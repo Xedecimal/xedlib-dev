@@ -475,7 +475,14 @@ class DataSet
 		if ($args == null) $args = MYSQL_BOTH;
 		if (mysql_affected_rows() < 1) return null;
 		while (($row = mysql_fetch_array($rows, $args)))
-			$this->items[] = $row;
+		{
+			$newrow = array();
+			foreach ($row as $key => $val)
+			{
+				$newrow[$key] = stripslashes($val);
+			}
+			$this->items[] = $newrow;
+		}
 		return $this->items;
 	}
 
