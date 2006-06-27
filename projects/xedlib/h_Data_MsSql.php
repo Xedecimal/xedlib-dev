@@ -62,7 +62,7 @@ class Database
 	 * query and translating.
 	 * @param $query string The actual SQL formatted query.
 	 * @param $silent bool Should we return an error?
-	 * @param $return Whether or not to return data (avoids truple errors with odbc)
+	 * @param $return Whether or not to return data (avoids truple (what a choice of wording, Microsoft!) errors with odbc)
 	 * @return object Query result object.
 	 */
 	function Query($query, $silent = false, $return = true)
@@ -72,10 +72,10 @@ class Database
 		if ($this->odbc) $res = odbc_exec($this->link, $query);
 		else $res = mssql_query($query, $this->link);
 
-		if (empty($res))
+		if (!$res)
 		{
 			if (!$silent) Error("Query: $query<br>\nMSSQL Error: ".
-				mssql_get_last_message()."<br>\n");
+				odbc_errormsg()."<br>\n");
 			return null;
 		}
 		$queries[] = $query;
@@ -327,7 +327,7 @@ class DataSet
 	/**
 	 * Associated database.
 	 *
-	 * @var Data.Database
+	 * @var Database
 	 */
 	public $database;
 
@@ -338,6 +338,8 @@ class DataSet
 	 */
 	public $table;
 
+	public $children;
+
 	/**
 	 * Initialize a new CDataSet binded to $table in $db.
 	 * @param $db Database A Database object to bind to.
@@ -347,6 +349,15 @@ class DataSet
 	{
 		$this->database = $db;
 		$this->table = new DataTable($table);
+	}
+
+	/**
+	 * @param $cpkey string Name of the child's primary key for item swap.
+	 * @param $temp string Name of temporary table containing space for item swap.
+	 */
+	function AddChild($ds, $pkey, $ckey, $cpkey = null, $temp = null)
+	{
+		$this->children[] = array("ds" => $ds, "pkey" => $pkey, "ckey" => $ckey, "cpkey" => $cpkey, "temp" => $temp);
 	}
 
 	function ColsClause($cols)
@@ -369,17 +380,17 @@ class DataSet
 	{
 		if (isset($match))
 		{
-			$ret = ' WHERE';
 			if (is_array($match))
 			{
+				$ret = ' WHERE';
 				$ix = 0;
 				foreach ($match as $col => $val)
 				{
 					if ($ix++ > 0) $ret .= ' AND';
 					$ret .= " [{$col}] = '{$val}'";
 				}
+				return $ret;
 			}
-			return $ret;
 		}
 		return null;
 	}
@@ -610,7 +621,7 @@ class DataSet
 			{
 				if ($val[0] == "destring") $query .= "[{$key}] = {$val[1]}";
 			}
-			else $query .= "[{$key}] = '{$val}'";
+			else $query .= "[{$key}] = '".str_replace("'", "''", $val)."'";
 			if ($x++ < count($values)-1) $query .= ", ";
 		}
 		$this->database->Query($query.$this->WhereClause($match), false, false);
@@ -618,10 +629,10 @@ class DataSet
 
 	function Swap($smatch, $dmatch, $pkey)
 	{
-		$sitems = $this->database->query("SELECT * FROM `{$this->table->name}`".$this->WhereClause($smatch));
-		$sitem = mysql_fetch_array($sitems, GET_ASSOC);
-		$ditems = $this->database->query("SELECT * FROM `{$this->table->name}`".$this->WhereClause($dmatch));
-		$ditem = mysql_fetch_array($ditems, GET_ASSOC);
+		$sitems = $this->database->query("SELECT * FROM [{$this->table->name}]".$this->WhereClause($smatch));
+		$sitem = $sitems[0];
+		$ditems = $this->database->query("SELECT * FROM [{$this->table->name}]".$this->WhereClause($dmatch));
+		$ditem = $ditems[0];
 		if (!empty($this->children))
 		{
 			foreach ($this->children as $child)
@@ -637,7 +648,7 @@ class DataSet
 				$query = "UPDATE `{$child['ds']->table->name}` JOIN `{$child['temp']}` SET {$child['ckey']} = {$ditem[$child['pkey']]} WHERE `{$child['temp']}`.{$child['cpkey']} = {$child['ds']->table->name}.{$child['cpkey']}";
 				$child['ds']->database->query($query);
 
-				$child['ds']->database->query("TRUNCATE temp");
+				$child['ds']->database->query("TRUNCATE [{$child['temp']}]");
 			}
 		}
 		unset($sitem['id'], $ditem['id']);
