@@ -204,9 +204,13 @@ class Template
 	 * @param $var Name of the variable.
 	 * @param $val Value of the variable.
 	 */
-	function set($var, $val)
+	function set($var, $val = null)
 	{
-		$this->vars[$var] = $val;
+		if (is_array($var) && !empty($var))
+		{
+			$this->vars = array_merge($this->vars, $var);
+		}
+		else $this->vars[$var] = $val;
 	}
 
 	/**
