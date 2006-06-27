@@ -293,7 +293,7 @@ class DataSet
 	/**
 	 * Associated database.
 	 *
-	 * @var Data.Database
+	 * @var Database
 	 */
 	public $database;
 
@@ -585,8 +585,8 @@ class DataSet
 	{
 		$query = "SELECT COUNT(*) FROM `{$this->table->name}`";
 		$query .= $this->WhereClause($match);
-		$val = $this->GetOne($query, $silent);
-		return $val[0];
+		$val = $this->GetCustom($query, $silent);
+		return $val[0][0];
 	}
 
 	/**
