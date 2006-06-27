@@ -72,6 +72,7 @@ class Template
 			else $box = new Box();
 			if (isset($attribs["TITLE"])) $box->title = $attribs["TITLE"];
 			$this->objs[] = $box;
+			$show = false;
 		}
 		else if ($tag == "XFORM")
 		{

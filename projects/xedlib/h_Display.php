@@ -217,6 +217,7 @@ class Form extends Table
 	public $hiddens; //!< Array of hidden fields stored from AddHidden()
 	public $attribs; //!< Form tag attributes, "name" => "value" pairs.
 	public $out; //!< Actual output.
+	public $Persist; //Whether to use persistant vars or not.
 
 	/**
 	* Instantiates this form with a unique name.
@@ -228,6 +229,8 @@ class Form extends Table
 		$this->Table($name, null, $tblAttribs);
 		$this->name = $name;
 		$this->attribs = array();
+
+		$this->Persist = true;
 	}
 
 	/**
@@ -328,7 +331,7 @@ class Form extends Table
 			foreach ($this->attribs as $atr => $val) $ret .= " $atr=\"$val\"";
 		}
 		$ret .= ">\n";
-		if (!empty($PERSISTS))
+		if ($this->Persist && !empty($PERSISTS))
 		{
 			foreach ($PERSISTS as $name => $value) $this->hiddens[] = array($name, $value);
 		}
