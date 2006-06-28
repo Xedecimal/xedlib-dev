@@ -30,6 +30,7 @@ class Box
 	public $name; //!< For unique identifier.
 	public $title; //!< Title to be displayed in this box, placement depends on the theme.
 	public $out; //!< Standard text to be output inside this box.
+	public $template; // 
 
 	/**
 	* Constructs a new box object with empty title and body.
@@ -39,6 +40,7 @@ class Box
 		$this->title = "";
 		$this->out = "";
 		$this->name = "";
+		$this->template = null;
 	}
 
 	/**
@@ -47,6 +49,7 @@ class Box
 	function Get($template = null)
 	{
 		$temp = isset($template) ? $template : "template_box.html";
+		if (isset($this->template)) $temp = $this->template;
 		if (file_exists($temp))
 		{
 			$t = new Template();

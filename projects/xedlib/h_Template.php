@@ -71,6 +71,7 @@ class Template
 			}
 			else $box = new Box();
 			if (isset($attribs["TITLE"])) $box->title = $attribs["TITLE"];
+			if (isset($attribs['TEMPLATE'])) $box->template = $attribs['TEMPLATE'];
 			$this->objs[] = $box;
 			$show = false;
 		}
