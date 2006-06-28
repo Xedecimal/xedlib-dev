@@ -197,10 +197,10 @@ class SortTable extends Table
 			$append = "";
 			if ($sort == $id)
 			{
-				$append = " [$order]";
+				$append = $order == 'ASC' ? ' &uarr;' : ' &darr;';
 				($order == "ASC") ? $order = "DESC" : $order = "ASC";
 			}
-			$this->cols[] = "<a href=\"$me?cs=$cs&ca=$ca&sort=$id&order=$order\">$disp</a>$append";
+			$this->cols[] = "<a href=\"$me?cs=$cs&amp;ca=$ca&amp;sort=$id&amp;order=$order\">$disp</a>$append";
 		}
 
 		$this->atrs = $attributes;

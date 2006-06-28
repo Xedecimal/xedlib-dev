@@ -15,6 +15,7 @@ define("DB_FKEY",		16);
 /** Column options include unsigned. */
 define("DB_UNSIGNED",	32);
 define("GET_ASSOC", MYSQL_ASSOC);
+define("GET_BOTH", MYSQL_BOTH);
 
 $queries = array();
 
@@ -457,7 +458,7 @@ class DataSet
 		$sort = null,
 		$filter = null,
 		$joins = null,
-		$args = null)
+		$args = GET_BOTH)
 	{
 		//Prepare Query
 		$query = 'SELECT';
@@ -472,7 +473,6 @@ class DataSet
 
 		//Prepare Data
 		$this->items = array();
-		if ($args == null) $args = MYSQL_BOTH;
 		if (mysql_affected_rows() < 1) return null;
 		while (($row = mysql_fetch_array($rows, $args)))
 		{
@@ -492,7 +492,7 @@ class DataSet
 	 * @param $args Arguments passed to fetch_array.
 	 * @return A single serialized row matching $match or null if not found.
 	 */
-	function GetOne($match, $args = null)
+	function GetOne($match, $args = GET_BOTH)
 	{
 		$data = $this->Get($match, null, null, null, $args);
 		if (isset($data)) return $data[0];
@@ -513,7 +513,7 @@ class DataSet
 	 * @param $args int Arguments to be passed to mysql_fetch_array (defaults to MYSQL_NUM)
 	 * @return array An array of results from the query specified.
 	 */
-	function GetAll($limit = NULL, $args = null)
+	function GetAll($limit = NULL, $args = GET_BOTH)
 	{
 		return $this->Get(null, null, $limit, null, $args);
 	}
@@ -544,7 +544,7 @@ class DataSet
 		return $this->items;
 	}
 
-	function GetSearch($columns, $phrase, $args = MYSQL_BOTH)
+	function GetSearch($columns, $phrase, $args = GET_BOTH)
 	{
 		$query = "SELECT * FROM `".$this->table->name."` WHERE";
 		foreach ($columns as $ix => $col)
@@ -566,12 +566,20 @@ class DataSet
 	 * @param $silent bool Should we output an error?
 	 * @return array The serialized database rows.
 	 */
-	function GetCustom($query, $silent = false)
+	function GetCustom($query, $silent = false, $args = GET_BOTH)
 	{
-		$cols = $this->database->Query($query, $silent);
-		if ($cols == null) return null;
+		$rows = $this->database->Query($query, $silent);
+		if ($rows == null) return null;
 		$ret = array();
-		while (($row = mysql_fetch_array($cols))) $ret[] = $row;
+		while (($row = mysql_fetch_array($rows, $args)))
+		{
+			$newrow = array();
+			foreach ($row as $key => $val)
+			{
+				$newrow[$key] = stripslashes($val);
+			}
+			$ret[] = $newrow;
+		}
 		return $ret;
 	}
 
