@@ -210,6 +210,11 @@ class Template
 		{
 			$this->vars = array_merge($this->vars, $var);
 		}
+		else if (get_class($var) != null)
+		{
+			$array = get_object_vars($var);
+			$this->vars = array_merge($this->vars, $array);
+		}
 		else $this->vars[$var] = $val;
 	}
 
@@ -257,7 +262,7 @@ class Template
 		if (isset($this->vars[$tvar])) return $this->vars[$tvar];
 		if (defined($tvar)) return constant($tvar);
 		if ($this->use_getvar && GetVar($tvar) != null) return GetVar($tvar);
-		return null;
+		return $match[0];
 	}
 }
 
