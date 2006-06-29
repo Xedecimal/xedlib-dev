@@ -205,7 +205,7 @@ class Template
 	 * @param $var Name of the variable.
 	 * @param $val Value of the variable.
 	 */
-	function set($var, $val = null)
+	function Set($var, $val = null)
 	{
 		if (is_array($var) && !empty($var))
 		{
@@ -223,7 +223,7 @@ class Template
 	 * Get a rendered template.
 	 * @param $template string The template file.
 	 */
-	function get($template)
+	function Get($template)
 	{
 		$this->out = "";
 		if (!file_exists($template)) { trigger_error("Template not found (" . $template . ")", E_USER_ERROR); return NULL; }
@@ -260,7 +260,7 @@ class Template
 		$tvar = $match[1];
 		global $$tvar;
 		if (isset($$tvar)) return $$tvar;
-		if (isset($this->vars[$tvar])) return $this->vars[$tvar];
+		if (key_exists($tvar, $this->vars)) return $this->vars[$tvar];
 		if (defined($tvar)) return constant($tvar);
 		if ($this->use_getvar && GetVar($tvar) != null) return GetVar($tvar);
 		return $match[0];

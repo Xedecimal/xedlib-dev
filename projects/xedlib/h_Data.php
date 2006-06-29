@@ -631,17 +631,17 @@ class DataSet
 			foreach ($this->children as $child)
 			{
 				//Copy Source children into Temp
-				$query = "INSERT INTO `{$child['temp']}` SELECT `{$child['cpkey']}` FROM `{$child['ds']->table->name}` WHERE {$child['ckey']} = {$smatch[$child['pkey']]}";
+				$query = "INSERT INTO `{$child['temp']}` SELECT `{$child['cpkey']}` FROM `{$child['ds']->table->name}` WHERE `{$child['ckey']}` = {$smatch[$child['pkey']]}";
 				$child['ds']->database->query($query);
 
 				//Move Destination children into Source parent.
 				$child['ds']->Update(array($child['ckey'] => $ditem[$child['pkey']]), array($child['ckey'] => $sitem[$child['pkey']]));
 
 				//Move Temp children into Destination parent.
-				$query = "UPDATE `{$child['ds']->table->name}` JOIN `{$child['temp']}` SET {$child['ckey']} = {$ditem[$child['pkey']]} WHERE `{$child['temp']}`.{$child['cpkey']} = {$child['ds']->table->name}.{$child['cpkey']}";
+				$query = "UPDATE `{$child['ds']->table->name}` JOIN `{$child['temp']}` SET {$child['ckey']} = {$ditem[$child['pkey']]} WHERE `{$child['temp']}`.`{$child['cpkey']}` = `{$child['ds']->table->name}`.`{$child['cpkey']}`";
 				$child['ds']->database->query($query);
 
-				$child['ds']->database->query("TRUNCATE temp");
+				$child['ds']->database->query("TRUNCATE `{$child['temp']}`");
 			}
 		}
 		unset($sitem['id'], $ditem['id']);
