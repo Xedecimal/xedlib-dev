@@ -405,6 +405,9 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 define('STATE_CREATE', 0);
 define('STATE_EDIT', 1);
 
+define('CONTROL_SIMPLE', 0);
+define('CONTROL_BOUND', 1);
+
 function BoolCallback($val) { return $val ? 'Yes' : 'No'; }
 
 /**
@@ -426,6 +429,7 @@ class EditorData
 	public $state;
 	public $sorting;
 	public $oncreate;
+	public $onupdate;
 	public $ondelete;
 	public $onswap;
 	public $idcol;
@@ -441,15 +445,21 @@ class EditorData
 	 * @param $filter array Array to constrain editing to a given expression.
 	 * @return EditorData
 	 */
-	function EditorData($name, $idcol, $ds, $display = null, $fields = null, $filter = null, $sort = null)
+	function EditorData($name, $idcol = null, $ds = null, $display = null, $fields = null, $filter = null, $sort = null)
 	{
 		$this->name = $name;
 		$this->idcol = $idcol;
-		$this->ds = $ds;
-		$this->display = $display;
+		if ($ds != null)
+		{
+			$this->ds = $ds;
+			$this->display = $display;
+			$this->filter = $filter;
+			$this->sort = $sort;
+			$this->type = CONTROL_BOUND;
+		}
+		else $this->type = CONTROL_SIMPLE;
+
 		$this->fields = $fields;
-		$this->filter = $filter;
-		$this->sort = $sort;
 
 		$this->state = GetVar('ca') == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
 		$this->sorting = true;
@@ -517,7 +527,14 @@ class EditorData
 					else $update[$data[0]] = GetVar($data[0]);
 				}
 			}
-			$this->ds->Update(array($this->idcol => $ci), $update);
+			if ($this->type == CONTROL_BOUND)
+				$this->ds->Update(array($this->idcol => $ci), $update);
+
+			if (isset($this->onupdate))
+			{
+				$handler = $this->onupdate;
+				if (!$handler($ci)) return;
+			}
 		}
 		else if ($action == $this->name.'_swap')
 		{
@@ -542,12 +559,16 @@ class EditorData
 		return $ret;
 	}
 
-	function Get($target, $ci)
+	function Get($target, $ci = null)
 	{
 		global $errors, $PERSISTS;
 		$ret = '';
-		$sel = $this->state == STATE_EDIT ? $this->ds->GetOne(array($this->idcol => $ci)) : null;
-		$items = $this->ds->Get($this->filter, $this->sort);
+		if ($this->type == CONTROL_BOUND)
+		{
+			$sel = $this->state == STATE_EDIT ? $this->ds->GetOne(array($this->idcol => $ci)) : null;
+			$items = $this->ds->Get($this->filter, $this->sort);
+		}
+		else { $sel = $ci; $this->state = STATE_EDIT; }
 
 		//Table
 
@@ -580,7 +601,7 @@ class EditorData
 				if ($last_id > -1 && $this->sorting)
 				{
 					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->idcol], 'ct' => $last_id), $url_defaults));
-					$data[] = "<a href=\"{$url_up}\"><b>&darr;</b></a>";
+					$data[] = "<a href=\"{$url_up}\"><b>&uarr;</b></a>";
 				}
 				else $data[] = null;
 
@@ -633,7 +654,7 @@ class EditorData
 			$frm->AddRow(array(
 				null,
 				'<input type="submit" value="'.($this->state == STATE_EDIT ? 'Update' : 'Create').'"/> '.
-				($this->state == STATE_EDIT ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null),
+				($this->state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null),
 				null
 			));
 			$ret .= "<a name=\"{$this->name}_editor\">&nbsp;</a>";
@@ -642,9 +663,6 @@ class EditorData
 		return $ret;
 	}
 }
-
-define('LOGIN_SIMPLE', 0);
-define('LOGIN_BOUND', 1);
 
 class LoginManager
 {
