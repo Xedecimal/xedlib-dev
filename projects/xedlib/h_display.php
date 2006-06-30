@@ -672,7 +672,7 @@ class LoginManager
 
 	function LoginManager()
 	{
-		$this->type = LOGIN_SIMPLE;
+		$this->type = CONTROL_SIMPLE;
 	}
 
 	/**
@@ -685,14 +685,14 @@ class LoginManager
 	 */
 	function Prepare($ca, $passvar = 'sespass', $uservar = null)
 	{
-		$check_user = ($this->type == LOGIN_BOUND) ? GetVar($uservar) : null;
+		$check_user = ($this->type == CONTROL_BOUND) ? GetVar($uservar) : null;
 		$check_pass = GetVar($passvar);
 
 		if ($ca == 'login')
 		{
 			if ($this->type == LOGIN_BOUND)
 			{
-				$check_user = ($this->type == LOGIN_BOUND) ? $check_user = GetVar('auth_user') : null;
+				$check_user = ($this->type == CONTROL_BOUND) ? $check_user = GetVar('auth_user') : null;
 			 	SetVar($uservar, $check_user);
 			}
 
@@ -706,7 +706,7 @@ class LoginManager
 			return false;
 		}
 
-		if ($this->type == LOGIN_BOUND)
+		if ($this->type == CONTROL_BOUND)
 		{
 			foreach ($this->datasets as $ds)
 			{
