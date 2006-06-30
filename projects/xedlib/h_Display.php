@@ -30,7 +30,7 @@ class Box
 	public $name; //!< For unique identifier.
 	public $title; //!< Title to be displayed in this box, placement depends on the theme.
 	public $out; //!< Standard text to be output inside this box.
-	public $template; // 
+	public $template; //!< Template to use with this box.
 
 	/**
 	* Constructs a new box object with empty title and body.
