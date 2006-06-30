@@ -214,7 +214,10 @@ class Template
 		else if (get_class($var) != null)
 		{
 			$array = get_object_vars($var);
-			$this->vars = array_merge($this->vars, $array);
+			foreach ($array as $key => $val)
+			{
+				if (!is_array($var)) $this->vars[$key] = $val;
+			}
 		}
 		else $this->vars[$var] = $val;
 	}

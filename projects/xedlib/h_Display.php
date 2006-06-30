@@ -241,9 +241,9 @@ class Form extends Table
 	* @param $name string The name attribute of the html field.
 	* @param $value mixed The value attribute of the html field.
 	*/
-	function AddHidden($name, $value)
+	function AddHidden($name, $value, $attribs = null)
 	{
-		$this->hiddens[] = array($name, $value);
+		$this->hiddens[] = array($name, $value, $attribs);
 	}
 
 	/**
@@ -314,7 +314,7 @@ class Form extends Table
 				break;
 		}
 		if ($helptext != null) $this->AddRow(array("<label for=\"$name\">$text</label>", $strout, $helptext));
-		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"$name\">$text</label>" : null, $strout, "&nbsp;"));
+		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"$name\">$text</label>" : null, $strout, null));
 	}
 
 	/**
@@ -340,7 +340,12 @@ class Form extends Table
 		}
 		if ($this->hiddens)
 		{
-			foreach ($this->hiddens as $hidden) $ret .= "<input type=\"hidden\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\" />\n";
+			foreach ($this->hiddens as $hidden)
+			{
+				$ret .= "<input type=\"hidden\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
+				if (isset($hidden[2])) $ret .= ' '.$hidden[2];
+				$ret .= " />\n";
+			}
 		}
 		$ret .= parent::Get($tblAttribs);
 		$ret .= "</form>\n";

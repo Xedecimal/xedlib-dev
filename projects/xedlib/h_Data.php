@@ -550,13 +550,9 @@ class DataSet
 		foreach ($columns as $ix => $col)
 		{
 			if ($ix > 0) $query .= " OR";
-			$query .= " $col LIKE '%$phrase%'";
+			$query .= " `$col` LIKE '%$phrase%'";
 		}
-		$cols = $this->database->Query($query);
-		if (mysql_affected_rows() < 1) return null;
-		$this->items = array();
-		while (($row = mysql_fetch_array($cols, $args))) $this->items[] = $row;
-		return $this->items;
+		return $this->Query($query);
 	}
 
 	/**
