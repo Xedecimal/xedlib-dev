@@ -609,7 +609,8 @@ class EditorData
 					if ($data[1] == 'custom')
 					{
 						$fname = $data[2];
-						$frm->AddRow($fname($sel));
+						$fname($sel, $frm);
+						continue;
 					}
 					else if ($data[1] == 'select') $value = $this->GetSelArray($data[2], $sel[$data[0]]);
 					else if ($data[1] == 'password') $value = '';
