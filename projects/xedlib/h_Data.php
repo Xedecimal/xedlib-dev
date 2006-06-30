@@ -546,11 +546,13 @@ class DataSet
 
 	function GetSearch($columns, $phrase, $args = GET_BOTH)
 	{
+		$newphrase = str_replace("'", '%', stripslashes($phrase));
+		$newphrase = str_replace(' ', '%', $newphrase);
 		$query = "SELECT * FROM `".$this->table->name."` WHERE";
 		foreach ($columns as $ix => $col)
 		{
 			if ($ix > 0) $query .= " OR";
-			$query .= " `$col` LIKE '%$phrase%'";
+			$query .= " `$col` LIKE '%{$newphrase}%'";
 		}
 		return $this->GetCustom($query);
 	}
