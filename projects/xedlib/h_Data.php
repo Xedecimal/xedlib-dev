@@ -552,7 +552,7 @@ class DataSet
 			if ($ix > 0) $query .= " OR";
 			$query .= " `$col` LIKE '%$phrase%'";
 		}
-		return $this->Query($query);
+		return $this->GetCustom($query);
 	}
 
 	/**
