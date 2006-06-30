@@ -533,7 +533,7 @@ class EditorData
 			if (isset($this->onupdate))
 			{
 				$handler = $this->onupdate;
-				if (!$handler($ci)) return;
+				if (!$handler($update)) return;
 			}
 		}
 		else if ($action == $this->name.'_swap')
