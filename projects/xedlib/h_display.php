@@ -580,14 +580,14 @@ class EditorData
 				if ($last_id > -1 && $this->sorting)
 				{
 					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->idcol], 'ct' => $last_id), $url_defaults));
-					$data[] = "<a href=\"{$url_up}\">Up</a>";
+					$data[] = "<a href=\"{$url_up}\"><b>&darr;</b></a>";
 				}
 				else $data[] = null;
 
 				if ($ix < count($items)-1 && $this->sorting)
 				{
 					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->idcol], 'ct' => $items[$ix+1][$this->idcol]), $url_defaults));
-					$data[] = "<a href=\"$url_down\">Down</a>";
+					$data[] = "<a href=\"$url_down\"><b>&darr;</b></a>";
 				}
 				else $data[] = null;
 
