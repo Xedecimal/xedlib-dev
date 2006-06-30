@@ -1,7 +1,7 @@
 <?php
 
-require_once("h_Template.php");
-require_once("h_Utility.php");
+require_once("h_template.php");
+require_once("h_utility.php");
 /**
  * @package Display
  */
@@ -441,13 +441,13 @@ class EditorData
 	 * @param $filter array Array to constrain editing to a given expression.
 	 * @return EditorData
 	 */
-	function EditorData($name, $idcol, $ds, $fields = null, $display = null, $filter = null, $sort = null)
+	function EditorData($name, $idcol, $ds, $display = null, $fields = null, $filter = null, $sort = null)
 	{
 		$this->name = $name;
 		$this->idcol = $idcol;
 		$this->ds = $ds;
-		$this->fields = $fields;
 		$this->display = $display;
+		$this->fields = $fields;
 		$this->filter = $filter;
 		$this->sort = $sort;
 
