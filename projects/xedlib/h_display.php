@@ -524,6 +524,8 @@ class EditorData
 						if (strlen($value) > 0)
 							$update[$data[0]] = md5($value);
 					}
+					else if ($data[1] == 'checkbox')
+						$update[$data[0]] = ($value == 1) ? $value : 0;
 					else $update[$data[0]] = GetVar($data[0]);
 				}
 			}
@@ -690,7 +692,7 @@ class LoginManager
 
 		if ($ca == 'login')
 		{
-			if ($this->type == LOGIN_BOUND)
+			if ($this->type == CONTROL_BOUND)
 			{
 				$check_user = ($this->type == CONTROL_BOUND) ? $check_user = GetVar('auth_user') : null;
 			 	SetVar($uservar, $check_user);
@@ -726,7 +728,7 @@ class LoginManager
 		foreach ($_GET as $key => $val) if ($key != 'ca' && $val != 'logout') Persist($key, $val);
 		$f = new Form('login', array(null, 'width="100%"'));
 		$f->AddHidden('ca', 'login');
-		if ($this->type != LOGIN_SIMPLE) $f->AddInput('Login', 'text', 'auth_user');
+		if ($this->type != CONTROL_SIMPLE) $f->AddInput('Login', 'text', 'auth_user');
 		$f->AddInput('Password', 'password', 'auth_pass');
 		$f->AddInput(null, 'submit', 'butSubmit', 'Login');
 		return $f->Get('action="'.$target.'" method="post"');
@@ -734,7 +736,7 @@ class LoginManager
 
 	function AddDataset($ds = null, $passcol = 'pass', $usercol = 'user')
 	{
-		$this->type = LOGIN_BOUND;
+		$this->type = CONTROL_BOUND;
 		$this->datasets[] = array($ds, $passcol, $usercol);
 	}
 
