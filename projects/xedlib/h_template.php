@@ -56,6 +56,7 @@ class Template
 			}
 		}
 		else if ($tag == 'IMG') $close = ' /';
+		else if ($tag == 'INPUT') $close = ' /';
 		else if ($tag == 'LINK') $close = ' /';
 		else if ($tag == 'META') $close = ' /';
 		else if ($tag == 'NBSP') $output = '&nbsp;';
@@ -135,6 +136,7 @@ class Template
 		else if ($tag == 'BR') return;
 		else if ($tag == 'COPY') return;
 		else if ($tag == 'IMG') return;
+		else if ($tag == 'INPUT') return;
 		else if ($tag == 'LINK') return;
 		else if ($tag == 'DOCTYPE') return;
 		else if ($tag == 'META') return;
