@@ -411,6 +411,25 @@ class DataSet
 		return null;
 	}
 
+	function GetSetString($values)
+	{
+		$ret = null;
+		if (!empty($values))
+		{
+			$x = 0;
+			foreach ($values as $key => $val)
+			{
+				if (is_array($val))
+				{
+					if ($val[0] == "destring") $ret .= "`{$key}` = {$val[1]}";
+				}
+				else $ret .= "`{$key}` = '".addslashes($val)."'";
+				if ($x++ < count($values)-1) $ret .= ", ";
+			}
+		}
+		return $ret;
+	}
+	
 	/**
 	 * Inserts a row into the associated table with the passed array.
 	 * @param $columns array An array of columns. If you wish to use functions
@@ -418,7 +437,7 @@ class DataSet
 	 * errors.
 	 * @return int ID of added row.
 	 */
-	function Add($columns)
+	function Add($columns, $update_existing = false)
 	{
 		$query = "INSERT INTO `{$this->table->name}` (";
 		foreach (array_keys($columns) as $ix => $key)
@@ -439,7 +458,11 @@ class DataSet
 			if ($ix < count($columns)-1) $query .= ", ";
 			$ix++;
 		}
-		$query .= ");";
+		$query .= ")";
+		if ($update_existing)
+		{
+			$query .= " ON DUPLICATE KEY UPDATE ".$this->GetSetString($columns);
+		}
 		$this->database->Query($query);
 		return mysql_insert_id($this->database->link);
 	}
@@ -604,17 +627,7 @@ class DataSet
 	 */
 	function Update($match, $values)
 	{
-		$query = "UPDATE `{$this->table->name}` SET ";
-		$x = 0;
-		foreach ($values as $key => $val)
-		{
-			if (is_array($val))
-			{
-				if ($val[0] == "destring") $query .= "`{$key}` = {$val[1]}";
-			}
-			else $query .= "`{$key}` = '".addslashes($val)."'";
-			if ($x++ < count($values)-1) $query .= ", ";
-		}
+		$query = "UPDATE `{$this->table->name}` SET ".$this->GetSetString($values);
 		$this->database->Query($query.$this->WhereClause($match));
 	}
 
