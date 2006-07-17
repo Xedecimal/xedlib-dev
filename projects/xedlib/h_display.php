@@ -397,8 +397,8 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 		$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("i", $timestamp) . "\" alt=\"Minute\">\n";
 	}
 	$strout .= GetMonthSelect("{$name}[]", date("n", $timestamp));
-	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("d", $timestamp) . "\" alt=\"Day\">\n";
-	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . date("Y", $timestamp) . "\" alt=\"Year\">\n";
+	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("d", $timestamp) . "\" alt=\"Day\" />\n";
+	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . date("Y", $timestamp) . "\" alt=\"Year\" />\n";
 	return $strout;
 }
 
