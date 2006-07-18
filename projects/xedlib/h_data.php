@@ -58,8 +58,7 @@ class Database
 		$res = mysql_db_query($this->name, $query);
 		if (mysql_error())
 		{
-			if (!$silent) Error("Query: $query<br>\nMySQL Error: "
-				. mysql_error());
+			Error("Query: $query<br>\nMySQL Error: ".mysql_error());
 			return null;
 		}
 		$queries[] = $query;
