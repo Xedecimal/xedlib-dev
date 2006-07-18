@@ -71,8 +71,9 @@ class Template
 				else die("Class does not exist ($handler).<br/>\n");
 			}
 			else $box = new Box();
-			if (isset($attribs["TITLE"])) $box->title = $attribs["TITLE"];
+			if (isset($attribs['TITLE'])) $box->title = $attribs['TITLE'];
 			if (isset($attribs['TEMPLATE'])) $box->template = $attribs['TEMPLATE'];
+			if (isset($attribs['ID'])) $box->name = $attribs['ID'];
 			$this->objs[] = $box;
 			$show = false;
 		}
