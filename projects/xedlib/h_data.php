@@ -428,7 +428,7 @@ class DataSet
 		}
 		return $ret;
 	}
-	
+
 	/**
 	 * Inserts a row into the associated table with the passed array.
 	 * @param $columns array An array of columns. If you wish to use functions
@@ -490,7 +490,6 @@ class DataSet
 		$query .= $this->OrderClause($sort);
 		$query .= $this->AmountClause($filter);
 
-		
 		//Execute Query
 		$rows = $this->database->Query($query);
 
