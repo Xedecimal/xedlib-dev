@@ -133,13 +133,12 @@ function MakeURI($url, $uri = null)
 
 	if (is_array($uri))
 	{
-		if (strpos($ret, "?")  > 0) $start = false;
-		else $start = true;
+		$start = (strpos($ret, "?") > 0);
 		foreach ($uri as $key => $val)
 		{
 			if ($val != null)
 			{
-				$ret .= ($start ? '?' : '&amp;') . "$key=".str_replace(" ", "%20", $val);
+				$ret .= ($start ? '?' : '&') . urlencode($key).'='.urlencode($val);
 				$start = false;
 			}
 		}

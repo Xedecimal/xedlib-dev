@@ -305,8 +305,6 @@ class Form extends Table
 				if ($value) $attributes .= ' checked="checked"';
 				$strout = "<input id=\"$name\" type=\"$type\" name=\"$name\"$attributes />";
 				break;
-			case "submit":
-				$class = "input_button";
 			default:
 				if (isset($value)) $val = ' value="'.htmlspecialchars($value).'"';
 				else $val = "";
@@ -368,14 +366,24 @@ class SelOption
 	}
 }
 
-function MakeSelect($name, $value = NULL, $attributes = NULL)
+function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 {
 	$strout = "<select name=\"$name\" $attributes>\n";
-	foreach ($value as $ix => $option)
+	$selid = 0;
+	foreach ($value as $option)
 	{
-		if (isset($option[2]) && $option[2]) $selected = " selected=\"true\"";
-		else $selected = "";
-		$strout .= "<option value=\"{$ix}\"$selected>{$option[0]}</option>\n";
+		if (isset($selvalue))
+		{
+			if (is_array($selvalue) && $selvalue[$selid] == $option->id)
+			{
+				$selected = ' selected="true"';
+				$selid++;
+			}
+			else if ($selvalue == $option->id) $selected = ' selected="true"';
+		}
+		else if ($option->selected) $selected = ' selected="true"';
+		$strout .= "<option value=\"{$option->id}\"$selected>{$option->text}</option>\n";
+		$selected = null;
 	}
 	$strout .= "</select>\n";
 	return $strout;
@@ -390,6 +398,11 @@ function MakeSelect($name, $value = NULL, $attributes = NULL)
  */
 function GetInputDate($name = "", $timestamp = null, $include_time = false)
 {
+	if (!isset($timestamp)) $timestamp = time();
+	if (is_array($timestamp))
+	{
+		$timestamp = mktime($timestamp[3], $timestamp[4], $timestamp[5], $timestamp[0], $timestamp[1], $timestamp[2]);
+	}
 	$strout = "";
 	if ($include_time)
 	{
@@ -482,9 +495,13 @@ class EditorData
 				{
 					$value = GetVar($data[0]);
 					if ($data[1] == 'date')
+					{
 						$insert[$name] = $value[2].'-'.$value[0].'-'.$value[1];
+					}
 					else if ($data[1] == 'password' && strlen($value) > 0)
+					{
 						$insert[$data[0]] = md5($value);
+					}
 					else $insert[$data[0]] = $value;
 				}
 				else $insert[$name] = DeString($data);
@@ -640,8 +657,14 @@ class EditorData
 						$fname($sel, $frm);
 						continue;
 					}
-					else if ($data[1] == 'select') $value = $this->GetSelArray($data[2], $sel[$data[0]]);
-					else if ($data[1] == 'password') $value = '';
+					else if ($data[1] == 'select')
+					{
+						$value = $this->GetSelArray($data[2], $sel[$data[0]]);
+					}
+					else if ($data[1] == 'password')
+					{
+						$value = '';
+					}
 					else $value = $sel[$data[0]];
 					$frm->AddInput(
 						$text,
@@ -720,6 +743,7 @@ class LoginManager
 			}
 		}
 		else return $this->pass == $check_pass;
+		return false;
 	}
 
 	function Get($target)
@@ -861,8 +885,8 @@ class Calendar
 
 		$month = new CalendarMonth($ts);
 
-		$off = date("w", $ts); //Gets the offset of the first  day of this month.
-		$days = date("t", $ts); //Get total amount of days in this month.
+		//$off = date("w", $ts); //Gets the offset of the first  day of this month.
+		//$days = date("t", $ts); //Get total amount of days in this month.
 $ret = <<<EOF
 <form action="$me" method="post">
 <div><input type="hidden" name="cs" value="$cs"></div>
