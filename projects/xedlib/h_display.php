@@ -340,7 +340,7 @@ class Form extends Table
 		{
 			foreach ($this->hiddens as $hidden)
 			{
-				$ret .= "<input type=\"hidden\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
+				$ret .= "<input type=\"hidden\" id=\"{$this->name}_{$hidden[0]}\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
 				if (isset($hidden[2])) $ret .= ' '.$hidden[2];
 				$ret .= " />\n";
 			}
