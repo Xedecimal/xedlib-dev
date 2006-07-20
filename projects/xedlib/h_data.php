@@ -490,6 +490,7 @@ class DataSet
 		$query .= $this->OrderClause($sort);
 		$query .= $this->AmountClause($filter);
 
+		
 		//Execute Query
 		$rows = $this->database->Query($query);
 

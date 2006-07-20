@@ -273,7 +273,7 @@ class Form extends Table
 					$ogstarted = false;
 					foreach ($value as $opt)
 					{
-						$selected = $opt[1] ? ' selected="true"' : "";
+						$selected = $opt[1] ? ' selected="true"' : "";						
 						if ($opt[0]->group)
 						{
 							if ($ogstarted) $strout .= "</optgroup>";
