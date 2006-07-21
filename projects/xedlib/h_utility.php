@@ -129,7 +129,7 @@ function VarInfo($var)
  */
 function MakeURI($url, $uri = null)
 {
-	$ret = str_replace(" ", "%20", $url);
+	$ret = str_replace(' ', '%20', $url);
 
 	if (is_array($uri))
 	{
@@ -138,8 +138,8 @@ function MakeURI($url, $uri = null)
 		{
 			if ($val != null)
 			{
-				$ret .= ($start ? '?' : '&') . urlencode($key).'='.urlencode($val);
-				$start = false;
+				$ret .= ($start ? '&amp;' : '?')."{$key}={$val}";
+				$start = true;
 			}
 		}
 	}
