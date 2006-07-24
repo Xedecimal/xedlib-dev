@@ -357,12 +357,14 @@ class SelOption
 	public $id;
 	public $text;
 	public $group;
+	public $selected;
 
-	function SelOption($id, $text, $group = false)
+	function SelOption($id, $text, $group = false, $selected = false)
 	{
 		$this->id = $id;
 		$this->text = $text;
 		$this->group = $group;
+		$this->selected = $selected;
 	}
 }
 
@@ -372,9 +374,10 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 	$selid = 0;
 	foreach ($value as $option)
 	{
+		$selected = null;
 		if (isset($selvalue))
 		{
-			if (is_array($selvalue) && $selvalue[$selid] == $option->id)
+			if (isset($selvalue[$selid]) && $selvalue[$selid] == $option->id)
 			{
 				$selected = ' selected="true"';
 				$selid++;
@@ -401,7 +404,10 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	if (!isset($timestamp)) $timestamp = time();
 	if (is_array($timestamp))
 	{
-		$timestamp = mktime($timestamp[3], $timestamp[4], $timestamp[5], $timestamp[0], $timestamp[1], $timestamp[2]);
+		if (isset($timestamp[5]))
+			$timestamp = mktime($timestamp[3], $timestamp[4], $timestamp[5], $timestamp[0], $timestamp[1], $timestamp[2]);
+		else
+			$timestamp = mktime(0, 0, 0, $timestamp[0], $timestamp[1], $timestamp[2]);
 	}
 	$strout = "";
 	if ($include_time)

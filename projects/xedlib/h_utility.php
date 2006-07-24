@@ -41,22 +41,22 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 
 	$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
 
-	$err = "<pre>";
-	$err .= "[{$errortype[$errno]}] ";
-	$err .= "$errmsg in ";
-	$err .= "$filename:$linenum\n";
+	//$err = "<pre>";
+	$err = "[<b>{$errortype[$errno]}</b>] ";
+	$err .= "<b>$errmsg</b> in ";
+	$err .= "<b>$filename</b>:<b>$linenum</b>\n";
 	$err .= "Call Stack...";
-	$err .= "</pre>\n";
+	//$err .= "</pre>\n";
 
 	$err .= "<table><tr><td>File:Line</td><td>Function</td>\n";
 	$array = debug_backtrace();
 	foreach ($array as $entry)
 	{
 		$err .= "<tr><td>";
-		if (isset($entry['file'])) $err .= "{$entry['file']}";
-		if (isset($entry['line'])) $err .= ":{$entry['line']}";
+		if (isset($entry['file'])) $err .= "<b>{$entry['file']}</b>";
+		if (isset($entry['line'])) $err .= ":<b>{$entry['line']}</b>";
 		if (isset($entry['class'])) $err .= "</td><td>{$entry['class']}{$entry['type']}{$entry['function']}";
-		else if (isset($entry['function'])) $err .= "</td><td>{$entry['function']}";
+		else if (isset($entry['function'])) $err .= "</td><td><b>{$entry['function']}</b>";
 		$err .= "<td></tr>";
 	}
 	$err .= "</table><hr size=\"1\">";
