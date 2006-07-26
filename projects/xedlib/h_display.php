@@ -273,7 +273,7 @@ class Form extends Table
 					$ogstarted = false;
 					foreach ($value as $opt)
 					{
-						$selected = $opt[1] ? ' selected="true"' : "";						
+						$selected = $opt[1] ? ' selected="true"' : "";
 						if ($opt[0]->group)
 						{
 							if ($ogstarted) $strout .= "</optgroup>";
@@ -891,8 +891,8 @@ class Calendar
 
 		$month = new CalendarMonth($ts);
 
-		//$off = date("w", $ts); //Gets the offset of the first  day of this month.
-		//$days = date("t", $ts); //Get total amount of days in this month.
+		$off = date("w", $ts); //Gets the offset of the first  day of this month.
+		$days = date("t", $ts); //Get total amount of days in this month.
 $ret = <<<EOF
 <form action="$me" method="post">
 <div><input type="hidden" name="cs" value="$cs"></div>
@@ -996,7 +996,7 @@ EOF;
 				//Pad in the rest of the week.
 				if ($curday != -1)
 				{
-					if ($dayx < 7) $ret .= str_repeat("\t\t\t<td>&nbsp;</td>\n", 7-$dayx);
+					if ($dayx < 3) $ret .= str_repeat("\t\t\t<td>&nbsp;</td>\n", 7-$dayx);
 					$dayx = 0;
 				}
 			}
@@ -1004,7 +1004,7 @@ EOF;
 			if ($year != $curyear)
 			{
 				//Terminate the last month
-				if ($curmonth != -1) $ret .= "\t</tr></table>";
+				if ($curmonth != -1) $ret .= "\t</tr></table><img src=\"/images/pixel_red.gif\" width=\"482\" height=\"1\" />";
 				//Begin the next year.
 				//if ($yearx % 2 == 0) $id = "odd";
 				//else $id = "even";
@@ -1020,7 +1020,7 @@ EOF;
 				if ($curmonth != -1)
 				{
 					//Terminate the last month
-					$ret .= "</td></tr></table>\n";
+					$ret .= "</td></tr></table><img src=\"/images/pixel_red.gif\" width=\"482\" height=\"1\" />\n";
 				}
 				//New month in new year
 				//else $ret .= "\t<td>";
@@ -1030,7 +1030,7 @@ EOF;
 				else $class = "CalendarMonthEven";
 				$ret .= "<table border=\"0\" class=\"{$class}\" cellspacing=\"2\" cellpadding=\"3\" width=\"100%\">\n";
 				$ret .= "\t<tr>\n";
-				$ret .= "\t\t<td align=\"center\" colspan=\"7\">\n";
+				$ret .= "\t\t<td colspan=\"7\">\n";
 				$ret .= "\t\t\t<b>" . date("F", $key) . " $year</b>\n";
 				$ret .= "\t\t</td>\n";
 				$ret .= "\t</tr>\n";
@@ -1043,9 +1043,9 @@ EOF;
 			{
 				if ($curday != -1) $ret .= "\t\t</td>\n";
 				else $ret .= "\t<tr>\n";
-				if ($dayx % 7 == 0 && $curday != -1) $ret .= "\t</tr><tr>\n";
+				if ($dayx % 3 == 0 && $curday != -1) $ret .= "\t</tr><tr>\n";
 				$ret .= "\t\t<td class=\"CalendarDay\" valign=\"top\">\n";
-				$ret .= "\t\t\t<p class=\"CalendarDayTitle\">$day</p>\n";
+				//$ret .= "\t\t\t<p class=\"CalendarDayTitle\">$day</p>\n";
 				$curday = $day;
 				$dayx++;
 			}
@@ -1058,10 +1058,10 @@ EOF;
 				$ret .= "\t\t\t<p class=\"CalendarDayBody\">\n";
 				if ($admin)
 				{
-					$ret .= "\t\t\t[<a href=\"$me?ca=cal_del&amp;ci={$event[0]}&amp;ts=$thists\" OnClick=\"return confirm('Are you sure?')\"><b>X</b></a>]\n";
-					$ret .= "\t\t\t[<a href=\"$me?ca=cal_edit&amp;ci={$event[0]}&amp;ts=$thists\"><b>E</b></a>]\n";
+					$ret .= "\t\t\t[<a class=\"link\" href=\"$me?ca=cal_del&amp;ci={$event[0]}&amp;ts=$thists\" OnClick=\"return confirm('Are you sure?')\"><b>X</b></a>]\n";
+					$ret .= "\t\t\t[<a class=\"link\" href=\"$me?ca=cal_edit&amp;ci={$event[0]}&amp;ts=$thists\"><b>E</b></a>]\n";
 				}
-				$ret .= "\t\t\t<a href=\"{$event[4]}\">" . stripslashes($event[3]) . "</a>\n";
+				$ret .= "\t\t\t<a class=\"link\" href=\"{$me}?ca=viewe&amp;ci={$event[0]}\">".stripslashes($event[3])."</a><br/>\n";
 				$ret .= "\t\t\t{$event[5]}\n";
 			}
 		}
@@ -1070,7 +1070,7 @@ EOF;
 		if ($curday != -1)
 		{
 			$ret .= "\t\t</td>\n";
-			if ($dayx < 7) $ret .= "\t\t<td colspan=\"". (7 - $dayx) . "\">&nbsp;</td>\n";
+			if ($dayx < 3) $ret .= "\t\t<td colspan=\"". (3 - $dayx) . "\">&nbsp;</td>\n";
 			$dayx = 0;
 		}
 

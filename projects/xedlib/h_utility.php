@@ -41,12 +41,10 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 
 	$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
 
-	//$err = "<pre>";
 	$err = "[<b>{$errortype[$errno]}</b>] ";
 	$err .= "<b>$errmsg</b> in ";
 	$err .= "<b>$filename</b>:<b>$linenum</b>\n";
 	$err .= "Call Stack...";
-	//$err .= "</pre>\n";
 
 	$err .= "<table><tr><td>File:Line</td><td>Function</td>\n";
 	$array = debug_backtrace();
