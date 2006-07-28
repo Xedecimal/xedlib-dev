@@ -126,9 +126,11 @@ function FormRequire($name, $arr, $check)
 	$checks = null;
 	foreach ($arr as $key => $val)
 	{
+		$rec = RecurseReq($key, $val, $checks);
+		//$ret['errors'] = array_merge($ret['errors'], $rec['errors']);
 		if ($check && strlen(GetVar($key)) < 1) $ret['errors'][$key] = $val;
-		$checks .= "\tchk_{$key} = document.getElementById('{$key}')\n";
-		$checks .= "\tif (chk_{$key}.value.length < 1) { alert('{$val}'); chk_{$key}.focus(); return false; }\n";
+		//$checks .= "\tchk_{$key} = document.getElementById('{$key}')\n";
+		//$checks .= "\tif (chk_{$key}.value.length < 1) { alert('{$val}'); chk_{$key}.focus(); return false; }\n";
 	}
 	$ret['js'] = <<<EOF
 function {$name}_check()
@@ -138,6 +140,25 @@ function {$name}_check()
 }\n
 EOF;
 	return $ret;
+}
+
+function RecurseReq($key, $val, &$checks)
+{
+	if (is_array($val))
+	{
+		foreach ($val as $newkey => $newval)
+		{
+			$checks .= "\tchk_{$key} = document.getElementById('{$key}')\n";
+			$checks .= "\tif (chk_{$key}.value == '{$newkey}')\n\t{\n";
+			RecurseReq($newkey, $newval, $checks);
+			$checks .= "\t}\n";
+		}
+	}
+	else
+	{
+		$checks .= "\tchk_{$key} = document.getElementById('{$key}')\n";
+		$checks .= "\tif (chk_{$key}.value.length < 1) { alert('{$val}'); chk_{$key}.focus(); return false; }\n";
+	}
 }
 
 /**
