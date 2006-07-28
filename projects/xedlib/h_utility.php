@@ -120,13 +120,23 @@ function VarInfo($var)
 
 //Managing session values.
 
-function FormRequire($arr)
+function FormRequire($name, $arr, $check)
 {
 	$ret = array();
+	$checks = null;
 	foreach ($arr as $key => $val)
 	{
-		if (strlen(GetVar($key)) < 1) $ret[$key] = $val;
+		if ($check && strlen(GetVar($key)) < 1) $ret['errors'][$key] = $val;
+		$checks .= "\tchk_{$key} = document.getElementById('{$key}')\n";
+		$checks .= "\tif (chk_{$key}.value.length < 1) { alert('{$val}'); chk_{$key}.focus(); return false; }\n";
 	}
+	$ret['js'] = <<<EOF
+function {$name}_check()
+{
+{$checks}
+	return true;
+}\n
+EOF;
 	return $ret;
 }
 
