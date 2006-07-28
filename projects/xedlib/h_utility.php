@@ -118,6 +118,18 @@ function VarInfo($var)
 	echo "</pre>\n";
 }
 
+//Managing session values.
+
+function FormRequire($arr)
+{
+	$ret = array();
+	foreach ($arr as $key => $val)
+	{
+		if (strlen(GetVar($key)) < 1) $ret[$key] = $val;
+	}
+	return $ret;
+}
+
 /**
  * Returns a clean URI.
  *
