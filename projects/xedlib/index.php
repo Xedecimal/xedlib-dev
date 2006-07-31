@@ -1,8 +1,8 @@
 <?php
-require_once("h_Data.php");
-require_once("h_Display.php");
-require_once("h_Utility.php");
-require_once("h_Template.php");
+require_once("h_data.php");
+require_once("h_display.php");
+require_once("h_utility.php");
+require_once("h_template.php");
 
 $db = new Database("xldemo", "localhost", "root", "ransal");
 $db->CheckInstall();
@@ -94,8 +94,8 @@ echo $cal->GetVert();
 
 <?php
 $t = new Template();
-$t->set("title", "A title!");
-$t->set("body", "And some bawday!");
+$t->set("box_title", "A title!");
+$t->set("box_body", "And some bawday!");
 echo $t->Get("template_box.html");
 ?>
 
