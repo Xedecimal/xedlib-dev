@@ -1,33 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN"
+						"http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<title> PHP Converter </title>
+	<style type="text/css">
+	body { font-family: Verdana, sans-serif; }
+	.outer_center { margin: auto; }
+	.inner_center { text-align: center; }
+	</style>
+</head>
+<body>
 <form action="php_convert.php" method="post">
-<table align="center" border="2">
-<tr>
-	<td nowrap="nowrap">make PHP 4 compatible
-	</td>
-	<td nowrap="nowrap"><input type="radio" checked="checked" name="php" value="php_4" />
-	</td>
-</tr>
-<tr>
-	<td nowrap="nowrap">make PHP 5 compatible
-	</td>
-	<td nowrap="nowrap"><input type="radio" name="php" value="php_5" />
-	</td>
-</tr>
-
-<tr>
-	<td align="center" colspan="2"><input type="submit" name="btnSubmit" value="Convert" />
-	</td>
-</tr>
-</table>
 <input type="hidden" name="ca" value="convert" />
+<table class="outer_center">
+	<tr>
+		<td>Make PHP 4 Compatible</td>
+		<td><input type="radio" checked="checked" name="php" value="php_4" /></td>
+	</tr>
+	<tr>
+		<td>Make PHP 5 Compatible</td>
+		<td><input type="radio" name="php" value="php_5" /></td>
+	</tr>
+	<tr>
+		<td colspan="2" class="inner_center">
+			<input type="submit" value="Convert" />
+		</td>
+	</tr>
+</table>
 </form>
 
+<?php
 
-
-
-<?php 
-
-$files = array("h_data.php", 
-				   "h_data_mssql.php", 
+$files = array("h_data.php",
+				   "h_data_mssql.php",
 				   "h_display.php",
 				   "h_template.php",
 				   "h_utility.php");
@@ -39,19 +44,17 @@ $files = array("h_data.php",
 
 //NOTE:  use preg_replace('/$mySearchString/s', $myReplcementString, $myFileIntoString)
 
-
-if($_POST['ca'] == "convert")
+if ($_POST['ca'] == "convert")
 {
 	$fileContents;
 	$newFileContents;
-	
+
 	switch($_POST['php'])
 	{
 		case "php_4":
 			echo "converting to PHP Version 4\n";
 			foreach($files as $file)
 			{
-				
 				$fileContents = file_get_contents($file);
 				$newFileContents = preg_replace('/public/s', "var", $fileContents);
 				file_put_contents($file, $newFileContents);
@@ -59,12 +62,10 @@ if($_POST['ca'] == "convert")
 				file_put_contents($file, $newFileContents);
 			}
 		break;
-		
 		case "php_5":
 			echo "converting to PHP Version 5\n";
 			foreach($files as $file)
 			{
-				
 				$fileContents = file_get_contents($file);
 				$newFileContents = preg_replace('/var/s', "public", $fileContents);
 				file_put_contents($file, $newFileContents);
@@ -73,6 +74,7 @@ if($_POST['ca'] == "convert")
 			}
 		break;
 	}
-	//foreach($files as $file)
 }
 ?>
+</body>
+</html>
