@@ -210,10 +210,10 @@ function GetMonthSelect($name, $default, $attribs = null)
 	$ret .= ">";
 	for ($ix = 1; $ix < 13; $ix++)
 	{
-		$ts = mktime(0, 0, 0, $ix);
+		$ts = gmmktime(0, 0, 0, $ix);
 		if ($ix == $default) $sel = " selected=\"selected\"";
 		else $sel = "";
-		$ret .= "<option value=\"$ix\"$sel> " . date("F", $ts) . "</option>\n";
+		$ret .= "<option value=\"$ix\"$sel> " . gmdate("F", $ts) . "</option>\n";
 	}
 	$ret .= "</select>\n";
 	return $ret;
