@@ -132,13 +132,7 @@ function FormRequire($name, $arr, $check)
 		//$checks .= "\tchk_{$key} = document.getElementById('{$key}')\n";
 		//$checks .= "\tif (chk_{$key}.value.length < 1) { alert('{$val}'); chk_{$key}.focus(); return false; }\n";
 	}
-	$ret['js'] = <<<EOF
-function {$name}_check()
-{
-{$checks}
-	return true;
-}\n
-EOF;
+	$ret['js'] = "function {$name}_check()\n\t{\n\t{$checks}\n\treturn true;\n}\n";
 	return $ret;
 }
 

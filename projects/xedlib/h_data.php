@@ -160,7 +160,10 @@ class DataTable
 {
 	/** Name of this table */
 	public $name;
-	/** An array of columns and associated data in the underlying database. */
+	/**
+	 * An array of columns and associated data in the underlying database.
+	 * @var array
+	 */
 	public $cols;
 
 	/**
@@ -432,8 +435,8 @@ class DataSet
 	/**
 	 * Inserts a row into the associated table with the passed array.
 	 * @param $columns array An array of columns. If you wish to use functions
-	 * please use the function DeString("myvalue") to avoid any database
-	 * errors.
+	 * @param $update_existing bool Whether to update the existing values
+	 * by unique keys, or just to add ignoring keys otherwise.
 	 * @return int ID of added row.
 	 */
 	function Add($columns, $update_existing = false)

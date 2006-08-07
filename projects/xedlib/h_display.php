@@ -240,10 +240,13 @@ class Form extends Table
 	* Adds a hidden field to this form.
 	* @param $name string The name attribute of the html field.
 	* @param $value mixed The value attribute of the html field.
+	* @param $attribs string Attributes to append on this field.
+	* @param $general bool Whether this is a general name. It will not
+	* have the form name prefixed on it.
 	*/
-	function AddHidden($name, $value, $attribs = null)
+	function AddHidden($name, $value, $attribs = null, $general = false)
 	{
-		$this->hiddens[] = array($name, $value, $attribs);
+		$this->hiddens[] = array($name, $value, $attribs, $general);
 	}
 
 	/**
@@ -334,13 +337,14 @@ class Form extends Table
 		$ret .= ">\n";
 		if ($this->Persist && !empty($PERSISTS))
 		{
-			foreach ($PERSISTS as $name => $value) $this->hiddens[] = array($name, $value);
+			foreach ($PERSISTS as $name => $value) $this->AddHidden($name, $value);
 		}
 		if ($this->hiddens)
 		{
 			foreach ($this->hiddens as $hidden)
 			{
-				$ret .= "<input type=\"hidden\" id=\"{$this->name}_{$hidden[0]}\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
+				$fname = $hidden[3] ? $hidden[0] : $this->name.'_'.$hidden[0];
+				$ret .= "<input type=\"hidden\" id=\"$fname\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
 				if (isset($hidden[2])) $ret .= ' '.$hidden[2];
 				$ret .= " />\n";
 			}
