@@ -40,7 +40,7 @@ class Box
 		$this->title = "";
 		$this->out = "";
 		$this->name = "";
-		$this->template = null;
+		$this->template = "template_box.html";
 	}
 
 	/**
@@ -48,8 +48,7 @@ class Box
 	*/
 	function Get($template = null)
 	{
-		$temp = isset($template) ? $template : "template_box.html";
-		if (isset($this->template)) $temp = $this->template;
+		$temp = isset($template) ? $template : $this->template;
 		if (file_exists($temp))
 		{
 			$t = new Template();
