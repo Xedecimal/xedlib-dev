@@ -698,11 +698,15 @@ class EditorData
 	}
 }
 
+define('ACCESS_GUEST', 0);
+define('ACCESS_ADMIN', 1);
+
 class LoginManager
 {
 	public $datasets;
 	public $type;
 	public $pass;
+	public $access;
 
 	function LoginManager()
 	{
