@@ -345,6 +345,12 @@ class DataSet
 		return null;
 	}
 
+	function QuoteTable($name)
+	{
+		if (strpos($name, '.') > -1) return str_replace('.', '`.`', "`$name`");
+		return "`$name`";
+	}
+
 	function WhereClause($match)
 	{
 		if (isset($match))
@@ -356,7 +362,10 @@ class DataSet
 				foreach ($match as $col => $val)
 				{
 					if ($ix++ > 0) $ret .= ' AND';
-					$ret .= " `{$col}` = '{$val}'";
+					if (is_array($val) && $val[0] = 'destring')
+						$ret .= ' '.$this->QuoteTable($col)." = {$val[1]}";
+					else
+						$ret .= ' '.$this->QuoteTable($col)." = '{$val}'";
 				}
 				return $ret;
 			}
@@ -669,15 +678,38 @@ class DataSet
 	*/
 	function Remove($match)
 	{
-		$this->database->Query("DELETE FROM `{$this->table->name}`".$this->WhereClause($match));
+		$matches = array();
+		foreach ($match as $key => $val)
+		{
+			$matches[$this->table->name.'.'.$key] = $val;
+		}
+		$children = $this->GetMatches($matches);
+		$tnames = null;
+		if (!empty($children[0])) foreach ($children[0] as $ix => $table)
+		{
+			if ($ix > 0) $tnames .= ',';
+			$tnames .= " `$table`";
+		}
+		$query = "DELETE{$tnames} FROM{$tnames}";
+		$query .= $this->WhereClause($children[1]);
+		$this->database->Query($query);
+	}
+
+	function GetMatches($original)
+	{
+		$ret = $original;
+		$tables = array($this->table->name);
 		if (!empty($this->children))
 		{
 			foreach ($this->children as $child)
 			{
-				if (isset($match[$child['pkey']]))
-					$child['ds']->Remove(array($child['ckey'] => $match[$child['pkey']]));
+				$tm = $child['ds']->GetMatches($ret);
+				$tables = array_merge($tm[0], $tables);
+				$tm[1]["{$child['ds']->table->name}.{$child['ckey']}"] = DeString($this->QuoteTable($this->table->name.'.'.$child['pkey']));
+				if ($tm[1] != null) $ret = array_merge($ret, $tm[1]);
 			}
 		}
+		return array($tables, $ret);
 	}
 }
 
