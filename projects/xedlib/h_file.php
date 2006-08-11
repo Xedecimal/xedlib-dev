@@ -106,6 +106,7 @@ class FileManager
 				{
 					//Additional information.
 					$ret .= "<form action=\"$target\" method=\"post\"/>\n";
+					$ret .= "<input type=\"hidden\" name=\"editor\" value=\"{$this->name}\" />";
 					$ret .= "<input type=\"hidden\" name=\"ca\" value=\"update_info\"/>";
 					$ret .= "<input type=\"hidden\" name=\"cf\" value=\"$cf\"/>";
 					$ret .= "Keywords (separated by spaces):<br/><textarea name=\"ck\" rows=\"5\" cols=\"50\">";
@@ -216,9 +217,9 @@ EOF;
 						'editor' => $this->name,
 						'ca' => "delete",
 						'cf' => $fi->path,
-						'ci' => $file['name']))
+						'ci' => urlencode($file['name'])))
 					."\" onClick=\"return confirm('Are you sure you wish to delete this file?')\">X</a>]\n";
-				$ret .= "<a href=\"$target?cf={$file['path']}\">{$file['name']}</a><br/>\n";
+				$ret .= "<a href=\"$target?cf=".urlencode($file['path'])."\">{$file['name']}</a><br/>\n";
 			}
 			$ret .= "</p>";
 		}
@@ -411,8 +412,10 @@ class DirFilter
 	{
 		if (is_file($fi->path))
 		{
-			$finfo = $fi->path . '/.' . $info['basename'];
+			$info = pathinfo($fi->path);
+			$finfo = "{$info['dirname']}/.{$info['basename']}";
 			if (file_exists($finfo)) unlink($finfo);
+			unlink($fi->path);
 		}
 		else DelTree($fi->path);;
 	}
