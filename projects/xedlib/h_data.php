@@ -683,15 +683,26 @@ class DataSet
 		{
 			$matches[$this->table->name.'.'.$key] = $val;
 		}
-		$children = $this->GetMatches($matches);
 		$tnames = null;
-		if (!empty($children[0])) foreach ($children[0] as $ix => $table)
+		if (!empty($this->children))
 		{
-			if ($ix > 0) $tnames .= ',';
-			$tnames .= " `$table`";
+			$children = $this->GetMatches($matches);
+			if (!empty($children[0])) foreach ($children[0] as $ix => $table)
+			{
+				if ($ix > 0) $tnames .= ',';
+				$tnames .= " `$table`";
+			}
+			$query = "DELETE{$tnames} FROM{$tnames}";
 		}
-		$query = "DELETE{$tnames} FROM{$tnames}";
-		$query .= $this->WhereClause($children[1]);
+		else
+		{
+			$query = "DELETE FROM `{$this->table->name}`";
+		}
+		if (!empty($this->children))
+		{
+			$query .= $this->WhereClause($children[1]);
+		}
+		else $query .= $this->WhereClause($match);
 		$this->database->Query($query);
 	}
 
