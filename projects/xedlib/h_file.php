@@ -36,7 +36,7 @@ class FileManager
 
 	function Prepare($ca, $cf)
 	{
-		$newcf = isset($cf) ? $cf : $this->root;
+		$newcf = strlen($cf) > 0 ? $cf : $this->root;
 		if ($ca == "upload")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
@@ -61,7 +61,7 @@ class FileManager
 		else if ($ca == "createdir")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
-			mkdir(GetVar("cf") . GetVar("name"));
+			mkdir($newcf.GetVar("name"));
 		}
 		else if ($ca == "settype")
 		{
@@ -76,14 +76,14 @@ class FileManager
 	}
 
 	/**
-	 * Return the display.
-	 *
-	 * @param string $cf Current folder.
-	 * @return string Output.
-	 */
+	* Return the display.
+	*
+	* @param string $cf Current folder.
+	* @return string Output.
+	*/
 	function Get($target, $cf)
 	{
-		$newcf = isset($cf) ? $cf : $this->root;
+		$newcf = strlen($cf) > 0 ? $cf : $this->root;
 		$fi = new FileInfo($newcf);
 		$ret = '';
 
@@ -124,7 +124,7 @@ class FileManager
 		if ($this->lm != null && $this->lm->access == ACCESS_ADMIN)
 		{
 			$ret .= $this->GetSetType($fi);
-			$ret .= $this->GetCreateDirectory();
+			$ret .= $this->GetCreateDirectory($target, $newcf);
 			$ret .= $this->GetUpload();
 		}
 		return $ret;
@@ -154,16 +154,15 @@ EOF;
 EOF;
 	}
 
-	function GetCreateDirectory()
+	function GetCreateDirectory($target, $cf)
 	{
-		global $me, $cf;
 		return <<<EOF
-<form action="{$me}" method="post">
+<form action="{$target}" method="post">
 	<input type="hidden" name="editor" value="{$this->name}" />
-	<input type="hidden" name="ca" value="createdir"/>
-	<input type="hidden" name="cf" value="{$cf}"/>
-	<input type="text" name="name"/>
-	<input type="submit" value="Create Directory Here"/>
+	<input type="hidden" name="ca" value="createdir" />
+	<input type="hidden" name="cf" value="{$cf}" />
+	<input type="text" name="name" />
+	<input type="submit" value="Create Directory Here" />
 </form>
 EOF;
 	}
@@ -365,9 +364,9 @@ class FileInfo
 }
 
 /**
- * The generic file handler.
- *
- */
+* The generic file handler.
+*
+*/
 class DirFilter
 {
 	function GetName() { return "Normal"; }
