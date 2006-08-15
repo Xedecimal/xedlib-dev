@@ -36,13 +36,13 @@ class FileManager
 
 	function Prepare($ca, $cf)
 	{
-		$newcf = strlen($cf) > 0 ? $cf : $this->root;
+		$newcf = $this->root.$cf;
 		if ($ca == "upload")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
-			$fi = new FileInfo($cf);
+			$fi = new FileInfo($newcf);
 			$file = GetVar("cu");
-			$fi->filter->Upload($file);
+			$fi->filter->Upload($file, $newcf);
 		}
 		else if ($ca == "update_info")
 		{
@@ -66,10 +66,10 @@ class FileManager
 		else if ($ca == "settype")
 		{
 			$type = GetVar('type');
-			if ($type == 'normal') unlink("$cf/.filter");
+			if ($type == 'normal') unlink("{$newcf}.filter");
 			else
 			{
-				$fp = fopen("$cf/.filter", "w+");
+				$fp = fopen("{$newcf}.filter", "w+");
 				fwrite($fp, GetVar("type"));
 			}
 		}
@@ -83,7 +83,7 @@ class FileManager
 	*/
 	function Get($target, $cf)
 	{
-		$newcf = strlen($cf) > 0 ? $cf : $this->root;
+		$newcf = $this->root.$cf;
 		$fi = new FileInfo($newcf);
 		$ret = '';
 
@@ -92,7 +92,7 @@ class FileManager
 			$ret .= $this->GetHeader($target, $newcf);
 			if (is_dir($newcf))
 			{
-				$ret .= $this->GetDirectory($target, $fi);
+				$ret .= $this->GetDirectory($target, $cf, $fi);
 			}
 			else
 			{
@@ -123,19 +123,19 @@ class FileManager
 
 		if ($this->lm != null && $this->lm->access == ACCESS_ADMIN)
 		{
-			$ret .= $this->GetSetType($fi);
-			$ret .= $this->GetCreateDirectory($target, $newcf);
+			$ret .= $this->GetSetType($target, $cf, $fi);
+			$ret .= $this->GetCreateDirectory($target, $cf);
 			$ret .= $this->GetUpload();
 		}
 		return $ret;
 	}
 
-	function GetSetType($fi)
+	function GetSetType($target, $cf, $fi)
 	{
-		global $me, $cf;
 		if (!isset($fi)) return null;
 		$ret = <<<EOF
-<form action="{$me}" method="post">
+<form action="{$target}" method="post">
+	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="settype"/>
 	<input type="hidden" name="cf" value="{$cf}"/>
 	Set this directory type to:
@@ -152,6 +152,7 @@ EOF;
 	<input type="submit" value="Update"/>
 </form>
 EOF;
+		return $ret;
 	}
 
 	function GetCreateDirectory($target, $cf)
@@ -181,7 +182,7 @@ EOF;
 EOF;
 	}
 
-	function GetDirectory($target, $fi)
+	function GetDirectory($target, $cf, $fi)
 	{
 		$ret = '';
 		if (!empty($fi->dirs))
@@ -194,11 +195,15 @@ EOF;
 					.MakeURI($target, array(
 						'editor' => $this->name,
 						'ca' => "delete",
-						'cf' => $fi->path,
+						'cf' => $cf,
 						'ci' => $dir['name']))
 					."\" onClick=\"return confirm('Are you sure you wish to
 						delete this folder?')\">X</a>]\n";
-				$ret .= "<a href=\"$target?cf=".urlencode($dir['path'].'/')
+				$ret .= "<a href=\""
+					.MakeURI($target, array(
+						'editor' => $this->name,
+						'cf' => $cf.$dir['name'].'/'
+					))
 					."\">{$dir['name']}<br/></a>\n";
 			}
 			$ret .= "</p>";
@@ -215,8 +220,8 @@ EOF;
 					.MakeURI($target, array(
 						'editor' => $this->name,
 						'ca' => "delete",
-						'cf' => $fi->path,
-						'ci' => urlencode($file['name'])))
+						'cf' => $cf,
+						'ci' => $file['name']))
 					."\" onClick=\"return confirm('Are you sure you wish to delete this file?')\">X</a>]\n";
 				$ret .= "<a href=\"$target?cf=".urlencode($file['path'])."\">{$file['name']}</a><br/>\n";
 			}
@@ -277,6 +282,12 @@ class FileInfo
 	public $dirs;
 	public $files;
 	public $bitpos;
+	
+	/**
+	* Directory Filter.
+	*
+	* @var DirFilter
+	*/
 	public $filter;
 	public $filtername;
 	public $owned;
@@ -290,11 +301,9 @@ class FileInfo
 		$this->dirs = array();
 		$this->files = array();
 
-		$pinfo = pathinfo($source);
-		$this->GetFilter($pinfo['dirname']);
-
 		if (is_dir($source))
 		{
+			$this->GetFilter($source);
 			if (!file_exists($source)) return;
 			$dir = opendir($source);
 			while (($file = readdir($dir)))
@@ -311,6 +320,11 @@ class FileInfo
 			}
 			asort($this->files);
 			asort($this->dirs);
+		}
+		else
+		{
+			$pinfo = pathinfo($source);
+			$this->GetFilter($pinfo['dirname'].'/');
 		}
 	}
 
@@ -333,7 +347,6 @@ class FileInfo
 		if (file_exists("$path/.filter"))
 		{
 			$name = file_get_contents("$path/.filter");
-			require_once("filter_$name.php");
 			$objname = "Filter{$name}";
 			$filter = new $objname();
 		}
@@ -353,13 +366,6 @@ class FileInfo
 		$items = explode('/', $this->path);
 		if ($off < count($items)) return $items[$off];
 		return null;
-		/*$newpos = strpos($this->path, '/', $this->bitpos+1);
-		if ($newpos > 0)
-		{
-			$ret = substr($this->path, $this->bitpos, $newpos-$this->bitpos);
-			$this->bitpos = $newpos+1;
-			return $ret;
-		}*/
 	}
 }
 
@@ -396,17 +402,16 @@ class DirFilter
 		return $ret;
 	}
 
-	function Upload($file)
+	function Upload($file, $target)
 	{
-		global $cf;
-		move_uploaded_file($file['tmp_name'], "{$cf}{$file['name']}");
+		move_uploaded_file($file['tmp_name'], "{$target}{$file['name']}");
 	}
 
 	/**
-	 * Delete a file or folder.
-	 *
-	 * @param FileInfo $fi
-	 */
+	* Delete a file or folder.
+	*
+	* @param FileInfo $fi
+	*/
 	function Delete($fi)
 	{
 		if (is_file($fi->path))
@@ -416,7 +421,7 @@ class DirFilter
 			if (file_exists($finfo)) unlink($finfo);
 			unlink($fi->path);
 		}
-		else DelTree($fi->path);;
+		else DelTree($fi->path);
 	}
 }
 
@@ -435,19 +440,18 @@ class FilterGallery extends DirFilter
 	}
 
 	/**
-	 * @param $target string target to be deleted.
-	 */
+	* @param FileInfo $fi Target to be deleted.
+	*/
 	function Delete($fi)
 	{
 		parent::Delete($fi);
+		$pi = pathinfo($fi->path);
 		$thumb = $pi['dirname'].'/t_'.$pi['basename'];
 		if (file_exists($thumb)) unlink($thumb);
 	}
 
-	function Upload($file)
+	function Upload($file, $target)
 	{
-		global $cf;
-		$dirname = $cf;
 		$filename = substr(basename($file['name']), 0, strpos(basename($file['name']), '.'));
 
 		switch ($file['type'])
@@ -467,8 +471,8 @@ class FilterGallery extends DirFilter
 				die("Unknown image type: {$file['type']}<br>\n");
 			break;
 		}
-		$destimage = "{$dirname}/{$filename}.jpg";
-		$destthumb = "{$dirname}/t_{$filename}.jpg";
+		$destimage = "{$target}/{$filename}.jpg";
+		$destthumb = "{$target}/t_{$filename}.jpg";
 		imagejpeg($img, $destimage);
 		$img = $this->ResizeImg($img, 200, 200);
 		imagejpeg($img, $destthumb);
