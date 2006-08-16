@@ -615,7 +615,7 @@ class EditorData
 					if (is_array($field)) //Callback for field
 					{
 						$callback = $field[0];
-						$data[] = $callback($i);
+						$data[] = $callback($i, $field[1]);
 					}
 					//Regular field
 					else $data[] = stripslashes($i[$field]);
