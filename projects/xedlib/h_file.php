@@ -9,7 +9,9 @@ class FileManager
 	public $name;
 	public $filters;
 	public $root;
-	
+	public $icons;
+	public $cf;
+
 	/**
 	 * Associated login manager.
 	 *
@@ -36,6 +38,7 @@ class FileManager
 
 	function Prepare($ca, $cf)
 	{
+		$this->cf = $cf;
 		$newcf = $this->root.$cf;
 		if ($ca == "upload")
 		{
@@ -89,16 +92,13 @@ class FileManager
 
 		if (file_exists($newcf))
 		{
-			$ret .= $this->GetHeader($target, $newcf);
-			if (is_dir($newcf))
-			{
-				$ret .= $this->GetDirectory($target, $cf, $fi);
-			}
+			$ret .= $this->GetHeader($target, $cf);
+			if (is_dir($newcf)) $ret .= $this->GetDirectory($target, $cf, $fi);
 			else
 			{
 				$info = dirname($cf).'/.'.basename($cf);
-				$time = gmdate("M j Y H:i:s ", filemtime($cf));
-				$size = filesize($cf);
+				$time = gmdate("M j Y H:i:s ", filemtime($this->root.$cf));
+				$size = filesize($this->root.$cf);
 				$ret .= "Size: $size bytes<br/>\n";
 				$ret .= "Last Modified: $time<br/>\n";
 
@@ -110,10 +110,7 @@ class FileManager
 					$ret .= "<input type=\"hidden\" name=\"ca\" value=\"update_info\"/>";
 					$ret .= "<input type=\"hidden\" name=\"cf\" value=\"$cf\"/>";
 					$ret .= "Keywords (separated by spaces):<br/><textarea name=\"ck\" rows=\"5\" cols=\"50\">";
-					if (file_exists($info))
-					{
-						$ret .= file_get_contents($info);
-					}
+					if (file_exists($info)) $ret .= file_get_contents($info);
 					$ret .= "</textarea>\n";
 					$ret .= "<input type=\"submit\" value=\"Update\"/>\n";
 					$ret .= "</form>\n";
@@ -190,7 +187,9 @@ EOF;
 			$ret = "<p>Folders<br/>\n";
 			foreach($fi->dirs as $dir)
 			{
-				$ret .= "{$dir['icon']}\n";
+				$icon = $this->icons[$dir['mime']];
+				if (isset($icon))
+					$ret .= '<img src="'.$icon.'" alt="'.$dir['mime'].'" /> ';
 				$ret .= "[<a href=\""
 					.MakeURI($target, array(
 						'editor' => $this->name,
@@ -215,7 +214,13 @@ EOF;
 			foreach($fi->files as $file)
 			{
 				if (isset($file['thumb'])) $ret .= "{$file['thumb']}\n";
-				else $ret .= "{$file['icon']}\n";
+				else
+				{
+					if (isset($this->icons[$file['ext']]))
+						$icon = $this->icons[$file['ext']];
+					if (isset($icon))
+						$ret .= '<img src="'.$icon.'" alt="'.$file['ext'].'" /> ';
+				}
 				$ret .= "[<a href=\""
 					.MakeURI($target, array(
 						'editor' => $this->name,
@@ -223,7 +228,7 @@ EOF;
 						'cf' => $cf,
 						'ci' => $file['name']))
 					."\" onClick=\"return confirm('Are you sure you wish to delete this file?')\">X</a>]\n";
-				$ret .= "<a href=\"$target?cf=".urlencode($file['path'])."\">{$file['name']}</a><br/>\n";
+				$ret .= "<a href=\"$target?editor={$this->name}&amp;cf=".urlencode($cf.$file['name'])."\">{$file['name']}</a><br/>\n";
 			}
 			$ret .= "</p>";
 		}
@@ -232,19 +237,21 @@ EOF;
 
 	function GetHeader($target, $source)
 	{
-		global $me, $cf;
+		//global $me, $cf;
 		$ret = null;
-		if (is_dir($source))
+		if (is_dir($this->root.$source))
 		{
-			$ret .= "<form action=\"$me\" method=\"post\">\n";
+			$ret .= "<form action=\"$target\" method=\"post\">\n";
+			$ret .= "<input type=\"hidden\" name=\"editor\" value=\"$this->name\" />\n";
 			$ret .= "<input type=\"hidden\" name=\"ca\" value=\"search\"/>\n";
-			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"$cf\"/>\n";
-			$ret .= "Search in:\n";
+			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"$source\"/>\n";
+			$ret .= "Search in: /\n";
 		}
 		$ret .= $this->GetPath($target, $source);
-	
-		if (is_file($source)) $ret .= " [<a href=\"$cf\" target=\"_blank\">Download</a>]";
-		if (is_dir($source))
+
+		if (is_file($this->root.$source))
+			$ret .= " [<a href=\"{$this->root}{$source}\" target=\"_blank\">Download</a>]";
+		if (is_dir($this->root.$source))
 		{
 			$ret .= " for <input type=\"text\" name=\"cq\"/>\n";
 			$ret .= "<input type=\"submit\" value=\"Search\"/>\n";
@@ -260,18 +267,29 @@ EOF;
 		$ret = null;
 		if (strlen($path) > 0) while (($pos = strpos($path, '/', $pos+1)) > 0)
 		{
-			$ret .= "<a href=\""
-				.MakeURI($target,array('cf' => substr($path, 0, $pos+1)))
+			$ret .= "<a href=\"".
+				MakeURI($target, array(
+					'editor' => $this->name,
+					'cf' => substr($path, 0, $pos+1)
+				))
 				."\">".substr($path, $start, $pos-$start)."</a> /\n";
 			$start = $pos+1;
 		}
 		if ($pos < strlen($path))
 		{
-			$ret .= "<a href=\""
-				.MakeURI($target, array('cf' => substr($path, 0)))
+			$ret .= "<a href=\"".
+				MakeURI($target, array(
+					'editor' => $this->name,
+					'cf' => substr($path, 0)
+				))
 				."\">" . substr($path, $start) . "</a>";
 		}
-		return $ret;
+		return "<a href=\"".
+			MakeURI($target, array(
+				'editor' => $this->name,
+				'cf' => ''
+			))
+			."\"> Home</a> / ".$ret;
 	}
 }
 
@@ -282,7 +300,7 @@ class FileInfo
 	public $dirs;
 	public $files;
 	public $bitpos;
-	
+
 	/**
 	* Directory Filter.
 	*
@@ -340,6 +358,7 @@ class FileInfo
 			}
 		}
 		$this->filter = new DirFilter();
+		return null;
 	}
 
 	function AddDir($path)
@@ -381,16 +400,7 @@ class DirFilter
 		$ret = array();
 		$ret['name'] = "$file.$ext";
 		$ret['path'] = "$path$file.$ext";
-		switch ($ext)
-		{
-			case 'jpg':
-			case 'png':
-			case 'gif':
-				$ret['icon'] = '<img src="images/img.gif" alt="Image" />';
-				break;
-			default:
-				$ret['icon'] = '<img src="images/file.gif" alt="File" />';
-		}
+		$ret['ext'] = $ext;
 		return $ret;
 	}
 
@@ -399,6 +409,7 @@ class DirFilter
 		$ret['name'] = basename($path);
 		$ret['path'] = $path;
 		$ret['icon'] = '<img src="images/folder.gif" alt="Folder" />';
+		$ret['mime'] = 'folder';
 		return $ret;
 	}
 
