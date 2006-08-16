@@ -93,7 +93,8 @@ class FileManager
 		if (file_exists($newcf))
 		{
 			$ret .= $this->GetHeader($target, $cf);
-			if (is_dir($newcf)) $ret .= $this->GetDirectory($target, $cf, $fi);
+			if (is_dir($newcf))
+				$ret .= $this->GetDirectory($target, $cf, $fi);
 			else
 			{
 				$info = dirname($cf).'/.'.basename($cf);
@@ -237,7 +238,6 @@ EOF;
 
 	function GetHeader($target, $source)
 	{
-		//global $me, $cf;
 		$ret = null;
 		if (is_dir($this->root.$source))
 		{
@@ -408,8 +408,7 @@ class DirFilter
 	{
 		$ret['name'] = basename($path);
 		$ret['path'] = $path;
-		$ret['icon'] = '<img src="images/folder.gif" alt="Folder" />';
-		$ret['mime'] = 'folder';
+		$ret['ext'] = 'folder';
 		return $ret;
 	}
 
