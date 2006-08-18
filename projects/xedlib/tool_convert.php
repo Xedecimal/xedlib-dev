@@ -10,7 +10,7 @@
 	</style>
 </head>
 <body>
-<form action="php_convert.php" method="post">
+<form action="tool_convert.php" method="post">
 <input type="hidden" name="ca" value="convert" />
 <table class="outer_center">
 	<tr>
