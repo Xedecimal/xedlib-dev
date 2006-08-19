@@ -41,6 +41,7 @@ class Database
 	{
 		$this->link = mysql_connect($host, $user, $pass);
 		if (mysql_error()) die("MySQL Error on connect: " . mysql_error());
+		mysql_select_db($database, $this->link);
 		$this->name = $database;
 	}
 
@@ -55,7 +56,7 @@ class Database
 	function Query($query, $silent = false)
 	{
 		global $queries;
-		$res = mysql_db_query($this->name, $query);
+		$res = mysql_query($query, $this->link);
 		if (mysql_error())
 		{
 			Error("Query: $query<br>\nMySQL Error: ".mysql_error());
