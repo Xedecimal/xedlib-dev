@@ -33,6 +33,8 @@ class FileManager
 		$this->name = $name;
 		$this->filters = $filters;
 		$this->root = $root;
+		if (substr($this->root, strlen($this->root)-1) != '/') $this->root .= '/';
+		if (!file_exists($root)) Error('FileManager: Root directory does not exist.');
 		$this->lm = $lm;
 	}
 
