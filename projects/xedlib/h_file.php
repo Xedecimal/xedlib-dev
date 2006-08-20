@@ -11,6 +11,7 @@ class FileManager
 	public $root;
 	public $icons;
 	public $cf;
+	public $default_filter;
 
 	/**
 	 * Associated login manager.
@@ -28,10 +29,11 @@ class FileManager
 	 * @param array $filters Directory filters allowed.
 	 * @return FileManager
 	 */
-	function FileManager($name, $root, $lm = null, $filters = array())
+	function FileManager($name, $root, $lm = null, $filters = array(), $default_filter = 'Default')
 	{
 		$this->name = $name;
 		$this->filters = $filters;
+		$this->default_filter = $default_filter;
 		$this->root = $root;
 		if (substr($this->root, strlen($this->root)-1) != '/') $this->root .= '/';
 		if (!file_exists($root)) Error('FileManager: Root directory does not exist.');
@@ -45,7 +47,7 @@ class FileManager
 		if ($ca == "upload")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
-			$fi = new FileInfo($newcf);
+			$fi = new FileInfo($newcf, $this->default_filter);
 			$file = GetVar("cu");
 			$fi->filter->Upload($file, $newcf);
 		}
@@ -60,7 +62,7 @@ class FileManager
 		else if ($ca == "delete")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
-			$fi = new FileInfo($newcf.GetVar('ci'));
+			$fi = new FileInfo($newcf.GetVar('ci'), $this->default_filter);
 			$fi->filter->Delete($fi);
 		}
 		else if ($ca == "createdir")
@@ -89,7 +91,12 @@ class FileManager
 	function Get($target, $cf)
 	{
 		$newcf = $this->root.$cf;
-		$fi = new FileInfo($newcf);
+		$fi = new FileInfo($newcf, $this->default_filter);
+		if (!empty($this->filters))
+		{
+			$keys = array_keys($this->filters);
+			$fi->default_filter = $keys[0];
+		}
 		$ret = '';
 
 		if (file_exists($newcf))
@@ -133,6 +140,8 @@ class FileManager
 	function GetSetType($target, $cf, $fi)
 	{
 		if (!isset($fi)) return null;
+		if (empty($this->filters)) return null;
+		if (count($this->filters) < 2) return null;
 		$ret = <<<EOF
 <form action="{$target}" method="post">
 	<input type="hidden" name="editor" value="{$this->name}" />
@@ -312,7 +321,7 @@ class FileInfo
 	public $filtername;
 	public $owned;
 
-	function FileInfo($source)
+	function FileInfo($source, $default_filter)
 	{
 		global $user_root;
 		$this->owned = strlen(strstr($source, $user_root)) > 0;
@@ -323,8 +332,8 @@ class FileInfo
 
 		if (is_dir($source))
 		{
-			$this->GetFilter($source);
 			if (!file_exists($source)) return;
+			$this->GetFilter($source, $default_filter);
 			$dir = opendir($source);
 			while (($file = readdir($dir)))
 			{
@@ -344,15 +353,24 @@ class FileInfo
 		else
 		{
 			$pinfo = pathinfo($source);
-			$this->GetFilter($pinfo['dirname'].'/');
+			$this->GetFilter($pinfo['dirname'].'/', $default_filter);
 		}
 	}
 
-	function GetFilter($path)
+	function GetFilter($path, $default = 'Default')
 	{
 		if (file_exists("$path.filter"))
 		{
 			$name = file_get_contents("$path.filter");
+			if (class_exists("Filter$name"))
+			{
+				$objname = "Filter$name";
+				return $this->filter = new $objname();
+			}
+		}
+		if (isset($default))
+		{
+			$name = $default;
 			if (class_exists("Filter$name"))
 			{
 				$objname = "Filter$name";
@@ -394,7 +412,7 @@ class FileInfo
 * The generic file handler.
 *
 */
-class DirFilter
+class FilterDefault
 {
 	function GetName() { return "Normal"; }
 	function GetInfo($path, $file, $ext)
@@ -437,7 +455,7 @@ class DirFilter
 	}
 }
 
-class FilterGallery extends DirFilter
+class FilterGallery extends FilterDefault
 {
 	function GetName() { return "Gallery"; }
 
