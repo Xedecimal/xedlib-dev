@@ -92,11 +92,7 @@ class FileManager
 	{
 		$newcf = $this->root.$cf;
 		$fi = new FileInfo($newcf, $this->default_filter);
-		if (!empty($this->filters))
-		{
-			$keys = array_keys($this->filters);
-			$fi->default_filter = $keys[0];
-		}
+		if (!empty($this->filters)) $fi->default_filter = $this->filters[0];
 		$ret = '';
 
 		if (file_exists($newcf))
