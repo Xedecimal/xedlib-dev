@@ -2,17 +2,18 @@
 
 require_once("h_template.php");
 require_once("h_utility.php");
+
 /**
  * @package Display
  */
 
 /**
- * Quick macro to retreive a generated box.
- * @param $name string Name of the box (good for javascript calls to getElementById()).
- * @param $title string Title of the returned box.
- * @param $body string Raw text contents of the returned box.
- * @param $template string Template file to use for the returned box.
- */
+* Quick macro to retreive a generated box.
+* @param $name string Name of the box (good for javascript calls to getElementById()).
+* @param $title string Title of the returned box.
+* @param $body string Raw text contents of the returned box.
+* @param $template string Template file to use for the returned box.
+*/
 function GetBox($name, $title, $body, $template = null)
 {
 	$box = new Box();
@@ -446,8 +447,6 @@ class EditorData
 	public $ds;
 	public $filter;
 	public $sort;
-	public $fields;
-	public $display;
 	public $state;
 	public $sorting;
 	public $oncreate;
@@ -467,21 +466,17 @@ class EditorData
 	 * @param $filter array Array to constrain editing to a given expression.
 	 * @return EditorData
 	 */
-	function EditorData($name, $idcol = null, $ds = null, $display = null, $fields = null, $filter = null, $sort = null)
+	function EditorData($name, $idcol = null, $ds = null, $filter = null, $sort = null)
 	{
 		$this->name = $name;
 		$this->idcol = $idcol;
 		if ($ds != null)
 		{
 			$this->ds = $ds;
-			$this->display = $display;
-			$this->filter = $filter;
 			$this->sort = $sort;
 			$this->type = CONTROL_BOUND;
 		}
 		else $this->type = CONTROL_SIMPLE;
-
-		$this->fields = $fields;
 
 		$this->state = GetVar('ca') == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
 		$this->sorting = true;
@@ -498,7 +493,7 @@ class EditorData
 		if ($action == $this->name.'_create')
 		{
 			$insert = array();
-			foreach ($this->fields as $name => $data)
+			foreach ($this->ds->fields as $name => $data)
 			{
 				if (is_array($data))
 				{
@@ -536,7 +531,7 @@ class EditorData
 		{
 			global $ci;
 			$update = array();
-			foreach ($this->fields as $name => $data)
+			foreach ($this->ds->fields as $name => $data)
 			{
 				if (is_array($data))
 				{
@@ -600,17 +595,17 @@ class EditorData
 
 		//Table
 
-		if (!empty($items) && !empty($this->display))
+		if (!empty($items) && !empty($this->ds->display))
 		{
 			$cols = array();
-			foreach ($this->display as $name => $field) $cols[] = "<b>{$name}</b>";
+			foreach ($this->ds->display as $name => $field) $cols[] = "<b>{$name}</b>";
 
-			$table = new Table('tbl'.$this->name, $cols);
+			$table = new Table($this->name.'_table', $cols);
 			$last_id = -1;
 			foreach ($items as $ix => $i)
 			{
 				$data = array();
-				foreach ($this->display as $name => $field)
+				foreach ($this->ds->display as $name => $field)
 				{
 					if (is_array($field)) //Callback for field
 					{
@@ -641,22 +636,23 @@ class EditorData
 				else $data[] = null;
 
 				$data[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
-				$data[] = "<a href=\"$url_del\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
+				$data[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
 				$table->AddRow($data);
 				$last_id = $i[$this->idcol];
 			}
+			$ret .= "<a name=\"{$this->name}_table\">&nbsp;</a>";
 			$ret .= $table->Get('class="editor"');
 		}
 
 		//Form
 
-		if (!empty($this->fields))
+		if (!empty($this->ds->fields))
 		{
 			$frm = new Form('form'.$this->name, array('align="right"', 'width="100%"', null));
 			$frm->AddHidden('editor', $this->name);
 			$frm->AddHidden('ca', $this->state == STATE_EDIT ? $this->name.'_update' : $this->name.'_create');
 			if ($this->state == STATE_EDIT) $frm->AddHidden('ci', $ci);
-			foreach ($this->fields as $text => $data)
+			foreach ($this->ds->fields as $text => $data)
 			{
 				if (is_array($data))
 				{
@@ -847,14 +843,14 @@ class Calendar
 	*/
 	function AddItem($ID, $FromTimeStamp, $ToTimeStamp, $Title, $Link, $Desc)
 	{
-		$fromyear  = date("Y", $FromTimeStamp);
-		$frommonth = date("n", $FromTimeStamp);
-		$fromday   = date("j", $FromTimeStamp);
-		$toyear    = date("Y", $ToTimeStamp);
-		$tomonth   = date("n", $ToTimeStamp);
-		$today     = date("j", $ToTimeStamp);
-		$fromkey   = mktime(0, 0, 0, $frommonth, $fromday, $fromyear);
-		$tokey     = mktime(0, 0, 0, $tomonth, $today, $toyear);
+		$fromyear  = gmdate("Y", $FromTimeStamp);
+		$frommonth = gmdate("n", $FromTimeStamp);
+		$fromday   = gmdate("j", $FromTimeStamp);
+		$toyear    = gmdate("Y", $ToTimeStamp);
+		$tomonth   = gmdate("n", $ToTimeStamp);
+		$today     = gmdate("j", $ToTimeStamp);
+		$fromkey   = gmmktime(0, 0, 0, $frommonth, $fromday, $fromyear);
+		$tokey     = gmmktime(0, 0, 0, $tomonth, $today, $toyear);
 
 		$this->events[count($this->events)] = array($ID, $FromTimeStamp, $ToTimeStamp, $Title, $Link, $Desc);
 		$DaysSpanned = ($tokey - $fromkey) / 86400;
@@ -867,7 +863,7 @@ class Calendar
 			$this->dates[$key][] = count($this->events)-1;
 
 			//Store reference to day.
-			$keyday = date("j-m-Y", $key);
+			$keyday = gmdate("j-m-Y", $key);
 			if (!isset($this->datesbyday[$keyday])) $this->datesbyday[$keyday] = array();
 			$this->datesbyday[$keyday][] = count($this->events)-1;
 		}
@@ -885,21 +881,21 @@ class Calendar
 
 		if ($timestamp != null)
 		{
-			$thismonth = date("n", $timestamp);
-			$thisyear = date("Y", $timestamp);
+			$thismonth = gmdate("n", $timestamp);
+			$thisyear = gmdate("Y", $timestamp);
 		}
 		else
 		{
-			$thismonth = GetVar('calmonth', date("n"));
-			$thisyear = GetVar('calyear', date("Y"));
+			$thismonth = GetVar('calmonth', gmdate("n"));
+			$thisyear = GetVar('calyear', gmdate("Y"));
 		}
 
-		$ts = mktime(0, 0, 0, $thismonth, 1, $thisyear); //Get timestamp for first day of this month.
+		$ts = gmmktime(0, 0, 0, $thismonth, 1, $thisyear); //Get timestamp for first day of this month.
 
 		$month = new CalendarMonth($ts);
 
-		$off = date("w", $ts); //Gets the offset of the first  day of this month.
-		$days = date("t", $ts); //Get total amount of days in this month.
+		$off = gmdate("w", $ts); //Gets the offset of the first  day of this month.
+		$days = gmdate("t", $ts); //Get total amount of days in this month.
 $ret = <<<EOF
 <form action="$me" method="post">
 <div><input type="hidden" name="cs" value="$cs"></div>
@@ -982,7 +978,7 @@ EOF;
 				$curdate = $key;
 			}
 		}
-		$thists = GetVar("ts", mktime());
+		$thists = GetVar("ts", time());
 		//$ret = "<table class=\"CalendarYear\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n";
 		$ret = "";
 		$yearx = 0;
@@ -994,9 +990,9 @@ EOF;
 		if (!is_array($this->dates)) return null;
 		foreach ($this->dates as $key => $eventids)
 		{
-			$year  = date("Y", $key);
-			$month = date("n", $key);
-			$day   = date("j", $key);
+			$year  = gmdate("Y", $key);
+			$month = gmdate("n", $key);
+			$day   = gmdate("j", $key);
 
 			if ($year != $curyear || $month != $curmonth)
 			{
@@ -1038,7 +1034,7 @@ EOF;
 				$ret .= "<table border=\"0\" class=\"{$class}\" cellspacing=\"2\" cellpadding=\"3\" width=\"100%\">\n";
 				$ret .= "\t<tr>\n";
 				$ret .= "\t\t<td colspan=\"7\">\n";
-				$ret .= "\t\t\t<b>" . date("F", $key) . " $year</b>\n";
+				$ret .= "\t\t\t<b>" . gmdate("F", $key) . " $year</b>\n";
 				$ret .= "\t\t</td>\n";
 				$ret .= "\t</tr>\n";
 				$curmonth = $month;
@@ -1097,14 +1093,14 @@ class CalendarMonth
 
 	function CalendarMonth($timestamp)
 	{
-		$this->Year = date('Y', $timestamp);
-		$this->Month = date('n', $timestamp);
-		$this->Pad = date('w', $timestamp);
-		$daycount = date('t', $timestamp);
+		$this->Year = gmdate('Y', $timestamp);
+		$this->Month = gmdate('n', $timestamp);
+		$this->Pad = gmdate('w', $timestamp);
+		$daycount = gmdate('t', $timestamp);
 
 		for ($ix = 1; $ix < $daycount+1; $ix++)
 		{
-			$this->Days[] = new CalendarDay(mktime(0, 0, 0, $this->Month, $ix, $this->Year));
+			$this->Days[] = new CalendarDay(gmmktime(0, 0, 0, $this->Month, $ix, $this->Year));
 		}
 	}
 }
@@ -1121,11 +1117,11 @@ class CalendarDay
 	function CalendarDay($timestamp)
 	{
 		$this->TimeStamp = $timestamp;
-		if (date('w', $timestamp) == 0) $this->StartWeek = true;
-		if (date('w', $timestamp) == 6) $this->EndWeek = true;
-		$this->Day = date('j', $timestamp);
-		$this->WeekDay = date('w', $timestamp);
-		if (date('t', $timestamp) == date('j', $timestamp)) $this->LastDay = true;
+		if (gmdate('w', $timestamp) == 0) $this->StartWeek = true;
+		if (gmdate('w', $timestamp) == 6) $this->EndWeek = true;
+		$this->Day = gmdate('j', $timestamp);
+		$this->WeekDay = gmdate('w', $timestamp);
+		if (gmdate('t', $timestamp) == gmdate('j', $timestamp)) $this->LastDay = true;
 	}
 }
 
@@ -1135,9 +1131,9 @@ class CalendarDay
 class Page
 {
 	/**
-	 * Gets name of this page.
-	 * @returns The name of this page for the browser's titlebar.
-	 */
+	* Gets name of this page.
+	* @returns The name of this page for the browser's titlebar.
+	*/
 	function GetName() { return "Class " . get_class($this) . " does not overload GetName()."; }
 
 	function Prepare() { }

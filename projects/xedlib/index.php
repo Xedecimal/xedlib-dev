@@ -4,8 +4,30 @@ require_once("h_display.php");
 require_once("h_utility.php");
 require_once("h_template.php");
 
+HandleErrors();
+
+$editor = GetVar('editor');
+$ca = GetVar('ca');
+$ci = GetVar('ci');
+
 $db = new Database("xldemo", "localhost", "root", "ransal");
 $db->CheckInstall();
+
+$dsCats = new DataSet($db, 'category');
+$dsCats->AddChild($dsCats, 'id', 'parent', 'id', 'temp');
+$dsCats->display = array(
+	'Name' => 'name'
+);
+$dsCats->fields = array(
+	'Name' => array('name', 'text')
+);
+
+$id = $dsCats->Add(array('name' => 'hi'));
+$dsCats->Remove(array('id' => $id));
+
+$edCats = new EditorData('cats', 'id', $dsCats);
+
+if ($editor == 'cats') $edCats->Prepare($ca);
 
 ?>
 
@@ -19,8 +41,6 @@ $db->CheckInstall();
 
 echo "Gathering data<br>\n";
 $ds = new DataSet($db, "authentication");
-//$ds->CheckInstall();
-//$rows = $ds->Get();
 
 ?>
 
@@ -73,6 +93,12 @@ $form->AddInput("Area!:",     "area",   "body",      "And values! Just like any 
 $form->AddInput("",           "submit", "butSubmit", "Test it");
 
 echo $form->Get();
+?>
+
+<br/><br/><b>Editor Data</b>
+
+<?php
+echo $edCats->Get($me, $ci);
 ?>
 
 <br/><br/><b>Calendar</b>
