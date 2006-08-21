@@ -419,9 +419,9 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 		$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("H", $timestamp) . "\" alt=\"Hour\">\n";
 		$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("i", $timestamp) . "\" alt=\"Minute\">\n";
 	}
-	$strout .= GetMonthSelect("{$name}[]", date("n", $timestamp));
-	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("d", $timestamp) . "\" alt=\"Day\" />\n";
-	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . date("Y", $timestamp) . "\" alt=\"Year\" />\n";
+	$strout .= GetMonthSelect("{$name}[]", gmdate("n", $timestamp));
+	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . gmdate("d", $timestamp) . "\" alt=\"Day\" />\n";
+	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . gmdate("Y", $timestamp) . "\" alt=\"Year\" />\n";
 	return $strout;
 }
 
@@ -1126,8 +1126,8 @@ class CalendarDay
 }
 
 /**
-* A generic page, associated with h_main.php and passed on to index.php .
-*/
+ * A generic page, associated with h_main.php and passed on to index.php .
+ */
 class Page
 {
 	/**
