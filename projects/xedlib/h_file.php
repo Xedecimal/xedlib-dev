@@ -195,9 +195,9 @@ EOF;
 			$ret = "<p>Folders<br/>\n";
 			foreach($fi->dirs as $dir)
 			{
-				$icon = $this->icons[$dir['mime']];
+				$icon = $this->icons['folder'];
 				if (isset($icon))
-					$ret .= '<img src="'.$icon.'" alt="'.$dir['mime'].'" /> ';
+					$ret .= '<img src="'.$icon.'" alt="'.$dir['ext'].'" /> ';
 				$ret .= "[<a href=\""
 					.MakeURI($target, array(
 						'editor' => $this->name,
@@ -385,7 +385,7 @@ class FileInfo
 			$objname = "Filter{$name}";
 			$filter = new $objname();
 		}
-		else $filter = new DirFilter($path);
+		else $filter = new FilterDefault($path);
 		$info = $filter->GetDirInfo($path);
 		if ($info != null) $this->dirs[] = $info;
 	}
