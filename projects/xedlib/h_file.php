@@ -254,10 +254,11 @@ EOF;
 			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"$source\"/>\n";
 			$ret .= "Search in: /\n";
 		}
+		else $ret .= '<p>';
 		$ret .= $this->GetPath($target, $source);
 
 		if (is_file($this->root.$source))
-			$ret .= " [<a href=\"{$this->root}{$source}\" target=\"_blank\">Download</a>]";
+			$ret .= " [<a href=\"{$this->root}{$source}\" target=\"_blank\">Download</a>]</p>";
 		if (is_dir($this->root.$source))
 		{
 			$ret .= " for <input type=\"text\" name=\"cq\"/>\n";
