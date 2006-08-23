@@ -426,6 +426,13 @@ function DataToSel($result, $col_disp, $col_id)
 	return $ret;
 }
 
+function ArrayToSel($array)
+{
+	$ret = null;
+	foreach ($array as $ix => $item) $ret[] = new SelOption($ix, $item);
+	return $ret;
+}
+
 /**
  * Returns a DateTime picker
  * @param $name string Name of this field.
