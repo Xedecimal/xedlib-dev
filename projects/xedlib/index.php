@@ -88,8 +88,8 @@ echo $tblSort->Get();
 <?php
 $form = new Form("Test Form", 'action="xlDemo.php"', "Submit Button");
 $form->AddHidden("hiddenvar", "hiddenvalue");
-$form->AddInput("Text here:", "text",   "value",     "Value",                                         "size=50",            null);
-$form->AddInput("Area!:",     "area",   "body",      "And values! Just like any other input object!", 'rows="5" cols="38"', null);
+$form->AddInput("Text here",  "text",   "value",     "Value",                                         "size=50",            null);
+$form->AddInput("Area!",      "area",   "body",      "And values! Just like any other input object!", 'rows="5" cols="38"', null);
 $form->AddInput("",           "submit", "butSubmit", "Test it");
 
 echo $form->Get();
