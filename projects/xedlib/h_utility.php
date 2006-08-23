@@ -364,4 +364,11 @@ function GetDateOffset($ts)
 	return $ret.' ago';
 }
 
+function GetMask($array)
+{
+	$ret = 0;
+	foreach ($array as $ix) $ret |= $ix;
+	return $ret;
+}
+
 ?>

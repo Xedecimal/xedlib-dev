@@ -276,7 +276,27 @@ class Form extends Table
 					$ogstarted = false;
 					foreach ($value as $opt)
 					{
-						$selected = $opt[1] ? ' selected="true"' : "";
+						$selected = $opt[1] ? ' selected="selected"' : "";
+						if ($opt[0]->group)
+						{
+							if ($ogstarted) $strout .= "</optgroup>";
+							$strout .= "<optgroup label=\"{$opt[0]->text}\">";
+							$ogstarted = true;
+						}
+						else $strout .= "<option value=\"{$opt[0]->id}\"$selected>".htmlspecialchars($opt[0]->text)."</option>\n";
+					}
+					if ($ogstarted) $strout .= "</optgroup>";
+				}
+				$strout .= "</select>\n";
+				break;
+			case 'selects':
+				$strout = "<select id=\"$name\" name=\"{$name}[]\" multiple=\"multiple\"$attributes>\n";
+				if (is_array($value))
+				{
+					$ogstarted = false;
+					foreach ($value as $opt)
+					{
+						$selected = $opt[1] ? ' selected="selected"' : "";
 						if ($opt[0]->group)
 						{
 							if ($ogstarted) $strout .= "</optgroup>";
@@ -394,6 +414,16 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 	}
 	$strout .= "</select>\n";
 	return $strout;
+}
+
+function DataToSel($result, $col_disp, $col_id)
+{
+	$ret = null;
+	foreach ($result as $res)
+	{
+		$ret[] = new SelOption($res[$col_id], $res[$col_disp]);
+	}
+	return $ret;
 }
 
 /**
@@ -547,6 +577,12 @@ class EditorData
 					}
 					else if ($data[1] == 'checkbox')
 						$update[$data[0]] = ($value == 1) ? $value : 0;
+					else if ($data[1] == 'selects')
+					{
+						$newval = 0;
+						foreach ($value as $val) $newval |= $val;
+						$update[$data[0]] = $newval;
+					}
 					else $update[$data[0]] = GetVar($data[0]);
 				}
 			}
@@ -575,9 +611,19 @@ class EditorData
 	function GetSelArray($items, $sel)
 	{
 		$ret = array();
-		foreach ($items as $key => $i)
+		foreach ($items as $i)
 		{
-			$ret[$key] = array($i, $key == $sel);
+			$ret[$i->id] = array($i, $i->id == $sel);
+		}
+		return $ret;
+	}
+
+	function GetSelMask($items, $sel)
+	{
+		$ret = array();
+		foreach ($items as $i)
+		{
+			$ret[$i->id] = array($i, ($i->id & $sel) > 0);
 		}
 		return $ret;
 	}
@@ -665,6 +711,10 @@ class EditorData
 					else if ($data[1] == 'select')
 					{
 						$value = $this->GetSelArray($data[2], $sel[$data[0]]);
+					}
+					else if ($data[1] == 'selects')
+					{
+						$value = $this->GetSelMask($data[2], $sel[$data[0]]);
 					}
 					else if ($data[1] == 'password')
 					{
