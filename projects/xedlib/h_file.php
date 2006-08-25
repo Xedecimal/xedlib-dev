@@ -54,8 +54,8 @@ class FileManager
 		else if ($ca == "update_info")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
-			$info = pathinfo($cf);
-			$fp = fopen($info['dirname'] . '/.' . $info['basename'], "w+");
+			$info = new FileInfo($newcf, $this->default_filter);
+			$fp = fopen($info->dir.'/.'.$info->filename, "w+");
 			fwrite($fp, GetVar("ck"));
 			fclose($fp);
 		}
@@ -102,7 +102,7 @@ class FileManager
 				$ret .= $this->GetDirectory($target, $cf, $fi);
 			else
 			{
-				$info = dirname($cf).'/.'.basename($cf);
+				$info = dirname($this->root.$cf).'/.'.basename($this->root.$cf);
 				$time = gmdate("M j Y H:i:s ", filemtime($this->root.$cf));
 				$size = filesize($this->root.$cf);
 				$ret .= "Size: $size bytes<br/>\n";
@@ -308,6 +308,7 @@ class FileInfo
 	public $dirs;
 	public $files;
 	public $bitpos;
+	public $filename;
 
 	/**
 	* Directory Filter.
@@ -350,7 +351,9 @@ class FileInfo
 		else
 		{
 			$pinfo = pathinfo($source);
+			$this->dir = $pinfo['dirname'];
 			$this->GetFilter($pinfo['dirname'].'/', $default_filter);
+			$this->filename = $pinfo['basename'];
 		}
 	}
 
