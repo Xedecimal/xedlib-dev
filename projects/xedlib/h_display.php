@@ -8,12 +8,12 @@ require_once("h_utility.php");
  */
 
 /**
-* Quick macro to retreive a generated box.
-* @param $name string Name of the box (good for javascript calls to getElementById()).
-* @param $title string Title of the returned box.
-* @param $body string Raw text contents of the returned box.
-* @param $template string Template file to use for the returned box.
-*/
+ * Quick macro to retreive a generated box.
+ * @param $name string Name of the box (good for javascript calls to getElementById()).
+ * @param $title string Title of the returned box.
+ * @param $body string Raw text contents of the returned box.
+ * @param $template string Template file to use for the returned box.
+ */
 function GetBox($name, $title, $body, $template = null)
 {
 	$box = new Box();

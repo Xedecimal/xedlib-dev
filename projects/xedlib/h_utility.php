@@ -335,7 +335,7 @@ function TimestampToMsSql($ts)
  */
 function MyDateTimestamp($date)
 {
-	return mktime(
+	return gmmktime(
 		substr($date, 11, 2), //h
 		substr($date, 14, 2), //i
 		substr($date, 17, 2), //s

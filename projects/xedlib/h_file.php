@@ -55,8 +55,9 @@ class FileManager
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
 			$info = new FileInfo($newcf, $this->default_filter);
+			$info->info = GetVar("ck");
 			$fp = fopen($info->dir.'/.'.$info->filename, "w+");
-			fwrite($fp, GetVar("ck"));
+			fwrite($fp, serialize($info->info));
 			fclose($fp);
 		}
 		else if ($ca == "delete")
@@ -73,7 +74,7 @@ class FileManager
 		else if ($ca == "settype")
 		{
 			$type = GetVar('type');
-			if ($type == 'normal') unlink("{$newcf}.filter");
+			if ($type == 'Normal') unlink("{$newcf}.filter");
 			else
 			{
 				$fp = fopen("{$newcf}.filter", "w+");
@@ -115,9 +116,9 @@ class FileManager
 					$ret .= "<input type=\"hidden\" name=\"editor\" value=\"{$this->name}\" />";
 					$ret .= "<input type=\"hidden\" name=\"ca\" value=\"update_info\"/>";
 					$ret .= "<input type=\"hidden\" name=\"cf\" value=\"$cf\"/>";
-					$ret .= "Keywords (separated by spaces):<br/><textarea name=\"ck\" rows=\"5\" cols=\"50\">";
-					if (file_exists($info)) $ret .= file_get_contents($info);
-					$ret .= "</textarea>\n";
+					$ret .= 'Title: <input type="text" name="ck"';
+					if (file_exists($info)) $ret .= ' value="'.htmlspecialchars($fi->info).'"';
+					$ret .= " />\n";
 					$ret .= "<input type=\"submit\" value=\"Update\"/>\n";
 					$ret .= "</form>\n";
 				}
@@ -150,7 +151,7 @@ EOF;
 		{
 			if ($fi->filtername == $key) $sel = ' selected="selected"';
 			else $sel = null;
-			$ret .= "<option value=\"{$key}\"{$sel}>{$val}</option>\n";
+			$ret .= "<option value=\"{$val}\"{$sel}>{$val}</option>\n";
 		}
 		$ret .= <<<EOF
 	</select>
@@ -318,6 +319,7 @@ class FileInfo
 	public $filter;
 	public $filtername;
 	public $owned;
+	public $info;
 
 	function FileInfo($source, $default_filter)
 	{
@@ -350,10 +352,14 @@ class FileInfo
 		}
 		else
 		{
-			$pinfo = pathinfo($source);
-			$this->dir = $pinfo['dirname'];
-			$this->GetFilter($pinfo['dirname'].'/', $default_filter);
-			$this->filename = $pinfo['basename'];
+			$this->dir = dirname($source);
+			$this->GetFilter(dirname($source).'/', $default_filter);
+			$this->filename = basename($source);
+			$finfo = dirname($source).'/.'.basename($source);
+			if (file_exists($finfo))
+			{
+				$this->info = unserialize(file_get_contents($finfo));
+			}
 		}
 	}
 

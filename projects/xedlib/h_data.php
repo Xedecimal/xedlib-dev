@@ -1,8 +1,8 @@
 <?php
 
 /**
-* @package Data
-*/
+ * @package Data
+ */
 
 /** Column options include nullable. */
 define("DB_NULL",		2);
@@ -31,12 +31,12 @@ class Database
 	public $name;
 
 	/**
-	* Instantiates a new xlDatabase object with the database name, hostname, user name and password.
-	* @param $database string Name of the database this will attach to.
-	* @param $host string Hostname to connect to, either specified or gathered from the defined constant XL_DBHOST.
-	* @param $user string Username to connect with, either specified or gathered from the defined constant XL_DBUSER.
-	* @param $pass string Password to connect with, either specified or gathered from the defined constant XL_DBPASS.
-	*/
+	 * Instantiates a new xlDatabase object with the database name, hostname, user name and password.
+	 * @param $database string Name of the database this will attach to.
+	 * @param $host string Hostname to connect to, either specified or gathered from the defined constant XL_DBHOST.
+	 * @param $user string Username to connect with, either specified or gathered from the defined constant XL_DBUSER.
+	 * @param $pass string Password to connect with, either specified or gathered from the defined constant XL_DBPASS.
+	 */
 	function Database($database, $host = null, $user = null, $pass = null)
 	{
 		$this->link = mysql_connect($host, $user, $pass);
@@ -46,13 +46,13 @@ class Database
 	}
 
 	/**
-	* Perform a manual query on the associated database, try to use this sparingly because
-	* we will be moving to abstract database support so it'll be a load parsing the sql-like
-	* query and translating.
-	* @param $query string The actual SQL formatted query.
-	* @param $silent bool Should we return an error?
-	* @return object Query result object.
-	*/
+	 * Perform a manual query on the associated database, try to use this sparingly because
+	 * we will be moving to abstract database support so it'll be a load parsing the sql-like
+	 * query and translating.
+	 * @param $query string The actual SQL formatted query.
+	 * @param $silent bool Should we return an error?
+	 * @return object Query result object.
+	 */
 	function Query($query, $silent = false)
 	{
 		global $queries;
@@ -155,16 +155,16 @@ class Database
 }
 
 /**
-* A generic database table definition, currently only MySQL supported.
-*/
+ * A generic database table definition, currently only MySQL supported.
+ */
 class DataTable
 {
 	/** Name of this table */
 	public $name;
 	/**
-	* An array of columns and associated data in the underlying database.
-	* @var array
-	*/
+	 * An array of columns and associated data in the underlying database.
+	 * @var array
+	 */
 	public $cols;
 
 	/**
@@ -295,17 +295,17 @@ function DBNow() { return array("now"); }
 class DataSet
 {
 	/**
-	* Associated database.
-	*
-	* @var Database
-	*/
+	 * Associated database.
+	 *
+	 * @var Database
+	 */
 	public $database;
 
 	/**
-	* Associated table.
-	*
-	* @var DataTable
-	*/
+	 * Associated table.
+	 *
+	 * @var DataTable
+	 */
 	public $table;
 
 	public $children;
@@ -313,10 +313,10 @@ class DataSet
 	public $fields;
 
 	/**
-	* Initialize a new CDataSet binded to $table in $db.
-	* @param $db Database A Database object to bind to.
-	* @param $table string Specifies the name of the table in $db to bind to.
-	*/
+	 * Initialize a new CDataSet binded to $table in $db.
+	 * @param $db Database A Database object to bind to.
+	 * @param $table string Specifies the name of the table in $db to bind to.
+	 */
 	function DataSet($db, $table)
 	{
 		$this->database = $db;
@@ -324,9 +324,9 @@ class DataSet
 	}
 
 	/**
-	* @param $cpkey string Name of the child's primary key for item swap.
-	* @param $temp string Name of temporary table containing space for item swap.
-	*/
+	 * @param $cpkey string Name of the child's primary key for item swap.
+	 * @param $temp string Name of temporary table containing space for item swap.
+	 */
 	function AddChild($ds, $pkey, $ckey, $cpkey = null, $temp = null)
 	{
 		$this->children[] = array("ds" => $ds, "pkey" => $pkey, "ckey" => $ckey, "cpkey" => $cpkey, "temp" => $temp);
@@ -445,12 +445,12 @@ class DataSet
 	}
 
 	/**
-	* Inserts a row into the associated table with the passed array.
-	* @param $columns array An array of columns. If you wish to use functions
-	* @param $update_existing bool Whether to update the existing values
-	* by unique keys, or just to add ignoring keys otherwise.
-	* @return int ID of added row.
-	*/
+	 * Inserts a row into the associated table with the passed array.
+	 * @param $columns array An array of columns. If you wish to use functions
+	 * @param $update_existing bool Whether to update the existing values
+	 * by unique keys, or just to add ignoring keys otherwise.
+	 * @return int ID of added row.
+	 */
 	function Add($columns, $update_existing = false)
 	{
 		$query = "INSERT INTO `{$this->table->name}` (";
@@ -482,14 +482,14 @@ class DataSet
 	}
 
 	/**
-	* Get a set of data given the specific arguments.
-	* @param $match array Column to Value to match for in a WHERE statement.
-	* @param $sort array Column to Direction array.
-	* @param $filter array Column to Value array.
-	* @param $joins array Table to ON Expression values.
-	* @param $args int passed to mysql_fetch_array.
-	* @return array Array of items selected.
-	*/
+	 * Get a set of data given the specific arguments.
+	 * @param $match array Column to Value to match for in a WHERE statement.
+	 * @param $sort array Column to Direction array.
+	 * @param $filter array Column to Value array.
+	 * @param $joins array Table to ON Expression values.
+	 * @param $args int passed to mysql_fetch_array.
+	 * @return array Array of items selected.
+	 */
 	function Get(
 		$match = null,
 		$sort = null,
@@ -524,11 +524,11 @@ class DataSet
 	}
 
 	/**
-	* Return a single item from this dataset
-	* @param $match array Passed on to WhereClause.
-	* @param $args Arguments passed to fetch_array.
-	* @return A single serialized row matching $match or null if not found.
-	*/
+	 * Return a single item from this dataset
+	 * @param $match array Passed on to WhereClause.
+	 * @param $args Arguments passed to fetch_array.
+	 * @return A single serialized row matching $match or null if not found.
+	 */
 	function GetOne($match, $args = GET_BOTH)
 	{
 		$data = $this->Get($match, null, null, null, $args);
@@ -545,24 +545,24 @@ class DataSet
 	}
 
 	/**
-	* Returns every row unless limit is specified without a specific sort column or order
-	* @param $limit int Maximum amount of rows to return.
-	* @param $args int Arguments to be passed to mysql_fetch_array (defaults to MYSQL_NUM)
-	* @return array An array of results from the query specified.
-	*/
+	 * Returns every row unless limit is specified without a specific sort column or order
+	 * @param $limit int Maximum amount of rows to return.
+	 * @param $args int Arguments to be passed to mysql_fetch_array (defaults to MYSQL_NUM)
+	 * @return array An array of results from the query specified.
+	 */
 	function GetAll($limit = NULL, $args = GET_BOTH)
 	{
 		return $this->Get(null, null, $limit, null, $args);
 	}
 
 	/**
-	* Returns every database  row from the database sorting by the given column
-	* @param $column Name of the table column to sort by.
-	* @param $order A string either "ASC" or "DESC" I believe.
-	* @param $start Result index to being at.
-	* @param $amount Result count to return.
-	* @return array An array of results from the query specified or null if none.
-	*/
+	 * Returns every database  row from the database sorting by the given column
+	 * @param $column Name of the table column to sort by.
+	 * @param $order A string either "ASC" or "DESC" I believe.
+	 * @param $start Result index to being at.
+	 * @param $amount Result count to return.
+	 * @return array An array of results from the query specified or null if none.
+	 */
 	function GetAllSort($column, $order = "ASC", $start = NULL, $amount = NULL)
 	{
 		$query = "SELECT * FROM {$this->table->name} ORDER BY $column $order";
@@ -595,12 +595,12 @@ class DataSet
 	}
 
 	/**
-	* Query the database manually, not suggested to be used as it will be
-	* very cpu intensive when it evaluates the query itself.
-	* @param $query string The query to perform, including the table name and everything.
-	* @param $silent bool Should we output an error?
-	* @return array The serialized database rows.
-	*/
+	 * Query the database manually, not suggested to be used as it will be
+	 * very cpu intensive when it evaluates the query itself.
+	 * @param $query string The query to perform, including the table name and everything.
+	 * @param $silent bool Should we output an error?
+	 * @return array The serialized database rows.
+	 */
 	function GetCustom($query, $silent = false, $args = GET_BOTH)
 	{
 		$rows = $this->database->Query($query, $silent);
@@ -619,11 +619,11 @@ class DataSet
 	}
 
 	/**
-	* Return the total amount of rows in this associated table.
-	* @param $match array Passed off to WhereClause.
-	* @param $silent boolean Good for checking an installation.
-	* @return int The actual numeric count.
-	*/
+	 * Return the total amount of rows in this associated table.
+	 * @param $match array Passed off to WhereClause.
+	 * @param $silent boolean Good for checking an installation.
+	 * @return int The actual numeric count.
+	 */
 	function GetCount($match = null, $silent = false)
 	{
 		$query = "SELECT COUNT(*) FROM `{$this->table->name}`";
@@ -633,12 +633,12 @@ class DataSet
 	}
 
 	/**
-	* Updates the column in the associated table with the given id.
-	* @param $match array Passed on to WhereClause.
-	* @param $values array Data to be updated.
-	* values to update using array("column1" => "value", "column2"
-	* => "value2").
-	*/
+	 * Updates the column in the associated table with the given id.
+	 * @param $match array Passed on to WhereClause.
+	 * @param $values array Data to be updated.
+	 * values to update using array("column1" => "value", "column2"
+	 * => "value2").
+	 */
 	function Update($match, $values)
 	{
 		$query = "UPDATE `{$this->table->name}` SET ".$this->GetSetString($values);
@@ -717,7 +717,6 @@ class DataSet
 		{
 			foreach ($this->children as $child)
 			{
-				if ($child['ds'] instanceof $this) continue;
 				$tm = $child['ds']->GetMatches($ret);
 				$tables = array_merge($tm[0], $tables);
 				$tm[1]["{$child['ds']->table->name}.{$child['ckey']}"] = DeString($this->QuoteTable($this->table->name.'.'.$child['pkey']));
