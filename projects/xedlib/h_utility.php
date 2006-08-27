@@ -371,4 +371,12 @@ function GetMask($array)
 	return $ret;
 }
 
+function filext($name) { return substr(strrchr($name, '.'), 1); }
+function filenoext($name)
+{
+	$v = strrchr($name, '.');
+	if ($v) return substr($name, 0, -strlen($v));
+	return $name;
+}
+
 ?>

@@ -1191,7 +1191,10 @@ class Page
 	 * Gets name of this page.
 	 * @returns The name of this page for the browser's titlebar.
 	 */
-	function GetName() { return "Class " . get_class($this) . " does not overload GetName()."; }
+	function GetName()
+	{
+		return "Class " . get_class($this) . " does not overload GetName().";
+	}
 
 	function Prepare() { }
 
