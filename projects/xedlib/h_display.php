@@ -401,7 +401,9 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 		$selected = null;
 		if (isset($selvalue))
 		{
-			if (isset($selvalue[$selid]) && $selvalue[$selid] == $option->id)
+			if (isset($selvalue[$selid]) &&
+			strlen($selvalue[$selid]) > 0 &&
+			$selvalue[$selid] == $option->id)
 			{
 				$selected = ' selected="true"';
 				$selid++;
@@ -460,6 +462,14 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . gmdate("d", $timestamp) . "\" alt=\"Day\" />\n";
 	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . gmdate("Y", $timestamp) . "\" alt=\"Year\" />\n";
 	return $strout;
+}
+
+function GetInputYesNo($name, $value)
+{
+	return '<input type="radio" name="'.$name.'" value="0"'.
+	($value ? null : ' checked="checked"').' /> No ' .
+	'<input type="radio" name="'.$name.'" value="1"'.
+	($value ? ' checked="checked"' : null).' /> Yes ';
 }
 
 define('STATE_CREATE', 0);
