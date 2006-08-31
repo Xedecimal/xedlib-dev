@@ -738,6 +738,8 @@ class EditorData
 						$value = '';
 					}
 					else $value = $sel[$data[0]];
+
+					if (!is_array($value)) $value = stripslashes($value);
 					$frm->AddInput(
 						$text,
 						$data[1],
