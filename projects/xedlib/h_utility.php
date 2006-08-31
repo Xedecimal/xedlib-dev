@@ -1,6 +1,7 @@
 <?php
 
 $me = GetVar("SCRIPT_NAME");
+$xlpath = GetXedlibPath();
 
 function HandleErrors()
 {
@@ -383,6 +384,11 @@ function filenoext($name)
 	$v = strrchr($name, '.');
 	if ($v) return substr($name, 0, -strlen($v));
 	return $name;
+}
+
+function GetXedlibPath()
+{
+	return 'xedlib';
 }
 
 ?>

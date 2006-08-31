@@ -647,7 +647,7 @@ class EditorData
 
 	function Get($target, $ci = null)
 	{
-		global $errors, $PERSISTS;
+		global $errors, $PERSISTS, $xlpath;
 		$ret = '';
 		if ($this->type == CONTROL_BOUND)
 		{
@@ -687,14 +687,14 @@ class EditorData
 				if ($last_id > -1 && $this->sorting)
 				{
 					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->idcol], 'ct' => $last_id), $url_defaults));
-					$data[] = "<a href=\"{$url_up}\">&uArr;</a>";
+					$data[] = "<a href=\"{$url_up}\"><img src=\"{$xlpath}/up.gif\" border=\"0\"/></a>";
 				}
 				else $data[] = null;
 
 				if ($ix < count($items)-1 && $this->sorting)
 				{
 					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->idcol], 'ct' => $items[$ix+1][$this->idcol]), $url_defaults));
-					$data[] = "<a href=\"$url_down\">&dArr;</a>";
+					$data[] = "<a href=\"$url_down\"><img src=\"{$xlpath}/down.gif\" border=\"0\" /></a>";
 				}
 				else $data[] = null;
 
