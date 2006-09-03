@@ -4,24 +4,11 @@
  * @package Data
  */
 
-/** Column options include nullable. */
-define("DB_NULL",		2);
-/** Column options include auto increment. */
-define("DB_AINC",		4);
-/** Column options include a primary key. */
-define("DB_PKEY",		8);
-/** Column optons include foreign key. */
-define("DB_FKEY",		16);
-/** Column options include unsigned. */
-define("DB_UNSIGNED",	32);
 define("GET_ASSOC", MYSQL_ASSOC);
 define("GET_BOTH", MYSQL_BOTH);
 
-$queries = array();
-
 /**
  * A generic database interface, currently only supports MySQL apparently.
- * @todo Add other database formats.
  */
 class Database
 {
@@ -40,7 +27,7 @@ class Database
 	function Database($database, $host = null, $user = null, $pass = null)
 	{
 		$this->link = mysql_connect($host, $user, $pass);
-		if (mysql_error()) die("MySQL Error on connect: " . mysql_error());
+		if (mysql_error()) die("MySQL Error on connect: ".mysql_error());
 		mysql_select_db($database, $this->link);
 		$this->name = $database;
 	}
@@ -55,14 +42,12 @@ class Database
 	 */
 	function Query($query, $silent = false)
 	{
-		global $queries;
 		$res = mysql_query($query, $this->link);
 		if (mysql_error())
 		{
 			Error("Query: $query<br>\nMySQL Error: ".mysql_error());
 			return null;
 		}
-		$queries[] = $query;
 		return $res;
 	}
 
@@ -76,57 +61,8 @@ class Database
 	}
 
 	/**
-	* Creates a generic table.
-	* @param $table DataTable The table to be created.
-	*/
-	function CreateTable($table)
-	{
-		$query = "CREATE TABLE {$table->name} (\n";
-
-		foreach ($table->cols as $ix => $col)
-		{
-			$name = $col[0];
-			$type = $col[1];
-			$size = $col[2];
-			$opts = $col[3];
-			$query .= "  $name";
-
-			//Type/Size
-			if ($type == "int")
-			{
-				$query .= " int";
-				if ($size != NULL) $query .= "($size)";
-			}
-			else if ($type == "text")
-			{
-				if ($size < 256) $query .= " varchar($size)";
-				else if ($size < 65536) { $query .= " text"; }
-				else if ($size < 16777216) { $query .= " mediumtext"; }
-				else if ($size < 4294967296) { $query .= " longtext"; }
-				else die("Cannot create type based on field input.");
-			}
-			else if ($type == "float")
-			{
-				$sizes = explode(",", $size);
-				$query .= " float({$sizes[0]}, {$sizes[1]})";
-			}
-
-			//Options
-			if ($opts & DB_NNULL) $query .= " NOT NULL";
-			if ($opts & DB_AINC) $query .= " AUTO_INCREMENT";
-			if ($opts & DB_PKEY) $query .= " PRIMARY KEY";
-			if ($opts & DB_FKEY) $query .= " FOREIGN KEY";
-			if ($ix < count($table->cols)-1) $query .= ",";
-			$query .= "\n";
-		}
-		$query .= ");";
-		$this->Query($query);
-	}
-
-	/**
 	* Drop a child table.
 	* @param $name The name of the table to make a boo boo to.
-	* \todo Move this to xlDataTable->Drop()
 	*/
 	function DropTable($name)
 	{
@@ -151,129 +87,6 @@ class Database
 			echo "Database: Could not locate database, installing...<br/>\n";
 			mysql_query("CREATE DATABASE {$this->name}");
 		}
-	}
-}
-
-/**
- * A generic database table definition, currently only MySQL supported.
- */
-class DataTable
-{
-	/** Name of this table */
-	public $name;
-	/**
-	 * An array of columns and associated data in the underlying database.
-	 * @var array
-	 */
-	public $cols;
-
-	/**
-	* Instantiate this class associated with a given table in a database.
-	* @param $name Name of the table to associate with.
-	*/
-	function DataTable($name)
-	{
-		$this->name = $name;
-	}
-
-	/**
-	* Populates the $cols member with information on all the columns in this table.
-	* @param $db The xlDatabase object to use for the connection.
-	*/
-	function GetCols($db)
-	{
-		$this->cols = array();
-		$res = $db->Query("DESCRIBE {$this->name}");
-		while (($row = mysql_fetch_array($res)))
-		{
-			$type = strtok($row[1], "()");
-			$size = strtok("()");
-
-			$options = 0;
-			if (strstr($row[5], "auto_increment")) $options |= XL_DBAINC;
-			if ($row[3] == "PRI") $options |= XL_DBPKEY;
-			$this->cols[] = array($row[0], $type, $size, $options);
-		}
-	}
-
-	/**
-	* Depricated.
-	* @param $db Depricated.
-	* @param $where Depricated.
-	* @return Depricated.
-	*/
-	function GetData($db, $where)
-	{
-		$query = "SELECT * FROM {$this->name}";
-		if ($where) $query .= " WHERE $where;";
-		$cols = $db->Query($query);
-		$ds = new xlDataSet();
-		while (($row = mysql_fetch_array($cols, MYSQL_NUM)))
-		{
-			$ds->AddRow($row);
-		}
-		return $ds;
-	}
-
-	/**
-	* Depricated.
-	* @param $db Depricated.
-	* @param $items Depricated.
-	* @return Depricated.
-	*/
-	function InsertData($db, $items)
-	{
-		$query = "INSERT INTO {$this->name} VALUES(";
-		$x = 0;
-		foreach ($items as $row)
-		{
-			if ($row == NULL) { $query .= "NULL"; }
-			else if (is_string($row)) { $query .= "\"$row\""; }
-			else { $query .= "$row"; }
-			if ($x < count($items) - 1) { $query .= ", "; }
-			else { $query .= ");"; }
-			$x++;
-		}
-		$db->Query($query);
-	}
-
-	/**
-	* Depricated.
-	* @param $db Depricated.
-	* @param $row Depricated.
-	* @return Depricated.
-	*/
-	function UpdateData($db, $row)
-	{
-		$query = "UPDATE {$this->name} SET ";
-		for ($x = 0; $x < count($this->cols); $x++)
-		{
-			switch ($this->cols[$x][1])
-			{
-				case "int":
-					$query .= "{$this->cols[$x][0]} = {$row[$x]}";
-				break;
-				default:
-					$query .= "{$this->cols[$x][0]} = \"{$row[$x]}\"";
-				break;
-			}
-			if ($x < count($row) - 1) $query .= ", ";
-		}
-		$query .= " WHERE {$this->cols[0][0]} = {$row[0]};";
-		$db->Query($query);
-	}
-
-	/**
-	* Depricated.
-	* @param $name Depricated.
-	* @param $type Depricated.
-	* @param $size Depricated.
-	* @param $options Depricated.
-	* @return Depricated.
-	*/
-	function AddField($name, $type, $size = NULL, $options = 0)
-	{
-		$this->cols[] = array($name, $type, $size, $options);
 	}
 }
 

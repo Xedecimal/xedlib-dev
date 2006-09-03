@@ -166,10 +166,10 @@ class Template
 	}
 
 	/**
-	* Parse Character Data for an xml parser.
-	* @param $parser Xml parser for current document.
-	* @param $text Actual Character Data.
-	*/
+	 * Parse Character Data for an xml parser.
+	 * @param $parser Xml parser for current document.
+	 * @param $text Actual Character Data.
+	 */
 	function CData($parser, $text)
 	{
 		$obj = &$this->GetCurrentObject();
