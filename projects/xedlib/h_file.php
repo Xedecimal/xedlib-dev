@@ -354,6 +354,17 @@ class FileInfo
 				return $this->Filter = new $objname();
 			}
 		}
+		else
+		{
+			varinfo($this->path);
+			if (is_file($this->path))
+			{
+				$dirname = strrchr($this->dir, '/');
+				varinfo($dirname);
+				//echo 'Path to filter: '.pathinfo($this->path).'/../.'.
+			}
+		}
+
 		if (isset($default))
 		{
 			$name = $default;
