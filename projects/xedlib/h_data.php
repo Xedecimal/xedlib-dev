@@ -97,6 +97,16 @@ class Database
 function DeString($data) { return array("destring", $data); }
 function DBNow() { return array("now"); }
 
+class DataTable
+{
+	public $name;
+
+	function DataTable($name)
+	{
+		$this->name = $name;
+	}
+}
+
 /**
  * A general dataset, good for binding to a database's table.
  * Used to generically retrieve, store, update and delete

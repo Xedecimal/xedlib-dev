@@ -2,8 +2,6 @@
 
 require_once('h_display.php');
 
-$cf = GetVar('cf');
-
 class FileManager
 {
 	public $name;
@@ -13,7 +11,6 @@ class FileManager
 	public $cf;
 	public $DefaultFilter;
 	public $sortable;
-	public $FullPath;
 	public $DefaultInfo;
 
 	/**
@@ -34,35 +31,35 @@ class FileManager
 	 */
 	function FileManager($name, $root, $lm = null, $filters = array(), $DefaultFilter = 'Default')
 	{
-		global $cf;
 		$this->name = $name;
 		$this->filters = $filters;
 		$this->DefaultFilter = $DefaultFilter;
 		$this->root = $root;
-		$this->FullPath = $root.$cf;
-
-		$this->FI = new FileInfo($root.$cf);
 
 		//Append trailing slash.
-		if (substr($this->root, strlen($this->root)-1) != '/') $this->root .= '/';
 		if (!file_exists($root)) Error('FileManager: Root directory does not exist.');
+		if (substr($this->root, -1) != '/') $this->root .= '/';
+		$this->cf = GetVar('cf');
+		if (is_dir($this->root.$this->cf)
+		&& strlen($this->cf) > 0
+		&& substr($this->cf, -1) != '/')
+			$this->cf .= '/';
 		$this->lm = $lm;
 	}
 
-	function Prepare($ca, $cf)
+	function Prepare($action)
 	{
 		//Security
 		if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
-		$fullcf = $this->root.$cf;
 
 		//Actions
-		if ($ca == "upload")
+		if ($action == "upload")
 		{
 			$fi = new FileInfo($newcf, $this->DefaultFilter);
 			$file = GetVar("cu");
 			$fi->filter->Upload($file, $newcf);
 		}
-		else if ($ca == "update_info")
+		else if ($action == "update_info")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
 			$info = new FileInfo($newcf, $this->DefaultFilter);
@@ -71,13 +68,13 @@ class FileManager
 			fwrite($fp, serialize($info->info));
 			fclose($fp);
 		}
-		else if ($ca == "delete")
+		else if ($action == "delete")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
 			$fi = new FileInfo($newcf.GetVar('ci'), $this->DefaultFilter);
 			$fi->filter->Delete($fi);
 		}
-		else if ($ca == "createdir")
+		else if ($action == "createdir")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
 			mkdir($newcf.GetVar("name"));
@@ -90,22 +87,22 @@ class FileManager
 	* @param string $cf Current folder.
 	* @return string Output.
 	*/
-	function Get($target, $cf)
+	function Get($target)
 	{
-		if (!file_exists($this->root.$cf))
-			return "FileManager::Get(): File doesn't exist ({$cf}).<br/>\n";
+		if (!file_exists($this->root.$this->cf))
+			return "FileManager::Get(): File doesn't exist ({$this->root}{$this->cf}).<br/>\n";
 
-		$fi = new FileInfo($this->FullPath, $this->DefaultFilter);
+		$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 		if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
 		$ret = '';
 
-		$ret .= $this->GetHeader($target, $cf);
-		if (is_dir($this->FullPath)) $ret .= $this->GetDirectory($target, $cf, $fi);
+		$ret .= $this->GetHeader($target, $this->root.$this->cf);
+		if (is_dir($this->root.$this->cf)) $ret .= $this->GetDirectory($target, $this->cf);
 		else
 		{
-			$info = dirname($this->root.$cf).'/.'.basename($this->root.$cf);
-			$time = gmdate("M j Y H:i:s ", filemtime($this->root.$cf));
-			$size = filesize($this->root.$cf);
+			$info = dirname($this->root.$this->cf).'/.'.basename($this->root.$this->cf);
+			$time = gmdate("M j Y H:i:s ", filemtime($this->root.$this->cf));
+			$size = filesize($this->root.$this->cf);
 			$ret .= "Size: $size bytes<br/>\n";
 			$ret .= "Last Modified: $time<br/>\n";
 
@@ -115,7 +112,7 @@ class FileManager
 				$ret .= "<form action=\"$target\" method=\"post\"/>\n";
 				$ret .= "<input type=\"hidden\" name=\"editor\" value=\"{$this->name}\" />";
 				$ret .= "<input type=\"hidden\" name=\"ca\" value=\"update_info\"/>";
-				$ret .= "<input type=\"hidden\" name=\"cf\" value=\"$cf\"/>";
+				$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$this->cf}\"/>";
 				$ret .= 'Title: <input type="text" name="ck"';
 				if (file_exists($info)) $ret .= ' value="'.htmlspecialchars($fi->info).'"';
 				$ret .= " />\n";
@@ -126,14 +123,14 @@ class FileManager
 
 		if ($this->lm != null && $this->lm->access == ACCESS_ADMIN)
 		{
-			$ret .= $this->GetSetType($target, $cf, $fi);
-			$ret .= $this->GetCreateDirectory($target, $cf);
+			$ret .= $this->GetSetType($target, $this->cf);
+			$ret .= $this->GetCreateDirectory($target, $this->cf);
 			$ret .= $this->GetUpload();
 		}
 		return $ret;
 	}
 
-	function GetSetType($target, $cf, $fi)
+	function GetSetType($target)
 	{
 		if (!isset($fi)) return null;
 		if (empty($this->filters)) return null;
@@ -160,13 +157,13 @@ EOF;
 		return $ret;
 	}
 
-	function GetCreateDirectory($target, $cf)
+	function GetCreateDirectory($target)
 	{
 		return <<<EOF
 <form action="{$target}" method="post">
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="createdir" />
-	<input type="hidden" name="cf" value="{$cf}" />
+	<input type="hidden" name="cf" value="{$this->cf}" />
 	<input type="text" name="name" />
 	<input type="submit" value="Create Directory Here" />
 </form>
@@ -187,14 +184,14 @@ EOF;
 EOF;
 	}
 
-	function GetDirectory($target, $cf, $fi)
+	function GetDirectory($target)
 	{
-		$dp = opendir($this->FullPath);
+		$dp = opendir($this->root.$this->cf);
 		while ($file = readdir($dp))
 		{
 			if ($file[0] == '.') continue;
-			$newfi = new FileInfo($this->FullPath.$file, $this->DefaultFilter);
-			if (is_dir($this->FullPath.$file)) $dirs[] = $newfi;
+			$newfi = new FileInfo($this->root.$this->cf.$file, $this->DefaultFilter);
+			if (is_dir($this->cf.$file)) $dirs[] = $newfi;
 			else $files[] = $newfi;
 		}
 		$ret = '';
@@ -222,9 +219,9 @@ EOF;
 	 */
 	function GetFile($target, $file)
 	{
-		global $cf;
 		$ret = null;
-		if (isset($file->thumb)) $ret .= "{$file->thumb}\n";
+		if (!$file->show) return;
+		if (isset($file->info['thumb'])) $ret .= "{$file->info['thumb']}\n";
 		else
 		{
 			if (isset($this->icons[$file->type])) $icon = $this->icons[$file->type];
@@ -235,10 +232,10 @@ EOF;
 			.MakeURI($target, array(
 				'editor' => $this->name,
 				'ca' => "delete",
-				'cf' => $cf,
+				'cf' => $this->cf,
 				'ci' => $file->filename))
 			."\" onClick=\"return confirm('Are you sure you wish to delete this file?')\">X</a>]\n";
-		$ret .= "<a href=\"$target?editor={$this->name}&amp;cf=".urlencode($cf.$file->filename)."\">{$file->filename}</a><br/>\n";
+		$ret .= "<a href=\"$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename)."\">{$file->filename}</a><br/>\n";
 		return $ret;
 	}
 
@@ -270,9 +267,9 @@ EOF;
 
 	function GetPath($target, $path)
 	{
-		$pos = $start = 0;
+		$pos = $start = strlen($this->root);
 		$ret = null;
-		if (strlen($path) > 0) while (($pos = strpos($path, '/', $pos+1)) > 0)
+		if (strlen($path) > $start) while (($pos = strpos($path, '/', $pos+1)) > 0)
 		{
 			$ret .= "<a href=\"".
 				MakeURI($target, array(
@@ -322,29 +319,41 @@ class FileInfo
 	public $info;
 	public $type;
 	public $thumb;
+	public $show;
 
 	function FileInfo($source, $DefaultFilter = 'Default')
 	{
 		global $user_root;
 		if (!file_exists($source))
-			Error("FileInfo: Directory does not exist. ({$source})<br/>\n");
+			Error("FileInfo: File/Directory does not exist. ({$source})<br/>\n");
 		$this->owned = strlen(strstr($source, $user_root)) > 0;
 		$this->bitpos = 0;
 		$this->path = $source;
 		$this->dir = dirname($source);
 		$this->filename = basename($source);
+		$this->show = true;
 
 		$finfo = $this->dir.'/.'.$this->filename;
 		if (file_exists($finfo))
 			$this->info = unserialize(file_get_contents($finfo));
-
-			$this->GetFilter($source, $DefaultFilter);
+		else $this->info = array();
+		$this->GetFilter($source, $DefaultFilter);
 		if (is_dir($source)) $this->type = 'folder';
-		$this->Filter->GetInfo($this);
+		if (!$this->Filter->GetInfo($this)) $this->show = false;
 	}
 
 	function GetFilter($path, $default = 'Default')
 	{
+		if (is_file($path))
+		{
+			$dirname = substr(strrchr($this->dir, '/'), 1);
+			$dinfo = dirname($path).'/../.'.$dirname;
+			if (file_exists($dinfo))
+			{
+				$dinfo = unserialize(file_get_contents($dinfo));
+				$this->info = array_merge($dinfo, $this->info);
+			}
+		}
 		if (isset($this->info['type']))
 		{
 			$name = $this->info['type'];
@@ -352,16 +361,6 @@ class FileInfo
 			{
 				$objname = "Filter$name";
 				return $this->Filter = new $objname();
-			}
-		}
-		else
-		{
-			varinfo($this->path);
-			if (is_file($this->path))
-			{
-				$dirname = strrchr($this->dir, '/');
-				varinfo($dirname);
-				//echo 'Path to filter: '.pathinfo($this->path).'/../.'.
 			}
 		}
 
@@ -427,9 +426,8 @@ class FilterGallery extends FilterDefault
 		if (substr($fi->filename, 0, 2) == 't_') return null;
 		$ret->info['Width'] = 'w';
 		$ret->info['Height'] = 'h';
-		varinfo($fi->dir."/t_".$fi->filename);
-		if (file_exists($fi->dir."t_".$fi->filename))
-			$ret['thumb'] = "<img src=\"{$path}t_{$file}.{$ext}\"/>";
+		if (file_exists($fi->dir."/t_".$fi->filename))
+			$ret->info['thumb'] = "<img src=\"{$fi->dir}/t_{$fi->filename}\"/>";
 		return $ret;
 	}
 
