@@ -97,16 +97,6 @@ class Database
 function DeString($data) { return array("destring", $data); }
 function DBNow() { return array("now"); }
 
-class DataTable
-{
-	public $name;
-
-	function DataTable($name)
-	{
-		$this->name = $name;
-	}
-}
-
 /**
  * A general dataset, good for binding to a database's table.
  * Used to generically retrieve, store, update and delete
@@ -124,13 +114,7 @@ class DataSet
 	 */
 	public $database;
 
-	/**
-	 * Associated table.
-	 *
-	 * @var DataTable
-	 */
 	public $table;
-
 	public $children;
 	public $display;
 	public $fields;
@@ -143,7 +127,7 @@ class DataSet
 	function DataSet($db, $table)
 	{
 		$this->database = $db;
-		$this->table = new DataTable($table);
+		$this->table = $table;
 	}
 
 	/**
@@ -276,7 +260,7 @@ class DataSet
 	 */
 	function Add($columns, $update_existing = false)
 	{
-		$query = "INSERT INTO `{$this->table->name}` (";
+		$query = "INSERT INTO `{$this->table}` (";
 		foreach (array_keys($columns) as $ix => $key)
 		{
 			if ($ix != 0) $query .= ", ";
@@ -322,7 +306,7 @@ class DataSet
 	{
 		//Prepare Query
 		$query = 'SELECT';
-		$query .= " * FROM `{$this->table->name}`";
+		$query .= " * FROM `{$this->table}`";
 		$query .= $this->JoinClause($joins);
 		$query .= $this->WhereClause($match);
 		$query .= $this->OrderClause($sort);
@@ -361,7 +345,7 @@ class DataSet
 
 	function GetScalar($match, $col)
 	{
-		$query = "SELECT `$col` FROM `{$this->table->name}`".$this->WhereClause($match);
+		$query = "SELECT `$col` FROM `{$this->table}`".$this->WhereClause($match);
 		$cols = $this->database->Query($query);
 		$data = mysql_fetch_array($cols);
 		return $data[0];
@@ -388,7 +372,7 @@ class DataSet
 	 */
 	function GetAllSort($column, $order = "ASC", $start = NULL, $amount = NULL)
 	{
-		$query = "SELECT * FROM {$this->table->name} ORDER BY $column $order";
+		$query = "SELECT * FROM {$this->table} ORDER BY $column $order";
 		if (isset($start))
 		{
 			$query .= " LIMIT $start";
@@ -408,7 +392,7 @@ class DataSet
 	{
 		$newphrase = str_replace("'", '%', stripslashes($phrase));
 		$newphrase = str_replace(' ', '%', $newphrase);
-		$query = "SELECT * FROM `".$this->table->name."` WHERE";
+		$query = "SELECT * FROM `{$this->table}` WHERE";
 		foreach ($columns as $ix => $col)
 		{
 			if ($ix > 0) $query .= " OR";
@@ -449,7 +433,7 @@ class DataSet
 	 */
 	function GetCount($match = null, $silent = false)
 	{
-		$query = "SELECT COUNT(*) FROM `{$this->table->name}`";
+		$query = "SELECT COUNT(*) FROM `{$this->table}`";
 		$query .= $this->WhereClause($match);
 		$val = $this->GetCustom($query, $silent);
 		return $val[0][0];
@@ -464,29 +448,29 @@ class DataSet
 	 */
 	function Update($match, $values)
 	{
-		$query = "UPDATE `{$this->table->name}` SET ".$this->GetSetString($values);
+		$query = "UPDATE `{$this->table}` SET ".$this->GetSetString($values);
 		$this->database->Query($query.$this->WhereClause($match));
 	}
 
 	function Swap($smatch, $dmatch, $pkey)
 	{
-		$sitems = $this->database->query("SELECT * FROM `{$this->table->name}`".$this->WhereClause($smatch));
+		$sitems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($smatch));
 		$sitem = mysql_fetch_array($sitems, GET_ASSOC);
-		$ditems = $this->database->query("SELECT * FROM `{$this->table->name}`".$this->WhereClause($dmatch));
+		$ditems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($dmatch));
 		$ditem = mysql_fetch_array($ditems, GET_ASSOC);
 		if (!empty($this->children))
 		{
 			foreach ($this->children as $child)
 			{
 				//Copy Source children into Temp
-				$query = "INSERT INTO `{$child['temp']}` SELECT `{$child['cpkey']}` FROM `{$child['ds']->table->name}` WHERE `{$child['ckey']}` = {$smatch[$child['pkey']]}";
+				$query = "INSERT INTO `{$child['temp']}` SELECT `{$child['cpkey']}` FROM `{$child['ds']->table}` WHERE `{$child['ckey']}` = {$smatch[$child['pkey']]}";
 				$child['ds']->database->query($query);
 
 				//Move Destination children into Source parent.
 				$child['ds']->Update(array($child['ckey'] => $ditem[$child['pkey']]), array($child['ckey'] => $sitem[$child['pkey']]));
 
 				//Move Temp children into Destination parent.
-				$query = "UPDATE `{$child['ds']->table->name}` JOIN `{$child['temp']}` SET {$child['ckey']} = {$ditem[$child['pkey']]} WHERE `{$child['temp']}`.`{$child['cpkey']}` = `{$child['ds']->table->name}`.`{$child['cpkey']}`";
+				$query = "UPDATE `{$child['ds']->table}` JOIN `{$child['temp']}` SET {$child['ckey']} = {$ditem[$child['pkey']]} WHERE `{$child['temp']}`.`{$child['cpkey']}` = `{$child['ds']->table}`.`{$child['cpkey']}`";
 				$child['ds']->database->query($query);
 
 				$child['ds']->database->query("TRUNCATE `{$child['temp']}`");
@@ -507,7 +491,7 @@ class DataSet
 		$matches = array();
 		foreach ($match as $key => $val)
 		{
-			$matches[$this->table->name.'.'.$key] = $val;
+			$matches[$this->table.'.'.$key] = $val;
 		}
 		$tnames = null;
 		if (!empty($this->children))
@@ -522,7 +506,7 @@ class DataSet
 		}
 		else
 		{
-			$query = "DELETE FROM `{$this->table->name}`";
+			$query = "DELETE FROM `{$this->table}`";
 		}
 		if (!empty($this->children))
 		{
@@ -535,14 +519,14 @@ class DataSet
 	function GetMatches($original)
 	{
 		$ret = $original;
-		$tables = array($this->table->name);
+		$tables = array($this->table);
 		if (!empty($this->children))
 		{
 			foreach ($this->children as $child)
 			{
 				$tm = $child['ds']->GetMatches($ret);
 				$tables = array_merge($tm[0], $tables);
-				$tm[1]["{$child['ds']->table->name}.{$child['ckey']}"] = DeString($this->QuoteTable($this->table->name.'.'.$child['pkey']));
+				$tm[1]["{$child['ds']->table}.{$child['ckey']}"] = DeString($this->QuoteTable($this->table.'.'.$child['pkey']));
 				if ($tm[1] != null) $ret = array_merge($ret, $tm[1]);
 			}
 		}
