@@ -62,8 +62,8 @@ class FileManager
 		else if ($action == "update_info")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
-			$info = new FileInfo($newcf, $this->DefaultFilter);
-			$info->info = GetVar("info");
+			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
+			$info->info = array_merge($info->info, GetVar("info"));
 			$fp = fopen($info->dir.'/.'.$info->filename, "w+");
 			fwrite($fp, serialize($info->info));
 			fclose($fp);
@@ -77,7 +77,7 @@ class FileManager
 		else if ($action == "createdir")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
-			mkdir($newcf.GetVar("name"));
+			mkdir($this->root.$this->cf.GetVar("name"));
 		}
 	}
 
@@ -96,7 +96,7 @@ class FileManager
 		if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
 		$ret = '';
 
-		$ret .= $this->GetHeader($target, $this->root.$this->cf);
+		$ret .= $this->GetHeader($target, $fi);
 		if (is_dir($this->root.$this->cf)) $ret .= $this->GetDirectory($target, $this->cf);
 		else
 		{
@@ -109,12 +109,12 @@ class FileManager
 			if ($this->lm != null && $this->lm->access == ACCESS_ADMIN)
 			{
 				//Additional information.
-				$ret .= "<form action=\"$target\" method=\"post\"/>\n";
+				$ret .= "<form action=\"$target\" method=\"post\">\n";
 				$ret .= "<input type=\"hidden\" name=\"editor\" value=\"{$this->name}\" />";
 				$ret .= "<input type=\"hidden\" name=\"ca\" value=\"update_info\"/>";
 				$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$this->cf}\"/>";
-				$ret .= 'Title: <input type="text" name="ck"';
-				if (file_exists($info)) $ret .= ' value="'.htmlspecialchars($fi->info).'"';
+				$ret .= 'Title: <input type="text" name="info[title]"';
+				if (file_exists($info)) $ret .= ' value="'.htmlspecialchars($fi->info['title']).'"';
 				$ret .= " />\n";
 				$ret .= "<input type=\"submit\" value=\"Update\"/>\n";
 				$ret .= "</form>\n";
@@ -191,7 +191,7 @@ EOF;
 		{
 			if ($file[0] == '.') continue;
 			$newfi = new FileInfo($this->root.$this->cf.$file, $this->DefaultFilter);
-			if (is_dir($this->cf.$file)) $dirs[] = $newfi;
+			if (is_dir($this->root.$this->cf.$file)) $dirs[] = $newfi;
 			else $files[] = $newfi;
 		}
 		$ret = '';
@@ -265,35 +265,19 @@ EOF;
 		return $ret;
 	}
 
-	function GetPath($target, $path)
+	function GetPath($target, $fi)
 	{
-		$pos = $start = strlen($this->root);
+		$items = explode('/', $fi->path);
 		$ret = null;
-		if (strlen($path) > $start) while (($pos = strpos($path, '/', $pos+1)) > 0)
+		$cpath = '';
+		for ($ix = 1; $ix < count($items); $ix++)
 		{
-			$ret .= "<a href=\"".
-				MakeURI($target, array(
-					'editor' => $this->name,
-					'cf' => substr($path, 0, $pos+1)
-				))
-				."\">".substr($path, $start, $pos-$start)."</a> /\n";
-			$start = $pos+1;
+			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
+			$uri = MakeURI($target, array('editor' => $this->name, 'cf' => $cpath));
+			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
+			if ($ix < count($items)-1) $ret .= ' / ';
 		}
-		if ($pos < strlen($path))
-		{
-			$ret .= "<a href=\"".
-				MakeURI($target, array(
-					'editor' => $this->name,
-					'cf' => substr($path, 0)
-				))
-				."\">" . substr($path, $start) . "</a>";
-		}
-		return "<a href=\"".
-			MakeURI($target, array(
-				'editor' => $this->name,
-				'cf' => ''
-			))
-			."\"> Home</a> / ".$ret;
+		return $ret;
 	}
 }
 
