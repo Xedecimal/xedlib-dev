@@ -401,7 +401,8 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 		$selected = null;
 		if (isset($selvalue))
 		{
-			if (isset($selvalue[$selid]) &&
+			if (is_array($selvalue) &&
+			isset($selvalue[$selid]) &&
 			strlen($selvalue[$selid]) > 0 &&
 			$selvalue[$selid] == $option->id)
 			{
