@@ -11,7 +11,6 @@ class FileManager
 	public $cf;
 	public $DefaultFilter;
 	public $sortable;
-	public $DefaultInfo;
 	public $files;
 
 	/**
@@ -136,7 +135,7 @@ class FileManager
 		{
 			if (!empty($this->files['dirs']))
 			{
-				$ret = "<p>Folders<br/>\n";
+				$ret .= "<p>Folders<br/>\n";
 				foreach($this->files['dirs'] as $dir)
 					$ret .= $this->GetFile($target, $dir);
 				$ret .= "</p>";
@@ -338,6 +337,7 @@ EOF;
 			$ret .= "<input type=\"submit\" value=\"Search\"/>\n";
 			$ret .= "</form>\n";
 		}
+		else $ret .= '</p>';
 		return $ret;
 	}
 
