@@ -306,12 +306,12 @@ EOF;
 		)));
 
 		if ($file->info['index'] > 0)
-			$ret .= " - <a href=\"$uriUp\"><img src=\"xedlib/up.gif\" border=\"0\" /></a> ";
+			$ret .= " - <a href=\"$uriUp\"><img src=\"xedlib/up.png\" border=\"0\" /></a> ";
 		if ($file->info['index'] < count($this->files[$types])-1)
-			$ret .= " - <a href=\"$uriDown\"><img src=\"xedlib/down.gif\" border=\"0\" /></a> ";
+			$ret .= " - <a href=\"$uriDown\"><img src=\"xedlib/down.png\" border=\"0\" /></a> ";
 
 		$ret .= " - <a href=\"$uriDel".
-			"\" onClick=\"return confirm('Are you sure you wish to delete this file?')\">Delete</a></p>\n";
+			"\" onClick=\"return confirm('Are you sure you wish to delete this file?')\"><img src=\"xedlib/delete.png\" border=\"0\" /></a></p>\n";
 
 		return $ret;
 	}
