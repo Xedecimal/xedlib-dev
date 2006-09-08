@@ -12,6 +12,7 @@ class FileManager
 	public $DefaultFilter;
 	public $sortable;
 	public $DefaultInfo;
+	public $files;
 
 	/**
 	 * Associated login manager.
@@ -49,15 +50,18 @@ class FileManager
 
 	function Prepare($action)
 	{
+		$this->files = $this->GetDirectory();
+
 		//Security
 		if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
 
 		//Actions
 		if ($action == "upload")
 		{
-			$fi = new FileInfo($newcf, $this->DefaultFilter);
+			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$file = GetVar("cu");
-			$fi->filter->Upload($file, $newcf);
+			$fi->Filter->Upload($file, $this->root.$this->cf);
+			$this->files = $this->GetDirectory();
 		}
 		else if ($action == "update_info")
 		{
@@ -71,13 +75,44 @@ class FileManager
 		else if ($action == "delete")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
-			$fi = new FileInfo($newcf.GetVar('ci'), $this->DefaultFilter);
-			$fi->filter->Delete($fi);
+			$index = GetVar('ci');
+			$types = GetVar('type');
+			$fi = $this->files[$types][$index];
+			$fi->Filter->Delete($fi);
+			array_splice($this->files[$types], $index, 1);
 		}
 		else if ($action == "createdir")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
 			mkdir($this->root.$this->cf.GetVar("name"));
+		}
+		else if ($action == 'swap')
+		{
+			$index = GetVar('index');
+			$types = GetVar('type');
+			$cd = GetVar('cd');
+			if ($cd == 'up')
+			{
+				$this->files[$types][$index]->info['index'] -= 1;
+				$this->files[$types][$index]->SaveInfo();
+				$this->files[$types][$index-1]->info['index'] += 1;
+				$this->files[$types][$index-1]->SaveInfo();
+
+				$move = $this->files[$types][$index];
+				$this->files[$types][$index] = $this->files[$types][$index-1];
+				$this->files[$types][$index-1] = $move;
+			}
+			else
+			{
+				$this->files[$types][$index]->info['index'] += 1;
+				$this->files[$types][$index]->SaveInfo();
+				$this->files[$types][$index+1]->info['index'] -= 1;
+				$this->files[$types][$index+1]->SaveInfo();
+
+				$move = $this->files[$types][$index];
+				$this->files[$types][$index] = $this->files[$types][$index+1];
+				$this->files[$types][$index+1] = $move;
+			}
 		}
 	}
 
@@ -97,7 +132,24 @@ class FileManager
 		$ret = '';
 
 		$ret .= $this->GetHeader($target, $fi);
-		if (is_dir($this->root.$this->cf)) $ret .= $this->GetDirectory($target, $this->cf);
+		if (is_dir($this->root.$this->cf))
+		{
+			if (!empty($this->files['dirs']))
+			{
+				$ret = "<p>Folders<br/>\n";
+				foreach($this->files['dirs'] as $dir)
+					$ret .= $this->GetFile($target, $dir);
+				$ret .= "</p>";
+			}
+	
+			if (!empty($this->files['files']))
+			{
+				$ret .= "<p>Files<br/>\n";
+				foreach($this->files['files'] as $file)
+					$ret .= $this->GetFile($target, $file);
+				$ret .= "</p>";
+			}
+		}
 		else
 		{
 			$info = dirname($this->root.$this->cf).'/.'.basename($this->root.$this->cf);
@@ -123,29 +175,29 @@ class FileManager
 
 		if ($this->lm != null && $this->lm->access == ACCESS_ADMIN)
 		{
-			$ret .= $this->GetSetType($target, $this->cf);
+			$ret .= $this->GetSetType($target, $fi);
 			$ret .= $this->GetCreateDirectory($target, $this->cf);
 			$ret .= $this->GetUpload();
 		}
 		return $ret;
 	}
 
-	function GetSetType($target)
+	function GetSetType($target, $fi)
 	{
-		if (!isset($fi)) return null;
 		if (empty($this->filters)) return null;
 		if (count($this->filters) < 2) return null;
+		$fname = $fi->Filter->GetName();
 		$ret = <<<EOF
 <form action="{$target}" method="post">
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="update_info"/>
-	<input type="hidden" name="cf" value="{$cf}"/>
+	<input type="hidden" name="cf" value="{$this->cf}"/>
 	Set this directory type to:
 	<select name="info[type]">
 EOF;
 		foreach ($this->filters as $key => $val)
 		{
-			if ($fi->filtername == $key) $sel = ' selected="selected"';
+			if ($fname == $val) $sel = ' selected="selected"';
 			else $sel = null;
 			$ret .= "<option value=\"{$val}\"{$sel}>{$val}</option>\n";
 		}
@@ -177,37 +229,36 @@ EOF;
 <form action="{$me}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="upload"/>
-	<input type="hidden" name="cf" value="{$cf}"/>
+	<input type="hidden" name="cf" value="{$this->cf}"/>
 	<input type="file" name="cu"/>
 	<input type="submit" value="Upload"/>
 </form>
 EOF;
 	}
 
-	function GetDirectory($target)
+	function GetDirectory()
 	{
 		$dp = opendir($this->root.$this->cf);
+		$ret['files'] = array();
+		$ret['dirs'] = array();
 		while ($file = readdir($dp))
 		{
 			if ($file[0] == '.') continue;
-			$newfi = new FileInfo($this->root.$this->cf.$file, $this->DefaultFilter);
-			if (is_dir($this->root.$this->cf.$file)) $dirs[] = $newfi;
-			else $files[] = $newfi;
+			$newfi = new FileInfo($this->root.$this->cf.'/'.$file, $this->DefaultFilter);
+			if (!$newfi->show) continue;
+			if (is_dir($this->root.$this->cf.'/'.$file))
+			{
+				$put = isset($newfi->info['index']) ? $newfi->info['index'] : 0;
+				array_splice($ret['dirs'], $put, 0, array($newfi));
+			}
+			else
+			{
+				$put = isset($newfi->info['index']) ? $newfi->info['index'] : 0;
+				array_splice($ret['files'], $put, 0, array($newfi));
+			}
 		}
-		$ret = '';
-		if (!empty($dirs))
-		{
-			$ret = "<p>Folders<br/>\n";
-			foreach($dirs as $dir) $ret .= $this->GetFile($target, $dir);
-			$ret .= "</p>";
-		}
-
-		if (!empty($files))
-		{
-			$ret .= "<p>Files<br/>\n";
-			foreach($files as $file) $ret .= $this->GetFile($target, $file);
-			$ret .= "</p>";
-		}
+		foreach ($ret['files'] as $ix => $file) $file->info['index'] = $ix;
+		foreach ($ret['dirs'] as $ix => $dir) $dir->info['index'] = $ix;
 		return $ret;
 	}
 
@@ -221,21 +272,47 @@ EOF;
 	{
 		$ret = null;
 		if (!$file->show) return;
-		if (isset($file->info['thumb'])) $ret .= "{$file->info['thumb']}\n";
+		$types = $file->type ? 'dirs' : 'files';
+		if (isset($file->info['thumb'])) $ret .= "<p>{$file->info['thumb']}\n";
 		else
 		{
 			if (isset($this->icons[$file->type])) $icon = $this->icons[$file->type];
 			if (isset($icon))
-				$ret .= '<img src="'.$icon.'" alt="'.$file->type.'" /> ';
+				$ret .= '<p><img src="'.$icon.'" alt="'.$file->type.'" /> ';
 		}
-		$ret .= "[<a href=\""
-			.MakeURI($target, array(
-				'editor' => $this->name,
-				'ca' => "delete",
-				'cf' => $this->cf,
-				'ci' => $file->filename))
-			."\" onClick=\"return confirm('Are you sure you wish to delete this file?')\">X</a>]\n";
-		$ret .= "<a href=\"$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename)."\">{$file->filename}</a><br/>\n";
+		$ret .= "<br/><a href=\"$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename)."\">{$file->filename}</a>\n";
+
+		$common = array(
+			'cf' => $this->cf,
+			'editor' => $this->name,
+			'type' => $types,
+		);
+
+		$uriDel = MakeURI($target, array_merge($common, array(
+			'ca' => "delete",
+			'ci' => $file->info['index']
+		)));
+
+		$uriUp = MakeURI($target, array_merge($common, array(
+			'ca' => 'swap',
+			'cd' => 'up',
+			'index' => $file->info['index']
+		)));
+
+		$uriDown = MakeURI($target, array_merge($common, array(
+			'ca' => 'swap',
+			'cd' => 'down',
+			'index' => $file->info['index']
+		)));
+
+		if ($file->info['index'] > 0)
+			$ret .= " - <a href=\"$uriUp\"><img src=\"xedlib/up.gif\" border=\"0\" /></a> ";
+		if ($file->info['index'] < count($this->files[$types])-1)
+			$ret .= " - <a href=\"$uriDown\"><img src=\"xedlib/down.gif\" border=\"0\" /></a> ";
+
+		$ret .= " - <a href=\"$uriDel".
+			"\" onClick=\"return confirm('Are you sure you wish to delete this file?')\">Delete</a></p>\n";
+
 		return $ret;
 	}
 
@@ -261,7 +338,6 @@ EOF;
 			$ret .= "<input type=\"submit\" value=\"Search\"/>\n";
 			$ret .= "</form>\n";
 		}
-		else $ret .= "<br/><br/>\n";
 		return $ret;
 	}
 
@@ -272,6 +348,7 @@ EOF;
 		$cpath = '';
 		for ($ix = 1; $ix < count($items); $ix++)
 		{
+			if (strlen($items[$ix]) < 1) continue;
 			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
 			$uri = MakeURI($target, array('editor' => $this->name, 'cf' => $cpath));
 			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
@@ -330,7 +407,7 @@ class FileInfo
 	{
 		if (is_file($path))
 		{
-			$dirname = substr(strrchr($this->dir, '/'), 1);
+			$dirname = substr(strrchr('/'.$this->dir, '/'), 1);
 			$dinfo = dirname($path).'/../.'.$dirname;
 			if (file_exists($dinfo))
 			{
@@ -365,6 +442,14 @@ class FileInfo
 		$items = explode('/', $this->path);
 		if ($off < count($items)) return $items[$off];
 		return null;
+	}
+
+	function SaveInfo()
+	{
+		$info = $this->dir.'/.'.$this->filename;
+		$fp = fopen($info, 'w+');
+		fwrite($fp, serialize($this->info));
+		fclose($fp);
 	}
 }
 
@@ -421,8 +506,7 @@ class FilterGallery extends FilterDefault
 	function Delete($fi)
 	{
 		parent::Delete($fi);
-		$pi = pathinfo($fi->path);
-		$thumb = $pi['dirname'].'/t_'.$pi['basename'];
+		$thumb = $fi->dir.'/t_'.$fi->filename;
 		if (file_exists($thumb)) unlink($thumb);
 	}
 
