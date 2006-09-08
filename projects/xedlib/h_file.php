@@ -135,18 +135,16 @@ class FileManager
 		{
 			if (!empty($this->files['dirs']))
 			{
-				$ret .= "<p>Folders<br/>\n";
+				$ret .= "<p>Folders</p>\n";
 				foreach($this->files['dirs'] as $dir)
 					$ret .= $this->GetFile($target, $dir);
-				$ret .= "</p>";
 			}
 	
 			if (!empty($this->files['files']))
 			{
-				$ret .= "<p>Files<br/>\n";
+				$ret .= "<p>Files</p>\n";
 				foreach($this->files['files'] as $file)
 					$ret .= $this->GetFile($target, $file);
-				$ret .= "</p>";
 			}
 		}
 		else
@@ -305,12 +303,12 @@ EOF;
 		)));
 
 		if ($file->info['index'] > 0)
-			$ret .= " - <a href=\"$uriUp\"><img src=\"xedlib/up.png\" border=\"0\" /></a> ";
+			$ret .= " - <a href=\"$uriUp\"><img src=\"xedlib/up.png\" border=\"0\" alt=\"Move Up\" title=\"Move Up\" /></a> ";
 		if ($file->info['index'] < count($this->files[$types])-1)
-			$ret .= " - <a href=\"$uriDown\"><img src=\"xedlib/down.png\" border=\"0\" /></a> ";
+			$ret .= " - <a href=\"$uriDown\"><img src=\"xedlib/down.png\" border=\"0\" alt=\"Move Down\" title=\"Move Down\" /></a> ";
 
 		$ret .= " - <a href=\"$uriDel".
-			"\" onClick=\"return confirm('Are you sure you wish to delete this file?')\"><img src=\"xedlib/delete.png\" border=\"0\" /></a></p>\n";
+			"\" onClick=\"return confirm('Are you sure you wish to delete this file?')\"><img src=\"xedlib/delete.png\" border=\"0\"  alt=\"Delete\" title=\"Delete\" /></a></p>\n";
 
 		return $ret;
 	}
@@ -352,7 +350,7 @@ EOF;
 			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
 			$uri = MakeURI($target, array('editor' => $this->name, 'cf' => $cpath));
 			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
-			if ($ix < count($items)-1) $ret .= ' / ';
+			if ($ix < count($items)-1) $ret .= " / \n";
 		}
 		return $ret;
 	}
@@ -496,7 +494,7 @@ class FilterGallery extends FilterDefault
 		$ret->info['Width'] = 'w';
 		$ret->info['Height'] = 'h';
 		if (file_exists($fi->dir."/t_".$fi->filename))
-			$ret->info['thumb'] = "<img src=\"{$fi->dir}/t_{$fi->filename}\"/>";
+			$ret->info['thumb'] = "<img src=\"{$fi->dir}/t_{$fi->filename}\" alt=\"Thumbnail\" title=\"Thumbnail\" />";
 		return $ret;
 	}
 
