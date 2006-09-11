@@ -276,14 +276,14 @@ class Form extends Table
 					$ogstarted = false;
 					foreach ($value as $opt)
 					{
-						$selected = $opt[1] ? ' selected="selected"' : "";
-						if ($opt[0]->group)
+						$selected = $opt->selected ? ' selected="selected"' : "";
+						if ($opt->group)
 						{
 							if ($ogstarted) $strout .= "</optgroup>";
-							$strout .= "<optgroup label=\"{$opt[0]->text}\">";
+							$strout .= "<optgroup label=\"{$opt->text}\">";
 							$ogstarted = true;
 						}
-						else $strout .= "<option value=\"{$opt[0]->id}\"$selected>".htmlspecialchars($opt[0]->text)."</option>\n";
+						else $strout .= "<option value=\"{$opt->id}\"$selected>".htmlspecialchars($opt->text)."</option>\n";
 					}
 					if ($ogstarted) $strout .= "</optgroup>";
 				}
@@ -424,8 +424,7 @@ function DataToSel($result, $col_disp, $col_id, $default = 0)
 	$ret = null;
 	foreach ($result as $res)
 	{
-		$ret[] = array(new SelOption($res[$col_id], $res[$col_disp]),
-			$default == $res[$col_id]);
+		$ret[] = new SelOption($res[$col_id], $res[$col_disp], false, $default == $res[$col_id]);
 	}
 	return $ret;
 }
