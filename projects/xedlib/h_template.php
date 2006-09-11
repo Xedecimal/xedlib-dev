@@ -273,10 +273,10 @@ class Template
 	{
 		$tvar = $match[1];
 		global $$tvar;
-		if (isset($$tvar)) return $$tvar;
 		if (key_exists($tvar, $this->vars)) return $this->vars[$tvar];
-		if (defined($tvar)) return constant($tvar);
-		if ($this->use_getvar && GetVar($tvar) != null) return GetVar($tvar);
+		else if (isset($$tvar)) return $$tvar;
+		else if (defined($tvar)) return constant($tvar);
+		else if ($this->use_getvar && GetVar($tvar) != null) return GetVar($tvar);
 		return $match[0];
 	}
 }
