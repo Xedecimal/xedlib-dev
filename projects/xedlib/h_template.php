@@ -144,22 +144,23 @@ class Template
 		if ($tag == 'AMP') return;
 		else if ($tag == 'BR') return;
 		else if ($tag == 'COPY') return;
+		else if ($tag == 'DOCTYPE') return;
 		else if ($tag == 'IMG') return;
 		else if ($tag == 'INPUT') return;
 		else if ($tag == 'LINK') return;
-		else if ($tag == 'DOCTYPE') return;
 		else if ($tag == 'META') return;
-		else if ($tag == 'NULL') return;
+		else if ($tag == 'MODULE') return;
 		else if ($tag == 'NBSP') return;
+		else if ($tag == 'NULL') return;
 
-		else if ($tag == 'XFORM')
+		else if ($tag == 'BOX')
 		{
 			$objc = &$this->GetCurrentObject();
 			$objd = &$this->GetDestinationObject();
 			$objd->out .= $objc->Get();
 			array_pop($this->objs);
 		}
-		else if ($tag == 'BOX')
+		else if ($tag == 'XFORM')
 		{
 			$objc = &$this->GetCurrentObject();
 			$objd = &$this->GetDestinationObject();

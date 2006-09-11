@@ -419,9 +419,10 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 	return $strout;
 }
 
-function DataToSel($result, $col_disp, $col_id, $default = 0)
+function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 {
 	$ret = null;
+	if (isset($none)) $ret[] = new SelOption(0, $none, false, $default == 0);
 	foreach ($result as $res)
 	{
 		$ret[] = new SelOption($res[$col_id], $res[$col_disp], false, $default == $res[$col_id]);
