@@ -32,35 +32,6 @@ class Template
 		$output = '';
 
 		if ($tag == 'AMP') $output = '&amp;';
-		else if ($tag == 'BR') $close = ' /';
-		else if ($tag == 'COPY') $output .= '&copy;';
-		else if ($tag == 'DOCTYPE')
-		{
-			if (isset($attribs["TYPE"]))
-			{
-				if ($attribs['TYPE'] == 'strict')
-					$output = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN"
-						"http://www.w3.org/TR/html4/strict.dtd">';
-				if ($attribs['TYPE'] == 'trans')
-					$output = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
-			}
-		}
-		else if ($tag == "TEMPLATE")
-		{
-			if (isset($attribs["FILE"]))
-			{
-				$t = new Template();
-				$obj = &$this->GetCurrentObject();
-				$obj->out .= $t->Get($attribs["FILE"]);
-			}
-		}
-		else if ($tag == 'IMG') $close = ' /';
-		else if ($tag == 'INPUT') $close = ' /';
-		else if ($tag == 'LINK') $close = ' /';
-		else if ($tag == 'META') $close = ' /';
-		else if ($tag == 'NBSP') $output = '&nbsp;';
-		else if ($tag == 'NULL') $show = false;
 		else if ($tag == 'BOX')
 		{
 			if (isset($attribs["HANDLER"]))
@@ -76,6 +47,43 @@ class Template
 			if (isset($attribs['ID'])) $box->name = $attribs['ID'];
 			$this->objs[] = $box;
 			$show = false;
+		}
+		else if ($tag == 'BR') $close = ' /';
+		else if ($tag == 'COPY') $output .= '&copy;';
+		else if ($tag == 'DOCTYPE')
+		{
+			if (isset($attribs["TYPE"]))
+			{
+				if ($attribs['TYPE'] == 'strict')
+					$output = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN"
+						"http://www.w3.org/TR/html4/strict.dtd">';
+				if ($attribs['TYPE'] == 'trans')
+					$output = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+			}
+		}
+		else if ($tag == 'IMG') $close = ' /';
+		else if ($tag == 'INPUT') $close = ' /';
+		else if ($tag == 'LINK') $close = ' /';
+		else if ($tag == 'META') $close = ' /';
+		else if ($tag == 'MODULE')
+		{
+			require_once('modules/'.$attribs['FILE']);
+			$class = $attribs['CLASS'];
+			if (!class_exists($class)) Error("Class ($class) does not exist");
+			$mod = new $class();
+			$output = $mod->Get();
+		}
+		else if ($tag == 'NBSP') $output = '&nbsp;';
+		else if ($tag == 'NULL') $show = false;
+		else if ($tag == "TEMPLATE")
+		{
+			if (isset($attribs["FILE"]))
+			{
+				$t = new Template();
+				$obj = &$this->GetCurrentObject();
+				$obj->out .= $t->Get($attribs["FILE"]);
+			}
 		}
 		else if ($tag == "XFORM")
 		{

@@ -419,12 +419,13 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 	return $strout;
 }
 
-function DataToSel($result, $col_disp, $col_id)
+function DataToSel($result, $col_disp, $col_id, $default = 0)
 {
 	$ret = null;
 	foreach ($result as $res)
 	{
-		$ret[] = new SelOption($res[$col_id], $res[$col_disp]);
+		$ret[] = array(new SelOption($res[$col_id], $res[$col_disp]),
+			$default == $res[$col_id]);
 	}
 	return $ret;
 }
