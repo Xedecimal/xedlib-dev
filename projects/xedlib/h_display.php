@@ -270,7 +270,7 @@ class Form extends Table
 				$strout .= "</textarea>";
 				break;
 			case "select":
-				$strout = "<select id=\"$name\" name=\"$name\"$attributes>\n";
+				$strout = '<select id="'.htmlspecialchars($name).'" name="'.$name."\"{$attributes}>\n";
 				if (is_array($value))
 				{
 					$ogstarted = false;
@@ -290,7 +290,7 @@ class Form extends Table
 				$strout .= "</select>\n";
 				break;
 			case 'selects':
-				$strout = "<select id=\"$name\" name=\"{$name}[]\" multiple=\"multiple\"$attributes>\n";
+				$strout = '<select id="'.htmlspecialchars($name).'" name="'.$name."[]\" multiple=\"multiple\"$attributes>\n";
 				if (is_array($value))
 				{
 					$ogstarted = false;
@@ -334,7 +334,7 @@ class Form extends Table
 				$strout = "<input id=\"$name\" type=\"$type\" name=\"$name\"$attributes$val />";
 				break;
 		}
-		if ($helptext != null) $this->AddRow(array("<label for=\"$name\">$text</label>", $strout, $helptext));
+		if ($helptext != null) $this->AddRow(array('<label for="'.htmlspecialchars($name).'">'.$text.'</label>', $strout, $helptext));
 		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"$name\">$text</label>" : null, $strout, null));
 	}
 
@@ -430,11 +430,12 @@ function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 	return $ret;
 }
 
-function ArrayToSel($array)
+function ArrayToSelOptions($array, $default = null, $use_keys = true)
 {
-	$ret = null;
-	foreach ($array as $ix => $item) $ret[] = new SelOption($ix, $item);
-	return $ret;
+	$opts = array();
+	foreach ($array as $ix => $item)
+		$opts[] = array(new SelOption($use_keys ? $ix : $item, $item), $default == $item);
+	return $opts;
 }
 
 /**

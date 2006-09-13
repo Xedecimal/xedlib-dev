@@ -49,8 +49,6 @@ class FileManager
 
 	function Prepare($action)
 	{
-		$this->files = $this->GetDirectory();
-
 		//Security
 		if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
 
@@ -59,26 +57,36 @@ class FileManager
 		{
 			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$file = GetVar("cu");
-			$fi->Filter->Upload($file, $this->root.$this->cf);
-			$this->files = $this->GetDirectory();
+			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
+			$fi->Filter->Upload($file, $info);
 		}
 		else if ($action == "update_info")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
 			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
-			$info->info = array_merge($info->info, GetVar("info"));
+			$info->info = GetVar("info");
 			$fp = fopen($info->dir.'/.'.$info->filename, "w+");
 			fwrite($fp, serialize($info->info));
 			fclose($fp);
 		}
+		else if ($action == 'rename_done')
+		{
+			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
+			$this->files = $this->GetDirectory();
+			$index = GetVar('ci');
+			$types = GetVar('type');
+			$name = GetVar('name');
+			$fi = $this->files[$types][$index];
+			$fi->Filter->Rename($fi, $name);
+		}
 		else if ($action == "delete")
 		{
 			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
+			$this->files = $this->GetDirectory();
 			$index = GetVar('ci');
 			$types = GetVar('type');
 			$fi = $this->files[$types][$index];
 			$fi->Filter->Delete($fi);
-			array_splice($this->files[$types], $index, 1);
 		}
 		else if ($action == "createdir")
 		{
@@ -87,6 +95,7 @@ class FileManager
 		}
 		else if ($action == 'swap')
 		{
+			$this->files = $this->GetDirectory();
 			$index = GetVar('index');
 			$types = GetVar('type');
 			$cd = GetVar('cd');
@@ -96,10 +105,6 @@ class FileManager
 				$this->files[$types][$index]->SaveInfo();
 				$this->files[$types][$index-1]->info['index'] += 1;
 				$this->files[$types][$index-1]->SaveInfo();
-
-				$move = $this->files[$types][$index];
-				$this->files[$types][$index] = $this->files[$types][$index-1];
-				$this->files[$types][$index-1] = $move;
 			}
 			else
 			{
@@ -107,12 +112,10 @@ class FileManager
 				$this->files[$types][$index]->SaveInfo();
 				$this->files[$types][$index+1]->info['index'] -= 1;
 				$this->files[$types][$index+1]->SaveInfo();
-
-				$move = $this->files[$types][$index];
-				$this->files[$types][$index] = $this->files[$types][$index+1];
-				$this->files[$types][$index+1] = $move;
 			}
 		}
+
+		$this->files = $this->GetDirectory();
 	}
 
 	/**
@@ -121,7 +124,7 @@ class FileManager
 	* @param string $cf Current folder.
 	* @return string Output.
 	*/
-	function Get($target)
+	function Get($target, $action)
 	{
 		if (!file_exists($this->root.$this->cf))
 			return "FileManager::Get(): File doesn't exist ({$this->root}{$this->cf}).<br/>\n";
@@ -175,141 +178,22 @@ class FileManager
 			$ret .= $this->GetSetType($target, $fi);
 			$ret .= $this->GetCreateDirectory($target, $this->cf);
 			$ret .= $this->GetUpload();
-		}
-		return $ret;
-	}
-
-	function GetSetType($target, $fi)
-	{
-		if (empty($this->filters)) return null;
-		if (count($this->filters) < 2) return null;
-		$fname = $fi->Filter->GetName();
-		$ret = <<<EOF
-<form action="{$target}" method="post">
-	<input type="hidden" name="editor" value="{$this->name}" />
-	<input type="hidden" name="ca" value="update_info"/>
-	<input type="hidden" name="cf" value="{$this->cf}"/>
-	Set this directory type to:
-	<select name="info[type]">
-EOF;
-		foreach ($this->filters as $key => $val)
-		{
-			if ($fname == $val) $sel = ' selected="selected"';
-			else $sel = null;
-			$ret .= "<option value=\"{$val}\"{$sel}>{$val}</option>\n";
-		}
-		$ret .= <<<EOF
-	</select>
-	<input type="submit" value="Update"/>
-</form>
-EOF;
-		return $ret;
-	}
-
-	function GetCreateDirectory($target)
-	{
-		return <<<EOF
-<form action="{$target}" method="post">
-	<input type="hidden" name="editor" value="{$this->name}" />
-	<input type="hidden" name="ca" value="createdir" />
-	<input type="hidden" name="cf" value="{$this->cf}" />
-	<input type="text" name="name" />
-	<input type="submit" value="Create Directory Here" />
-</form>
-EOF;
-	}
-
-	function GetUpload()
-	{
-		global $me, $cf;
-		return <<<EOF
-<form action="{$me}" method="post" enctype="multipart/form-data">
-	<input type="hidden" name="editor" value="{$this->name}" />
-	<input type="hidden" name="ca" value="upload"/>
-	<input type="hidden" name="cf" value="{$this->cf}"/>
-	<input type="file" name="cu"/>
-	<input type="submit" value="Upload"/>
-</form>
-EOF;
-	}
-
-	function GetDirectory()
-	{
-		$dp = opendir($this->root.$this->cf);
-		$ret['files'] = array();
-		$ret['dirs'] = array();
-		while ($file = readdir($dp))
-		{
-			if ($file[0] == '.') continue;
-			$newfi = new FileInfo($this->root.$this->cf.'/'.$file, $this->DefaultFilter);
-			if (!$newfi->show) continue;
-			if (is_dir($this->root.$this->cf.'/'.$file))
+			if ($action == 'rename')
 			{
-				$put = isset($newfi->info['index']) ? $newfi->info['index'] : 0;
-				array_splice($ret['dirs'], $put, 0, array($newfi));
-			}
-			else
-			{
-				$put = isset($newfi->info['index']) ? $newfi->info['index'] : 0;
-				array_splice($ret['files'], $put, 0, array($newfi));
+				$index = GetVar('ci');
+				$types = GetVar('type');
+				$fi = $this->files[$types][$index];
+
+				$form = new Form('rename');
+				$form->AddHidden('editor', $this->name);
+				$form->AddHidden('ca', 'rename_done');
+				$form->AddHidden('ci', $index);
+				$form->AddHidden('type', $types);
+				$form->AddInput('Name', 'text', 'name', $fi->filename);
+				$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
+				$ret .= '<b>Rename</b>'.$form->Get('method="post"');
 			}
 		}
-		foreach ($ret['files'] as $ix => $file) $file->info['index'] = $ix;
-		foreach ($ret['dirs'] as $ix => $dir) $dir->info['index'] = $ix;
-		return $ret;
-	}
-
-	/**
-	 * Get a single file.
-	 *
-	 * @param string $target
-	 * @param FileInfo $file
-	 */
-	function GetFile($target, $file)
-	{
-		$ret = null;
-		if (!$file->show) return;
-		$types = $file->type ? 'dirs' : 'files';
-		if (isset($file->info['thumb'])) $ret .= "<p>{$file->info['thumb']}\n";
-		else
-		{
-			if (isset($this->icons[$file->type])) $icon = $this->icons[$file->type];
-			if (isset($icon))
-				$ret .= '<p><img src="'.$icon.'" alt="'.$file->type.'" /> ';
-		}
-		$ret .= "<br/><a href=\"$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename)."\">{$file->filename}</a>\n";
-
-		$common = array(
-			'cf' => $this->cf,
-			'editor' => $this->name,
-			'type' => $types,
-		);
-
-		$uriDel = MakeURI($target, array_merge($common, array(
-			'ca' => "delete",
-			'ci' => $file->info['index']
-		)));
-
-		$uriUp = MakeURI($target, array_merge($common, array(
-			'ca' => 'swap',
-			'cd' => 'up',
-			'index' => $file->info['index']
-		)));
-
-		$uriDown = MakeURI($target, array_merge($common, array(
-			'ca' => 'swap',
-			'cd' => 'down',
-			'index' => $file->info['index']
-		)));
-
-		if ($file->info['index'] > 0)
-			$ret .= " - <a href=\"$uriUp\"><img src=\"xedlib/up.png\" border=\"0\" alt=\"Move Up\" title=\"Move Up\" /></a> ";
-		if ($file->info['index'] < count($this->files[$types])-1)
-			$ret .= " - <a href=\"$uriDown\"><img src=\"xedlib/down.png\" border=\"0\" alt=\"Move Down\" title=\"Move Down\" /></a> ";
-
-		$ret .= " - <a href=\"$uriDel".
-			"\" onClick=\"return confirm('Are you sure you wish to delete this file?')\"><img src=\"xedlib/delete.png\" border=\"0\"  alt=\"Delete\" title=\"Delete\" /></a></p>\n";
-
 		return $ret;
 	}
 
@@ -344,15 +228,163 @@ EOF;
 		$items = explode('/', $fi->path);
 		$ret = null;
 		$cpath = '';
-		for ($ix = 1; $ix < count($items); $ix++)
+		for ($ix = 0; $ix < count($items); $ix++)
 		{
 			if (strlen($items[$ix]) < 1) continue;
-			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
-			$uri = MakeURI($target, array('editor' => $this->name, 'cf' => $cpath));
+			if ($ix > 0)
+				$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
+			$uri = MakeURI($target, array('editor' => $this->name,
+				'cf' => $ix == 0 ? null : $cpath));
 			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
 			if ($ix < count($items)-1) $ret .= " / \n";
 		}
 		return $ret;
+	}
+
+	/**
+	 * Get a single file.
+	 *
+	 * @param string $target
+	 * @param FileInfo $file
+	 */
+	function GetFile($target, $file)
+	{
+		$ret = '<p>';
+		if (!$file->show) return;
+		$types = $file->type ? 'dirs' : 'files';
+		if (isset($file->info['thumb'])) $ret .= "{$file->info['thumb']}\n";
+		else
+		{
+			if (isset($this->icons[$file->type])) $icon = $this->icons[$file->type];
+			if (isset($icon))
+				$ret .= '<img src="'.$icon.'" alt="'.$file->type.'" /> ';
+		}
+		$ret .= "<br/><a href=\"$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename)."\">{$file->filename}</a>\n";
+
+		$common = array(
+			'cf' => $this->cf,
+			'editor' => $this->name,
+			'type' => $types,
+		);
+
+		$uriUp = MakeURI($target, array_merge($common, array(
+			'ca' => 'swap',
+			'cd' => 'up',
+			'index' => $file->info['index']
+		)));
+
+		$uriDown = MakeURI($target, array_merge($common, array(
+			'ca' => 'swap',
+			'cd' => 'down',
+			'index' => $file->info['index']
+		)));
+		
+		$uriDel = MakeURI($target, array_merge($common, array(
+			'ca' => "delete",
+			'ci' => $file->info['index']
+		)));
+
+		$uriEdit = MakeURI($target, array_merge($common, array(
+			'ca' => "rename",
+			'ci' => $file->info['index']
+		)));
+
+		if ($file->info['index'] > 0)
+			$ret .= " - <a href=\"$uriUp\"><img src=\"xedlib/up.png\" border=\"0\" alt=\"Move Up\" title=\"Move Up\" /></a> ";
+		if ($file->info['index'] < count($this->files[$types])-1)
+			$ret .= " - <a href=\"$uriDown\"><img src=\"xedlib/down.png\" border=\"0\" alt=\"Move Down\" title=\"Move Down\" /></a> ";
+
+		$ret .= " - <a href=\"$uriEdit\"><img src=\"xedlib/rename.png\" border=\"0\" alt=\"Rename\" title=\"Rename\" /></a>";
+
+		$ret .= " - <a href=\"$uriDel".
+			"\" onClick=\"return confirm('Are you sure you wish to delete this file?')\"><img src=\"xedlib/delete.png\" border=\"0\"  alt=\"Delete\" title=\"Delete\" /></a></p>\n";
+
+		return $ret;
+	}
+
+	function GetDirectory()
+	{
+		$dp = opendir($this->root.$this->cf);
+		$ret['files'] = array();
+		$ret['dirs'] = array();
+		while ($file = readdir($dp))
+		{
+			if ($file[0] == '.') continue;
+			$newfi = new FileInfo($this->root.$this->cf.'/'.$file, $this->DefaultFilter);
+			if (!$newfi->show) continue;
+			if (is_dir($this->root.$this->cf.'/'.$file))
+			{
+				$put = isset($newfi->info['index']) ? $newfi->info['index'] : 0;
+				array_splice($ret['dirs'], $put, 0, array($newfi));
+			}
+			else
+			{
+				$put = isset($newfi->info['index']) ? $newfi->info['index'] : 0;
+				array_splice($ret['files'], $put, 0, array($newfi));
+			}
+		}
+		foreach ($ret['files'] as $ix => $file) $file->info['index'] = $ix;
+		foreach ($ret['dirs'] as $ix => $dir) $dir->info['index'] = $ix;
+		return $ret;
+	}
+
+	/**
+	 * Enter description here...
+	 *
+	 * @param unknown_type $target
+	 * @param FileInfo $fi
+	 * @return string HTML output
+	 */
+	function GetSetType($target, $fi)
+	{
+		if (empty($this->filters)) return null;
+		if (count($this->filters) < 2) return null;
+		$fname = $fi->Filter->GetName();
+		$ret = "<b>Configure Type</b>\n";
+		$form = new Form('formType');
+		$form->AddHidden('editor', $this->name);
+		$form->AddHidden('ca', 'update_info');
+		$form->AddHidden('cf', $this->cf);
+		$form->AddInput('Change Type', 'select', 'info[type]',
+			ArrayToSelOptions($this->filters, $fname, false));
+		$options = $fi->Filter->GetOptions();
+		if (!empty($options)) foreach ($options as $text => $field)
+		{
+			$def = isset($field[2]) ? $field[2] : null;
+			$val = isset($fi->info[$field[0]]) ? $fi->info[$field[0]] : $def;
+			$form->AddInput($text, $field[1], "info[{$field[0]}]", $val);
+		}
+		$form->AddInput(null, 'submit', 'butSubmit', 'Update');
+		return $ret.$form->Get('action="'.$target.'" method="post"');
+	}
+
+	function GetCreateDirectory($target)
+	{
+		return <<<EOF
+<b>Create Directory</b>
+<form action="{$target}" method="post">
+	<input type="hidden" name="editor" value="{$this->name}" />
+	<input type="hidden" name="ca" value="createdir" />
+	<input type="hidden" name="cf" value="{$this->cf}" />
+	<input type="text" name="name" />
+	<input type="submit" value="Create" />
+</form>
+EOF;
+	}
+
+	function GetUpload()
+	{
+		global $me, $cf;
+		return <<<EOF
+<b>Upload Files</b>
+<form action="{$me}" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="editor" value="{$this->name}" />
+	<input type="hidden" name="ca" value="upload"/>
+	<input type="hidden" name="cf" value="{$this->cf}"/>
+	<input type="file" name="cu"/>
+	<input type="submit" value="Upload"/>
+</form>
+EOF;
 	}
 }
 
@@ -370,7 +402,7 @@ class FileInfo
 	/**
 	* Directory Filter.
 	*
-	* @var DirFilter
+	* @var FilterDefault
 	*/
 	public $Filter;
 	public $filtername;
@@ -460,9 +492,17 @@ class FilterDefault
 	function GetName() { return "Normal"; }
 	function GetInfo($fi) { return $fi; }
 
+	function GetOptions() { return null; }
 	function Upload($file, $target)
 	{
 		move_uploaded_file($file['tmp_name'], "{$target}{$file['name']}");
+	}
+
+	function Rename ($fi, $newname)
+	{
+		$finfo = "{$fi->dir}/.{$fi->filename}";
+		if (file_exists($finfo)) rename($finfo, $fi->dir.'/.'.$newname);
+		rename($fi->path, $fi->dir.'/'.$newname);
 	}
 
 	/**
@@ -498,6 +538,22 @@ class FilterGallery extends FilterDefault
 		return $ret;
 	}
 
+	function GetOptions()
+	{
+		return array(
+			'Thumbnail Width' => array('thumb_width', 'text', 200),
+			'Thumbnail Height' => array('thumb_height', 'text', 200),
+			'Gallery Name' => array('gallery_name', 'text')
+		);
+	}
+
+	function Rename($fi, $newname)
+	{
+		parent::Rename($fi, $newname);
+		$thumb = $fi->dir.'/t_'.$fi->filename;
+		if (file_exists($thumb)) rename($thumb, $fi->dir.'/t_'.$newname);
+	}
+
 	/**
 	* @param FileInfo $fi Target to be deleted.
 	*/
@@ -511,7 +567,6 @@ class FilterGallery extends FilterDefault
 	function Upload($file, $target)
 	{
 		$filename = substr(basename($file['name']), 0, strpos(basename($file['name']), '.'));
-
 		switch ($file['type'])
 		{
 			case "image/jpeg":
@@ -529,10 +584,10 @@ class FilterGallery extends FilterDefault
 				die("Unknown image type: {$file['type']}<br>\n");
 			break;
 		}
-		$destimage = "{$target}/{$filename}.jpg";
-		$destthumb = "{$target}/t_{$filename}.jpg";
+		$destimage = "{$target->path}/{$filename}.jpg";
+		$destthumb = "{$target->path}/t_{$filename}.jpg";
 		imagejpeg($img, $destimage);
-		$img = $this->ResizeImg($img, 200, 200);
+		$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
 		imagejpeg($img, $destthumb);
 	}
 
