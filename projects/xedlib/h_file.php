@@ -115,7 +115,7 @@ class FileManager
 			}
 		}
 
-		$this->files = $this->GetDirectory();
+		if (is_dir($this->root.$this->cf)) $this->files = $this->GetDirectory();
 	}
 
 	/**
@@ -495,7 +495,7 @@ class FilterDefault
 	function GetOptions() { return null; }
 	function Upload($file, $target)
 	{
-		move_uploaded_file($file['tmp_name'], "{$target}{$file['name']}");
+		move_uploaded_file($file['tmp_name'], "{$target->path}{$file['name']}");
 	}
 
 	function Rename ($fi, $newname)
@@ -557,6 +557,7 @@ class FilterGallery extends FilterDefault
 	/**
 	* @param FileInfo $fi Target to be deleted.
 	*/
+
 	function Delete($fi)
 	{
 		parent::Delete($fi);
