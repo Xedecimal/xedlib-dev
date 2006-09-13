@@ -282,4 +282,25 @@ class Template
 	}
 }
 
+class VarParser
+{
+	public $vars;
+
+	function ParseVars($data, $vars)
+	{
+		$this->vars = $vars;
+		return preg_replace_callback("/\{{([^}]+)\}}/", array($this, 'var_parser'), $data);
+	}
+	
+	function var_parser($match)
+	{
+		$tvar = $match[1];
+		global $$tvar;
+		if (isset($this->vars[$tvar])) return $this->vars[$tvar];
+		else if (isset($$tvar)) return $$tvar;
+		else if (defined($tvar)) return constant($tvar);
+		return $match[0];
+	}
+}
+
 ?>

@@ -903,6 +903,7 @@ class Calendar
 	public $events; //!< Array of events in this calendar.
 	public $dates; //!< Array of dates in this calendar.
 	public $datesbyday; //!< Array indexed by day in this calendar.
+	public $daybody;
 
 	/**
 	* Adds an item to the calendar to be displayed in a given period of time
@@ -913,18 +914,18 @@ class Calendar
 	* @param $Link string Link of event, TODO: Displayed where?
 	* @param $Desc string Description of event.
 	*/
-	function AddItem($ID, $FromTimeStamp, $ToTimeStamp, $Title, $Link, $Desc)
+	function AddItem($tsfrom, $tsto, $body)
 	{
-		$fromyear  = gmdate("Y", $FromTimeStamp);
-		$frommonth = gmdate("n", $FromTimeStamp);
-		$fromday   = gmdate("j", $FromTimeStamp);
-		$toyear    = gmdate("Y", $ToTimeStamp);
-		$tomonth   = gmdate("n", $ToTimeStamp);
-		$today     = gmdate("j", $ToTimeStamp);
+		$fromyear  = gmdate("Y", $tsfrom);
+		$frommonth = gmdate("n", $tsfrom);
+		$fromday   = gmdate("j", $tsfrom);
+		$toyear    = gmdate("Y", $tsto);
+		$tomonth   = gmdate("n", $tsto);
+		$today     = gmdate("j", $tsto);
 		$fromkey   = gmmktime(0, 0, 0, $frommonth, $fromday, $fromyear);
 		$tokey     = gmmktime(0, 0, 0, $tomonth, $today, $toyear);
 
-		$this->events[count($this->events)] = array($ID, $FromTimeStamp, $ToTimeStamp, $Title, $Link, $Desc);
+		$this->events[count($this->events)] = array($tsfrom, $tsto, $body);
 		$DaysSpanned = ($tokey - $fromkey) / 86400;
 
 		for ($ix = 0; $ix <= $DaysSpanned; $ix++)
@@ -947,9 +948,10 @@ class Calendar
 	* @param $timestamp int Time to display the calendar relavant to.
 	* @param $admin bool [DEPRICATED] Whether or not to have administration buttons on the calendar.
 	*/
-	function Get($timestamp = null, $admin = false)
+	function Get($timestamp = null)
 	{
 		global $me, $cs;
+		$vp = new VarParser();
 
 		if ($timestamp != null)
 		{
@@ -970,7 +972,7 @@ class Calendar
 		$days = gmdate("t", $ts); //Get total amount of days in this month.
 $ret = <<<EOF
 <form action="$me" method="post">
-<div><input type="hidden" name="cs" value="$cs"></div>
+<div><input type="hidden" name="cs" value="$cs" /></div>
 <table border="0" width="100%" cellspacing="0">
 	<tr class="CalendarHead">
 		<td valign="top" colspan="7">
@@ -978,7 +980,7 @@ EOF;
 $ret .= "			Year: " . GetYearSelect("calyear", $thisyear) . "\n";
 $ret .= "			Month: " . GetMonthSelect("calmonth", $thismonth) . "\n";
 $ret .= <<<EOF
-			<input type="submit" value="Go">
+			<input type="submit" value="Go" />
 		</td>
 	</tr>
 	<tr class="CalendarWeekTitle">
@@ -994,40 +996,30 @@ $ret .= <<<EOF
 		<td class="CalendarPadding" colspan="{$month->Pad}">&nbsp;</td>
 
 EOF;
+
 		foreach ($month->Days as $day)
 		{
+			$dayts = $day->TimeStamp;
 			if ($day->StartWeek) $ret .= "\t<tr>\n";
 			$ret .= "\t\t<td valign=\"top\" class=\"CalendarDay\">\n";
 			$ret .= "\t\t\t<div class=\"CalendarDayTitle\">\n";
-			if ($admin)
-			{
-				$addurl = MakeURI($me, array('ca' => 'cal_add', 'ts' => $day->TimeStamp));
-				$ret .= "\t\t\t[<a href=\"{$addurl}\">+</a>]\n";
-			}
 			$ret .= "\t\t\t{$day->Day}</div>\n";
+			$ret .= $vp->ParseVars($this->daybody, array('ts' => $dayts));
 
-			if (isset($this->dates[$day->TimeStamp]))
+			if (isset($this->dates[$dayts]))
 			{
-				foreach ($this->dates[$day->TimeStamp] as $eventid)
+				foreach ($this->dates[$dayts] as $eventid)
 				{
 					$event = $this->events[$eventid];
 					$ret .= "\t\t\t<p class=\"CalendarDayBody\">\n";
-					if ($admin)
-					{
-						$delurl = MakeURI($me, array("ca" => "cal_del", "ci" => $event[0], "ts" => $ts));
-						$ret .= "\t\t\t[<a href=\"$delurl\" OnClick=\"return confirm('Are you sure?')\" title=\"Delete\"><b>X</b></a>]\n";
-						$editurl = MakeURI($me, array("ca" => "cal_edit", "ci" => $event[0], "ts" => $ts));
-						$ret .= "\t\t\t[<a href=\"$editurl\" title=\"Edit\"><b>E</b></a>]\n";
-					}
-					$ret .= "\t\t\t<a href=\"{$event[4]}\">{$event[3]}</a><br/>\n";
-					$ret .= "\t\t\t{$event[5]}</p>\n";
+					$ret .= "\t\t\t{$event[2]}\n";
 				}
 			}
 			$ret .= "\t\t</td>\n";
 			if ($day->LastDay) $ret .= "\t\t<td class=\"CalendarPadding\" colspan=\"".(6 - $day->WeekDay)."\">&nbsp;</td>\n";
 			if ($day->EndWeek) $ret .= "\t</tr>\n";
 		}
-		$ret .= "</tr></table></form>\n";
+		$ret .= "</table></form>\n";
 		return $ret;
 	}
 
@@ -1037,7 +1029,8 @@ EOF;
 	 * month.
 	 * @param $admin bool Whether to include administration links.
 	 */
-	function GetVert($admin = false)
+
+	function GetVert()
 	{
 		global $me;
 
@@ -1071,7 +1064,7 @@ EOF;
 				//Pad in the rest of the week.
 				if ($curday != -1)
 				{
-					if ($dayx < 3) $ret .= str_repeat("\t\t\t<td>&nbsp;</td>\n", 7-$dayx);
+					if ($dayx < 7) $ret .= str_repeat("\t\t\t<td>&nbsp;</td>\n", 7-$dayx);
 					$dayx = 0;
 				}
 			}
@@ -1095,7 +1088,7 @@ EOF;
 				if ($curmonth != -1)
 				{
 					//Terminate the last month
-					$ret .= "</td></tr></table><img src=\"/images/pixel_red.gif\" width=\"482\" height=\"1\" />\n";
+					$ret .= "</td></tr></table>\n";
 				}
 				//New month in new year
 				//else $ret .= "\t<td>";
@@ -1118,9 +1111,9 @@ EOF;
 			{
 				if ($curday != -1) $ret .= "\t\t</td>\n";
 				else $ret .= "\t<tr>\n";
-				if ($dayx % 3 == 0 && $curday != -1) $ret .= "\t</tr><tr>\n";
+				if ($dayx % 7 == 0 && $curday != -1) $ret .= "\t</tr><tr>\n";
 				$ret .= "\t\t<td class=\"CalendarDay\" valign=\"top\">\n";
-				//$ret .= "\t\t\t<p class=\"CalendarDayTitle\">$day</p>\n";
+				$ret .= "\t\t\t<p class=\"CalendarDayTitle\">$day</p>\n";
 				$curday = $day;
 				$dayx++;
 			}
@@ -1131,12 +1124,7 @@ EOF;
 
 				//Calendar day content.
 				$ret .= "\t\t\t<p class=\"CalendarDayBody\">\n";
-				if ($admin)
-				{
-					$ret .= "\t\t\t[<a class=\"link\" href=\"$me?ca=cal_del&amp;ci={$event[0]}&amp;ts=$thists\" OnClick=\"return confirm('Are you sure?')\"><b>X</b></a>]\n";
-					$ret .= "\t\t\t[<a class=\"link\" href=\"$me?ca=cal_edit&amp;ci={$event[0]}&amp;ts=$thists\"><b>E</b></a>]\n";
-				}
-				$ret .= "\t\t\t<a class=\"link\" href=\"{$me}?ca=viewe&amp;ci={$event[0]}\">".stripslashes($event[3])."</a><br/>\n";
+				$ret .= stripslashes($event[2]);
 				$ret .= "\t\t\t{$event[5]}\n";
 			}
 		}
@@ -1200,6 +1188,7 @@ class CalendarDay
 /**
  * A generic page, associated with h_main.php and passed on to index.php .
  */
+
 class Page
 {
 	/**
