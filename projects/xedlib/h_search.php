@@ -1,50 +1,12 @@
 <?php
 
-/**
- * @return mixed
- * @param searchItems array
- * @param searchResults array
- * @param siteFiles array
- */
+require_once('h_utility.php');
+
 class Search
 {
 	var $searchItems;
 	var $searcResults;
 	var $siteFiles;
-	
-	function Search()
-	{
-		$this->searchItems = array();
-		$this->searchResults = array();
-		$this->siteFiles = array();
-	}
-	
-	function prepare($keyWords)
-	{
-		$this->searchItems = $keyWords;
-		$this->siteFiles = $this->getFiles();
-		
-		
-	}
-	
-	function performSearch()
-	{
-		for($x = 0; $x < count($this->siteFiles); $x++)
-		{
-			$contents = file_get_contents($this->siteFiles[$x]);
-			for($y = 0; $y < count($this->searchItems); $y++)
-			{
-				
-				$matches = preg_match('"'.$this->searchItems[$y].'"',$contents);
-				if($matches > 0)
-				{
-					array_push($this->searchResults, $this->siteFiles[$x]."<br />");
-				}
-			}
-			
-		}
-		
-	}
 	
 	function getResults()
 	{
@@ -56,35 +18,50 @@ class Search
 		
 		return $results;
 	}
-	
+
 	function getFiles()
 	{
-		return $this->scandir_recursive($_SERVER['DOCUMENT_ROOT']);
+		return $this->scandir_recursive(GetVar('DOCUMENT_ROOT'));
 	}
-	
+
 	function scandir_recursive($path)
 	{
 		if (!is_dir($path)) return 0;
-		$list=array();
-		$directory = @opendir("$path"); // @-no error display
-		while ($file= @readdir($directory))
+		$list = array();
+		$directory = opendir($path);
+		while ($file = readdir($directory))
 	    {
-	         if (($file<>".")&&($file<>"..")&&($file<>"images")&&($file<>"js"))
-	         { 
-	              $f=$path."/".$file;
-				  $f=preg_replace('/(\/){2,}/','/',$f); //replace double slashes
-				  if(is_file($f)) $list[]=$f;           
-				  if(is_dir($f))
-				  $list = array_merge($list ,$this->scandir_recursive($f));  //RECURSIVE CALL                     
-	         }   
+			$f = "{$path}/{$file}";
+			$f = preg_replace('/(\/){2,}/','/', $f);
+			if (is_file($f))
+			{
+				if (substr($f, -5) != '.html') continue;
+				$list[] = $f;
+			}
+			if (is_dir($f))
+				$list = array_merge($list ,$this->scandir_recursive($f));                     
 	     }
-		 @closedir($directory); 
+		 closedir($directory); 
 		 return $list ;
 	}
-	
-	
+
+	function Get($query)
+	{
+		$this->searchItems = $query;
+		$this->siteFiles = $this->getFiles();
+		varinfo($this->siteFiles);
+		$this->searchResults = array();
+
+		foreach ($this->siteFiles as $file)
+		{
+			$contents = file_get_contents($file);
+			$matches = preg_match('"'.$query.'"', $contents);
+			if ($matches > 0)
+			{
+				array_push($this->searchResults, $file."<br />");
+			}
+		}
+	}
 }
-
-
 
 ?>
