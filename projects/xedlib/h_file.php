@@ -13,23 +13,23 @@ class FileManager
 	public $sortable;
 	public $files;
 
-	/**
-	 * Associated login manager.
-	 *
-	 * @var LoginManager
-	 */
-	public $lm;
+	//Access Relation
+	public $allow_upload;
+	public $allow_create_dir;
+	public $allow_delete;
+	public $allow_sort;
+	public $allow_rename;
+	public $allow_edit;
 
 	/**
 	 * Enter description here...
 	 *
 	 * @param string $name Name of this instance.
 	 * @param string $root Highlest folder level allowed.
-	 * @param LoginManager $lm Login manager.
 	 * @param array $filters Directory filters allowed.
 	 * @return FileManager
 	 */
-	function FileManager($name, $root, $lm = null, $filters = array(), $DefaultFilter = 'Default')
+	function FileManager($name, $root, $filters = array(), $DefaultFilter = 'Default')
 	{
 		$this->name = $name;
 		$this->filters = $filters;
@@ -37,23 +37,22 @@ class FileManager
 		$this->root = $root;
 
 		//Append trailing slash.
-		if (!file_exists($root)) Error('FileManager: Root directory does not exist.');
+		if (!file_exists($root)) Error("FileManager::FileManager(): Root
+		($root) directory does not exist.");
 		if (substr($this->root, -1) != '/') $this->root .= '/';
 		$this->cf = GetVar('cf');
 		if (is_dir($this->root.$this->cf)
 		&& strlen($this->cf) > 0
 		&& substr($this->cf, -1) != '/')
 			$this->cf .= '/';
-		$this->lm = $lm;
+
+		$this->allow_upload = false;
 	}
 
 	function Prepare($action)
 	{
-		//Security
-		if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
-
 		//Actions
-		if ($action == "upload")
+		if ($action == "upload" && $this->allow_upload)
 		{
 			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$file = GetVar("cu");
@@ -71,7 +70,7 @@ class FileManager
 		}
 		else if ($action == 'rename_done')
 		{
-			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
+			if (!$this->allow_rename) return;
 			$this->files = $this->GetDirectory();
 			$index = GetVar('ci');
 			$types = GetVar('type');
@@ -90,7 +89,7 @@ class FileManager
 		}
 		else if ($action == "createdir")
 		{
-			if ($this->lm == null || $this->lm->access != ACCESS_ADMIN) return;
+			if (!$this->allow_create_dir) return;
 			mkdir($this->root.$this->cf.GetVar("name"));
 		}
 		else if ($action == 'swap')
@@ -158,7 +157,7 @@ class FileManager
 			$ret .= "Size: $size bytes<br/>\n";
 			$ret .= "Last Modified: $time<br/>\n";
 
-			if ($this->lm != null && $this->lm->access == ACCESS_ADMIN)
+			if ($this->allow_edit)
 			{
 				//Additional information.
 				$ret .= "<form action=\"$target\" method=\"post\">\n";
@@ -173,26 +172,23 @@ class FileManager
 			}
 		}
 
-		if ($this->lm != null && $this->lm->access == ACCESS_ADMIN)
+		$ret .= $this->GetSetType($target, $fi);
+		if ($this->allow_create_dir) $ret .= $this->GetCreateDirectory($target, $this->cf);
+		if ($this->allow_upload) $ret .= $this->GetUpload();
+		if ($action == 'rename')
 		{
-			$ret .= $this->GetSetType($target, $fi);
-			$ret .= $this->GetCreateDirectory($target, $this->cf);
-			$ret .= $this->GetUpload();
-			if ($action == 'rename')
-			{
-				$index = GetVar('ci');
-				$types = GetVar('type');
-				$fi = $this->files[$types][$index];
+			$index = GetVar('ci');
+			$types = GetVar('type');
+			$fi = $this->files[$types][$index];
 
-				$form = new Form('rename');
-				$form->AddHidden('editor', $this->name);
-				$form->AddHidden('ca', 'rename_done');
-				$form->AddHidden('ci', $index);
-				$form->AddHidden('type', $types);
-				$form->AddInput('Name', 'text', 'name', $fi->filename);
-				$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
-				$ret .= '<b>Rename</b>'.$form->Get('method="post"');
-			}
+			$form = new Form('rename');
+			$form->AddHidden('editor', $this->name);
+			$form->AddHidden('ca', 'rename_done');
+			$form->AddHidden('ci', $index);
+			$form->AddHidden('type', $types);
+			$form->AddInput('Name', 'text', 'name', $fi->filename);
+			$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
+			$ret .= '<b>Rename</b>'.$form->Get('method="post"');
 		}
 		return $ret;
 	}
@@ -211,8 +207,8 @@ class FileManager
 		else $ret .= '<p>';
 		$ret .= $this->GetPath($target, $source);
 
-		if (is_file($this->root.$source))
-			$ret .= " [<a href=\"{$this->root}{$source}\" target=\"_blank\">Download</a>]</p>";
+		if (is_file($source->path))
+			$ret .= " [<a href=\"{$source->path}\" target=\"_blank\">Download</a>]</p>";
 		if (is_dir($this->root.$source))
 		{
 			$ret .= " for <input type=\"text\" name=\"cq\"/>\n";
@@ -249,7 +245,7 @@ class FileManager
 	 */
 	function GetFile($target, $file)
 	{
-		$ret = '<p>';
+		$ret = '';
 		if (!$file->show) return;
 		$types = $file->type ? 'dirs' : 'files';
 		if (isset($file->info['thumb'])) $ret .= "{$file->info['thumb']}\n";
@@ -259,7 +255,7 @@ class FileManager
 			if (isset($icon))
 				$ret .= '<img src="'.$icon.'" alt="'.$file->type.'" /> ';
 		}
-		$ret .= "<br/><a href=\"$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename)."\">{$file->filename}</a>\n";
+		$ret .= "<a href=\"$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename)."\">{$file->filename}</a>\n";
 
 		$common = array(
 			'cf' => $this->cf,
@@ -289,15 +285,24 @@ class FileManager
 			'ci' => $file->info['index']
 		)));
 
-		if ($file->info['index'] > 0)
-			$ret .= " - <a href=\"$uriUp\"><img src=\"xedlib/up.png\" border=\"0\" alt=\"Move Up\" title=\"Move Up\" /></a> ";
-		if ($file->info['index'] < count($this->files[$types])-1)
-			$ret .= " - <a href=\"$uriDown\"><img src=\"xedlib/down.png\" border=\"0\" alt=\"Move Down\" title=\"Move Down\" /></a> ";
+		if ($this->allow_sort && $file->info['index'] > 0)
+			$ret .= " - <a href=\"$uriUp\"><img src=\"xedlib/up.png\"
+			border=\"0\" alt=\"Move Up\" title=\"Move Up\" /></a>";
+		if ($this->allow_sort &&
+		$file->info['index'] < count($this->files[$types])-1)
+			$ret .= " - <a href=\"$uriDown\"><img src=\"xedlib/down.png\"
+			border=\"0\" alt=\"Move Down\" title=\"Move Down\" /></a>";
 
-		$ret .= " - <a href=\"$uriEdit\"><img src=\"xedlib/rename.png\" border=\"0\" alt=\"Rename\" title=\"Rename\" /></a>";
+		if ($this->allow_rename)
+			$ret .= " <a href=\"$uriEdit\"><img src=\"xedlib/rename.png\"
+			border=\"0\" alt=\"Rename\" title=\"Rename\" style=\"vertical-align: text-bottom\" /></a>";
 
-		$ret .= " - <a href=\"$uriDel".
-			"\" onClick=\"return confirm('Are you sure you wish to delete this file?')\"><img src=\"xedlib/delete.png\" border=\"0\"  alt=\"Delete\" title=\"Delete\" /></a></p>\n";
+		if ($this->allow_delete)
+			$ret .= " <a href=\"$uriDel".
+				"\" onClick=\"return confirm('Are you sure you wish to delete
+				this file?')\"><img src=\"xedlib/delete.png\" border=\"0\"
+				alt=\"Delete\" title=\"Delete\" style=\"vertical-align: text-bottom\" /></a>\n";
+		$ret .= '<br/>';
 
 		return $ret;
 	}
@@ -361,7 +366,7 @@ class FileManager
 	function GetCreateDirectory($target)
 	{
 		return <<<EOF
-<b>Create Directory</b>
+<p><b>Create Directory</b></p>
 <form action="{$target}" method="post">
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="createdir" />
@@ -376,7 +381,7 @@ EOF;
 	{
 		global $me, $cf;
 		return <<<EOF
-<b>Upload Files</b>
+<p><b>Upload Files</b></p>
 <form action="{$me}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="upload"/>

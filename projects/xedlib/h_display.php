@@ -706,7 +706,7 @@ class EditorData
 				$table->AddRow($data);
 				$last_id = $i[$this->idcol];
 			}
-			$ret .= "<a name=\"{$this->name}_table\">&nbsp;</a>";
+			$ret .= "<a name=\"{$this->name}_table\" />";
 			$ret .= $table->Get('class="editor"');
 		}
 
@@ -760,7 +760,7 @@ class EditorData
 				($this->state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null),
 				null
 			));
-			$ret .= "<a name=\"{$this->name}_editor\">&nbsp;</a>";
+			$ret .= "<a name=\"{$this->name}_editor\" />";
 			$ret .= $frm->Get("action=\"$target\" method=\"post\"", 'width="100%"');
 		}
 		return $ret;
