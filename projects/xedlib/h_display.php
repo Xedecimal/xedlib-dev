@@ -666,22 +666,27 @@ class EditorData
 		if (!empty($items) && !empty($this->ds->display))
 		{
 			$cols = array();
-			foreach ($this->ds->display as $name => $field) $cols[] = "<b>{$name}</b>";
+			$atrs = array();
+			foreach ($this->ds->display as $disp)
+			{
+				$cols[] = "<b>{$disp->text}</b>";
+				$atrs[] = $disp->attribs;
+			}
 
-			$table = new Table($this->name.'_table', $cols);
+			$table = new Table($this->name.'_table', $cols, $atrs);
 			$last_id = -1;
 			foreach ($items as $ix => $i)
 			{
 				$data = array();
-				foreach ($this->ds->display as $name => $field)
+				foreach ($this->ds->display as $disp)
 				{
-					if (is_array($field)) //Callback for field
+					if (isset($disp->callback)) //Callback for field
 					{
-						$callback = $field[0];
+						$callback = $disp->callback;
 						$data[] = $callback($i, $field[1]);
 					}
 					//Regular field
-					else $data[] = stripslashes($i[$field]);
+					else $data[] = stripslashes($i[$disp->column]);
 				}
 
 				$url_defaults = array('editor' => $this->name);
@@ -716,7 +721,7 @@ class EditorData
 
 		if (!empty($this->ds->fields))
 		{
-			$frm = new Form('form'.$this->name, array('align="right"', 'width="100%"', null));
+			$frm = new Form('form'.$this->name, array('align="right"', null, null));
 			$frm->AddHidden('editor', $this->name);
 			$frm->AddHidden('ca', $this->state == STATE_EDIT ? $this->name.'_update' : $this->name.'_create');
 			if ($this->state == STATE_EDIT) $frm->AddHidden('ci', $ci);
@@ -743,7 +748,7 @@ class EditorData
 					{
 						$value = '';
 					}
-					else $value = $sel[$data[0]];
+					else $value = isset($sel[$data[0]]) ? $sel[$data[0]] : isset($data[2]) ? $data[2] : null;
 
 					if (!is_array($value)) $value = stripslashes($value);
 					$frm->AddInput(
@@ -752,7 +757,7 @@ class EditorData
 						$data[0],
 						$value,
 						'style="width: 100%"'. ((isset($data[3])) ? ' '.$data[3] : null),
-						isset($errors[$data[0]]) ? $errors[$data[0]] : null);
+						isset($errors[$data[0]]) ? $errors[$data[0]] : isset($data[4]) ? $data[4] : null);
 				}
 				else $frm->AddRow(array('&nbsp;'));
 			}
@@ -766,6 +771,22 @@ class EditorData
 			$ret .= $frm->Get("action=\"$target\" method=\"post\"", 'width="100%"');
 		}
 		return $ret;
+	}
+}
+
+class DisplayColumn
+{
+	public $text;
+	public $column;
+	public $callback;
+	public $attribs;
+
+	function DisplayColumn($text, $column, $callback = null, $attribs = null)
+	{
+		$this->text = $text;
+		$this->column = $column;
+		$this->callback = $callback;
+		$this->attribs = $attribs;
 	}
 }
 
