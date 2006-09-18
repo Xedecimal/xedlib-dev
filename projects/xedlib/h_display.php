@@ -1190,7 +1190,7 @@ class CalendarDay
  * A generic page, associated with h_main.php and passed on to index.php .
  */
 
-class Page
+class DisplayObject
 {
 	/**
 	 * Gets name of this page.
@@ -1202,14 +1202,6 @@ class Page
 	}
 
 	function Prepare() { }
-
-	/**
-	 * Returns an array of links this page supplies for the CUserBox object.
-	 */
-	function GetLinks()
-	{
-		return null;
-	}
 }
 
 ?>

@@ -1,14 +1,16 @@
 <?php
 
 /**
-* A template
-*/
+ * A template
+ */
 class Template
 {
 	public $vars; //!< Variables that have been set with set().
 	public $out; //!< Raw output to be rendered.
 	public $objs; //!< Set of objects to output to.
 	public $use_getvar; //!< Whether or not to use GetVar() for {{vars}}
+	public $handlers;
+	public $template;
 
 	function Template()
 	{
@@ -52,7 +54,7 @@ class Template
 		else if ($tag == 'COPY') $output .= '&copy;';
 		else if ($tag == 'DOCTYPE')
 		{
-			if (isset($attribs["TYPE"]))
+			if (isset($attribs['TYPE']))
 			{
 				if ($attribs['TYPE'] == 'strict')
 					$output = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN"
@@ -68,11 +70,20 @@ class Template
 		else if ($tag == 'META') $close = ' /';
 		else if ($tag == 'MODULE')
 		{
-			require_once('modules/'.$attribs['FILE']);
+			$inc_file = $attribs['FILE'];
+			if (!file_exists($inc_file))
+			{
+				Error("Template::Start_Tag()<br/>
+				&lt;MODULE> File doesn't exist ({$inc_file})<br/>
+				in {$this->template}
+				on line ".xml_get_current_line_number($parser)."<br/>");
+			}
+			require_once($inc_file);
 			$class = $attribs['CLASS'];
 			if (!class_exists($class)) Error("Class ($class) does not exist");
 			$mod = new $class();
-			$output = $mod->Get();
+			$this->objs[] = $mod;
+			$show = false;
 		}
 		else if ($tag == 'NBSP') $output = '&nbsp;';
 		else if ($tag == 'NULL') $show = false;
@@ -142,17 +153,6 @@ class Template
 	function End_Tag($parser, $tag)
 	{
 		if ($tag == 'AMP') return;
-		else if ($tag == 'BR') return;
-		else if ($tag == 'COPY') return;
-		else if ($tag == 'DOCTYPE') return;
-		else if ($tag == 'IMG') return;
-		else if ($tag == 'INPUT') return;
-		else if ($tag == 'LINK') return;
-		else if ($tag == 'META') return;
-		else if ($tag == 'MODULE') return;
-		else if ($tag == 'NBSP') return;
-		else if ($tag == 'NULL') return;
-
 		else if ($tag == 'BOX')
 		{
 			$objc = &$this->GetCurrentObject();
@@ -160,6 +160,22 @@ class Template
 			$objd->out .= $objc->Get();
 			array_pop($this->objs);
 		}
+		else if ($tag == 'BR') return;
+		else if ($tag == 'COPY') return;
+		else if ($tag == 'DOCTYPE') return;
+		else if ($tag == 'IMG') return;
+		else if ($tag == 'INPUT') return;
+		else if ($tag == 'LINK') return;
+		else if ($tag == 'META') return;
+		else if ($tag == 'MODULE')
+		{
+			$objc = &$this->GetCurrentObject();
+			$objd = &$this->GetDestinationObject();
+			$objd->out .= $objc->Get();
+			array_pop($this->objs);
+		}
+		else if ($tag == 'NBSP') return;
+		else if ($tag == 'NULL') return;
 		else if ($tag == 'XFORM')
 		{
 			$objc = &$this->GetCurrentObject();
@@ -240,6 +256,7 @@ class Template
 	 */
 	function Get($template)
 	{
+		$this->template = $template;
 		$this->out = "";
 		if (!file_exists($template)) { trigger_error("Template not found (" . $template . ")", E_USER_ERROR); return NULL; }
 		$parser = xml_parser_create_ns();
