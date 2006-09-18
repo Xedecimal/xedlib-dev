@@ -18,7 +18,7 @@ class Template
 		$this->out = "";
 		$this->objs = array();
 		$this->vars = array();
-		$this->data = $data;
+		$this->data = &$data;
 		$this->use_getvar = false;
 	}
 
@@ -85,6 +85,10 @@ class Template
 				on line ".xml_get_current_line_number($parser)."<br/>");
 			$mod = new $class($this->data);
 			$mod->Prepare($this->data);
+			if (!isset($attribs['NAME'])) Error("Template::Start_Tag()<br/>
+				&lt;INCLUDE> Attribute 'NAME' does not exist.
+				in {$this->template}
+				on line ".xml_get_current_line_number($parser)."<br/>");
 			$this->includes[$attribs['NAME']] = $mod;
 			$show = false;
 		}
