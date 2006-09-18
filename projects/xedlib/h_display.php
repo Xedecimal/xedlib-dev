@@ -274,7 +274,7 @@ class Form extends Table
 				if (is_array($value))
 				{
 					$ogstarted = false;
-					foreach ($value as $opt)
+					foreach ($value as $id => $opt)
 					{
 						$selected = $opt->selected ? ' selected="selected"' : "";
 						if ($opt->group)
@@ -283,7 +283,7 @@ class Form extends Table
 							$strout .= "<optgroup label=\"{$opt->text}\">";
 							$ogstarted = true;
 						}
-						else $strout .= "<option value=\"{$opt->id}\"$selected>".htmlspecialchars($opt->text)."</option>\n";
+						else $strout .= "<option value=\"{$id}\"$selected>".htmlspecialchars($opt->text)."</option>\n";
 					}
 					if ($ogstarted) $strout .= "</optgroup>";
 				}
@@ -294,16 +294,16 @@ class Form extends Table
 				if (is_array($value))
 				{
 					$ogstarted = false;
-					foreach ($value as $opt)
+					foreach ($value as $id => $opt)
 					{
-						$selected = $opt[1] ? ' selected="selected"' : "";
-						if ($opt[0]->group)
+						$selected = $opt->selected ? ' selected="selected"' : "";
+						if ($opt->group)
 						{
 							if ($ogstarted) $strout .= "</optgroup>";
-							$strout .= "<optgroup label=\"{$opt[0]->text}\">";
+							$strout .= "<optgroup label=\"{$opt->text}\">";
 							$ogstarted = true;
 						}
-						else $strout .= "<option value=\"{$opt[0]->id}\"$selected>".htmlspecialchars($opt[0]->text)."</option>\n";
+						else $strout .= "<option value=\"{$id}\"$selected>".htmlspecialchars($opt->text)."</option>\n";
 					}
 					if ($ogstarted) $strout .= "</optgroup>";
 				}
@@ -378,14 +378,12 @@ class Form extends Table
 
 class SelOption
 {
-	public $id;
 	public $text;
 	public $group;
 	public $selected;
 
-	function SelOption($id, $text, $group = false, $selected = false)
+	function SelOption($text, $group = false, $selected = false)
 	{
-		$this->id = $id;
 		$this->text = $text;
 		$this->group = $group;
 		$this->selected = $selected;
@@ -422,10 +420,10 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 {
 	$ret = null;
-	if (isset($none)) $ret[] = new SelOption(0, $none, false, $default == 0);
+	if (isset($none)) $ret[0] = new SelOption($none, false, $default == 0);
 	foreach ($result as $res)
 	{
-		$ret[] = new SelOption($res[$col_id], $res[$col_disp], false, $default == $res[$col_id]);
+		$ret[$res[$col_id]] = new SelOption($res[$col_disp], false, $default == $res[$col_id]);
 	}
 	return $ret;
 }
@@ -434,7 +432,10 @@ function ArrayToSelOptions($array, $default = null, $use_keys = true)
 {
 	$opts = array();
 	foreach ($array as $ix => $item)
-		$opts[] = array(new SelOption($use_keys ? $ix : $item, $item), $default == $item);
+	{
+		$o = new SelOption($item, false, $default == $item);
+		$opts[$use_keys ? $ix : $item] = $o;
+	}
 	return $opts;
 }
 
@@ -641,9 +642,10 @@ class EditorData
 	function GetSelMask($items, $sel)
 	{
 		$ret = array();
-		foreach ($items as $i)
+		foreach ($items as $id => $i)
 		{
-			$ret[$i->id] = array($i, ($i->id & $sel) > 0);
+			$i->selected = ($id & $sel) > 0;
+			$ret[$id] = $i;
 		}
 		return $ret;
 	}

@@ -221,7 +221,7 @@ class FileManager
 
 	function GetPath($target, $fi)
 	{
-		$items = explode('/', $fi->path);
+		$items = explode('/', substr($fi->path, strlen($this->root)));
 		$ret = null;
 		$cpath = '';
 		for ($ix = 0; $ix < count($items); $ix++)

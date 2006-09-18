@@ -391,4 +391,11 @@ function GetXedlibPath()
 	return 'xedlib';
 }
 
+function DataToArray($rows, $idcol)
+{
+	$ret = array();
+	foreach ($rows as $row) $ret[$row[$idcol]] = $row;
+	return $ret;
+}
+
 ?>
