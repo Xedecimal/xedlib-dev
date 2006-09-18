@@ -683,7 +683,7 @@ class EditorData
 					if (isset($disp->callback)) //Callback for field
 					{
 						$callback = $disp->callback;
-						$data[] = $callback($i, $field[1]);
+						$data[] = $callback($i, $disp->column);
 					}
 					//Regular field
 					else $data[] = stripslashes($i[$disp->column]);
@@ -1149,7 +1149,6 @@ EOF;
 				//Calendar day content.
 				$ret .= "\t\t\t<p class=\"CalendarDayBody\">\n";
 				$ret .= stripslashes($event[2]);
-				$ret .= "\t\t\t{$event[5]}\n";
 			}
 		}
 
