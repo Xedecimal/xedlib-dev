@@ -456,6 +456,10 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 		else
 			$timestamp = gmmktime(0, 0, 0, $timestamp[0], $timestamp[1], $timestamp[2]);
 	}
+	if (is_string($timestamp))
+	{
+		$timestamp = MyDateTimestamp($timestamp);
+	}
 	$strout = "";
 	if ($include_time)
 	{
@@ -751,8 +755,7 @@ class EditorData
 					else if (isset($sel[$data[0]])) $value = $sel[$data[0]];
 					else if (isset($data[2])) $data[2];
 					else $value = null;
-
-					if (!is_array($value)) $value = stripslashes($value);
+					if (is_string($value)) $value = stripslashes($value);
 					$frm->AddInput(
 						$text,
 						$data[1],
