@@ -11,6 +11,7 @@ class Template
 	public $use_getvar; //!< Whether or not to use GetVar() for {{vars}}
 	public $handlers;
 	public $data;
+	public $includes;
 
 	function Template(&$data = null)
 	{
@@ -66,29 +67,37 @@ class Template
 			}
 		}
 		else if ($tag == 'IMG') $close = ' /';
-		else if ($tag == 'INPUT') $close = ' /';
-		else if ($tag == 'LINK') $close = ' /';
-		else if ($tag == 'META') $close = ' /';
-		else if ($tag == 'MODULE')
+		else if ($tag == 'INCLUDE')
 		{
 			$inc_file = $attribs['FILE'];
 			if (!file_exists($inc_file))
 			{
 				Error("Template::Start_Tag()<br/>
-				&lt;MODULE> File doesn't exist ({$inc_file})<br/>
+				&lt;INCLUDE> File ({$inc_file}) does not exist.<br/>
 				in {$this->template}
 				on line ".xml_get_current_line_number($parser)."<br/>");
 			}
 			require_once($inc_file);
 			$class = $attribs['CLASS'];
-			if (!class_exists($class)) Error("Class ($class) does not exist");
+			if (!class_exists($class)) Error("Template::Start_Tag()<br/>
+				&lt;INCLUDE> Class ({$class}) does not exist.
+				in {$this->template}
+				on line ".xml_get_current_line_number($parser)."<br/>");
 			$mod = new $class($this->data);
 			$mod->Prepare($this->data);
-			$this->objs[] = $mod;
+			$this->includes[$attribs['NAME']] = $mod;
 			$show = false;
 		}
+		else if ($tag == 'INPUT') $close = ' /';
+		else if ($tag == 'LINK') $close = ' /';
+		else if ($tag == 'META') $close = ' /';
 		else if ($tag == 'NBSP') $output = '&nbsp;';
 		else if ($tag == 'NULL') $show = false;
+		else if ($tag == 'PRESENT')
+		{
+			$this->objs[] = $this->includes[$attribs['NAME']];
+			$show = false;
+		}
 		else if ($tag == "TEMPLATE")
 		{
 			if (isset($attribs["FILE"]))
@@ -166,18 +175,19 @@ class Template
 		else if ($tag == 'COPY') return;
 		else if ($tag == 'DOCTYPE') return;
 		else if ($tag == 'IMG') return;
+		else if ($tag == 'INCLUDE') return;
 		else if ($tag == 'INPUT') return;
 		else if ($tag == 'LINK') return;
 		else if ($tag == 'META') return;
-		else if ($tag == 'MODULE')
+		else if ($tag == 'NBSP') return;
+		else if ($tag == 'NULL') return;
+		else if ($tag == 'PRESENT')
 		{
 			$objc = &$this->GetCurrentObject();
 			$objd = &$this->GetDestinationObject();
 			$objd->out .= $objc->Get($this->data);
 			array_pop($this->objs);
 		}
-		else if ($tag == 'NBSP') return;
-		else if ($tag == 'NULL') return;
 		else if ($tag == 'XFORM')
 		{
 			$objc = &$this->GetCurrentObject();
