@@ -1192,16 +1192,18 @@ class CalendarDay
 
 class DisplayObject
 {
+	function DisplayObject(&$data) { }
+
 	/**
 	 * Gets name of this page.
 	 * @returns The name of this page for the browser's titlebar.
 	 */
-	function GetName()
+	function Get(&$data)
 	{
-		return "Class " . get_class($this) . " does not overload GetName().";
+		return "Class " . get_class($this) . " does not overload Get().";
 	}
 
-	function Prepare() { }
+	function Prepare(&$data) { }
 }
 
 ?>

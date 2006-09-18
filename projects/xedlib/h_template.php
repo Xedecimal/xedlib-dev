@@ -10,13 +10,14 @@ class Template
 	public $objs; //!< Set of objects to output to.
 	public $use_getvar; //!< Whether or not to use GetVar() for {{vars}}
 	public $handlers;
-	public $template;
+	public $data;
 
-	function Template()
+	function Template(&$data = null)
 	{
 		$this->out = "";
 		$this->objs = array();
 		$this->vars = array();
+		$this->data = $data;
 		$this->use_getvar = false;
 	}
 
@@ -81,7 +82,8 @@ class Template
 			require_once($inc_file);
 			$class = $attribs['CLASS'];
 			if (!class_exists($class)) Error("Class ($class) does not exist");
-			$mod = new $class();
+			$mod = new $class($this->data);
+			$mod->Prepare($this->data);
 			$this->objs[] = $mod;
 			$show = false;
 		}
@@ -171,7 +173,7 @@ class Template
 		{
 			$objc = &$this->GetCurrentObject();
 			$objd = &$this->GetDestinationObject();
-			$objd->out .= $objc->Get();
+			$objd->out .= $objc->Get($this->data);
 			array_pop($this->objs);
 		}
 		else if ($tag == 'NBSP') return;
