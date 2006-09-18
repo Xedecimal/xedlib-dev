@@ -748,7 +748,9 @@ class EditorData
 					{
 						$value = '';
 					}
-					else $value = isset($sel[$data[0]]) ? $sel[$data[0]] : isset($data[2]) ? $data[2] : null;
+					else if (isset($sel[$data[0]])) $value = $sel[$data[0]];
+					else if (isset($data[2])) $data[2];
+					else $value = null;
 
 					if (!is_array($value)) $value = stripslashes($value);
 					$frm->AddInput(
