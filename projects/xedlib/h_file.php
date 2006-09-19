@@ -21,6 +21,18 @@ class FileManager
 	public $allow_rename;
 	public $allow_edit;
 
+	//Display
+	public $show_title;
+	public $show_files_header = 'Files';
+	public $show_folders_header = 'Folders';
+	/**
+	 * Whether files or folders come first.
+	 *
+	 * @var boolean
+	 */
+	public $show_files_first = false;
+	public $show_info = true;
+
 	/**
 	 * Enter description here...
 	 *
@@ -135,18 +147,26 @@ class FileManager
 		$ret .= $this->GetHeader($target, $fi);
 		if (is_dir($this->root.$this->cf))
 		{
-			if (!empty($this->files['dirs']))
+			if ($this->show_files_first)
 			{
-				$ret .= "<p>Folders</p>\n";
-				foreach($this->files['dirs'] as $ix => $dir)
-					$ret .= $this->GetFile($target, $dir, $ix);
+				$title = "<p>{$this->show_files_header}</p>\n";
+				$ret .= $this->GetFiles($target, 'files', $title);
 			}
-	
-			if (!empty($this->files['files']))
+			else
 			{
-				$ret .= "<p>Files</p>\n";
-				foreach($this->files['files'] as $ix => $file)
-					$ret .= $this->GetFile($target, $file, $ix);
+				$title = "<p>{$this->show_folders_header}</p>\n";
+				$ret .= $this->GetFiles($target, 'dirs', $title);
+			}
+
+			if (!$this->show_files_first)
+			{
+				$title = "<p>{$this->show_files_header}</p>\n";
+				$ret .= $this->GetFiles($target, 'files', $title);
+			}
+			else
+			{
+				$title = "<p>{$this->show_folders_header}</p>\n";
+				$ret .= $this->GetFiles($target, 'dirs', $title);
 			}
 		}
 		else
@@ -238,6 +258,18 @@ class FileManager
 		return $ret;
 	}
 
+	function GetFiles($target, $type, $title)
+	{
+		$ret = '';
+		if (!empty($this->files[$type]))
+		{
+			$ret .= $title;
+			foreach($this->files[$type] as $ix => $file)
+				$ret .= $this->GetFile($target, $file, $ix);
+		}
+		return $ret;
+	}
+
 	/**
 	 * Get a single file.
 	 *
@@ -256,7 +288,12 @@ class FileManager
 			if (isset($icon))
 				$ret .= '<img src="'.$icon.'" alt="'.$file->type.'" /> ';
 		}
-		$ret .= "<a href=\"$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename)."\">{$file->filename}</a>\n";
+		$name = ($this->show_title && isset($file->info['title'])) ?
+			$file->info['title'] : $file->filename;
+		if (is_file($file->path) && !$this->show_info)
+			$url = $this->root.$this->cf.$file->filename;
+		else $url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
+		$ret .= "<a href=\"$url\">{$name}</a>\n";
 
 		$common = array(
 			'cf' => $this->cf,
@@ -369,7 +406,7 @@ class FileManager
 	function GetCreateDirectory($target)
 	{
 		return <<<EOF
-<p><b>Create Directory</b></p>
+<p><b>Create New Folder</b></p>
 <form action="{$target}" method="post">
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="createdir" />
@@ -384,7 +421,7 @@ EOF;
 	{
 		global $me, $cf;
 		return <<<EOF
-<p><b>Upload Files</b></p>
+<p><b>Upload Files to Current Folder</b></p>
 <form action="{$me}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="upload"/>
