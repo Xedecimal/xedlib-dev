@@ -13,7 +13,7 @@ class Template
 	public $data;
 	public $includes;
 
-	function Template(&$data = null)
+	function Template(&$data)
 	{
 		$this->out = "";
 		$this->objs = array();
@@ -324,7 +324,7 @@ class VarParser
 		$this->vars = $vars;
 		return preg_replace_callback("/\{{([^}]+)\}}/", array($this, 'var_parser'), $data);
 	}
-	
+
 	function var_parser($match)
 	{
 		$tvar = $match[1];
