@@ -178,7 +178,7 @@ function MakeURI($url, $uri = null)
 		$start = (strpos($ret, "?") > 0);
 		foreach ($uri as $key => $val)
 		{
-			if (strlen($val) > 0)
+			if (isset($val))
 			{
 				$ret .= ($start ? '&amp;' : '?')."{$key}={$val}";
 				$start = true;

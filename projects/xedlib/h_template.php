@@ -13,7 +13,7 @@ class Template
 	public $data;
 	public $includes;
 
-	function Template(&$data)
+	function Template()
 	{
 		$this->out = "";
 		$this->objs = array();
