@@ -428,9 +428,12 @@ EOF;
 	function GetUpload()
 	{
 		global $me, $cf;
+		ini_set('max_execution_time', 0);
+		ini_set('max_input_time', 0);
 		return <<<EOF
 <p><b>Upload Files to Current Folder</b></p>
 <form action="{$me}" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="upload"/>
 	<input type="hidden" name="cf" value="{$this->cf}"/>
