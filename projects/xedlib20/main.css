@@ -1,0 +1,23 @@
+table { font-family: Verdana; font-size: 8pt; }
+
+th { text-align: left; }
+
+.box_row_even
+{
+	font-size: 13px;
+	background-color: #D0D0D0;
+}
+
+.box_row_odd
+{
+	background-color: #E0E0E0;
+}
+
+.box_main
+{
+	font-size: 13px;
+	color: #000000;
+}
+
+.tab_active { background-color: #E0E0E0; }
+.tab_inactive { background-color: #D0D0D0; }
