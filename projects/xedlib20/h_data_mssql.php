@@ -4,17 +4,7 @@
  * @package Data
  */
 
-/** Column options include nullable. */
-define("DB_NULL",		2);
-/** Column options include auto increment. */
-define("DB_AINC",		4);
-/** Column options include a primary key. */
-define("DB_PKEY",		8);
-/** Column optons include foreign key. */
-define("DB_FKEY",		16);
-/** Column options include unsigned. */
-define("DB_UNSIGNED",	32);
-define("GET_ASSOC", 0);
+define("GET_ASSOC",     0);
 
 $queries = array();
 
