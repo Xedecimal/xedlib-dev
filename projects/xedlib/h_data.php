@@ -45,7 +45,7 @@ class Database
 		$res = mysql_query($query, $this->link);
 		if (mysql_error())
 		{
-			Error("Query: $query<br>\nMySQL Error: ".mysql_error());
+			user_error("Query: $query<br>\nMySQL Error: ".mysql_error());
 			return null;
 		}
 		return $res;

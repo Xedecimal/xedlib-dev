@@ -1219,7 +1219,7 @@ class CalendarDay
 
 class DisplayObject
 {
-	function DisplayObject(&$data) { }
+	function DisplayObject() { }
 
 	/**
 	 * Gets name of this page.
