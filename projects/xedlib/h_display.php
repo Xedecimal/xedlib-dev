@@ -450,7 +450,6 @@ function ArrayToSelOptions($array, $default = null, $use_keys = true)
  */
 function GetInputDate($name = "", $timestamp = null, $include_time = false)
 {
-	if (!isset($timestamp)) $timestamp = time();
 	if (is_array($timestamp))
 	{
 		if (isset($timestamp[5]))
@@ -463,6 +462,7 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 		if ($include_time) $timestamp = MyDateTimestamp($timestamp);
 		else $timestamp = MyDateStamp($timestamp);
 	}
+	if (!isset($timestamp)) $timestamp = time();
 	$strout = "";
 	if ($include_time)
 	{

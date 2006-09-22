@@ -354,7 +354,7 @@ function MyDateTimestamp($date)
 
 function MyDateStamp($date)
 {
-	preg_match('/([0-9]+)-([0-9]+)-([0-9]+)/', $date, $match);
+	if (!preg_match('/([0-9]+)-([0-9]+)-([0-9]+)/', $date, $match)) return null;
 	return gmmktime(0, 0, 0,
 		$match[2], //m
 		$match[3], //d
