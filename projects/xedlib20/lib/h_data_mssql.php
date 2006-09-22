@@ -1,9 +1,9 @@
 <?php
 
 /**
- * @package Data
+ * Associative get, returns arrays as $item['column'] instead of $item[index].
+ * @todo Don't use defines, defines aren't redeclareable.
  */
-
 define("GET_ASSOC",     0);
 
 $queries = array();
@@ -19,11 +19,9 @@ class Database
 	/** Name of this database, set from constructor. */
 	public $name;
 	/**
-	 * Whether or not we use odbc.
-	 *
-	 * @var bool true if piping through odbc.
+	 * @var bool $odbc
 	 */
-	public $odbc;
+	public $odbc; //!< boolean True if piping through ODBC.
 
 	/**
 	 * Instantiates a new xlDatabase object with the database name, hostname, user name and password.

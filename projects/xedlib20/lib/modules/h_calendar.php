@@ -1,7 +1,13 @@
 <?php
 
 /**
+ * @package Calendar
+ */
+
+/**
  * A simple to use calander display.
+ *
+ * @package Calendar
  */
 class Calendar
 {
@@ -248,6 +254,11 @@ EOF;
 	}
 }
 
+/**
+ * Enter description here...
+ *
+ * @package Calendar
+ */
 class CalendarMonth
 {
 	public $Year; //Year this month is on.
@@ -269,6 +280,11 @@ class CalendarMonth
 	}
 }
 
+/**
+ * Enter description here...
+ *
+ * @package Calendar
+ */
 class CalendarDay
 {
 	public $TimeStamp;

@@ -1,7 +1,15 @@
 <?php
 
-require_once('h_display.php');
+/**
+ * @package FileManager
+ *
+ */
 
+/**
+ * Enter description here...
+ *
+ * @package FileManager
+ */
 class FileManager
 {
 	public $name;
@@ -457,6 +465,7 @@ EOF;
 /**
  * Collects information for a SINGLE file OR folder.
  *
+ * @package FileManager
  */
 class FileInfo
 {
@@ -551,9 +560,10 @@ class FileInfo
 }
 
 /**
-* The generic file handler.
-*
-*/
+ * The generic file handler.
+ *
+ * @package FileManager
+ */
 class FilterDefault
 {
 	function GetName() { return "Normal"; }
@@ -586,6 +596,11 @@ class FilterDefault
 	}
 }
 
+/**
+ * Enter description here...
+ *
+ * @package FileManager
+ */
 class FilterGallery extends FilterDefault
 {
 	function GetName() { return "Gallery"; }

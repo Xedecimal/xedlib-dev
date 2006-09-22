@@ -1,14 +1,24 @@
 <?php
 
 /**
- * @package Data
+ * @package Storage
  */
 
+/**
+ * Associative get, returns arrays as $item['column'] instead of $item[index].
+ * @todo Don't use defines, defines aren't redeclareable.
+ */
 define("GET_ASSOC", MYSQL_ASSOC);
+/**
+ * Both get, returns arrays as $item['column'] as well as $item[index] instead
+ * of $item[index].
+ * @todo Don't use defines, defines aren't redeclareable.
+ */
 define("GET_BOTH", MYSQL_BOTH);
 
 /**
  * A generic database interface, currently only supports MySQL apparently.
+ * @package Storage
  */
 class Database
 {
@@ -104,6 +114,8 @@ function DBNow() { return array("now"); }
  * general guidelines, for one it must have an auto_increment
  * primary key for it's first field named 'id' so it can
  * easily locate fields.
+ * 
+ * @package Storage
  */
 class DataSet
 {

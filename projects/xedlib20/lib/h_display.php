@@ -1,10 +1,7 @@
 <?php
 
-require_once("h_template.php");
-require_once("h_utility.php");
-
 /**
- * @package Display
+ * @package Presentation
  */
 
 /**
@@ -25,6 +22,8 @@ function GetBox($name, $title, $body, $template = null)
 
 /**
  * A simple themed box.
+ * 
+ * @package Presentation
  */
 class Box
 {
@@ -78,6 +77,8 @@ class Box
 
 /**
  * A generic table class to manage a top level table, with children rows and cells.
+ * 
+ * @package Presentation
  */
 class Table
 {
@@ -174,6 +175,8 @@ class Table
 /**
  * A table with columns that can sort, a bit
  * more processing with a better user experience.
+ * 
+ * @package Presentation
  */
 class SortTable extends Table
 {
@@ -213,6 +216,7 @@ class SortTable extends Table
 /**
  * A web page form, with functions for easy field creation and layout.
  * @todo Create sub classes for each input type.
+ * @package Presentation
  */
 class Form extends Table
 {
@@ -376,6 +380,11 @@ class Form extends Table
 	}
 }
 
+/**
+ * Enter description here...
+ * 
+ * @package Presentation
+ */
 class SelOption
 {
 	public $text;
@@ -493,6 +502,8 @@ function BoolCallback($val) { return $val ? 'Yes' : 'No'; }
 
 /**
  * A complex data editor.
+ * 
+ * @package Presentation
  */
 class EditorData
 {
@@ -783,6 +794,11 @@ class EditorData
 	}
 }
 
+/**
+ * Enter description here...
+ * 
+ * @package Presentation
+ */
 class DisplayColumn
 {
 	public $text;
@@ -802,6 +818,11 @@ class DisplayColumn
 define('ACCESS_GUEST', 0);
 define('ACCESS_ADMIN', 1);
 
+/**
+ * Enter description here...
+ *
+ * @package Presentation
+ */
 class LoginManager
 {
 	public $datasets;
@@ -887,7 +908,9 @@ class LoginManager
 
 /**
  * An easy way to display a set of tabs, they basically work like a menubar.
+ * 
  * @todo Get rid of this thing or revise it.
+ * @package Presentation
  */
 class Tabs
 {
@@ -930,8 +953,9 @@ class Tabs
 
 /**
  * A generic page, associated with h_main.php and passed on to index.php .
+ * 
+ * @package Presentation
  */
-
 class DisplayObject
 {
 	function DisplayObject() { }
@@ -950,19 +974,95 @@ class DisplayObject
 
 //Form Functions
 
-function FormRequire($name, $arr, $check)
+class Validation
+{
+	public $field;
+	public $regex;
+	public $error;
+	public $validators;
+
+	function Validation($field, $regex, $error)
+	{
+		$this->field = $field;
+		$this->regex = $regex;
+		$this->error = $error;
+		$this->validators = array();
+	}
+
+	function Add($value, $child)
+	{
+		$this->validators[$value] = $child;
+	}
+
+	function GetJS()
+	{
+		if (!empty($this->validators)) foreach ($this->validators as $v)
+		{
+			$ret .= $v->GetJS();
+		}
+		$ret .= "\t\tfunction {$this->field}_check(validate) \n\t\t{\n
+			ret = true;
+			chk_{$this->field} = document.getElementById('{$this->field}');
+			spn_{$this->field} = document.getElementById('span_{$this->field}');
+			if (!validate) { spn_{$this->field}.innerHTML = ''; return ret; }
+			if (!/^{$this->regex}$/.test(chk_{$this->field}.value))
+			{
+				spn_{$this->field}.innerHTML = '$this->error';
+				chk_{$this->field}.focus();
+				ret = false;\n";
+				foreach ($this->validators as $reg => $v)
+				{
+					$ret .= "\t\t\t\t{$v->field}_check(0);\n";
+				}
+			$ret .= "\t\t\treturn false;
+			}
+			else
+			{
+				spn_{$this->field}.innerHTML = '';\n";
+				foreach ($this->validators as $reg => $v)
+				{
+					$ret .= "\t\t\t\tret = {$v->field}_check(/^$reg$/.test(chk_{$this->field}.value));\n";
+					$ret .= "\t\t\t\tif (!ret) return false\n";
+				}
+			$ret .= "\t\t\t}
+			return ret;
+		}\n";
+		return $ret;
+	}
+
+	function Validate($check, &$ret)
+	{
+		if ($check)
+		{
+		}
+		else
+		{
+			$ret['errors'][$this->field] = '<span class="error" id="span_'.$this->field.'"></span>';
+			foreach ($this->validators as $v) $v->Validate($check, $ret);
+		}
+	}
+}
+
+function FormValidate($name, $arr, $check)
 {
 	$ret = array();
 	$checks = null;
-	foreach ($arr as $key => $val)
+	if (is_array($arr)) foreach ($arr as $key => $val)
 	{
 		$rec = RecurseReq($key, $val, $checks);
-		//$ret['errors'] = array_merge($ret['errors'], $rec['errors']);
 		if ($check && strlen(GetVar($key)) < 1) $ret['errors'][$key] = $val;
-		//$checks .= "\tchk_{$key} = document.getElementById('{$key}')\n";
-		//$checks .= "\tif (chk_{$key}.value.length < 1) { alert('{$val}'); chk_{$key}.focus(); return false; }\n";
+		else $ret['errors'][$key] = '<span class="error" id="span_'.$key.'"></span>';
+		$ret['js'] .= $v->GetJS();
 	}
-	$ret['js'] = "function {$name}_check()\n\t{\n\t{$checks}\n\treturn true;\n}\n";
+	else
+	{
+		$arr->Validate($check, $ret);
+		$ret['js'] .= $arr->GetJS($name);
+	}
+	$ret['js'] .= "\t\tfunction {$name}_check(validate)\n\t\t{\n";
+	if (is_array($arr)) foreach ($arr as $v) $ret['js'] .= "\t\t\t{$v->field}_check(validate);\n";
+	else $ret['js'] .= "\t\t\tret = {$arr->field}_check(validate);\n";
+	$ret['js'] .= "\t\t\treturn ret;\n\t\t}\n";
 	return $ret;
 }
 

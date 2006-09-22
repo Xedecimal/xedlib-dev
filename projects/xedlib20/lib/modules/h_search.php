@@ -1,7 +1,14 @@
 <?php
 
-require_once('h_utility.php');
+/**
+ * @package Search
+ */
 
+/**
+ * Enter description here...
+ *
+ * @package Search
+ */
 class Search
 {
 	var $searchItems;

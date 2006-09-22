@@ -2,6 +2,15 @@
 
 $me = GetVar("SCRIPT_NAME");
 
+/**
+ * @package Utility
+ *
+ */
+
+/**
+ * Enter description here...
+ *
+ */
 function HandleErrors()
 {
 	ini_set('display_errors', 1);
@@ -11,7 +20,20 @@ function HandleErrors()
 	set_error_handler("ErrorHandler");
 }
 
-//TODO: TraceConfig() and output locations.
+/**
+* Use this when you wish to output debug information only when $debug is
+* true.
+* <code>Testing</code>
+*
+* @param string $msg The message to output.
+* @access public
+* @version 1.0
+* @see Error, ErrorHandler, HandleErrors
+* @since 1.0
+* @todo Alternative output locations.
+* @todo Alternative verbosity levels.
+* @example ../examples/Trace.php
+*/
 function Trace($msg)
 {
 	global $debug;
@@ -20,8 +42,7 @@ function Trace($msg)
 
 function Error($msg, $level = E_USER_ERROR) { trigger_error($msg, $level); }
 
-//function ErrorHandler($errno, $errmsg, $filename, $linenum, $vars)
-function ErrorHandler($errno, $errmsg, $filename, $linenum)
+function ErrorHandler($errno, $errmsg, $filename, $linenum, $context)
 {
 	$errortype = array (
 		E_ERROR           => "Error",
@@ -41,20 +62,21 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 
 	$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
 
-	$err = "[<b>{$errortype[$errno]}</b>] ";
-	$err .= "<b>$errmsg</b> in ";
-	$err .= "<b>$filename</b>:<b>$linenum</b>\n";
-	$err .= "Call Stack...";
+	$err = "[{$errortype[$errno]}] <b>$errmsg</b><br/>";
+	//$err .= " in $filename:$linenum\n";
+	$err .= "Call stack follows...";
 
-	$err .= "<table><tr><td>File:Line</td><td>Function</td>\n";
+	$err .= "<table><tr><td>File</td><td>#</td><td>Function</td>\n";
 	$array = debug_backtrace();
-	foreach ($array as $entry)
+	foreach ($array as $ix => $entry)
 	{
-		$err .= "<tr><td>";
-		if (isset($entry['file'])) $err .= "<b>{$entry['file']}</b>";
-		if (isset($entry['line'])) $err .= ":<b>{$entry['line']}</b>";
+		if ($ix < 1) continue;
+		//varinfo($entry);
+		$err .= "<tr>";
+		if (isset($entry['file'])) $err .= "<td>{$entry['file']}</td>";
+		if (isset($entry['line'])) $err .= "<td>{$entry['line']}</td>";
 		if (isset($entry['class'])) $err .= "</td><td>{$entry['class']}{$entry['type']}{$entry['function']}";
-		else if (isset($entry['function'])) $err .= "</td><td><b>{$entry['function']}</b>";
+		else if (isset($entry['function'])) $err .= "</td><td>{$entry['function']}";
 		$err .= "<td></tr>";
 	}
 	$err .= "</table><hr size=\"1\">";
@@ -72,6 +94,7 @@ function SetVar($name, $value)
 	if (!session_is_registered($name)) session_register($name);
 	if (is_array($_SESSION)) $_SESSION[$name] = $value;
 	if (is_array($HTTP_SESSION_VARS)) $HTTP_SESSION_VARS[$name] = $value;
+	return $value;
 }
 
 /**
@@ -106,13 +129,6 @@ function GetVar($name, $default = null)
 	return $default;
 }
 
-function Persist($name, $value)
-{
-	global $PERSISTS;
-	$PERSISTS[$name] = $value;
-	return $value;
-}
-
 function UnsetVar($name)
 {
 	if (session_is_registered($name)) session_unregister($name);
@@ -126,6 +142,13 @@ function VarInfo($var)
 	if (!isset($var)) echo "NULL";
 	echo str_replace("<", "&lt;", print_r($var, true));
 	echo "</pre>\n";
+}
+
+function Persist($name, $value)
+{
+	global $PERSISTS;
+	$PERSISTS[$name] = $value;
+	return $value;
 }
 
 /**
