@@ -352,6 +352,16 @@ function MyDateTimestamp($date)
 	);
 }
 
+function MyDateStamp($date)
+{
+	preg_match('/([0-9]+)-([0-9]+)-([0-9]+)/', $date, $match);
+	return gmmktime(0, 0, 0,
+		$match[2], //m
+		$match[3], //d
+		$match[1] //y
+	);
+}
+
 function GetDateOffset($ts)
 {
 	$ret = '';

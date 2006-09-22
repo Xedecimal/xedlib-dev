@@ -460,7 +460,8 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	}
 	if (is_string($timestamp))
 	{
-		$timestamp = MyDateTimestamp($timestamp);
+		if ($include_time) $timestamp = MyDateTimestamp($timestamp);
+		else $timestamp = MyDateStamp($timestamp);
 	}
 	$strout = "";
 	if ($include_time)
