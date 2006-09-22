@@ -394,23 +394,25 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 {
 	$strout = "<select name=\"$name\" $attributes>\n";
 	$selid = 0;
-	foreach ($value as $option)
+	foreach ($value as $id => $option)
 	{
 		$selected = null;
 		if (isset($selvalue))
 		{
-			if (is_array($selvalue) &&
-			isset($selvalue[$selid]) &&
+			if (isset($selvalue[$selid]) &&
 			strlen($selvalue[$selid]) > 0 &&
-			$selvalue[$selid] == $option->id)
+			$selvalue[$selid] == $id)
 			{
 				$selected = ' selected="true"';
 				$selid++;
 			}
-			else if ($selvalue == $option->id) $selected = ' selected="true"';
+			else if ($selvalue == $id)
+			{
+				$selected = ' selected="true"';
+			}
 		}
 		else if ($option->selected) $selected = ' selected="true"';
-		$strout .= "<option value=\"{$option->id}\"$selected>{$option->text}</option>\n";
+		$strout .= "<option value=\"{$id}\"$selected>{$option->text}</option>\n";
 		$selected = null;
 	}
 	$strout .= "</select>\n";
@@ -525,6 +527,7 @@ class EditorData
 	{
 		$this->name = $name;
 		$this->idcol = $idcol;
+		$this->filter = $filter;
 		if ($ds != null)
 		{
 			$this->ds = $ds;
@@ -753,7 +756,7 @@ class EditorData
 						$value = '';
 					}
 					else if (isset($sel[$data[0]])) $value = $sel[$data[0]];
-					else if (isset($data[2])) $data[2];
+					else if (isset($data[2])) { $data[2]; }
 					else $value = null;
 					if (is_string($value)) $value = stripslashes($value);
 					$frm->AddInput(
@@ -997,8 +1000,8 @@ class Calendar
 
 		$month = new CalendarMonth($ts);
 
-		$off = gmdate("w", $ts); //Gets the offset of the first  day of this month.
-		$days = gmdate("t", $ts); //Get total amount of days in this month.
+		//$off = gmdate("w", $ts); //Gets the offset of the first  day of this month.
+		//$days = gmdate("t", $ts); //Get total amount of days in this month.
 $ret = <<<EOF
 <form action="$me" method="post">
 <div><input type="hidden" name="cs" value="$cs" /></div>
@@ -1072,7 +1075,7 @@ EOF;
 				$curdate = $key;
 			}
 		}
-		$thists = GetVar("ts", time());
+		//$thists = GetVar("ts", time());
 		//$ret = "<table class=\"CalendarYear\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n";
 		$ret = "";
 		$yearx = 0;
