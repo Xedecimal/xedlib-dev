@@ -97,6 +97,28 @@ class Database
 function DeString($data) { return array("destring", $data); }
 function DBNow() { return array("now"); }
 
+class Relation
+{
+	public $ds;
+	public $parent_key;
+	public $child_key;
+
+	/**
+	 * Prepares a relation for database association.
+	 *
+	 * @param DataSet $ds DataSet for this child.
+	 * @param string $primary_key Column name of the primary key of $ds.
+	 * @example ../examples/relation.php
+	 * @return Relation
+	 */
+	function Relation($ds, $parent_key, $child_key)
+	{
+		$this->ds = $ds;
+		$this->parent_key = $parent_key;
+		$this->child_key = $child_key;
+	}
+}
+
 /**
  * A general dataset, good for binding to a database's table.
  * Used to generically retrieve, store, update and delete
@@ -131,12 +153,11 @@ class DataSet
 	}
 
 	/**
-	 * @param $cpkey string Name of the child's primary key for item swap.
-	 * @param $temp string Name of temporary table containing space for item swap.
+	 * @param Relation $relation Child to add.
 	 */
-	function AddChild($ds, $pkey, $ckey, $cpkey = null, $temp = null)
+	function AddChild($relation)
 	{
-		$this->children[] = array("ds" => $ds, "pkey" => $pkey, "ckey" => $ckey, "cpkey" => $cpkey, "temp" => $temp);
+		$this->children[] = $relation;
 	}
 
 	function ColsClause($cols)
@@ -489,31 +510,16 @@ class DataSet
 	function Remove($match)
 	{
 		$matches = array();
-		foreach ($match as $key => $val)
-		{
-			$matches[$this->table.'.'.$key] = $val;
-		}
-		$tnames = null;
-		if (!empty($this->children))
-		{
-			$children = $this->GetMatches($matches);
-			if (!empty($children[0])) foreach ($children[0] as $ix => $table)
-			{
-				if ($ix > 0) $tnames .= ',';
-				$tnames .= " `$table`";
-			}
-			$query = "DELETE{$tnames} FROM{$tnames}";
-		}
-		else
-		{
-			$query = "DELETE FROM `{$this->table}`";
-		}
-		if (!empty($this->children))
-		{
-			$query .= $this->WhereClause($children[1]);
-		}
-		else $query .= $this->WhereClause($match);
+		$query = "DELETE FROM `{$this->table}`";
+		$query .= $this->WhereClause($match);
 		$this->database->Query($query);
+
+		//Prune off all children...
+		if (!empty($this->children)) foreach ($this->children as $ix => $child)
+		{
+			$query = "DELETE c FROM {$child->ds->table} c LEFT JOIN {$this->table} p ON(c.{$child->child_key} = p.{$child->parent_key}) WHERE c.{$child->child_key} != 0 AND p.{$child->parent_key} IS NULL";
+			$this->database->Query($query);
+		}
 	}
 
 	function GetMatches($original)
