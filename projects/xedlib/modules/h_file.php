@@ -1,6 +1,6 @@
 <?php
 
-require_once('h_display.php');
+require_once("$xlpath/h_display.php");
 
 class FileManager
 {
@@ -257,8 +257,11 @@ class FileManager
 		$ret = null;
 		$cpath = '';
 
-		$uri = MakeURI($target, array('editor' => $this->name));
-		$ret .= "<a href=\"{$uri}\">Home</a> / ";
+		if (isset($cf))
+		{
+			$uri = MakeURI($target, array('editor' => $this->name));
+			$ret .= "<a href=\"{$uri}\">Home</a> / ";
+		}
 
 		for ($ix = 0; $ix < count($items); $ix++)
 		{
