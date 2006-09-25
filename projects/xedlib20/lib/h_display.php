@@ -509,7 +509,7 @@ class TreeNode
 	public $data;
 	public $children;
 
-	function Node($data)
+	function TreeNode($data)
 	{
 		$this->data = $data;
 		$this->children = array();
@@ -824,18 +824,18 @@ class EditorData
 		$index = 0;
 		foreach ($node->children as $ix => $child)
 		{
-			$ret[] = $this->GetItem($target, $child, $node->children, $ix, $child_index++, $level+1);
+			$ret[] = $this->GetItem($target, $child, $level+1);
 
-			if ($this->sorting)
+			if ($this->sorting && count($node->children) > 1)
 			{
 				if ($index > 0)
 				{
 					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $node->data[$idcol], 'ct' => $ix-1), $url_defaults));
 					$row[] = "<a href=\"{$url_up}\"><img src=\"{$xlpath}/images/up.png\" alt=\"Up\" border=\"0\"/></a>";
 				}
-				if ($index < count($keys)-1)
+				if ($index < count($node->children)-1)
 				{
-					$next_child_id = $tree[$keys[$index+1]]->data['_child'];
+					$next_child_id = $node->children[$index]->data['_child'];
 					$next_child = $this->ds->children[$next_child_id];
 					$next_idcol = $next_child->ds->table.'_'.$next_child->ds->id;
 					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $node->data[$idcol], 'ct' => $tree[$ix+1]->data[$next_idcol]), $url_defaults));
@@ -930,10 +930,6 @@ class EditorData
 	{
 		if (!empty($items))
 		{
-			//Flats are indexed by ID, but the tree is indexed by it's
-			//position IN the parent node/root!
-			$flats = array();
-
 			//Build a list of ids we are going to use (child index => child keys)
 
 			$ids = array(0 => $this->ds->table.'_'.$this->ds->id);
@@ -947,6 +943,10 @@ class EditorData
 			}
 
 			//Build a list of column to node associations...
+
+			//Flats are indexed by ID, but the tree is indexed by it's
+			//position IN the parent node/root!
+			$flats = array();
 
 			$node_link[0] = array("{$this->ds->table}_{$this->ds->id}");
 			foreach ($this->ds->display as $disp) $node_link[0][] = "{$this->ds->table}_{$disp->column}";
@@ -991,7 +991,7 @@ class EditorData
 					if ($id)
 					{
 						if ($pid) $flats[0][$pid]->children[$id] = $node;
-						else $tree[$id] = $node;
+						else $tree[count($tree)] = $node;
 					}
 				}
 			}
