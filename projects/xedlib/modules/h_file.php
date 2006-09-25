@@ -241,6 +241,16 @@ class FileManager
 		return $ret;
 	}
 
+	/**
+	 * Returns a string of arrays in the format root / path / to / file.ext
+	 * [ download ]
+	 *
+	 * @param string $target Target url of links.
+	 * @param FileInfo $fi info for current file.
+	 * @return string
+	 * @see Get
+	 * @see GetHeader
+	 */
 	function GetPath($target, $fi)
 	{
 		$items = explode('/', substr($fi->path, strlen($this->root)));
