@@ -21,19 +21,17 @@ function HandleErrors()
 }
 
 /**
-* Use this when you wish to output debug information only when $debug is
-* true.
-* <code>Testing</code>
-*
-* @param string $msg The message to output.
-* @access public
-* @version 1.0
-* @see Error, ErrorHandler, HandleErrors
-* @since 1.0
-* @todo Alternative output locations.
-* @todo Alternative verbosity levels.
-* @example ../examples/Trace.php
-*/
+ * Use this when you wish to output debug information only when $debug is
+ * true.
+ *
+ * @param string $msg The message to output.
+ * @version 1.0
+ * @see Error, ErrorHandler, HandleErrors
+ * @since 1.0
+ * @todo Alternative output locations.
+ * @todo Alternative verbosity levels.
+ * @example ../examples/trace.php
+ */
 function Trace($msg)
 {
 	global $debug;
@@ -63,10 +61,10 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum, $context)
 	$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
 
 	$err = "[{$errortype[$errno]}] <b>$errmsg</b><br/>";
-	//$err .= " in $filename:$linenum\n";
-	$err .= "Call stack follows...";
+	$err .= "Error seems to be in one of these places...";
 
 	$err .= "<table><tr><td>File</td><td>#</td><td>Function</td>\n";
+	$err .= "<tr><td>$filename</td><td>$linenum</td></tr>\n";
 	$array = debug_backtrace();
 	foreach ($array as $ix => $entry)
 	{
@@ -139,7 +137,11 @@ function UnsetVar($name)
 function VarInfo($var)
 {
 	echo "<pre>\n";
-	if (!isset($var)) echo "NULL";
+	if (!isset($var)) echo "[NULL VALUE]";
+	else if (is_string($var) && strlen($var) < 1) echo '[EMPTY STRING]';
+
+	if (is_object($var)) echo $var.' -> ';
+	
 	echo str_replace("<", "&lt;", print_r($var, true));
 	echo "</pre>\n";
 }
@@ -197,6 +199,13 @@ function Redirect($url, $getvars = NULL)
 //String
 //
 
+/**
+ * Returns the start of a larger string trimmed down to the length you specify
+ * without chomping words.
+ * @param string $text Text to chomp.
+ * @param int $length Maximum length you're going for.
+ * @return string Chomped text.
+ */
 function ChompString($text, $length)
 {
 	if (strlen($text) > $length)
@@ -226,6 +235,7 @@ function TimestampToMsSql($ts)
  * Converts a mysql date to a timestamp.
  *
  * @param $date string MySql Date/DateTime
+ * @param $include_time Whether hours, minutes and seconds are included.
  * @return int Timestamp
  */
 function MyDateTimestamp($date, $include_time = false)

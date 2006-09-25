@@ -78,7 +78,6 @@ class Box
 /**
  * A generic table class to manage a top level table, with children rows and cells.
  * 
- * @package Presentation
  */
 class Table
 {
@@ -176,7 +175,6 @@ class Table
  * A table with columns that can sort, a bit
  * more processing with a better user experience.
  * 
- * @package Presentation
  */
 class SortTable extends Table
 {
@@ -216,7 +214,6 @@ class SortTable extends Table
 /**
  * A web page form, with functions for easy field creation and layout.
  * @todo Create sub classes for each input type.
- * @package Presentation
  */
 class Form extends Table
 {
@@ -382,8 +379,6 @@ class Form extends Table
 
 /**
  * Enter description here...
- * 
- * @package Presentation
  */
 class SelOption
 {
@@ -501,9 +496,28 @@ define('CONTROL_BOUND', 1);
 function BoolCallback($val) { return $val ? 'Yes' : 'No'; }
 
 /**
+ * A node holds children.
+ */
+
+//ARRAYS NEED TO BE INDEXED BY INDEX IN THE TREE!
+//ID NEEDS TO ONLY BE STORED IN THE ID FIELD HERE!
+//THIS IS ALL WE SHOULD NEED TO BUILD THE TREE
+//EASILY!!!
+class TreeNode
+{
+	public $id;
+	public $data;
+	public $children;
+
+	function Node($data)
+	{
+		$this->data = $data;
+		$this->children = array();
+	}
+}
+
+/**
  * A complex data editor.
- * 
- * @package Presentation
  */
 class EditorData
 {
@@ -522,23 +536,21 @@ class EditorData
 	public $onupdate;
 	public $ondelete;
 	public $onswap;
-	public $idcol;
 
 	/**
 	 * Default constructor.
 	 *
 	 * @param $name string Name of this editor
-	 * @param $idcol string Name of column that is the primary key.
 	 * @param $ds DataSet Dataset for this editor to interact with.
 	 * @param $fields array Array of items to allow editing.
 	 * @param $display array Array of items to display in top table.
 	 * @param $filter array Array to constrain editing to a given expression.
 	 * @return EditorData
 	 */
-	function EditorData($name, $idcol = null, $ds = null, $filter = null, $sort = null)
+	function EditorData($name, $ds = null, $filter = null, $sort = null)
 	{
+		require_once('h_utility.php');
 		$this->name = $name;
-		$this->idcol = $idcol;
 		$this->filter = $filter;
 		if ($ds != null)
 		{
@@ -547,8 +559,6 @@ class EditorData
 			$this->type = CONTROL_BOUND;
 		}
 		else $this->type = CONTROL_SIMPLE;
-
-		$this->state = GetVar('ca') == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
 		$this->sorting = true;
 	}
 
@@ -560,10 +570,14 @@ class EditorData
 	 */
 	function Prepare($action)
 	{
+		$parent = GetVar('parent');
+		$this->state = GetVar('ca') == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
 		if ($action == $this->name.'_create')
 		{
 			$insert = array();
-			foreach ($this->ds->fields as $name => $data)
+			if (isset($parent)) $fields = $this->ds->children[GetVar('child')]->ds->fields;
+			else $fields = $this->ds->fields;
+			foreach ($fields as $name => $data)
 			{
 				if (is_array($data))
 				{
@@ -585,7 +599,13 @@ class EditorData
 				$handler = $this->oncreate;
 				if (!$handler($insert)) return;
 			}
-			$this->ds->Add($insert);
+			if (isset($parent))
+			{
+				$child = $this->ds->children[GetVar('child')];
+				$insert[$child->child_key] = $parent;
+				$child->ds->Add($insert);
+			}
+			else $this->ds->Add($insert);
 		}
 		else if ($action == $this->name.'_delete')
 		{
@@ -595,13 +615,14 @@ class EditorData
 				$handler = $this->ondelete;
 				if (!$handler($ci)) return;
 			}
-			$this->ds->Remove(array($this->idcol => $ci));
+			$this->ds->Remove(array($this->ds->id => $ci));
 		}
 		else if ($action == $this->name.'_update')
 		{
 			global $ci;
+			$child = $this->ds->children[GetVar('child')];
 			$update = array();
-			foreach ($this->ds->fields as $name => $data)
+			foreach ($child->ds->fields as $name => $data)
 			{
 				if (is_array($data))
 				{
@@ -627,7 +648,7 @@ class EditorData
 				}
 			}
 			if ($this->type == CONTROL_BOUND)
-				$this->ds->Update(array($this->idcol => $ci), $update);
+				$child->ds->Update(array($this->ds->id => $ci), $update);
 
 			if (isset($this->onupdate))
 			{
@@ -673,16 +694,51 @@ class EditorData
 	{
 		global $errors, $PERSISTS, $xlpath;
 		$ret = '';
+
+		//Table
+		$ret .= $this->GetTable($target, $ci);
+		$ret .= $this->GetForm($target, $ci, GetVar('child'));
+		return $ret;
+	}
+
+	function GetTable($target, $ci)
+	{
+		$ret = null;
 		if ($this->type == CONTROL_BOUND)
 		{
-			$sel = $this->state == STATE_EDIT ? $this->ds->GetOne(array($this->idcol => $ci)) : null;
-			$items = $this->ds->Get($this->filter, $this->sort);
+			$cols = array();
+			//Build columns so nothing overlaps (eg. id of this and child table)
+			$cols[$this->ds->table.'.'.$this->ds->id] = "{$this->ds->table}_{$this->ds->id}";
+			foreach ($this->ds->display as $ix => $disp)
+			{
+				$cols[$this->ds->table.'.'.$disp->column] = "{$this->ds->table}_{$disp->column}";
+			}
+			if (!empty($this->ds->children)) foreach ($this->ds->children as $child)
+			{
+				$joins = array();
+
+				//Parent column of the child...
+				$cols[$child->ds->table.'.'.$child->child_key] = "{$child->ds->table}_{$child->child_key}";
+
+					//Coming from another table, we gotta join it in.
+				if ($child->ds->table != $this->ds->table)
+				{
+					$joins[$child->ds->table] = "{$child->ds->table}.{$child->child_key} = {$this->ds->table}.{$child->parent_key}";
+					//We also need to get the column names that we'll need...
+					$cols[$child->ds->table.'.'.$child->ds->id] = "{$child->ds->table}_{$child->ds->id}";
+					foreach ($child->ds->display as $ix => $disp)
+					{
+						$cols[$child->ds->table.'.'.$disp->column] = "{$child->ds->table}_{$disp->column}";
+					}
+				}
+			}
+			$items = $this->ds->Get(null, $this->sort, $this->filter, $joins, $cols);
+			//Build a whole tree out of the items and children.
+			$tree = $this->BuildTree($items);
 		}
 		else { $sel = $ci; $this->state = STATE_EDIT; }
 
-		//Table
-
-		if (!empty($items) && !empty($this->ds->display))
+		if (!empty($tree))
 		{
 			$cols = array();
 			$atrs = array();
@@ -691,60 +747,125 @@ class EditorData
 				$cols[] = "<b>{$disp->text}</b>";
 				$atrs[] = $disp->attribs;
 			}
+			
+			//Gather children columns.
+			foreach ($this->ds->children as $child)
+			{
+				if ($child->ds->table != $this->ds->table)
+				foreach ($child->ds->display as $disp)
+				{
+					$cols[] = "<b>{$disp->text}</b>";
+					$atrs[] = $disp->attribs;
+				}
+			}
 
 			$table = new Table($this->name.'_table', $cols, $atrs);
 			$last_id = -1;
-			foreach ($items as $ix => $i)
+			$index = 0;
+			foreach ($tree as $id => $node)
 			{
-				$data = array();
-				foreach ($this->ds->display as $disp)
-				{
-					if (isset($disp->callback)) //Callback for field
-					{
-						$callback = $disp->callback;
-						$data[] = $callback($i, $disp->column);
-					}
-					//Regular field
-					else $data[] = stripslashes($i[$disp->column]);
-				}
-
-				$url_defaults = array('editor' => $this->name);
-				if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
-				$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $i[$this->idcol]), $url_defaults));
-				$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $i[$this->idcol]), $url_defaults));
-
-				if ($last_id > -1 && $this->sorting)
-				{
-					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->idcol], 'ct' => $last_id), $url_defaults));
-					$data[] = "<a href=\"{$url_up}\"><img src=\"{$xlpath}/up.png\" border=\"0\"/></a>";
-				}
-				else $data[] = null;
-
-				if ($ix < count($items)-1 && $this->sorting)
-				{
-					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->idcol], 'ct' => $items[$ix+1][$this->idcol]), $url_defaults));
-					$data[] = "<a href=\"$url_down\"><img src=\"{$xlpath}/down.png\" border=\"0\" /></a>";
-				}
-				else $data[] = null;
-
-				$data[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
-				$data[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
-				$table->AddRow($data);
-				$last_id = $i[$this->idcol];
+				$rows[] = $this->GetItem($target, $node, $index++, 0);
 			}
+
+			foreach ($rows as $row) $table->AddRow($row);
 			$ret .= "<a name=\"{$this->name}_table\" />";
 			$ret .= $table->Get('class="editor"');
 		}
+		return $ret;
+	}
 
-		//Form
+	function GetItem($target, $node, $level)
+	{
+		global $xlpath;
 
-		if (!empty($this->ds->fields))
+		$child_id = $node->data['_child'];
+
+		//Pad any missing initial display columns...
+		for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
+
+		$child = $this->ds->children[$child_id];
+
+		//Show all displays...
+		foreach ($child->ds->display as $disp)
+		{
+			if (isset($disp->callback)) //Callback for field
+			{
+				$callback = $disp->callback;
+				$row[$child_id] = $callback($item->data, $disp->column);
+			}
+			//Regular field
+			else $row[$child_id] = stripslashes($node->data[$child->ds->table.'_'.$disp->column]);
+
+			if ($child->ds->table != $this->ds->table) foreach ($child->ds->display as $disp)
+			{
+				$row[$child_id] = $node->data[$child->ds->table.'_'.$disp->column];
+			}
+		}
+
+		$idcol = $child->ds->table.'_'.$child->ds->id;
+
+		$url_defaults = array('editor' => $this->name, 'child' => $child_id);
+		if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
+
+		else $row[] = null;
+
+		//Pad any additional display columns...
+		for ($ix = $child_id+1; $ix < count($this->ds->children); $ix++) $row[$ix] = '&nbsp;';
+
+		$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $node->data[$idcol]), $url_defaults));
+		$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $node->data[$idcol]), $url_defaults));
+		$row[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
+		$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
+
+		$row[0] = str_repeat('&nbsp;', $level*4).$row[0];
+
+		$ret[] = $row;
+
+		$index = 0;
+		foreach ($node->children as $ix => $child)
+		{
+			$ret[] = $this->GetItem($target, $child, $node->children, $ix, $child_index++, $level+1);
+
+			if ($this->sorting)
+			{
+				if ($index > 0)
+				{
+					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $node->data[$idcol], 'ct' => $ix-1), $url_defaults));
+					$row[] = "<a href=\"{$url_up}\"><img src=\"{$xlpath}/images/up.png\" alt=\"Up\" border=\"0\"/></a>";
+				}
+				if ($index < count($keys)-1)
+				{
+					$next_child_id = $tree[$keys[$index+1]]->data['_child'];
+					$next_child = $this->ds->children[$next_child_id];
+					$next_idcol = $next_child->ds->table.'_'.$next_child->ds->id;
+					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $node->data[$idcol], 'ct' => $tree[$ix+1]->data[$next_idcol]), $url_defaults));
+					$row[] = "<a href=\"$url_down\"><img src=\"{$xlpath}/images/down.png\" alt=\"Down\" border=\"0\" /></a>";
+				}
+			}
+		}
+	}
+
+	function GetForm($target, $ci, $curchild = null)
+	{
+		$ret = null;
+
+		if (isset($curchild)) $child = $this->ds->children[$curchild];
+		else $child = $this;
+
+		if ($this->state == CONTROL_BOUND)
+		{
+			$sel = $this->state == STATE_EDIT ? $child->ds->GetOne(array($this->ds->id => $ci)) : null;
+		}
+
+		if (!empty($child->ds->fields))
 		{
 			$frm = new Form('form'.$this->name, array('align="right"', null, null));
 			$frm->AddHidden('editor', $this->name);
 			$frm->AddHidden('ca', $this->state == STATE_EDIT ? $this->name.'_update' : $this->name.'_create');
 			if ($this->state == STATE_EDIT) $frm->AddHidden('ci', $ci);
-			foreach ($this->ds->fields as $text => $data)
+			else if (isset($child)) $frm->AddHidden('parent', $ci);
+			if (isset($child)) $frm->AddHidden('child', $curchild);
+			foreach ($child->ds->fields as $text => $data)
 			{
 				if (is_array($data))
 				{
@@ -787,17 +908,102 @@ class EditorData
 				($this->state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null),
 				null
 			));
-			$ret .= "<a name=\"{$this->name}_editor\" />";
+			$ret .= "<a name=\"{$this->name}_editor\"></a>";
 			$ret .= $frm->Get("action=\"$target\" method=\"post\"", 'width="100%"');
+			if ($this->state == CONTROL_BOUND && !isset($child))
+			{
+				if (!empty($this->ds->children))
+				{
+					foreach ($this->ds->children as $ix => $child)
+					{
+						$de = new EditorData($this->name, $child->ds);
+						$add = $de->GetForm($target, $sel[$child->parent_key], $ix);
+						$ret .= $add;
+					}
+				}
+			}
+			return $ret;
 		}
-		return $ret;
+	}
+
+	function BuildTree($items)
+	{
+		if (!empty($items))
+		{
+			//Flats are indexed by ID, but the tree is indexed by it's
+			//position IN the parent node/root!
+			$flats = array();
+
+			//Build a list of ids we are going to use (child index => child keys)
+
+			$ids = array(0 => $this->ds->table.'_'.$this->ds->id);
+
+			if (!empty($this->ds->children)) foreach ($this->ds->children as $ix => $child)
+			{
+				if ($child->ds->table != $this->ds->table)
+				{
+					$ids[$ix] = $child->ds->table.'_'.$child->ds->id;
+				}
+			}
+
+			//Build a list of column to node associations...
+
+			$node_link[0] = array("{$this->ds->table}_{$this->ds->id}");
+			foreach ($this->ds->display as $disp) $node_link[0][] = "{$this->ds->table}_{$disp->column}";
+
+			foreach ($this->ds->children as $ix => $child)
+			{
+				$link = array("{$child->ds->table}_{$child->ds->id}");
+				$link[] = $child->ds->table.'_'.$child->child_key;
+				foreach ($child->ds->display as $disp) $link[] = "{$child->ds->table}_{$disp->column}";
+				$node_link[$ix] = $link;
+			}
+
+			//Build array of flat associations...
+
+			foreach ($items as $ix => $item)
+			{
+				foreach ($node_link as $child_id => $link)
+				{
+					if (strlen($item[$ids[$child_id]]) > 0) 
+					{
+						$data = array('_child' => $child_id);
+						foreach ($link as $col) $data[$col] = $item[$col];
+						$tn = new TreeNode($data);
+						$tn->id = $item[$ids[$child_id]];
+						$flats[$child_id][$item[$ids[$child_id]]] = $tn;
+					}
+				}
+			}
+			
+			//Build tree of relations...
+
+			$tree = array();
+
+			foreach ($flats as $child_id => $items)
+			{
+				$child = $this->ds->children[$child_id];
+
+				foreach ($items as $id => $node)
+				{
+					$pid = $node->data[$child->ds->table.'_'.$child->child_key];
+					$id = $node->data[$child->ds->table.'_'.$child->ds->id];
+					if ($id)
+					{
+						if ($pid) $flats[0][$pid]->children[$id] = $node;
+						else $tree[$id] = $node;
+					}
+				}
+			}
+
+			return $tree;
+		}
+		return null;
 	}
 }
 
 /**
  * Enter description here...
- * 
- * @package Presentation
  */
 class DisplayColumn
 {
@@ -820,8 +1026,6 @@ define('ACCESS_ADMIN', 1);
 
 /**
  * Enter description here...
- *
- * @package Presentation
  */
 class LoginManager
 {
@@ -910,7 +1114,6 @@ class LoginManager
  * An easy way to display a set of tabs, they basically work like a menubar.
  * 
  * @todo Get rid of this thing or revise it.
- * @package Presentation
  */
 class Tabs
 {
@@ -953,8 +1156,6 @@ class Tabs
 
 /**
  * A generic page, associated with h_main.php and passed on to index.php .
- * 
- * @package Presentation
  */
 class DisplayObject
 {

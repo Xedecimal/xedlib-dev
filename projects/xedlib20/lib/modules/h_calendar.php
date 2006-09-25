@@ -6,8 +6,6 @@
 
 /**
  * A simple to use calander display.
- *
- * @package Calendar
  */
 class Calendar
 {
@@ -256,8 +254,6 @@ EOF;
 
 /**
  * Enter description here...
- *
- * @package Calendar
  */
 class CalendarMonth
 {
@@ -282,8 +278,6 @@ class CalendarMonth
 
 /**
  * Enter description here...
- *
- * @package Calendar
  */
 class CalendarDay
 {

@@ -6,8 +6,6 @@
 
 /**
  * A template
- * 
- * @package Presentation
  */
 class Template
 {
@@ -323,8 +321,6 @@ class Template
 
 /**
  * Enter description here...
- * 
- * @package Presentation
  */
 class VarParser
 {

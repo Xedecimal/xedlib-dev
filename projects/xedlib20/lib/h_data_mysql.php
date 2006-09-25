@@ -18,7 +18,6 @@ define("GET_BOTH", MYSQL_BOTH);
 
 /**
  * A generic database interface, currently only supports MySQL apparently.
- * @package Storage
  */
 class Database
 {
@@ -107,6 +106,28 @@ class Database
 function DeString($data) { return array("destring", $data); }
 function DBNow() { return array("now"); }
 
+class Relation
+{
+	public $ds;
+	public $parent_key;
+	public $child_key;
+
+	/**
+	 * Prepares a relation for database association.
+	 *
+	 * @param DataSet $ds DataSet for this child.
+	 * @param string $primary_key Column name of the primary key of $ds.
+	 * @example ../examples/relation.php
+	 * @return Relation
+	 */
+	function Relation($ds, $parent_key, $child_key)
+	{
+		$this->ds = $ds;
+		$this->parent_key = $parent_key;
+		$this->child_key = $child_key;
+	}
+}
+
 /**
  * A general dataset, good for binding to a database's table.
  * Used to generically retrieve, store, update and delete
@@ -114,8 +135,6 @@ function DBNow() { return array("now"); }
  * general guidelines, for one it must have an auto_increment
  * primary key for it's first field named 'id' so it can
  * easily locate fields.
- * 
- * @package Storage
  */
 class DataSet
 {
@@ -128,6 +147,7 @@ class DataSet
 
 	public $table;
 	public $children;
+	public $id;
 	public $display;
 	public $fields;
 
@@ -135,36 +155,37 @@ class DataSet
 	 * Initialize a new CDataSet binded to $table in $db.
 	 * @param $db Database A Database object to bind to.
 	 * @param $table string Specifies the name of the table in $db to bind to.
+	 * @param $id string Name of the column with the primary key on this table.
 	 */
-	function DataSet($db, $table)
+	function DataSet($db, $table, $id = 'id')
 	{
 		$this->database = $db;
 		$this->table = $table;
+		$this->id = $id;
 	}
 
 	/**
-	 * @param $cpkey string Name of the child's primary key for item swap.
-	 * @param $temp string Name of temporary table containing space for item swap.
+	 * @param Relation $relation Child to add.
 	 */
-	function AddChild($ds, $pkey, $ckey, $cpkey = null, $temp = null)
+	function AddChild($relation)
 	{
-		$this->children[] = array("ds" => $ds, "pkey" => $pkey, "ckey" => $ckey, "cpkey" => $cpkey, "temp" => $temp);
+		$this->children[] = $relation;
 	}
 
 	function ColsClause($cols)
 	{
-		if (is_array($cols))
+		if (!empty($cols))
 		{
 			$ret = '';
 			$ix = 0;
 			foreach ($cols as $col => $val)
 			{
 				if ($ix++ > 0) $ret .= ",";
-				$ret .= " `{$col}` AS `{$val}`";
+				$ret .= " {$col} AS `{$val}`";
 			}
 			return $ret;
 		}
-		return null;
+		return ' *';
 	}
 
 	function QuoteTable($name)
@@ -204,7 +225,7 @@ class DataSet
 			{
 				foreach ($joining as $col => $on)
 				{
-					$ret .= " JOIN {$col} ON({$on})";
+					$ret .= " LEFT JOIN {$col} ON({$on})";
 				}
 			}
 			return $ret;
@@ -314,11 +335,13 @@ class DataSet
 		$sort = null,
 		$filter = null,
 		$joins = null,
+		$columns = null,
 		$args = GET_BOTH)
 	{
 		//Prepare Query
 		$query = 'SELECT';
-		$query .= " * FROM `{$this->table}`";
+		$query .= $this->ColsClause($columns);
+		$query .= " FROM `{$this->table}`";
 		$query .= $this->JoinClause($joins);
 		$query .= $this->WhereClause($match);
 		$query .= $this->OrderClause($sort);
@@ -350,7 +373,7 @@ class DataSet
 	 */
 	function GetOne($match, $args = GET_BOTH)
 	{
-		$data = $this->Get($match, null, null, null, $args);
+		$data = $this->Get($match, null, null, null, null, $args);
 		if (isset($data)) return $data[0];
 		return $data;
 	}
@@ -466,7 +489,8 @@ class DataSet
 
 	function Swap($smatch, $dmatch, $pkey)
 	{
-		$sitems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($smatch));
+		$this->database->query('CREATE TEMPORARY TABLE IF NOT EXISTS __TEMP (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY);');
+		/*$sitems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($smatch));
 		$sitem = mysql_fetch_array($sitems, GET_ASSOC);
 		$ditems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($dmatch));
 		$ditem = mysql_fetch_array($ditems, GET_ASSOC);
@@ -490,7 +514,7 @@ class DataSet
 		}
 		unset($sitem['id'], $ditem['id']);
 		$this->Update($smatch, $ditem);
-		$this->Update($dmatch, $sitem);
+		$this->Update($dmatch, $sitem);*/
 	}
 
 	/**
@@ -501,48 +525,16 @@ class DataSet
 	function Remove($match)
 	{
 		$matches = array();
-		foreach ($match as $key => $val)
-		{
-			$matches[$this->table.'.'.$key] = $val;
-		}
-		$tnames = null;
-		if (!empty($this->children))
-		{
-			$children = $this->GetMatches($matches);
-			if (!empty($children[0])) foreach ($children[0] as $ix => $table)
-			{
-				if ($ix > 0) $tnames .= ',';
-				$tnames .= " `$table`";
-			}
-			$query = "DELETE{$tnames} FROM{$tnames}";
-		}
-		else
-		{
-			$query = "DELETE FROM `{$this->table}`";
-		}
-		if (!empty($this->children))
-		{
-			$query .= $this->WhereClause($children[1]);
-		}
-		else $query .= $this->WhereClause($match);
+		$query = "DELETE FROM `{$this->table}`";
+		$query .= $this->WhereClause($match);
 		$this->database->Query($query);
-	}
 
-	function GetMatches($original)
-	{
-		$ret = $original;
-		$tables = array($this->table);
-		if (!empty($this->children))
+		//Prune off all children...
+		foreach ($this->children as $ix => $child)
 		{
-			foreach ($this->children as $child)
-			{
-				$tm = $child['ds']->GetMatches($ret);
-				$tables = array_merge($tm[0], $tables);
-				$tm[1]["{$child['ds']->table}.{$child['ckey']}"] = DeString($this->QuoteTable($this->table.'.'.$child['pkey']));
-				if ($tm[1] != null) $ret = array_merge($ret, $tm[1]);
-			}
+			$query = "DELETE c FROM {$child->ds->table} c LEFT JOIN {$this->table} p ON(c.{$child->child_key} = p.{$child->parent_key}) WHERE c.{$child->child_key} != 0 AND p.{$child->parent_key} IS NULL";
+			$this->database->Query($query);
 		}
-		return array($tables, $ret);
 	}
 }
 
