@@ -32,7 +32,6 @@ $dsChild->fields = array(
 $ds->AddChild(new Relation($dsChild, 'id', 'parent'));
 
 $edTest = new EditorData('test', $ds);
-
 $edTest->Prepare($ca);
 
 $page_body = $edTest->Get($me, $ci);

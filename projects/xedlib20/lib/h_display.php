@@ -517,6 +517,25 @@ class TreeNode
 }
 
 /**
+ * Enter description here...
+ */
+class DisplayColumn
+{
+	public $text;
+	public $column;
+	public $callback;
+	public $attribs;
+
+	function DisplayColumn($text, $column, $callback = null, $attribs = null)
+	{
+		$this->text = $text;
+		$this->column = $column;
+		$this->callback = $callback;
+		$this->attribs = $attribs;
+	}
+}
+
+/**
  * A complex data editor.
  */
 class EditorData
@@ -701,6 +720,11 @@ class EditorData
 		return $ret;
 	}
 
+	function GetUpButton()
+	{
+		return '<img src="xedlib/images/up.png" />';
+	}
+
 	function GetTable($target, $ci)
 	{
 		$ret = null;
@@ -760,21 +784,28 @@ class EditorData
 			}
 
 			$table = new Table($this->name.'_table', $cols, $atrs);
-			$last_id = -1;
-			$index = 0;
-			foreach ($tree as $id => $node)
+			$rows = array();
+			foreach ($tree as $ix => $node)
 			{
-				$rows[] = $this->GetItem($target, $node, $index++, 0);
+				$row = $this->GetItem($rows, $target, $node, 0);
+				if ($ix > 0)
+					$rows[count($rows)-1][] = $this->GetUpButton();
+			}
+			foreach ($rows as $row)
+			{
+				$table->AddRow($row);
 			}
 
-			foreach ($rows as $row) $table->AddRow($row);
 			$ret .= "<a name=\"{$this->name}_table\" />";
 			$ret .= $table->Get('class="editor"');
 		}
 		return $ret;
 	}
 
-	function GetItem($target, $node, $level)
+	/**
+	* @param Table $table Table to add rows to.
+	*/
+	function GetItem(&$rows, $target, $node, $level)
 	{
 		global $xlpath;
 
@@ -819,30 +850,32 @@ class EditorData
 
 		$row[0] = str_repeat('&nbsp;', $level*4).$row[0];
 
-		$ret[] = $row;
+		$rows[] = $row;
 
-		$index = 0;
 		foreach ($node->children as $ix => $child)
 		{
-			$ret[] = $this->GetItem($target, $child, $level+1);
+			$child_row = $this->GetItem($rows, $target, $child, $level+1);
 
 			if ($this->sorting && count($node->children) > 1)
 			{
-				if ($index > 0)
+				if ($ix > 0)
 				{
 					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $node->data[$idcol], 'ct' => $ix-1), $url_defaults));
-					$row[] = "<a href=\"{$url_up}\"><img src=\"{$xlpath}/images/up.png\" alt=\"Up\" border=\"0\"/></a>";
+					$child_row[] = "<a href=\"{$url_up}\"><img src=\"{$xlpath}/images/up.png\" alt=\"Up\" border=\"0\"/></a>";
 				}
-				if ($index < count($node->children)-1)
+
+				if ($ix < count($node->children)-1)
 				{
-					$next_child_id = $node->children[$index]->data['_child'];
+					$next_child_id = $node->children[$ix]->data['_child'];
 					$next_child = $this->ds->children[$next_child_id];
 					$next_idcol = $next_child->ds->table.'_'.$next_child->ds->id;
-					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $node->data[$idcol], 'ct' => $tree[$ix+1]->data[$next_idcol]), $url_defaults));
-					$row[] = "<a href=\"$url_down\"><img src=\"{$xlpath}/images/down.png\" alt=\"Down\" border=\"0\" /></a>";
+					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $node->data[$idcol], 'ct' => $node->children[$ix+1]->data[$next_idcol]), $url_defaults));
+					$child_row[] = "<a href=\"$url_down\"><img src=\"{$xlpath}/images/down.png\" alt=\"Down\" border=\"0\" /></a>";
 				}
 			}
 		}
+		
+		return $row;
 	}
 
 	function GetForm($target, $ci, $curchild = null)
@@ -987,11 +1020,14 @@ class EditorData
 				foreach ($items as $id => $node)
 				{
 					$pid = $node->data[$child->ds->table.'_'.$child->child_key];
-					$id = $node->data[$child->ds->table.'_'.$child->ds->id];
+					//$id = $node->data[$child->ds->table.'_'.$child->ds->id];
+                    $id = $node->id;
 					if ($id)
 					{
-						if ($pid) $flats[0][$pid]->children[$id] = $node;
-						else $tree[count($tree)] = $node;
+						if ($pid)
+                            $flats[0][$pid]->children[] = $node;
+						else
+                            $tree[] = $node;
 					}
 				}
 			}
@@ -999,25 +1035,6 @@ class EditorData
 			return $tree;
 		}
 		return null;
-	}
-}
-
-/**
- * Enter description here...
- */
-class DisplayColumn
-{
-	public $text;
-	public $column;
-	public $callback;
-	public $attribs;
-
-	function DisplayColumn($text, $column, $callback = null, $attribs = null)
-	{
-		$this->text = $text;
-		$this->column = $column;
-		$this->callback = $callback;
-		$this->attribs = $attribs;
 	}
 }
 
