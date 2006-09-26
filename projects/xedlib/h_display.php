@@ -511,7 +511,6 @@ class EditorData
 	public $onupdate;
 	public $ondelete;
 	public $onswap;
-	public $idcol;
 
 	/**
 	 * Default constructor.
@@ -524,10 +523,9 @@ class EditorData
 	 * @param $filter array Array to constrain editing to a given expression.
 	 * @return EditorData
 	 */
-	function EditorData($name, $idcol = null, $ds = null, $filter = null, $sort = null)
+	function EditorData($name, $ds = null, $filter = null, $sort = null)
 	{
 		$this->name = $name;
-		$this->idcol = $idcol;
 		$this->filter = $filter;
 		if ($ds != null)
 		{
@@ -699,19 +697,19 @@ class EditorData
 
 				$url_defaults = array('editor' => $this->name);
 				if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
-				$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $i[$this->idcol]), $url_defaults));
-				$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $i[$this->idcol]), $url_defaults));
+				$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $i[$this->ds->id]), $url_defaults));
+				$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $i[$this->ds->id]), $url_defaults));
 
 				if ($last_id > -1 && $this->sorting)
 				{
-					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->idcol], 'ct' => $last_id), $url_defaults));
+					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->ds->id], 'ct' => $last_id), $url_defaults));
 					$data[] = "<a href=\"{$url_up}\"><img src=\"{$xlpath}/up.png\" border=\"0\"/></a>";
 				}
 				else $data[] = null;
 
 				if ($ix < count($items)-1 && $this->sorting)
 				{
-					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->idcol], 'ct' => $items[$ix+1][$this->idcol]), $url_defaults));
+					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->ds->id], 'ct' => $items[$ix+1][$this->ds->id]), $url_defaults));
 					$data[] = "<a href=\"$url_down\"><img src=\"{$xlpath}/down.png\" border=\"0\" /></a>";
 				}
 				else $data[] = null;
@@ -719,7 +717,7 @@ class EditorData
 				$data[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
 				$data[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
 				$table->AddRow($data);
-				$last_id = $i[$this->idcol];
+				$last_id = $i[$this->ds->id];
 			}
 			$ret .= "<a name=\"{$this->name}_table\" />";
 			$ret .= $table->Get('class="editor"');

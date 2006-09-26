@@ -140,16 +140,18 @@ class DataSet
 	public $children;
 	public $display;
 	public $fields;
+	public $id;
 
 	/**
 	 * Initialize a new CDataSet binded to $table in $db.
 	 * @param $db Database A Database object to bind to.
 	 * @param $table string Specifies the name of the table in $db to bind to.
 	 */
-	function DataSet($db, $table)
+	function DataSet($db, $table, $id = 'id')
 	{
 		$this->database = $db;
 		$this->table = $table;
+		$this->id = $id;
 	}
 
 	/**
