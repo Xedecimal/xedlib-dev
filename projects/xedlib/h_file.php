@@ -572,7 +572,7 @@ class FileInfo
 class FilterDefault
 {
 	function GetName() { return "Normal"; }
-	function GetInfo($fi) { return $fi; }
+	function GetInfo(&$fi) { return $fi; }
 
 	function GetOptions() { return null; }
 	function Upload($file, $target)
