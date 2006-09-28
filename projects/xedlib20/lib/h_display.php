@@ -499,10 +499,6 @@ function BoolCallback($val) { return $val ? 'Yes' : 'No'; }
  * A node holds children.
  */
 
-//ARRAYS NEED TO BE INDEXED BY INDEX IN THE TREE!
-//ID NEEDS TO ONLY BE STORED IN THE ID FIELD HERE!
-//THIS IS ALL WE SHOULD NEED TO BUILD THE TREE
-//EASILY!!!
 class TreeNode
 {
 	public $id;
@@ -722,7 +718,12 @@ class EditorData
 
 	function GetUpButton()
 	{
-		return '<img src="xedlib/images/up.png" />';
+		return '<img src="lib/images/up.png" />';
+	}
+
+	function GetDownButton()
+	{
+		return '<img src="lib/images/down.png" />';
 	}
 
 	function GetTable($target, $ci)
@@ -758,11 +759,11 @@ class EditorData
 			}
 			$items = $this->ds->Get(null, $this->sort, $this->filter, $joins, $cols);
 			//Build a whole tree out of the items and children.
-			$tree = $this->BuildTree($items);
+			$root = $this->BuildTree($items);
 		}
 		else { $sel = $ci; $this->state = STATE_EDIT; }
 
-		if (!empty($tree))
+		if (isset($root))
 		{
 			$cols = array();
 			$atrs = array();
@@ -784,17 +785,11 @@ class EditorData
 			}
 
 			$table = new Table($this->name.'_table', $cols, $atrs);
+
 			$rows = array();
-			foreach ($tree as $ix => $node)
-			{
-				$row = $this->GetItem($rows, $target, $node, 0);
-				if ($ix > 0)
-					$rows[count($rows)-1][] = $this->GetUpButton();
-			}
-			foreach ($rows as $row)
-			{
-				$table->AddRow($row);
-			}
+			$this->AddRows($rows, $target, $root, 0);
+
+			foreach ($rows as $row) $table->AddRow($row);
 
 			$ret .= "<a name=\"{$this->name}_table\" />";
 			$ret .= $table->Get('class="editor"');
@@ -805,77 +800,137 @@ class EditorData
 	/**
 	* @param Table $table Table to add rows to.
 	*/
-	function GetItem(&$rows, $target, $node, $level)
+	function AddRows(&$rows, $target, $node, $level)
 	{
 		global $xlpath;
 
-		$child_id = $node->data['_child'];
-
-		//Pad any missing initial display columns...
-		for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
-
-		$child = $this->ds->children[$child_id];
-
-		//Show all displays...
-		foreach ($child->ds->display as $disp)
+		if (!empty($node->children)) foreach ($node->children as $index => $cnode)
 		{
-			if (isset($disp->callback)) //Callback for field
+			$row = array();
+
+			$child_id = $cnode->data['_child'];
+			$child = $this->ds->children[$child_id];
+
+			//Pad any missing initial display columns...
+			for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
+
+			//Show all displays...
+			foreach ($child->ds->display as $disp)
 			{
-				$callback = $disp->callback;
-				$row[$child_id] = $callback($item->data, $disp->column);
-			}
-			//Regular field
-			else $row[$child_id] = stripslashes($node->data[$child->ds->table.'_'.$disp->column]);
-
-			if ($child->ds->table != $this->ds->table) foreach ($child->ds->display as $disp)
-			{
-				$row[$child_id] = $node->data[$child->ds->table.'_'.$disp->column];
-			}
-		}
-
-		$idcol = $child->ds->table.'_'.$child->ds->id;
-
-		$url_defaults = array('editor' => $this->name, 'child' => $child_id);
-		if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
-
-		else $row[] = null;
-
-		//Pad any additional display columns...
-		for ($ix = $child_id+1; $ix < count($this->ds->children); $ix++) $row[$ix] = '&nbsp;';
-
-		$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $node->data[$idcol]), $url_defaults));
-		$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $node->data[$idcol]), $url_defaults));
-		$row[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
-		$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
-
-		$row[0] = str_repeat('&nbsp;', $level*4).$row[0];
-
-		$rows[] = $row;
-
-		foreach ($node->children as $ix => $child)
-		{
-			$child_row = $this->GetItem($rows, $target, $child, $level+1);
-
-			if ($this->sorting && count($node->children) > 1)
-			{
-				if ($ix > 0)
+				if (isset($disp->callback)) //Callback for field
 				{
-					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $node->data[$idcol], 'ct' => $ix-1), $url_defaults));
-					$child_row[] = "<a href=\"{$url_up}\"><img src=\"{$xlpath}/images/up.png\" alt=\"Up\" border=\"0\"/></a>";
+					$callback = $disp->callback;
+					$row[$child_id] = $callback($item->data, $disp->column);
 				}
+				//Regular field
+				else $row[$child_id] = stripslashes($cnode->data[$child->ds->table.'_'.$disp->column]);
 
-				if ($ix < count($node->children)-1)
+				if ($child->ds->table != $this->ds->table) foreach ($child->ds->display as $disp)
 				{
-					$next_child_id = $node->children[$ix]->data['_child'];
-					$next_child = $this->ds->children[$next_child_id];
-					$next_idcol = $next_child->ds->table.'_'.$next_child->ds->id;
-					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $node->data[$idcol], 'ct' => $node->children[$ix+1]->data[$next_idcol]), $url_defaults));
-					$child_row[] = "<a href=\"$url_down\"><img src=\"{$xlpath}/images/down.png\" alt=\"Down\" border=\"0\" /></a>";
+					$row[$child_id] = $cnode->data[$child->ds->table.'_'.$disp->column];
 				}
 			}
+
+			$url_defaults = array('editor' => $this->name, 'child' => $child_id);
+			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
+
+			else $row[] = null;
+
+			//Pad any additional display columns...
+			for ($ix = $child_id+1; $ix < count($this->ds->children)+1; $ix++) $row[$ix] = "&nbsp;";
+
+			$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
+			$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
+			$row[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
+			$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
+
+			$row[0] = str_repeat('&nbsp;', $level*4).$row[0];
+
+			$rows[] = $row;
+			
+			if ($this->sorting && count($cnode->children) > 1)
+			{
+				if ($index > 0) $child_row[] = $this->GetUpButton();
+				if ($index < count($node->children)-1) $child_row[] = $this->GetDownButton();
+			}
+
+			$this->AddRows($rows, $target, $cnode, $level+1);
 		}
-		
-		return $row;
+	}
+
+	function BuildTree($items)
+	{
+		if (!empty($items))
+		{
+			//Build a list of ids we are going to use (child index => child keys)
+
+			$ids = array(0 => $this->ds->table.'_'.$this->ds->id);
+
+			if (!empty($this->ds->children)) foreach ($this->ds->children as $ix => $child)
+			{
+				if ($child->ds->table != $this->ds->table)
+				{
+					$ids[$ix] = $child->ds->table.'_'.$child->ds->id;
+				}
+			}
+
+			//Build a list of column to node associations...
+
+			$flats = array();
+
+			$node_link[0] = array("{$this->ds->table}_{$this->ds->id}");
+			foreach ($this->ds->display as $disp) $node_link[0][] = "{$this->ds->table}_{$disp->column}";
+
+			foreach ($this->ds->children as $ix => $child)
+			{
+				$link = array("{$child->ds->table}_{$child->ds->id}");
+				$link[] = $child->ds->table.'_'.$child->child_key;
+				foreach ($child->ds->display as $disp) $link[] = "{$child->ds->table}_{$disp->column}";
+				$node_link[$ix] = $link;
+			}
+
+			//Build array of flat associations...
+
+			foreach ($items as $ix => $item)
+			{
+				foreach ($node_link as $child_id => $link)
+				{
+					if (strlen($item[$ids[$child_id]]) > 0) 
+					{
+						$data = array('_child' => $child_id);
+						foreach ($link as $col) $data[$col] = $item[$col];
+						$tn = new TreeNode($data);
+						$tn->id = $item[$ids[$child_id]];
+						$flats[$child_id][$item[$ids[$child_id]]] = $tn;
+					}
+				}
+			}
+			
+			//Build tree of relations...
+
+			$tree = new TreeNode('Root');
+
+			foreach ($flats as $child_id => $items)
+			{
+				$child = $this->ds->children[$child_id];
+
+				foreach ($items as $id => $node)
+				{
+					$pid = $node->data[$child->ds->table.'_'.$child->child_key];
+                    $id = $node->id;
+					if ($id)
+					{
+						if ($pid)
+                            $flats[0][$pid]->children[] = $node;
+						else
+                            $tree->children[] = $node;
+					}
+				}
+			}
+
+			return $tree;
+		}
+		return null;
 	}
 
 	function GetForm($target, $ci, $curchild = null)
@@ -957,84 +1012,6 @@ class EditorData
 			}
 			return $ret;
 		}
-	}
-
-	function BuildTree($items)
-	{
-		if (!empty($items))
-		{
-			//Build a list of ids we are going to use (child index => child keys)
-
-			$ids = array(0 => $this->ds->table.'_'.$this->ds->id);
-
-			if (!empty($this->ds->children)) foreach ($this->ds->children as $ix => $child)
-			{
-				if ($child->ds->table != $this->ds->table)
-				{
-					$ids[$ix] = $child->ds->table.'_'.$child->ds->id;
-				}
-			}
-
-			//Build a list of column to node associations...
-
-			//Flats are indexed by ID, but the tree is indexed by it's
-			//position IN the parent node/root!
-			$flats = array();
-
-			$node_link[0] = array("{$this->ds->table}_{$this->ds->id}");
-			foreach ($this->ds->display as $disp) $node_link[0][] = "{$this->ds->table}_{$disp->column}";
-
-			foreach ($this->ds->children as $ix => $child)
-			{
-				$link = array("{$child->ds->table}_{$child->ds->id}");
-				$link[] = $child->ds->table.'_'.$child->child_key;
-				foreach ($child->ds->display as $disp) $link[] = "{$child->ds->table}_{$disp->column}";
-				$node_link[$ix] = $link;
-			}
-
-			//Build array of flat associations...
-
-			foreach ($items as $ix => $item)
-			{
-				foreach ($node_link as $child_id => $link)
-				{
-					if (strlen($item[$ids[$child_id]]) > 0) 
-					{
-						$data = array('_child' => $child_id);
-						foreach ($link as $col) $data[$col] = $item[$col];
-						$tn = new TreeNode($data);
-						$tn->id = $item[$ids[$child_id]];
-						$flats[$child_id][$item[$ids[$child_id]]] = $tn;
-					}
-				}
-			}
-			
-			//Build tree of relations...
-
-			$tree = array();
-
-			foreach ($flats as $child_id => $items)
-			{
-				$child = $this->ds->children[$child_id];
-
-				foreach ($items as $id => $node)
-				{
-					$pid = $node->data[$child->ds->table.'_'.$child->child_key];
-					//$id = $node->data[$child->ds->table.'_'.$child->ds->id];
-                    $id = $node->id;
-					if ($id)
-					{
-						if ($pid)
-                            $flats[0][$pid]->children[] = $node;
-						else
-                            $tree[] = $node;
-					}
-				}
-			}
-
-			return $tree;
-		}
-		return null;
 	}
 }
 
