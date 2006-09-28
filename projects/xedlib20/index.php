@@ -1,8 +1,9 @@
 <?php
-require_once("h_data.php");
-require_once("h_display.php");
-require_once("h_utility.php");
-require_once("h_template.php");
+require_once("lib/h_data_mysql.php");
+require_once("lib/h_display.php");
+require_once("lib/h_utility.php");
+require_once("lib/h_template.php");
+require_once('lib/a_calendar.php');
 
 HandleErrors();
 
@@ -14,9 +15,9 @@ $db = new Database("xldemo", "localhost", "root", "ransal");
 $db->CheckInstall();
 
 $dsCats = new DataSet($db, 'category');
-$dsCats->AddChild($dsCats, 'id', 'parent', 'id', 'temp');
+$dsCats->AddChild(new Relation($dsCats, 'id', 'parent'));
 $dsCats->display = array(
-	'Name' => 'name'
+	new DisplayColumn('Name', 'name')
 );
 $dsCats->fields = array(
 	'Name' => array('name', 'text')
@@ -25,7 +26,7 @@ $dsCats->fields = array(
 $id = $dsCats->Add(array('name' => 'hi'));
 $dsCats->Remove(array('id' => $id));
 
-$edCats = new EditorData('cats', 'id', $dsCats);
+$edCats = new EditorData('cats', $dsCats);
 
 if ($editor == 'cats') $edCats->Prepare($ca);
 
