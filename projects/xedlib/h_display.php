@@ -662,7 +662,7 @@ class EditorData
 		$ret = '';
 		if ($this->type == CONTROL_BOUND)
 		{
-			$sel = $this->state == STATE_EDIT ? $this->ds->GetOne(array($this->idcol => $ci)) : null;
+			$sel = $this->state == STATE_EDIT ? $this->ds->GetOne(array($this->ds->id => $ci)) : null;
 			$items = $this->ds->Get($this->filter, $this->sort);
 		}
 		else { $sel = $ci; $this->state = STATE_EDIT; }
