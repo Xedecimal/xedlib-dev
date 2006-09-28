@@ -62,7 +62,7 @@ class Database
 	 * query and translating.
 	 * @param $query string The actual SQL formatted query.
 	 * @param $silent bool Should we return an error?
-	 * @param $return Whether or not to return data (avoids truple (what a choice of wording, Microsoft!) errors with odbc)
+	 * @param $return Whether or not to return data (avoids truple errors with odbc)
 	 * @return object Query result object.
 	 */
 	function Query($query, $silent = false, $return = true)

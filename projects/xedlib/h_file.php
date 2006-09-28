@@ -20,6 +20,7 @@ class FileManager
 	public $allow_sort;
 	public $allow_rename;
 	public $allow_edit;
+	public $allow_set_type;
 
 	//Display
 	public $show_title;
@@ -91,9 +92,10 @@ class FileManager
 		else if ($action == "delete")
 		{
 			if (!$this->allow_delete) return;
-			$fi = new FileInfo($this->root.$this->cf.GetVar('ci'));
-			$types = GetVar('type');
+			$path = $this->root.$this->cf.GetVar('ci');
+			$fi = new FileInfo($path, $this->DefaultFilter);
 			$fi->Filter->Delete($fi);
+			$types = GetVar('type');
 			$this->files = $this->GetDirectory();
 			$ix = 0;
 			foreach ($this->files[$types] as $file)
@@ -194,7 +196,7 @@ class FileManager
 			}
 		}
 
-		$ret .= $this->GetSetType($target, $fi);
+		if ($this->allow_set_type) $ret .= $this->GetSetType($target, $fi);
 		if ($this->allow_create_dir) $ret .= $this->GetCreateDirectory($target, $this->cf);
 		if ($this->allow_upload) $ret .= $this->GetUpload();
 		if ($action == 'rename')
@@ -603,15 +605,15 @@ class FilterGallery extends FilterDefault
 {
 	function GetName() { return "Gallery"; }
 
-	function GetInfo($fi)
+	function GetInfo(&$fi)
 	{
-		$ret = parent::GetInfo($fi);
+		parent::GetInfo($fi);
 		if (substr($fi->filename, 0, 2) == 't_') return null;
-		$ret->info['Width'] = 'w';
-		$ret->info['Height'] = 'h';
+		$fi->info['thumb_width'] = 200;
+		$fi->info['thumb_height'] = 200;
 		if (file_exists($fi->dir."/t_".$fi->filename))
-			$ret->info['thumb'] = "<img src=\"{$fi->dir}/t_{$fi->filename}\" alt=\"Thumbnail\" title=\"Thumbnail\" />";
-		return $ret;
+			$fi->info['thumb'] = "<img src=\"{$fi->dir}/t_{$fi->filename}\" alt=\"Thumbnail\" title=\"Thumbnail\" />";
+		return $fi;
 	}
 
 	function GetOptions()
