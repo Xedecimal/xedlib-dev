@@ -107,11 +107,11 @@ echo $edCats->Get($me, $ci);
 <?php
 
 $cal = new Calendar();
-$cal->AddItem(0, time()+86400,  time()+345600, "One Day Ahead",    "http://www.google.com", "This entry is one day ahead and spans 5 days.");
-$cal->AddItem(0, time()+172800, time()+259200, "Two Days Ahead",   "http://www.google.com", "This entry is two days ahead and spans 4 days.");
-$cal->AddItem(0, time()+259200, time()+259200, "Three Days Ahead", "http://www.google.com", "This entry is three days ahead and spans 3 days.");
-$cal->AddItem(0, time()+345600, time()+432000, "Four Days Ahead",  "http://www.google.com", "This entry is four days ahead and spans 2 days.");
-$cal->AddItem(0, time()+432000, time()+432000, "Five Days Ahead",  "http://www.google.com", "This entry is five days ahead and spans 1 day.");
+$cal->AddItem(time()+86400,  time()+345600, "One Day Ahead<br/>This entry is one day ahead and spans 5 days.");
+$cal->AddItem(time()+172800, time()+259200, "Two Days Ahead<br/>This entry is two days ahead and spans 4 days.");
+$cal->AddItem(time()+259200, time()+259200, "Three Days Ahead<br/>This entry is three days ahead and spans 3 days.");
+$cal->AddItem(time()+345600, time()+432000, "Four Days Ahead<br/>This entry is four days ahead and spans 2 days.");
+$cal->AddItem(time()+432000, time()+432000, "Five Days Ahead<br/>This entry is five days ahead and spans 1 day.");
 echo $cal->Get();
 echo $cal->GetVert();
 
@@ -123,7 +123,7 @@ echo $cal->GetVert();
 $t = new Template();
 $t->set("box_title", "A title!");
 $t->set("box_body", "And some bawday!");
-echo $t->Get("template_box.html");
+echo $t->Get("templates/box.html");
 ?>
 
 <h2> Miscelaneous </h2>
@@ -132,8 +132,6 @@ echo $t->Get("template_box.html");
 
 <?php
 
-$d = time()-2678400;
-echo GetDateOffset($d).'<br/>';
 $d = time()-432000;
 echo GetDateOffset($d).'<br/>';
 $d = time()-1800;
