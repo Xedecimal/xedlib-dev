@@ -60,7 +60,7 @@ if ($_POST['ca'] == "convert")
 				$fileContents = file_get_contents($file);
 				$newFileContents = preg_replace('/public/s', "var", $fileContents);
 				//file_put_contents($file, $newFileContents);
-				fwrite($fp, $newFileContents);
+				//fwrite($fp, $newFileContents);
 				$newFileContents = preg_replace('/\tpublic/s', "\tvar", $fileContents);
 				//file_put_contents($file, $newFileContents);
 				fwrite($fp, $newFileContents);
@@ -75,7 +75,7 @@ if ($_POST['ca'] == "convert")
 				$fp = fopen($file, "r+");
 				$fileContents = file_get_contents($file);
 				$newFileContents = preg_replace('/var/s', "public", $fileContents);
-				fwrite($fp, $newFileContents);
+				//fwrite($fp, $newFileContents);
 				//file_put_contents($file, $newFileContents);
 				$newFileContents = preg_replace('/\tvar/s', "\tpublic", $fileContents);
 				//file_put_contents($file, $newFileContents);
