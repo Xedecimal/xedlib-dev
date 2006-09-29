@@ -614,7 +614,7 @@ class EditorData
 				}
 			}
 			if ($this->type == CONTROL_BOUND)
-				$this->ds->Update(array($this->idcol => $ci), $update);
+				$this->ds->Update(array($this->ds->id => $ci), $update);
 
 			if (isset($this->onupdate))
 			{
