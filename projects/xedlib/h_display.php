@@ -266,7 +266,7 @@ class Form extends Table
 		{
 			case "area":
 				$strout = "<textarea name=\"".htmlspecialchars($name)."\"$attributes>";
-				if ($value) $strout .= $value;
+				if ($value) $strout .= htmlspecialchars($value);
 				$strout .= "</textarea>";
 				break;
 			case "select":
