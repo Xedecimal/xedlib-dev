@@ -582,7 +582,7 @@ class EditorData
 				$handler = $this->ondelete;
 				if (!$handler($ci)) return;
 			}
-			$this->ds->Remove(array($this->idcol => $ci));
+			$this->ds->Remove(array($this->ds->id => $ci));
 		}
 		else if ($action == $this->name.'_update')
 		{
@@ -660,6 +660,7 @@ class EditorData
 	{
 		global $errors, $PERSISTS, $xlpath;
 		$ret = '';
+		$table_classes = array('row_odd', 'row_even');
 		if ($this->type == CONTROL_BOUND)
 		{
 			$sel = $this->state == STATE_EDIT ? $this->ds->GetOne(array($this->ds->id => $ci)) : null;
@@ -703,20 +704,20 @@ class EditorData
 				if ($last_id > -1 && $this->sorting)
 				{
 					$url_up = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->ds->id], 'ct' => $last_id), $url_defaults));
-					$data[] = "<a href=\"{$url_up}\"><img src=\"{$xlpath}/up.png\" border=\"0\"/></a>";
+					$data[] = "<a href=\"{$url_up}\"><img src=\"{$xlpath}/up.png\" alt=\"Up\" title=\"Up\" border=\"0\"/></a>";
 				}
 				else $data[] = null;
 
 				if ($ix < count($items)-1 && $this->sorting)
 				{
 					$url_down = MakeURI($target, array_merge(array('ca' => $this->name.'_swap', 'ci' => $i[$this->ds->id], 'ct' => $items[$ix+1][$this->ds->id]), $url_defaults));
-					$data[] = "<a href=\"$url_down\"><img src=\"{$xlpath}/down.png\" border=\"0\" /></a>";
+					$data[] = "<a href=\"$url_down\"><img src=\"{$xlpath}/down.png\" alt=\"Down\" title=\"Down\" border=\"0\" /></a>";
 				}
 				else $data[] = null;
 
 				$data[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
 				$data[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
-				$table->AddRow($data);
+				$table->AddRow($data, 'class="'.$table_classes[$ix%2].'"');
 				$last_id = $i[$this->ds->id];
 			}
 			$ret .= "<a name=\"{$this->name}_table\" />";
