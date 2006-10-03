@@ -656,7 +656,7 @@ class EditorData
 		return $ret;
 	}
 
-	function Get($target, $ci = null)
+	function Get($target, $ci = null, $formAttribs = null)
 	{
 		global $errors, $PERSISTS, $xlpath;
 		$ret = '';
@@ -776,7 +776,9 @@ class EditorData
 				null
 			));
 			$ret .= "<a name=\"{$this->name}_editor\" />";
-			$ret .= $frm->Get("action=\"$target\" method=\"post\"", 'width="100%"');
+			if ($formAttribs != null) $fattribs = ' '.$formAttribs;
+			else $fattribs = null;
+			$ret .= $frm->Get("action=\"$target\" method=\"post\"{$fattribs}", 'width="100%"');
 		}
 		return $ret;
 	}
