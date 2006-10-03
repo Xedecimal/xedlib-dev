@@ -728,7 +728,7 @@ class EditorData
 
 		if (!empty($this->ds->fields))
 		{
-			$frm = new Form('form'.$this->name, array('align="right"', 'width="40%"', null));
+			$frm = new Form('form'.$this->name, array('align="right"', null, null));
 			$frm->AddHidden('editor', $this->name);
 			$frm->AddHidden('ca', $this->state == STATE_EDIT ? $this->name.'_update' : $this->name.'_create');
 			if ($this->state == STATE_EDIT) $frm->AddHidden('ci', $ci);
