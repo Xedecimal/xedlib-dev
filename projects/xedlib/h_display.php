@@ -776,8 +776,7 @@ class EditorData
 				null
 			));
 			$ret .= "<a name=\"{$this->name}_editor\" />";
-			if ($formAttribs != null) $fattribs = ' '.$formAttribs;
-			else $fattribs = null;
+			$fattribs = $formAttribs != null ? ' '.$formAttribs : null;
 			$ret .= $frm->Get("action=\"$target\" method=\"post\"{$fattribs}", 'width="100%"');
 		}
 		return $ret;
