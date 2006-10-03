@@ -463,7 +463,6 @@ EOF;
 		$this->allow_create_dir =
 		$this->allow_delete =
 		$this->allow_edit =
-		$this->allow_rename =
 		$this->allow_sort =
 		$this->allow_upload = true;
 	}
