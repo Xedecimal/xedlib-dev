@@ -228,7 +228,6 @@ class FileManager
 			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"$source\"/>\n";
 			$ret .= "Search in: /\n";
 		}
-		else $ret .= '<p>';
 		$ret .= $this->GetPath($target, $source);
 
 		if (is_file($source->path))
@@ -239,7 +238,6 @@ class FileManager
 			$ret .= "<input type=\"submit\" value=\"Search\"/>\n";
 			$ret .= "</form>\n";
 		}
-		else $ret .= '</p>';
 		return $ret;
 	}
 
