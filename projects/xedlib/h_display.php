@@ -563,6 +563,15 @@ class EditorData
 					{
 						$insert[$data[0]] = md5($value);
 					}
+					else if ($data[1] == 'file' && $value != null)
+					{
+						$finfo = pathinfo($value['name']);
+						$moves[] = array(
+							$value['tmp_name'],
+							$data[2],
+							$finfo['extension']
+						);
+					}
 					else $insert[$data[0]] = $value;
 				}
 				else $insert[$name] = DeString($data);
@@ -572,11 +581,23 @@ class EditorData
 				$handler = $this->oncreate;
 				if (!$handler($insert)) return;
 			}
-			$this->ds->Add($insert);
+			$id = $this->ds->Add($insert);
+			foreach ($moves as $field => $move)
+			{
+				move_uploaded_file($move[0], "{$move[1]}/{$id}.{$move[2]}");
+			}
 		}
 		else if ($action == $this->name.'_delete')
 		{
 			global $ci;
+			foreach ($this->ds->fields as $name => $data)
+			{
+				if ($data[1] == 'file')
+				{
+					$files = glob("{$data[2]}/{$ci}.*");
+					foreach ($files as $file) unlink($file);
+				}
+			}
 			if (isset($this->ondelete))
 			{
 				$handler = $this->ondelete;
@@ -609,6 +630,13 @@ class EditorData
 						$newval = 0;
 						foreach ($value as $val) $newval |= $val;
 						$update[$data[0]] = $newval;
+					}
+					else if ($data[1] == 'file')
+					{
+						$files = glob("{$data[2]}/{$ci}.*");
+						foreach ($files as $file) unlink($file);
+						$finfo = pathinfo($value['name']);
+						move_uploaded_file($value['tmp_name'], "{$data[2]}/{$ci}.{$finfo['extension']}");
 					}
 					else $update[$data[0]] = GetVar($data[0]);
 				}
