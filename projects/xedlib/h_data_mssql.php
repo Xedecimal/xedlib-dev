@@ -25,15 +25,15 @@ $queries = array();
 class Database
 {
 	/** A link returned from mysql_connect(), don't worry about it. */
-	public $link;
+	var $link;
 	/** Name of this database, set from constructor. */
-	public $name;
+	var $name;
 	/**
 	 * Whether or not we use odbc.
 	 *
 	 * @var bool true if piping through odbc.
 	 */
-	public $odbc;
+	var $odbc;
 
 	/**
 	 * Instantiates a new xlDatabase object with the database name, hostname, user name and password.
@@ -193,9 +193,9 @@ class Database
 class DataTable
 {
 	/** Name of this table */
-	public $name;
+	var $name;
 	/** An array of columns and associated data in the underlying database. */
-	public $cols;
+	var $cols;
 
 	/**
 	* Instantiate this class associated with a given table in a database.
@@ -329,16 +329,16 @@ class DataSet
 	 *
 	 * @var Database
 	 */
-	public $database;
+	var $database;
 
 	/**
 	 * Associated table.
 	 *
 	 * @var DataTable
 	 */
-	public $table;
+	var $table;
 
-	public $children;
+	var $children;
 
 	/**
 	 * Initialize a new CDataSet binded to $table in $db.

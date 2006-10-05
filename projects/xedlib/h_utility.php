@@ -408,4 +408,78 @@ function DataToArray($rows, $idcol)
 	return $ret;
 }
 
+class Validate
+{
+	//$elements -- Array of HTML element Id's to be validated.
+	//$regex -- Array of regular expressions to validated an element
+	//$erroMessages -- Array of error messages unique to each element being validated.
+	var $elements;
+	var $regex;
+	var $errorMessages;
+	var $js;
+	var $badElements;
+	
+	function Validate($elements, $regex, $errorMessages)
+	{
+		$this->elements = $elements;
+		$this->regex = $regex;
+		$this->errorMessages = $errorMessages;
+		$this->js = "";
+		$this->badElements = array();
+	}
+	
+	
+	
+	function ErrorCheck()
+	{
+			
+		//print_r($this->elements);
+		//print_r($this->regex);
+		//print_r($this->errorMessages);
+		
+		$errorsFound = false;
+		
+		for($x = 0; $x < count($this->elements); $x++)
+		{
+			$el = GetVar($this->elements[$x]);
+			$re = $this->regex[$x];
+			$em = $this->errorMessages[$x];
+			
+			$pass = preg_match("#".$re."#", $el);
+			echo $pass;
+			if ($pass == false) 
+			{
+				$this->badElements[$x] = $this->elements[$x];
+				//need to get the elements associated error picture.
+				$this->generateJS($this->badElements);
+				return $errorsFound = true;
+			}
+			
+		}
+		return $errorsFound;	
+	}
+	
+	function getJS()
+	{
+		return $this->js;
+		
+	}
+	
+	function generateJS($bad)
+	{
+		$script = "";
+		$script = '<script type="text/javascript">';
+		$script .= 'document.getElementById("';
+		$script .= "NameError";
+		$script .= '").className="show";';
+		$script .= '</script>';
+		
+		$this->js = $script;
+		
+		
+	}
+	
+	
+}
+
 ?>
