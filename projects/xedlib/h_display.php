@@ -511,6 +511,7 @@ class EditorData
 	public $onupdate;
 	public $ondelete;
 	public $onswap;
+	public $handlers;
 
 	/**
 	 * Default constructor.
@@ -527,6 +528,8 @@ class EditorData
 	{
 		$this->name = $name;
 		$this->filter = $filter;
+		$this->handlers = array();
+
 		if ($ds != null)
 		{
 			$this->ds = $ds;
@@ -537,6 +540,11 @@ class EditorData
 
 		$this->state = GetVar('ca') == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
 		$this->sorting = true;
+	}
+
+	function AddHandler($handler)
+	{
+		$this->handlers[] = $handler;
 	}
 
 	/**
@@ -576,34 +584,15 @@ class EditorData
 				}
 				else $insert[$name] = DeString($data);
 			}
-			if (isset($this->oncreate))
+			foreach ($this->handlers as $handler)
 			{
-				$handler = $this->oncreate;
-				if (!$handler($insert)) return;
+				if (!$handler->Create($insert)) return;
 			}
 			$id = $this->ds->Add($insert);
 			foreach ($moves as $field => $move)
 			{
 				move_uploaded_file($move[0], "{$move[1]}/{$id}.{$move[2]}");
 			}
-		}
-		else if ($action == $this->name.'_delete')
-		{
-			global $ci;
-			foreach ($this->ds->fields as $name => $data)
-			{
-				if ($data[1] == 'file')
-				{
-					$files = glob("{$data[2]}/{$ci}.*");
-					foreach ($files as $file) unlink($file);
-				}
-			}
-			if (isset($this->ondelete))
-			{
-				$handler = $this->ondelete;
-				if (!$handler($ci)) return;
-			}
-			$this->ds->Remove(array($this->ds->id => $ci));
 		}
 		else if ($action == $this->name.'_update')
 		{
@@ -641,25 +630,51 @@ class EditorData
 					else $update[$data[0]] = GetVar($data[0]);
 				}
 			}
+
+			if (count($this->handlers) > 0)
+			{
+				$data = $this->ds->GetOne(array($this->ds->id => $ci));
+				foreach ($this->handlers as $handler)
+				{
+					if (!$handler->Update($ci, $data, $update)) return;
+				}
+			}
+
+			foreach ($this->ds->fields as $name => $data)
+			{
+				if ($data[1] == 'file')
+				{
+					$files = glob("{$data[2]}/{$ci}.*");
+					foreach ($files as $file) unlink($file);
+				}
+			}
+
 			if ($this->type == CONTROL_BOUND)
 				$this->ds->Update(array($this->ds->id => $ci), $update);
-
-			if (isset($this->onupdate))
-			{
-				$handler = $this->onupdate;
-				if (!$handler($update)) return;
-			}
 		}
 		else if ($action == $this->name.'_swap')
 		{
 			global $ci;
 			$ct = GetVar('ct');
-			if (isset($this->onswap))
+
+			foreach ($this->handlers as $handler)
 			{
-				$handler = $this->onswap;
-				if (!$handler($ci, $ct)) return;
+				if (!$handler->Swap($ci, $ct)) return;
 			}
 			$this->ds->Swap(array('id' => $ci), array('id' => $ct), 'id');
+		}
+		else if ($action == $this->name.'_delete')
+		{
+			global $ci;
+			if (count($this->handlers) > 0)
+			{
+				$data = $this->ds->GetOne(array($this->ds->id => $ci));
+				foreach ($this->handlers as $handler)
+				{
+					if (!$handler->Delete($ci, $data)) return;
+				}
+			}
+			$this->ds->Remove(array($this->ds->id => $ci));
 		}
 	}
 
@@ -808,6 +823,51 @@ class EditorData
 			$ret .= $frm->Get("action=\"$target\" method=\"post\"{$fattribs}", 'width="100%"');
 		}
 		return $ret;
+	}
+}
+
+class HandlerFile
+{
+	public $target;
+	public $column;
+	public $conditions;
+
+	function HandlerFile($target, $column, $conditions)
+	{
+		$this->target = $target;
+		$this->column = $column;
+		$this->conditions = $conditions;
+	}
+
+	function Create($data)
+	{
+		$target = "{$this->target}/{$data[$this->column]}";
+		if (!isset($this->conditions)) mkdir($target);
+		foreach ($this->conditions as $col => $cond)
+		{
+			foreach ($cond as $val)
+			{
+				if ($data[$col] == $val) { mkdir($target); return true; }
+			}
+		}
+		return true;
+	}
+
+	function Update($id, $data, $update)
+	{
+		$source = "{$this->target}/{$data[$this->column]}";
+		if (file_exists($source))
+		{
+			rename($source, $this->target.'/'.$update[$this->column]);
+		}
+		return true;
+	}
+
+	function Delete($id, $data)
+	{
+		$folder = "{$this->target}/{$data[$this->column]}";
+		if (file_exists($folder)) DelTree($folder);
+		return true;
 	}
 }
 
