@@ -1,6 +1,6 @@
 <?php
 
-require_once("h_display.php");
+require_once('h_display.php');
 
 class FileManager
 {

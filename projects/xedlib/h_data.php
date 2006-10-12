@@ -13,9 +13,9 @@ define("GET_BOTH", MYSQL_BOTH);
 class Database
 {
 	/** A link returned from mysql_connect(), don't worry about it. */
-	var $link;
+	public $link;
 	/** Name of this database, set from constructor. */
-	var $name;
+	public $name;
 
 	/**
 	 * Instantiates a new xlDatabase object with the database name, hostname, user name and password.
@@ -134,12 +134,12 @@ class DataSet
 	 *
 	 * @var Database
 	 */
-	var $database;
+	public $database;
 
-	var $table;
-	var $children;
-	var $display;
-	var $fields;
+	public $table;
+	public $children;
+	public $display;
+	public $fields;
 	public $id;
 
 	/**
