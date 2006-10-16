@@ -1,12 +1,13 @@
 <?php
 
 /**
- * @package FileManager
+ * @package File
  *
  */
 
 /**
  * Enter description here...
+ * @package File
  */
 class FileManager
 {
@@ -462,6 +463,7 @@ EOF;
 
 /**
  * Collects information for a SINGLE file OR folder.
+ * @package File
  */
 class FileInfo
 {
@@ -557,6 +559,7 @@ class FileInfo
 
 /**
  * The generic file handler.
+ * @package File
  */
 class FilterDefault
 {
@@ -592,6 +595,7 @@ class FilterDefault
 
 /**
  * Enter description here...
+ * @package File
  */
 class FilterGallery extends FilterDefault
 {

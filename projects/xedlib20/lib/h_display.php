@@ -77,7 +77,7 @@ class Box
 
 /**
  * A generic table class to manage a top level table, with children rows and cells.
- * 
+ * @package Presentation
  */
 class Table
 {
@@ -172,6 +172,7 @@ class Table
 }
 
 /**
+ * @package Presentation
  * A table with columns that can sort, a bit
  * more processing with a better user experience.
  * 
@@ -212,6 +213,7 @@ class SortTable extends Table
 }
 
 /**
+ * @package Presentation
  * A web page form, with functions for easy field creation and layout.
  * @todo Create sub classes for each input type.
  */
@@ -378,6 +380,7 @@ class Form extends Table
 }
 
 /**
+ * @package Presentation
  * Enter description here...
  */
 class SelOption
@@ -496,9 +499,9 @@ define('CONTROL_BOUND', 1);
 function BoolCallback($val) { return $val ? 'Yes' : 'No'; }
 
 /**
+ * @package Presentation
  * A node holds children.
  */
-
 class TreeNode
 {
 	public $id;
@@ -513,6 +516,7 @@ class TreeNode
 }
 
 /**
+ * @package Presentation
  * Enter description here...
  */
 class DisplayColumn
@@ -532,6 +536,7 @@ class DisplayColumn
 }
 
 /**
+ * @package Presentation
  * A complex data editor.
  */
 class EditorData
@@ -1019,6 +1024,7 @@ define('ACCESS_GUEST', 0);
 define('ACCESS_ADMIN', 1);
 
 /**
+ * @package Presentation
  * Enter description here...
  */
 class LoginManager
@@ -1104,11 +1110,12 @@ class LoginManager
 	}
 }
 
-/*
-** An easy way to display a set of tabs, they basically work like a menubar.
-** 
-** @todo Get rid of this thing or revise it.
-*/
+/**
+ * @package Presentation
+ * An easy way to display a set of tabs, they basically work like a menubar.
+ * 
+ * @todo Get rid of this thing or revise it.
+ */
 class Tabs
 {
 	/**
@@ -1169,6 +1176,11 @@ class DisplayObject
 
 //Form Functions
 
+/**
+ * @package Presentation
+ * Enter description here...
+ *
+ */
 class Validation
 {
 	public $field;

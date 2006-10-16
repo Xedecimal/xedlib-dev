@@ -1,3 +1,6 @@
+[Parse Data]
+title=Xedlib 2.0
+
 ;Configuration File made by Zend Studio PHPDocumentor Wizard, Sat Sep 23 15:02:21 PDT 2006
 pear=off
 
@@ -11,9 +14,6 @@ directory=d:\service\web\xedecimal\projects\xedlib\lib
 
 target=D:\service\web\Xedecimal\Projects\xedlib\doc\output
 
-title=Xedlib
-
 sourcecode=off
 
 javadocdesc=off
-

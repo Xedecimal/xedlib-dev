@@ -262,6 +262,7 @@ EOF;
 
 /**
  * Enter description here...
+ * @package Calendar
  */
 class CalendarMonth
 {
@@ -286,6 +287,7 @@ class CalendarMonth
 
 /**
  * Enter description here...
+ * @package Calendar
  */
 class CalendarDay
 {

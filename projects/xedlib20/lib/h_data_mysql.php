@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @package Storage
+ * @package Data
  */
 
 /**
@@ -18,6 +18,7 @@ define("GET_BOTH", MYSQL_BOTH);
 
 /**
  * A generic database interface, currently only supports MySQL apparently.
+ * @package Data
  */
 class Database
 {
@@ -106,6 +107,11 @@ class Database
 function DeString($data) { return array("destring", $data); }
 function DBNow() { return array("now"); }
 
+/**
+ * @package Data
+ * Enter description here...
+ *
+ */
 class Relation
 {
 	public $ds;
@@ -129,6 +135,7 @@ class Relation
 }
 
 /**
+ * @package Data
  * A general dataset, good for binding to a database's table.
  * Used to generically retrieve, store, update and delete
  * data quickly and easily, given the table matches a few
