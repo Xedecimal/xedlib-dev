@@ -96,9 +96,9 @@ function SetVar($name, $value)
 }
 
 /**
- * @return mixed
  * @param name string
  * @param default = NULL mixed
+ * @return mixed
  */
 function GetVar($name, $default = null)
 {

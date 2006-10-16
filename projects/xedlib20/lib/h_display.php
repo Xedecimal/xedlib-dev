@@ -1104,11 +1104,11 @@ class LoginManager
 	}
 }
 
-/**
- * An easy way to display a set of tabs, they basically work like a menubar.
- * 
- * @todo Get rid of this thing or revise it.
- */
+/*
+** An easy way to display a set of tabs, they basically work like a menubar.
+** 
+** @todo Get rid of this thing or revise it.
+*/
 class Tabs
 {
 	/**

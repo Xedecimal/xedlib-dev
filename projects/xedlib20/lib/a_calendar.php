@@ -5,7 +5,15 @@
  */
 
 /**
+ * Name: Calendar
  * A simple to use calander display.
+ * @package Calendar
+ * 
+ * Example:
+ * 
+ * $cal = new Calendar();
+ * $cal->AddItem(time(), time()+6000, 'Some content here.');
+ * echo $cal->Get();
  */
 class Calendar
 {
