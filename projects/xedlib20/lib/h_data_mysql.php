@@ -18,7 +18,6 @@ define("GET_BOTH", MYSQL_BOTH);
 
 /**
  * A generic database interface, currently only supports MySQL apparently.
- * @package Data
  */
 class Database
 {
@@ -89,6 +88,10 @@ class Database
 		if (mysql_error()) echo "Drop(): " . mysql_error() . "<br>\n";
 	}
 
+	/**
+	 * Ensure this database exists, according to it's specified schema.
+	 *
+	 */
 	function CheckInstall()
 	{
 		mysql_select_db($this->name, $this->link);
@@ -108,7 +111,6 @@ function DeString($data) { return array("destring", $data); }
 function DBNow() { return array("now"); }
 
 /**
- * @package Data
  * Enter description here...
  *
  */
@@ -135,7 +137,6 @@ class Relation
 }
 
 /**
- * @package Data
  * A general dataset, good for binding to a database's table.
  * Used to generically retrieve, store, update and delete
  * data quickly and easily, given the table matches a few

@@ -7,29 +7,25 @@
 /**
  * Name: Calendar
  * A simple to use calander display.
- * @package Calendar
  * 
- * Example:
- * 
- * $cal = new Calendar();
- * $cal->AddItem(time(), time()+6000, 'Some content here.');
- * echo $cal->Get();
+ * <code>
+ * $cal = new Calendar();\n
+ * $cal->AddItem(time(), time()+6000, 'Some content here.');\n
+ * echo $cal->Get();\n
+ * </code>
  */
 class Calendar
 {
 	public $events; //!< Array of events in this calendar.
 	public $dates; //!< Array of dates in this calendar.
 	public $datesbyday; //!< Array indexed by day in this calendar.
-	public $daybody;
+	public $daybody; //!< Body of the current day?
 
 	/**
 	* Adds an item to the calendar to be displayed in a given period of time
-	* @param $ID int Numeric identifier to be used for ci variable.
-	* @param $FromTimeStamp int Timestamp for start of event.
-	* @param $ToTimeStamp int Timestamp for end of event.
-	* @param $Title string Title of event
-	* @param $Link string Link of event, TODO: Displayed where?
-	* @param $Desc string Description of event.
+	* @param $tsfrom int Item beginning time.
+	* @param $tsto int Item end time.
+	* @param $body string Body of this cell.
 	*/
 	function AddItem($tsfrom, $tsto, $body)
 	{
@@ -63,7 +59,6 @@ class Calendar
 	* Gets an html rendered calander display relative to the given
 	* timestamp.
 	* @param $timestamp int Time to display the calendar relavant to.
-	* @param $admin bool [DEPRICATED] Whether or not to have administration buttons on the calendar.
 	*/
 	function Get($timestamp = null)
 	{
@@ -144,9 +139,7 @@ EOF;
 	 * A different style of calandar display, displays
 	 * every event horizontally instead of just one
 	 * month.
-	 * @param $admin bool Whether to include administration links.
 	 */
-
 	function GetVert()
 	{
 		global $me;
@@ -262,15 +255,20 @@ EOF;
 
 /**
  * Enter description here...
- * @package Calendar
  */
 class CalendarMonth
 {
-	public $Year; //Year this month is on.
-	public $Month; //Numeric month.
-	public $Pad; //Amount of blank days at start.
-	public $Days; //Array of CalendarDay objects.
+	public $Year; //!<Year this month is on.
+	public $Month; //!<Numeric month.
+	public $Pad; //!<Amount of blank days at start.
+	public $Days; //!<Array of CalendarDay objects.
 
+	/**
+	 * Enter description here...
+	 *
+	 * @param $timestamp int Timestamp
+	 * @return CalendarMonth
+	 */
 	function CalendarMonth($timestamp)
 	{
 		$this->Year = gmdate('Y', $timestamp);
@@ -287,17 +285,22 @@ class CalendarMonth
 
 /**
  * Enter description here...
- * @package Calendar
  */
 class CalendarDay
 {
-	public $TimeStamp;
-	public $StartWeek;
-	public $EndWeek;
-	public $Day;
-	public $WeekDay;
-	public $LastDay;
+	public $TimeStamp; //!< This day's timestamp.
+	public $StartWeek; //!< true if this day is the first weekday.
+	public $EndWeek; //!< true if this day is the last weekday.
+	public $Day; //!< Day of the month.
+	public $WeekDay; //!< Day of the week.
+	public $LastDay; //!< True if this is the last day of the month.
 
+	/**
+	 * Enter description here...
+	 *
+	 * @param $timestamp int Timestamp of this day.
+	 * @return CalendarDay
+	 */
 	function CalendarDay($timestamp)
 	{
 		$this->TimeStamp = $timestamp;

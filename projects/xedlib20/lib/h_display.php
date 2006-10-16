@@ -22,8 +22,6 @@ function GetBox($name, $title, $body, $template = null)
 
 /**
  * A simple themed box.
- * 
- * @package Presentation
  */
 class Box
 {
@@ -77,7 +75,6 @@ class Box
 
 /**
  * A generic table class to manage a top level table, with children rows and cells.
- * @package Presentation
  */
 class Table
 {
@@ -85,7 +82,7 @@ class Table
 	public $cols; //!< Column headers for this table (displayed at the top of the rows).
 	public $rows; //!< Each row array that makes up the bulk of this table.
 	public $atrs; //!< Array of attributes on a per-column basis.
-	public $rowattribs;
+	public $rowattribs; //!< Array of attributes on a per-row basis.
 
 	/**
 	 * Instantiates this table with the specified attributes.
@@ -172,7 +169,6 @@ class Table
 }
 
 /**
- * @package Presentation
  * A table with columns that can sort, a bit
  * more processing with a better user experience.
  * 
@@ -213,7 +209,6 @@ class SortTable extends Table
 }
 
 /**
- * @package Presentation
  * A web page form, with functions for easy field creation and layout.
  * @todo Create sub classes for each input type.
  */
@@ -380,15 +375,22 @@ class Form extends Table
 }
 
 /**
- * @package Presentation
  * Enter description here...
  */
 class SelOption
 {
-	public $text;
-	public $group;
-	public $selected;
+	public $text; //!< The text of this option.
+	public $group; //!< Whether this is a group header.
+	public $selected; //!< Whether this option is selected by default.
 
+	/**
+	 * Create a new select option.
+	 *
+	 * @param $text string The text of this option.
+	 * @param unknown_type $group
+	 * @param unknown_type $selected
+	 * @return SelOption
+	 */
 	function SelOption($text, $group = false, $selected = false)
 	{
 		$this->text = $text;
@@ -499,15 +501,20 @@ define('CONTROL_BOUND', 1);
 function BoolCallback($val) { return $val ? 'Yes' : 'No'; }
 
 /**
- * @package Presentation
  * A node holds children.
  */
 class TreeNode
 {
-	public $id;
-	public $data;
-	public $children;
+	public $id; //!<ID of this node (usually for database association)
+	public $data; //!< Data associated with this node.
+	public $children; //!< Child nodes of this node.
 
+	/**
+	 * Create a new TreeNode object.
+	 *
+	 * @param $data mixed Data to associate with this node.
+	 * @return TreeNode
+	 */
 	function TreeNode($data)
 	{
 		$this->data = $data;
@@ -516,7 +523,6 @@ class TreeNode
 }
 
 /**
- * @package Presentation
  * Enter description here...
  */
 class DisplayColumn
@@ -536,7 +542,6 @@ class DisplayColumn
 }
 
 /**
- * @package Presentation
  * A complex data editor.
  */
 class EditorData
@@ -547,7 +552,7 @@ class EditorData
 	 *
 	 * @var DataSet
 	 */
-	public $ds;
+	public $ds; //!< Associated dataset.
 	public $filter;
 	public $sort;
 	public $state;
@@ -1024,7 +1029,6 @@ define('ACCESS_GUEST', 0);
 define('ACCESS_ADMIN', 1);
 
 /**
- * @package Presentation
  * Enter description here...
  */
 class LoginManager
@@ -1111,7 +1115,6 @@ class LoginManager
 }
 
 /**
- * @package Presentation
  * An easy way to display a set of tabs, they basically work like a menubar.
  * 
  * @todo Get rid of this thing or revise it.
@@ -1160,6 +1163,11 @@ class Tabs
  */
 class DisplayObject
 {
+	/**
+	 * Creates a new display object.
+	 *
+	 * @return DisplayObject
+	 */
 	function DisplayObject() { }
 
 	/**
@@ -1171,23 +1179,36 @@ class DisplayObject
 		return "Class " . get_class($this) . " does not overload Get().";
 	}
 
+	/**
+	 * Prepare this object for output.
+	 *
+	 * @param $data string
+	 */
 	function Prepare(&$data) { }
 }
 
 //Form Functions
 
 /**
- * @package Presentation
+
  * Enter description here...
  *
  */
 class Validation
 {
-	public $field;
-	public $regex;
-	public $error;
-	public $validators;
+	public $field; //!< Field?
+	public $regex; //!< Regular expression?
+	public $error; //!< Error result.
+	public $validators; //!< Validator tree
 
+	/**
+	 * Enter description here...
+	 *
+	 * @param $field String Name of field
+	 * @param $regex String Regular Expression to match value.
+	 * @param $error String Error message.
+	 * @return Validation
+	 */
 	function Validation($field, $regex, $error)
 	{
 		$this->field = $field;
@@ -1196,11 +1217,22 @@ class Validation
 		$this->validators = array();
 	}
 
+	/**
+	 * Enter description here...
+	 *
+	 * @param $value String Name of field.
+	 * @param $child Validation Child validation object.
+	 */
 	function Add($value, $child)
 	{
 		$this->validators[$value] = $child;
 	}
 
+	/**
+	 * Enter description here...
+	 *
+	 * @return unknown
+	 */
 	function GetJS()
 	{
 		if (!empty($this->validators)) foreach ($this->validators as $v)
@@ -1237,6 +1269,12 @@ class Validation
 		return $ret;
 	}
 
+	/**
+	 * Enter description here...
+	 *
+	 * @param $check unknown
+	 * @param $ret unknown
+	 */
 	function Validate($check, &$ret)
 	{
 		if ($check)
