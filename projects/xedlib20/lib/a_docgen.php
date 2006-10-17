@@ -39,6 +39,10 @@ class DocGen
 						case '{':
 							if ($this->show_tree) echo str_repeat("\t", count($tree))."{$tok}\n";
 							array_push($tree, $current);
+
+							//We're done with function arguments.
+							if (isset($current) && $current->type == T_FUNCTION)
+								$current = null;
 							break;
 						case '}':
 							$current = array_pop($tree);
@@ -108,17 +112,17 @@ class DocGen
 					$d->doc = $doc;
 					$doc = null;
 
-					//Member variable
-					if (count($tree) == 1 && $tree[count($tree)-1]->type == T_CLASS)
-					{
+					//Argument
+					if (isset($current) && $current->type == T_FUNCTION)
 						$current->members[$tok[1]] = $d;
-					}
-					
-					//Global variable
-					if (count($tree) == 0)
-					{
+
+					//Member
+					else if (count($tree) == 1 && $tree[count($tree)-1]->type == T_CLASS)
+						$current->members[$tok[1]] = $d;
+
+					//Global
+					else if (empty($tree))
 						$ret->members[$tok[1]] = $d;
-					}
 				}
 			}
 		}

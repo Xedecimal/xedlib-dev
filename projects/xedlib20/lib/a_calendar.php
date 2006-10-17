@@ -5,7 +5,6 @@
  */
 
 /**
- * Name: Calendar
  * A simple to use calander display.
  * 
  * <code>
@@ -16,16 +15,36 @@
  */
 class Calendar
 {
-	public $events; //!< Array of events in this calendar.
-	public $dates; //!< Array of dates in this calendar.
-	public $datesbyday; //!< Array indexed by day in this calendar.
-	public $daybody; //!< Body of the current day?
+	/**
+	 * Array of events in this calendar.
+	 *
+	 * @var array
+	 */
+	public $events;
+	/**
+	 * Array of dates in this calendar.
+	 *
+	 * @var array
+	 */
+	public $dates;
+	/**
+	 * Array indexed by day in this calendar.
+	 *
+	 * @var array
+	 */
+	public $datesbyday;
+	/**
+	 * Body of the current day?
+	 *
+	 * @var unknown_type
+	 */
+	public $daybody;
 
 	/**
 	* Adds an item to the calendar to be displayed in a given period of time
-	* @param $tsfrom int Item beginning time.
-	* @param $tsto int Item end time.
-	* @param $body string Body of this cell.
+	* @param int $tsfrom Item beginning time.
+	* @param int $tsto Item end time.
+	* @param string $body Body of this cell.
 	*/
 	function AddItem($tsfrom, $tsto, $body)
 	{
@@ -58,7 +77,7 @@ class Calendar
 	/**
 	* Gets an html rendered calander display relative to the given
 	* timestamp.
-	* @param $timestamp int Time to display the calendar relavant to.
+	* @param int $timestamp Time to display the calendar relavant to.
 	*/
 	function Get($timestamp = null)
 	{

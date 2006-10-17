@@ -25,10 +25,30 @@ function GetBox($name, $title, $body, $template = null)
  */
 class Box
 {
-	public $name; //!< For unique identifier.
-	public $title; //!< Title to be displayed in this box, placement depends on the theme.
-	public $out; //!< Standard text to be output inside this box.
-	public $template; //!< Template to use with this box.
+	/**
+	 * For unique identifier.
+	 *
+	 * @var String
+	 */
+	public $name;
+	/**
+	 * Title to be displayed in this box, placement depends on the theme.
+	 *
+	 * @var String
+	 */
+	public $title;
+	/**
+	 * Standard text to be output inside this box.
+	 *
+	 * @var String
+	 */
+	public $out;
+	/**
+	 * Template filename to use with this box.
+	 *
+	 * @var String
+	 */
+	public $template;
 
 	/**
 	* Constructs a new box object with empty title and body.
@@ -43,6 +63,7 @@ class Box
 
 	/**
 	* Returns the rendered html output of this Box.
+	* @param String $template Filename of template to use for display.
 	*/
 	function Get($template = null)
 	{

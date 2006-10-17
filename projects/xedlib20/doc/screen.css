@@ -1,0 +1,61 @@
+body
+{
+	font-family: Verdana, sans-serif;
+	font-size: 8pt;
+}
+
+.head_head
+{
+	margin-bottom: 0px;
+	padding: 10px;
+	background-color: #DDD;
+	-moz-border-radius: 10px 10px 0px 0px;
+	font-size: 10pt;
+	font-weight: bold;
+}
+
+.head_body
+{
+	margin-top: 0px;
+	padding: 10px;
+	background-color: #EEE;
+	-moz-border-radius: 0px 0px 10px 10px;
+}
+
+/* Class Related */
+
+.properties_head
+{
+	padding: 10px;
+	background-color: #DDF;
+	-moz-border-radius: 10px 10px 0px 0px;
+	margin-bottom: 0px;
+	font-weight: bold;
+	font-size: 10pt;
+}
+
+.properties_body
+{
+	margin-top: 0px;
+	padding: 10px;
+	background-color: #EEF;
+	-moz-border-radius: 0px 0px 10px 10px;
+}
+
+.methods_head
+{
+	padding: 10px;
+	background-color: #DFD;
+	-moz-border-radius: 10px 10px 0px 0px;
+	margin-bottom: 0px;
+	font-weight: bold;
+	font-size: 10pt;
+}
+
+.methods_body
+{
+	margin-top: 0px;
+	padding: 10px;
+	background-color: #EFE;
+	-moz-border-radius: 0px 0px 10px 10px;
+}
