@@ -294,6 +294,7 @@ class DataSet
 
 	/**
 	 * Inserts a row into the associated table with the passed array.
+	 * @access public
 	 * @param $columns array An array of columns. If you wish to use functions
 	 * @param $update_existing bool Whether to update the existing values
 	 * by unique keys, or just to add ignoring keys otherwise.
@@ -375,9 +376,9 @@ class DataSet
 
 	/**
 	 * Return a single item from this dataset
-	 * @param $match array Passed on to WhereClause.
-	 * @param $args Arguments passed to fetch_array.
-	 * @return A single serialized row matching $match or null if not found.
+	 * @param array $match Passed on to WhereClause.
+	 * @param int $args Arguments passed to fetch_array.
+	 * @return array A single serialized row matching $match or null if not found.
 	 */
 	function GetOne($match, $args = GET_BOTH)
 	{

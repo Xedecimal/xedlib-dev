@@ -7,11 +7,7 @@
 /**
  * A simple to use calander display.
  * 
- * <code>
- * $cal = new Calendar();\n
- * $cal->AddItem(time(), time()+6000, 'Some content here.');\n
- * echo $cal->Get();\n
- * </code>
+ * @example doc\examples\calendar.php
  */
 class Calendar
 {
@@ -42,6 +38,8 @@ class Calendar
 
 	/**
 	* Adds an item to the calendar to be displayed in a given period of time
+	* 
+	* @access public
 	* @param int $tsfrom Item beginning time.
 	* @param int $tsto Item end time.
 	* @param string $body Body of this cell.
@@ -277,10 +275,30 @@ EOF;
  */
 class CalendarMonth
 {
-	public $Year; //!<Year this month is on.
-	public $Month; //!<Numeric month.
-	public $Pad; //!<Amount of blank days at start.
-	public $Days; //!<Array of CalendarDay objects.
+	/**
+	 * Enter description here...
+	 * Year this month is on.
+	 * @var int
+	 */
+	public $Year;
+	/**
+	 * Numeric month. 1 - 12
+	 *
+	 * @var int
+	 */
+	public $Month;
+	/**
+	 * Amount of blank days at start.
+	 *
+	 * @var int
+	 */
+	public $Pad;
+	/**
+	 * Array of CalendarDay objects.
+	 *
+	 * @var int
+	 */
+	public $Days;
 
 	/**
 	 * Enter description here...
@@ -307,12 +325,42 @@ class CalendarMonth
  */
 class CalendarDay
 {
-	public $TimeStamp; //!< This day's timestamp.
-	public $StartWeek; //!< true if this day is the first weekday.
-	public $EndWeek; //!< true if this day is the last weekday.
-	public $Day; //!< Day of the month.
-	public $WeekDay; //!< Day of the week.
-	public $LastDay; //!< True if this is the last day of the month.
+	/**
+	 * This day's timestamp.
+	 *
+	 * @var int
+	 */
+	public $TimeStamp;
+	/**
+	 * true if this day is the first weekday.
+	 *
+	 * @var bool
+	 */
+	public $StartWeek;
+	/**
+	 * true if this day is the last weekday.
+	 *
+	 * @var bool
+	 */
+	public $EndWeek;
+	/**
+	 * Day of the month.
+	 *
+	 * @var int
+	 */
+	public $Day;
+	/**
+	 * Day of the week.
+	 *
+	 * @var int
+	 */
+	public $WeekDay;
+	/**
+	 * True if this is the last day of the month.
+	 *
+	 * @var bool
+	 */
+	public $LastDay;
 
 	/**
 	 * Enter description here...
