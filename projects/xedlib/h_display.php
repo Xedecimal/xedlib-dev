@@ -625,7 +625,10 @@ class EditorData
 						$files = glob("{$data[2]}/{$ci}.*");
 						foreach ($files as $file) unlink($file);
 						$finfo = pathinfo($value['name']);
-						move_uploaded_file($value['tmp_name'], "{$data[2]}/{$ci}.{$finfo['extension']}");
+						
+						$src = $value['tmp_name'];
+						$dst = "{$data[2]}/{$ci}.{$finfo['extension']}";
+						move_uploaded_file($src, $dst);
 					}
 					else $update[$data[0]] = GetVar($data[0]);
 				}
@@ -637,15 +640,6 @@ class EditorData
 				foreach ($this->handlers as $handler)
 				{
 					if (!$handler->Update($ci, $data, $update)) return;
-				}
-			}
-
-			foreach ($this->ds->fields as $name => $data)
-			{
-				if ($data[1] == 'file')
-				{
-					$files = glob("{$data[2]}/{$ci}.*");
-					foreach ($files as $file) unlink($file);
 				}
 			}
 
@@ -672,6 +666,17 @@ class EditorData
 				foreach ($this->handlers as $handler)
 				{
 					if (!$handler->Delete($ci, $data)) return;
+				}
+			}
+			foreach ($this->ds->fields as $name => $data)
+			{
+				if (is_array($data))
+				{
+					if ($data[1] == 'file')
+					{
+						$files = glob("{$data[2]}/{$ci}.*");
+						foreach ($files as $file) unlink($file);
+					}
 				}
 			}
 			$this->ds->Remove(array($this->ds->id => $ci));
@@ -826,6 +831,12 @@ class EditorData
 	}
 }
 
+/**
+ * Check the example...
+ * 
+ * @example doc/HandlerFile.php
+ *
+ */
 class HandlerFile
 {
 	public $target;
