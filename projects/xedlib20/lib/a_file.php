@@ -6,7 +6,7 @@
  */
 
 /**
- * Enter description here...
+ * Allows a user to administrate files from a web browser.
  */
 class FileManager
 {

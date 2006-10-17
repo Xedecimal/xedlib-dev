@@ -331,4 +331,9 @@ function DataToArray($rows, $idcol)
 	return $ret;
 }
 
+function array_get($array)
+{
+	return $array[count($array)-1];
+}
+
 ?>
