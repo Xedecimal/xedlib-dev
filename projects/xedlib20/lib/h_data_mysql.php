@@ -125,7 +125,7 @@ class Relation
 	 *
 	 * @param DataSet $ds DataSet for this child.
 	 * @param string $primary_key Column name of the primary key of $ds.
-	 * @example ../examples/relation.php
+	 * @example doc\examples\dataset.php
 	 * @return Relation
 	 */
 	function Relation($ds, $parent_key, $child_key)
@@ -143,6 +143,8 @@ class Relation
  * general guidelines, for one it must have an auto_increment
  * primary key for it's first field named 'id' so it can
  * easily locate fields.
+ * 
+ * @example doc\examples\dataset.php
  */
 class DataSet
 {

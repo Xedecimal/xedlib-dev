@@ -1,0 +1,43 @@
+body { font-family: Verdana, sans-serif; font-size: 8pt; }
+table { font-family: Verdana, sans-serif; font-size: 8pt; }
+
+.head
+{
+	font-weight: bold;
+	font-size: 10pt;
+
+	border-right: 1px solid;
+	-moz-border-radius: 10px 10px 0px 0px;
+	padding: 10px;
+	margin-bottom: 0px;
+}
+
+.body
+{
+	margin-top: 0px;
+}
+
+.item
+{
+	margin-top: 0px;
+	padding: 10px;
+	-moz-border-radius: 0px 0px 10px 10px;
+	border-bottom: 1px solid;
+	border-right: 1px solid;
+}
+
+.yellow.head { background-color: #FFD; border-color: #DDC; }
+.yellow.body { background-color: #FFE; }
+.yellow.item { border-color: #DDC; }
+
+.blue.head { background-color: #DDF; border-color: #CCD; }
+.blue.body { background-color: #EEF; }
+.blue.item { border-color: #CCD; }
+
+.green.head { background-color: #DFD; border-color: #CDC; }
+.green.body { background-color: #EFE; }
+.green.item { border-color: #CDC; }
+
+.red.head { background-color: #FDD; border-color: #DCC; }
+.red.body { background-color: #FEE; }
+.red.item { border-color: #DCC; }

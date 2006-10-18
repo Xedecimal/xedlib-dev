@@ -8,6 +8,7 @@
  * A simple to use calander display.
  * 
  * @example doc\examples\calendar.php
+ * @access public
  */
 class Calendar
 {

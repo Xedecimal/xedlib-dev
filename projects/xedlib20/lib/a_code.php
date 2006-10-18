@@ -4,6 +4,8 @@ define('GET_NONE', 0);
 define('GET_NAME', 1);
 define('GET_DEFINE_NAME', 2);
 define('GET_DEFINE_VALUE', 3);
+define('GET_EXTENDS', 4);
+
 define('T_DEFINE', 900);
 
 /**
@@ -89,6 +91,7 @@ class CodeReader
 						array_push($tree, $current);
 						$current = new CodeObject(T_DEFINE);
 						$current->name = str_replace('"', '', str_replace("'", '', $tok[1]));
+						$current->filename = $filename;
 						$ret->members[$current->name] = $current;
 						$getting = GET_DEFINE_VALUE;
 					}
@@ -122,6 +125,11 @@ class CodeReader
 					if ($getting == GET_NONE && strtolower($tok[1]) == 'define')
 					{
 						$getting = GET_DEFINE_NAME;
+					}
+					if ($getting == GET_EXTENDS)
+					{
+						$current->extends = $tok[1];
+						$getting = GET_NONE;
 					}
 					if ($getting == GET_NAME)
 					{
@@ -178,6 +186,21 @@ class CodeReader
 						$d->parent = $ret;
 						$ret->members[$tok[1]] = $d;
 					}
+				}
+				
+				if ($tok[0] == T_LNUMBER)
+				{
+					if ($getting == GET_DEFINE_VALUE)
+					{
+						$current->value = str_replace('"', '', str_replace("'", '', $tok[1]));
+						$current = array_pop($tree);
+						$getting = GET_NONE;
+					}
+				}
+				
+				if ($tok[0] == T_EXTENDS)
+				{
+					$getting = GET_EXTENDS;
 				}
 			}
 		}

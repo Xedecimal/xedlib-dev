@@ -407,7 +407,7 @@ class SelOption
 	/**
 	 * Create a new select option.
 	 *
-	 * @param $text string The text of this option.
+	 * @param string $text The text of this option.
 	 * @param unknown_type $group
 	 * @param unknown_type $selected
 	 * @return SelOption

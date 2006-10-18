@@ -10,7 +10,17 @@
  */
 class FileManager
 {
+	/**
+	 * Name of this file manager.
+	 *
+	 * @var string
+	 */
 	public $name;
+	/**
+	 * Array of filters that are available for this object.
+	 *
+	 * @var array
+	 */
 	public $filters;
 	public $root;
 	public $icons;
