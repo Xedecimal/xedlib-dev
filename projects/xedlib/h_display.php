@@ -622,13 +622,16 @@ class EditorData
 					}
 					else if ($data[1] == 'file')
 					{
-						$files = glob("{$data[2]}/{$ci}.*");
-						foreach ($files as $file) unlink($file);
-						$finfo = pathinfo($value['name']);
-						
-						$src = $value['tmp_name'];
-						$dst = "{$data[2]}/{$ci}.{$finfo['extension']}";
-						move_uploaded_file($src, $dst);
+						if (isset($value))
+						{
+							$files = glob("{$data[2]}/{$ci}.*");
+							foreach ($files as $file) unlink($file);
+							$finfo = pathinfo($value['name']);
+
+							$src = $value['tmp_name'];
+							$dst = "{$data[2]}/{$ci}.{$finfo['extension']}";
+							move_uploaded_file($src, $dst);
+						}
 					}
 					else $update[$data[0]] = GetVar($data[0]);
 				}
@@ -833,7 +836,7 @@ class EditorData
 
 /**
  * Check the example...
- * 
+ *
  * @example doc/HandlerFile.php
  *
  */
