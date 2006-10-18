@@ -622,7 +622,7 @@ class EditorData
 					}
 					else if ($data[1] == 'file')
 					{
-						if (isset($value))
+						if (strlen($value['tmp_name']) > 0)
 						{
 							$files = glob("{$data[2]}/{$ci}.*");
 							foreach ($files as $file) unlink($file);
