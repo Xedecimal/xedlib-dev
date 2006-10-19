@@ -331,7 +331,7 @@ class FileManager
 			'cd' => 'down',
 			'index' => $index
 		)));
-		
+
 		$uriDel = MakeURI($target, array_merge($common, array(
 			'ca' => "delete",
 			'ci' => urlencode($file->filename)
@@ -379,12 +379,19 @@ class FileManager
 			if (is_dir($this->root.$this->cf.'/'.$file))
 			{
 				if (!isset($newfi->info['index'])) $newdirs[] = $newfi;
-				else $ret['dirs'][$newfi->info['index']] = $newfi;
+				else array_splice($ret['dirs'], $newfi->info['index'], 0, array($newfi));
 			}
 			else
 			{
 				if (!isset($newfi->info['index'])) $newfiles[] = $newfi;
-				else $ret['files'][$newfi->info['index']] = $newfi;
+				//We have to insert into the array so the merge doesn't end
+				//up overwriting items that don't have indexes.
+				else array_splice($ret['files'], $newfi->info['index'], 0, array($newfi));
+
+				//This is the old method in case the above breaks sorting
+				//functionality. Don't forgot to revert dirs too if this is the
+				//case.
+				//$ret['files'][$newfi->info['index']] = $newfi;
 			}
 		}
 		if (!empty($newdirs)) $ret['dirs'] = array_merge($newdirs, $ret['dirs']);
