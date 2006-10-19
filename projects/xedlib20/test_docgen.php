@@ -34,40 +34,44 @@ class DocGeneratorXML
 		$elDoc = $doc->createElement('doc');
 		preg_match_all('#/*([^*/]+)#', $data, $matches);
 		$ret = null;
-		//Process this differently, match @<anything>, then match
-		//more under that.
 		foreach ($matches[0] as $line)
 		{
 			$line = chop($line);
-			if (preg_match('#@example (.+)#', $line, $tag_match))
+			
+			//Tag
+			if (preg_match('#@(.+)#', $line, $match))
 			{
-				$data = highlight_file($tag_match[1], true);
-				$elTag = $doc->createElement('tag');
-				$elTag->appendChild($doc->createCDATASection($data));
-				$elTag->setAttribute('type', 'example');
-				$elDoc->appendChild($elTag);
-			}
-			else if (preg_match('#@param ([^ ]+) ([^ ]+)(.*)#', $line, $tag_match))
-			{
-				$elTag = $doc->createElement('tag', $tag_match[3]);
-				$elTag->setAttribute('type', 'param');
-				$elTag->setAttribute('datatype', $tag_match[1]);
-				$elTag->setAttribute('name', $tag_match[2]);
-				$elDoc->appendChild($elTag);
-			}
-			else if (preg_match('#@return ([^ ]+) (.*)#', $line, $tag_match))
-			{
-				$elTag = $doc->createElement('tag', isset($tag_match[3]) ? $tag_match[3] : null);
-				$elTag->setAttribute('type', 'return');
-				$elTag->setAttribute('datatype', $tag_match[1]);
-				$elTag->setAttribute('text', $tag_match[2]);
-				$elDoc->appendChild($elTag);
-			}
-			else if (preg_match('#@([^ ]+) (.*)#', $line, $tag_match))
-			{
-				$elTag = $doc->createElement('tag', $tag_match[2]);
-				$elTag->setAttribute('type', $tag_match[1]);
-				$elDoc->appendChild($elTag);
+				$tag = $match[1];
+				if (preg_match('#example (.+)#', $tag, $match))
+				{
+					$data = highlight_file($match[1], true);
+					$elTag = $doc->createElement('tag');
+					$elTag->appendChild($doc->createCDATASection($data));
+					$elTag->setAttribute('type', 'example');
+					$elDoc->appendChild($elTag);
+				}
+				else if (preg_match('#param ([^ ]+) ([^ ]+)(.*)#', $tag, $match))
+				{
+					$elTag = $doc->createElement('tag', $match[3]);
+					$elTag->setAttribute('type', 'param');
+					$elTag->setAttribute('datatype', $match[1]);
+					$elTag->setAttribute('name', $match[2]);
+					$elDoc->appendChild($elTag);
+				}
+				else if (preg_match('#return ([^ ]+)(.*)#', $line, $match))
+				{
+					$elTag = $doc->createElement('tag', isset($match[3]) ? $match[3] : null);
+					$elTag->setAttribute('type', 'return');
+					$elTag->setAttribute('datatype', $match[1]);
+					$elTag->setAttribute('text', $match[2]);
+					$elDoc->appendChild($elTag);
+				}
+				else
+				{
+					$elTag = $doc->createElement('tag', isset($match[2]) ? $match[2] : null);
+					$elTag->setAttribute('type', $tag);
+					$elDoc->appendChild($elTag);
+				}
 			}
 			else $ret .= $line;
 		}

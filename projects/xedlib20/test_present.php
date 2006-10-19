@@ -5,15 +5,22 @@ require_once('lib/h_display.php');
 
 $imgError = '<img src="lib/images/error.png" style="vertical-align: text-bottom" alt="Error" />';
 
-$vContact = new Validation('contact', '.+', $imgError.' You must select a contact.');
+$vContact = new Validation('contact', '[^0]+', $imgError.' You must select a contact.');
 $vContact->Add('email', new Validation('email', '.+@.+\..+',
 	$imgError.' Email address should be in the format name@address.com'));
 $vContact->Add('phone', new Validation('phone', '.*([0-9]{3}).*([0-9]{3}).*([0-9]{4}).*',
 	$imgError.' Invalid phone number.'));
 $vContact->Add('mail', new Validation('address', '.+',
 	$imgError.' You must enter an address'));
-$validation = FormValidate('formContact', $vContact, GetVar('ca') == 'send');
+$validation = FormValidate('formTest', $vContact, GetVar('ca') == 'send');
 $errors = $validation['errors'];
+
+$contacts = array(
+	0 => 'None',
+	'email' => 'Email',
+	'phone' => 'Phone',
+	'mail' => 'Mail'
+);
 
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -27,19 +34,19 @@ $errors = $validation['errors'];
 	</script>
 </head>
 <body>
-<h3>Form Validation</h3>
-<form action="<?=$me?>">
-Contact by:
-<select id="contact" name="contact">
-	<option value="">None</option>
-	<option value="email">Email</option>
-	<option value="phone">Phone</option>
-	<option value="mail">Mail</option>
-</select> <?=$errors['contact']?><br/>
-Email: <input type="text" id="email" name="email" /> <?=$errors['email']?><br />
-Phone: <input type="text" id="phone" name="phone" /> <?=$errors['phone']?><br />
-Address: <input type="text" id="address" name="address" /> <?=$errors['address']?><br />
-<input type="submit" value="Send" onclick="return formContact_check(1);" />
-</form>
+<h3>Form With Validation</h3>
+
+<?
+
+$frm = new Form('formTest');
+$frm->Validation = $vContact;
+$frm->AddInput('Contact method', 'select', 'contact', ArrayToSelOptions($contacts));
+$frm->AddInput('Email:',   'text', 'email');
+$frm->AddInput('Phone:',   'text', 'phone');
+$frm->AddInput('Address:', 'text', 'address');
+$frm->AddInput(null, 'submit', 'butSubmit', 'Send');
+echo GetBox('box_test', 'Form Test', $frm->Get('action="'.$me.'" method="post"'));
+
+?>
 </body>
 </html>

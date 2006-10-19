@@ -40,6 +40,7 @@
 	<xsl:value-of select="@extends" />
 </xsl:for-each>
 </p>
+
 <p class="green head">Variables</p>
 <p class="green body item">
 <b>Rule of thumb, have no existing global variables!</b><br/><br/>
@@ -52,9 +53,12 @@
 	</a>
 </xsl:for-each>
 </p>
+
+<xsl:if test="root/define">
 <p class="red head">Defines</p>
 <p class="red body item">
 <table>
+<tr><th>Name</th><th>Value</th><th>Filename</th></tr>
 <xsl:for-each select="root/define">
 	<tr>
 		<td><xsl:value-of select="@name" /></td>
@@ -64,6 +68,8 @@
 </xsl:for-each>
 </table>
 </p>
+</xsl:if>
+
 </body>
 </html>
 </xsl:template>

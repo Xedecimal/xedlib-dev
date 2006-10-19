@@ -7,6 +7,7 @@ require_once('lib/h_utility.php');
 
 $t = new Template();
 $page_body = '';
+$page_title = 'Utility Test';
 
 ////////////////////////////////////////////////////////////////////////////////
 //Errors
@@ -42,6 +43,10 @@ $error = MakeError('This is a notice.', E_USER_WARNING);
 $page_body .= $error;
 $error = $e->MakeError('This is a warning in a class.', E_USER_WARNING);
 $page_body .= $error;
+
+Trace("Here's a trace with debug off!<br/>\n");
+$debug = true;
+Trace("Here's a trace with debug on!<br/>\n");
 
 ////////////////////////////////////////////////////////////////////////////////
 //Sessions

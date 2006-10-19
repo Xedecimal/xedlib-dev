@@ -30,7 +30,7 @@ function HandleErrors()
  * @since 1.0
  * @todo Alternative output locations.
  * @todo Alternative verbosity levels.
- * @example doc\examples\debug.php
+ * @example test_utility.php
  */
 function Trace($msg)
 {

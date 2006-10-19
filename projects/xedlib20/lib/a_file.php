@@ -15,38 +15,119 @@ class FileManager
 	 *
 	 * @var string
 	 */
-	public $name;
+	private $name;
 	/**
 	 * Array of filters that are available for this object.
 	 *
 	 * @var array
 	 */
-	public $filters;
-	public $root;
-	public $icons;
-	public $cf;
-	public $DefaultFilter;
-	public $sortable;
-	public $files;
+	private $filters;
+	/**
+	 * People are not allowed above this folder.
+	 *
+	 * @var string
+	 */
+	private $root;
+	/**
+	 * Icons and their associated filetypes, overridden with FilterGallery.
+	 *
+	 * @var array
+	 */
+	private $icons;
+	/**
+	 * Current File
+	 *
+	 * @var string
+	 */
+	private $cf;
+	/**
+	 * Filter that new folders will begin with.
+	 *
+	 * @var FilterDefault
+	 */
+	private $DefaultFilter;
+	/**
+	 * Whether or not files and folders can be manually sorted with an index.
+	 *
+	 * @var bool
+	 */
+	private $sortable;
+	/**
+	 * An array of files and folders.
+	 *
+	 * @var array
+	 */
+	private $files;
 
 	//Access Relation
-	public $allow_upload;
-	public $allow_create_dir;
-	public $allow_delete;
-	public $allow_sort;
-	public $allow_rename;
-	public $allow_edit;
+	/**
+	 * Whether or not file uploads are allowed.
+	 *
+	 * @var bool
+	 */
+	private $allow_upload;
+	/**
+	 * Whether or not users are allowed to create directories.
+	 *
+	 * @var bool
+	 */
+	private $allow_create_dir;
+	/**
+	 * Whether users are allowed to delete files.
+	 * @see AllowAll
+	 *
+	 * @var bool
+	 */
+	private $allow_delete;
+	/**
+	 * Whether users are allowed to manually sort files.
+	 *
+	 * @var bool
+	 */
+	private $allow_sort;
+	/**
+	 * Whether users are allowed to set filter types on folders.
+	 *
+	 * @var bool
+	 */
+	private $allow_rename;
+	/**
+	 * Whether users are allowed to rename or update file information.
+	 *
+	 * @var bool
+	 */
+	private $allow_edit;
 
 	//Display
-	public $show_title;
-	public $show_files_header = 'Files';
-	public $show_folders_header = 'Folders';
+	/**
+	 * Whether titles of files or filenames are shown.
+	 *
+	 * @var bool
+	 */
+	private $show_title;
+	/**
+	 * Text of the header that comes before files.
+	 *
+	 * @var string
+	 */
+	private $show_files_header = 'Files';
+	/**
+	 * Text of the header that comes before folders.
+	 *
+	 * @var string
+	 */
+	private $show_folders_header = 'Folders';
 	/**
 	 * Whether files or folders come first.
 	 *
 	 * @var boolean
 	 */
 	public $show_files_first = false;
+	/**
+	 * Whether file information is shown, or file is simply downloaded on click.
+	 *
+	 * @var bool
+	 */
 	public $show_info = true;
 
 	/**
@@ -77,6 +158,11 @@ class FileManager
 		$this->allow_upload = false;
 	}
 
+	/**
+	 * This must be called before Get. This will prepare for presentation.
+	 *
+	 * @param string $action Use GetVar('ca') usually.
+	 */
 	function Prepare($action)
 	{
 		//Actions
@@ -231,6 +317,15 @@ class FileManager
 		return $ret;
 	}
 
+	/**
+	 * Returns the top portion of the file manager.
+	 * * Path
+	 * * Search
+	 *
+	 * @param string $target Destination of all forms.
+	 * @param string $source Related directory.
+	 * @return string
+	 */
 	function GetHeader($target, $source)
 	{
 		$ret = null;
@@ -257,6 +352,14 @@ class FileManager
 		return $ret;
 	}
 
+	/**
+	 * Returns a linked breadcrumb trail of the path back to the root of this
+	 * file manager.
+	 *
+	 * @param string $target Target filename of all links.
+	 * @param FileInfo $fi File / Folder to create path out of.
+	 * @return string
+	 */
 	function GetPath($target, $fi)
 	{
 		$items = explode('/', substr($fi->path, strlen($this->root)));
@@ -278,6 +381,14 @@ class FileManager
 		return $ret;
 	}
 
+	/**
+	 * Returns a series of files or folders.
+	 *
+	 * @param string $target Target filename of script using this.
+	 * @param string $type files or dirs
+	 * @param string $title Header
+	 * @return string
+	 */
 	function GetFiles($target, $type, $title)
 	{
 		$ret = '';
@@ -369,6 +480,11 @@ class FileManager
 		return $ret;
 	}
 
+	/**
+	 * Gets an array of files and directories in a directory.
+	 *
+	 * @return array
+	 */
 	function GetDirectory()
 	{
 		$dp = opendir($this->root.$this->cf);
@@ -427,6 +543,12 @@ class FileManager
 		return $ret.$form->Get('action="'.$target.'" method="post"');
 	}
 
+	/**
+	 * Gets the form used to create folders.
+	 *
+	 * @param string $target Script filename that uses this editor.
+	 * @return string
+	 */
 	function GetCreateDirectory($target)
 	{
 		return <<<EOF
@@ -441,6 +563,11 @@ class FileManager
 EOF;
 	}
 
+	/**
+	 * Gets the form used to upload files.
+	 *
+	 * @return string
+	 */
 	function GetUpload()
 	{
 		global $me, $cf;
@@ -459,6 +586,10 @@ EOF;
 EOF;
 	}
 
+	/**
+	 * Turns on all allowances for administration usage.
+	 *
+	 */
 	function AllowAll()
 	{
 		$this->allow_create_dir =
@@ -475,9 +606,29 @@ EOF;
  */
 class FileInfo
 {
+	/**
+	 * Path of this file, including the filename.
+	 *
+	 * @var string
+	 */
 	public $path;
+	/**
+	 * Directory of this file excluding filename.
+	 *
+	 * @var string
+	 */
 	public $dir;
+	/**
+	 * No idea, probably depricated.
+	 *
+	 * @var unknown
+	 */
 	public $bitpos;
+	/**
+	 * Name of this file, excluding path.
+	 *
+	 * @var string
+	 */
 	public $filename;
 
 	/**
@@ -486,13 +637,53 @@ class FileInfo
 	* @var FilterDefault
 	*/
 	public $Filter;
+	/**
+	 * Name of the associated filter, hopefully depricated.
+	 *
+	 * @var string
+	 */
 	public $filtername;
+	/**
+	 * Whether or not the current users owns this object.
+	 *
+	 * @var bool
+	 */
 	public $owned;
+	/**
+	 * Array of serializable information on this file, including but not limited
+	 * to, index and title.
+	 *
+	 * @var array
+	 */
 	public $info;
+	/**
+	 * Extension of this filename, used for collecting icon information.
+	 *
+	 * @var string
+	 */
 	public $type;
+	/**
+	 * Thumbnail of this item, this should be depricated as it only applies
+	 * to FilterGallery.
+	 *
+	 * @var string
+	 */
 	public $thumb;
+	/**
+	 * Whether or not this file should be shown.
+	 *
+	 * @var bool
+	 */
 	public $show;
 
+	/**
+	 * Creates a new FileInfo from an existing file. Filter manages how this
+	 * information will be handled, manipulated or displayed.
+	 *
+	 * @param string $source Filename to gather information on.
+	 * @param string $DefaultFilter Associated directory filter.
+	 * @return FileInfo
+	 */
 	function FileInfo($source, $DefaultFilter = 'Default')
 	{
 		global $user_root;
@@ -514,6 +705,14 @@ class FileInfo
 		if (!$this->Filter->GetInfo($this)) $this->show = false;
 	}
 
+	/**
+	 * Returns the filter that was explicitely set on this object, object's
+	 * directory, or fall back on the default filter.
+	 *
+	 * @param string $path Path to file to get filter of.
+	 * @param string $default Default filter to fall back on.
+	 * @return DirFilter
+	 */
 	function GetFilter($path, $default = 'Default')
 	{
 		if (is_file($path))
@@ -548,6 +747,13 @@ class FileInfo
 		return $this->Filter = new DirFilter();
 	}
 
+	/**
+	 * Gets a bit of a path, a bit is anything between the path separators
+	 * ('/').
+	 *
+	 * @param int $off Which bit to return
+	 * @return string
+	 */
 	function GetBit($off)
 	{
 		$items = explode('/', $this->path);
@@ -555,6 +761,11 @@ class FileInfo
 		return null;
 	}
 
+	/**
+	 * Serializes the information of this file to the filesystem for later
+	 * reuse.
+	 *
+	 */
 	function SaveInfo()
 	{
 		$info = $this->dir.'/.'.$this->filename;
@@ -570,15 +781,43 @@ class FileInfo
  */
 class FilterDefault
 {
+	/**
+	 * Returns the name of this filter.
+	 *
+	 * @return string
+	 */
 	function GetName() { return "Normal"; }
+	/**
+	 * Places information into $fi for later use.
+	 *
+	 * @param FileInfo $fi
+	 * @return FileInfo
+	 * @todo Replace this with ApplyInfo as reference with no return.
+	 */
 	function GetInfo($fi) { return $fi; }
 
+	/**
+	 * Returns an array of options that allow configuring this filter.
+	 *
+	 * @return array
+	 */
 	function GetOptions() { return null; }
+	/**
+	 * Called when a file is requested to upload.
+	 *
+	 * @param array $file Upload form's file field.
+	 * @param string $target Destination folder.
+	 */
 	function Upload($file, $target)
 	{
 		move_uploaded_file($file['tmp_name'], "{$target->path}{$file['name']}");
 	}
-
+	/**
+	 * Called when a file is requested to be renamed.
+	 *
+	 * @param FileInfo $fi Source file information.
+	 * @param string $newname Destination filename.
+	 */
 	function Rename ($fi, $newname)
 	{
 		$finfo = "{$fi->dir}/.{$fi->filename}";
@@ -605,8 +844,19 @@ class FilterDefault
  */
 class FilterGallery extends FilterDefault
 {
+	/**
+	 * Returns the name of this filter.
+	 *
+	 * @return string
+	 */
 	function GetName() { return "Gallery"; }
-
+	/**
+	 * Appends the width, height, thumbnail and any other image related
+	 * information on this file.
+	 *
+	 * @param FileInfo $fi
+	 * @return FileInfo
+	 */
 	function GetInfo($fi)
 	{
 		$ret = parent::GetInfo($fi);
@@ -617,7 +867,11 @@ class FilterGallery extends FilterDefault
 			$ret->info['thumb'] = "<img src=\"{$fi->dir}/t_{$fi->filename}\" alt=\"Thumbnail\" title=\"Thumbnail\" />";
 		return $ret;
 	}
-
+	/**
+	 * Returns an array of options that allow configuring this filter.
+	 *
+	 * @return array
+	 */
 	function GetOptions()
 	{
 		return array(
@@ -626,14 +880,18 @@ class FilterGallery extends FilterDefault
 			'Gallery Name' => array('gallery_name', 'text')
 		);
 	}
-
+	/**
+	 * Called when a file is requested to be renamed.
+	 *
+	 * @param FileInfo $fi Source file information.
+	 * @param string $newname Destination filename.
+	 */
 	function Rename($fi, $newname)
 	{
 		parent::Rename($fi, $newname);
 		$thumb = $fi->dir.'/t_'.$fi->filename;
 		if (file_exists($thumb)) rename($thumb, $fi->dir.'/t_'.$newname);
 	}
-
 	/**
 	* @param FileInfo $fi Target to be deleted.
 	*/
@@ -643,7 +901,12 @@ class FilterGallery extends FilterDefault
 		$thumb = $fi->dir.'/t_'.$fi->filename;
 		if (file_exists($thumb)) unlink($thumb);
 	}
-
+	/**
+	 * Called when a file is requested to upload.
+	 *
+	 * @param array $file Upload form's file field.
+	 * @param string $target Destination folder.
+	 */
 	function Upload($file, $target)
 	{
 		$filename = substr(basename($file['name']), 0, strpos(basename($file['name']), '.'));
@@ -671,6 +934,14 @@ class FilterGallery extends FilterDefault
 		imagejpeg($img, $destthumb);
 	}
 
+	/**
+	 * Resizes an image bicubicly with GD keeping aspect ratio.
+	 *
+	 * @param resource $image
+	 * @param int $newWidth
+	 * @param int $newHeight
+	 * @return resource
+	 */
 	function ResizeImg($image, $newWidth, $newHeight)
 	{
 		$srcWidth  = ImageSX( $image );

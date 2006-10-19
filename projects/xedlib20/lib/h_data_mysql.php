@@ -116,8 +116,25 @@ function DBNow() { return array("now"); }
  */
 class Relation
 {
+	/**
+	 * Associated dataset.
+	 *
+	 * @var DataSet
+	 */
 	public $ds;
+	/**
+	 * Name of the column that is the primary key for the parent of this
+	 * relation.
+	 *
+	 * @var string
+	 */
 	public $parent_key;
+	/**
+	 * Name of the column that is the primary key for the child of this
+	 * relation.
+	 *
+	 * @var string
+	 */
 	public $child_key;
 
 	/**
@@ -153,12 +170,42 @@ class DataSet
 	 *
 	 * @var Database
 	 */
-	public $database;
+	private $database;
 
-	public $table;
-	public $children;
-	public $id;
+	/**
+	 * Name of the table that this DataSet is associated with.
+	 *
+	 * @var string
+	 */
+	private $table;
+	/**
+	 * Array of Relation objects that make up associated children of the table
+	 * this DataSet is associated with.
+	 *
+	 * @var array
+	 */
+	private $children;
+	/**
+	 * Name of the column that holds the primary key of the table that this
+	 * DataSet is associated with.
+	 *
+	 * @var string
+	 */
+	private $id;
+	
+	/**
+	 * Array of DisplayColumn objects that this DataSet is associated with.
+	 *
+	 * @var array
+	 * @see EditorData
+	 */
 	public $display;
+	/**
+	 * Array of field information that this DataSet is associated with.
+	 *
+	 * @var array
+	 * @see EditorData
+	 */
 	public $fields;
 
 	/**
@@ -175,13 +222,23 @@ class DataSet
 	}
 
 	/**
-	 * @param Relation $relation Child to add.
+	 * Adds a child relation to this DataSet for recursion.
+	 *
+	 * @param Relation $relation
+	 * @see EditorData
 	 */
 	function AddChild($relation)
 	{
 		$this->children[] = $relation;
 	}
 
+	/**
+	 * Gets associated SQL text for a clause naming specific columns.
+	 *
+	 * @param array $cols
+	 * @return string
+	 * @access private
+	 */
 	function ColsClause($cols)
 	{
 		if (!empty($cols))
@@ -198,12 +255,25 @@ class DataSet
 		return ' *';
 	}
 
+	/**
+	 * Quotes a table properly depending on the data source.
+	 *
+	 * @param string $name
+	 * @return string Quoted name.
+	 * @todo Rename this to QuoteName
+	 */
 	function QuoteTable($name)
 	{
 		if (strpos($name, '.') > -1) return str_replace('.', '`.`', "`$name`");
 		return "`$name`";
 	}
 
+	/**
+	 * Gets a WHERE clause in SQL format.
+	 *
+	 * @param array $match
+	 * @return string
+	 */
 	function WhereClause($match)
 	{
 		if (isset($match))
@@ -226,6 +296,13 @@ class DataSet
 		return null;
 	}
 
+	/**
+	 * Gets a LEFT JOIN clause in SQL format.
+	 *
+	 * @param array $joining
+	 * @return string
+	 * @todo Allow specifying LEFT, INNER or JOIN formats.
+	 */
 	function JoinClause($joining)
 	{
 		if (isset($joining))
@@ -243,6 +320,12 @@ class DataSet
 		return null;
 	}
 
+	/**
+	 * Gets an ORDER BY clause in SQL format depending on the datasource.
+	 *
+	 * @param array $sorting
+	 * @return string
+	 */
 	function OrderClause($sorting)
 	{
 		if (isset($sorting))
@@ -263,6 +346,12 @@ class DataSet
 		return null;
 	}
 
+	/**
+	 * Gets a LIMIT clause in SQL format depending on data source.
+	 *
+	 * @param array $amount
+	 * @return string
+	 */
 	function AmountClause($amount)
 	{
 		if (isset($amount))
@@ -275,6 +364,13 @@ class DataSet
 		return null;
 	}
 
+	/**
+	 * Returns a series of name to value pairs in SQL format depending on the
+	 * data source.
+	 *
+	 * @param unknown_type $values
+	 * @return unknown
+	 */
 	function GetSetString($values)
 	{
 		$ret = null;
@@ -389,6 +485,13 @@ class DataSet
 		return $data;
 	}
 
+	/**
+	 * Returns the specified column from the first result of the specified query.
+	 *
+	 * @param array $match
+	 * @param string $col
+	 * @return mixed
+	 */
 	function GetScalar($match, $col)
 	{
 		$query = "SELECT `$col` FROM `{$this->table}`".$this->WhereClause($match);
@@ -434,6 +537,14 @@ class DataSet
 		return $this->items;
 	}
 
+	/**
+	 * Returns all rows that match $columns LIKE $phrase
+	 *
+	 * @param array $columns
+	 * @param string $phrase
+	 * @param int $args
+	 * @return array
+	 */
 	function GetSearch($columns, $phrase, $args = GET_BOTH)
 	{
 		$newphrase = str_replace("'", '%', stripslashes($phrase));
@@ -498,6 +609,13 @@ class DataSet
 		$this->database->Query($query.$this->WhereClause($match));
 	}
 
+	/**
+	 * Swaps two items in the database.
+	 *
+	 * @param array $smatch
+	 * @param array $dmatch
+	 * @param mixed $pkey
+	 */
 	function Swap($smatch, $dmatch, $pkey)
 	{
 		$this->database->query('CREATE TEMPORARY TABLE IF NOT EXISTS __TEMP (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY);');

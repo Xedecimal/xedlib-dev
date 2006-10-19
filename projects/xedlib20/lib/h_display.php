@@ -6,10 +6,12 @@
 
 /**
  * Quick macro to retreive a generated box.
- * @param $name string Name of the box (good for javascript calls to getElementById()).
- * @param $title string Title of the returned box.
- * @param $body string Raw text contents of the returned box.
- * @param $template string Template file to use for the returned box.
+ * @param string $name Name of the box (good for javascript calls to getElementById()).
+ * @param string $title Title of the returned box.
+ * @param string $body Raw text contents of the returned box.
+ * @param string $template Template file to use for the returned box.
+ * 
+ * @example test_present.php
  */
 function GetBox($name, $title, $body, $template = null)
 {
@@ -99,11 +101,36 @@ class Box
  */
 class Table
 {
-	public $name; //!< Name of this table (only used as identifer in html comments).
-	public $cols; //!< Column headers for this table (displayed at the top of the rows).
-	public $rows; //!< Each row array that makes up the bulk of this table.
-	public $atrs; //!< Array of attributes on a per-column basis.
-	public $rowattribs; //!< Array of attributes on a per-row basis.
+	/**
+	 * Name of this table (only used as identifer in html comments).
+	 *
+	 * @var string
+	 */
+	public $name;
+	/**
+	 * Column headers for this table (displayed at the top of the rows).
+	 *
+	 * @var array
+	 */
+	public $cols;
+	/**
+	 * Each row array that makes up the bulk of this table.
+	 *
+	 * @var array
+	 */
+	public $rows;
+	/**
+	 * Array of attributes on a per-column basis.
+	 *
+	 * @var array
+	 */
+	public $atrs;
+	/**
+	 * Array of attributes on a per-row basis.
+	 *
+	 * @var array
+	 */
+	public $rowattribs;
 
 	/**
 	 * Instantiates this table with the specified attributes.
@@ -235,11 +262,42 @@ class SortTable extends Table
  */
 class Form extends Table
 {
-	public $name; //!< Unique name of this form (used in Html comments).
-	public $hiddens; //!< Array of hidden fields stored from AddHidden()
-	public $attribs; //!< Form tag attributes, "name" => "value" pairs.
-	public $out; //!< Actual output.
-	public $Persist; //Whether to use persistant vars or not.
+	/**
+	 * Unique name of this form (used in html / js / identifying).
+	 *
+	 * @var string
+	 */
+	public $name;
+	/**
+	 * Hidden fields stored from AddHidden()
+	 *
+	 * @var array
+	 */
+	private $hiddens;
+	/**
+	 * Form tag attributes, "name" => "value" pairs.
+	 *
+	 * @var array
+	 */
+	public $attribs;
+	/**
+	 * Actual output.
+	 *
+	 * @var string
+	 */
+	public $out;
+	/**
+	 * Whether to use persistant vars or not.
+	 *
+	 * @var bool
+	 */
+	public $Persist;
+	/**
+	 * Associated validator.
+	 *
+	 * @var Validation
+	 */
+	public $Validation;
 
 	/**
 	* Instantiates this form with a unique name.
@@ -281,6 +339,8 @@ class Form extends Table
 	function AddInput($text, $type, $name, $value = null, $attributes = null, $helptext = null)
 	{
 		if (isset($attributes)) $attributes = ' '.$attributes;
+		if (isset($this->Validation))
+			$helptext = $this->Validation->GetError($name).$helptext;
 		switch ($type)
 		{
 			case "area":
@@ -347,6 +407,9 @@ class Form extends Table
 				if ($value) $attributes .= ' checked="checked"';
 				$strout = "<input id=\"$name\" type=\"$type\" name=\"$name\"$attributes />";
 				break;
+			case 'submit':
+				if (isset($this->Validation))
+					$attributes .= " onclick=\"return {$this->name}_check(1);\"";
 			default:
 				if (isset($value)) $val = ' value="'.htmlspecialchars($value).'"';
 				else $val = "";
@@ -400,9 +463,24 @@ class Form extends Table
  */
 class SelOption
 {
-	public $text; //!< The text of this option.
-	public $group; //!< Whether this is a group header.
-	public $selected; //!< Whether this option is selected by default.
+	/**
+	 * The text of this option.
+	 *
+	 * @var string
+	 */
+	public $text;
+	/**
+	 * Whether this is a group header.
+	 *
+	 * @var bool
+	 */
+	public $group;
+	/**
+	 * Whether this option is selected by default.
+	 *
+	 * @var bool
+	 */
+	public $selected;
 
 	/**
 	 * Create a new select option.
@@ -526,9 +604,24 @@ function BoolCallback($val) { return $val ? 'Yes' : 'No'; }
  */
 class TreeNode
 {
-	public $id; //!<ID of this node (usually for database association)
-	public $data; //!< Data associated with this node.
-	public $children; //!< Child nodes of this node.
+	/**
+	 * ID of this node (usually for database association)
+	 *
+	 * @var unknown_type
+	 */
+	public $id;
+	/**
+	 * Data associated with this node.
+	 *
+	 * @var unknown_type
+	 */
+	public $data;
+	/**
+	 * Child nodes of this node.
+	 *
+	 * @var unknown_type
+	 */
+	public $children;
 
 	/**
 	 * Create a new TreeNode object.
@@ -548,11 +641,40 @@ class TreeNode
  */
 class DisplayColumn
 {
+	/**
+	 * Text of the column in the display table.
+	 *
+	 * @var string
+	 */
 	public $text;
+	/**
+	 * Name of the associate dataset column.
+	 *
+	 * @var string
+	 */
 	public $column;
+	/**
+	 * Callback function for evaluating this cell for each row.
+	 *
+	 * @var mixed
+	 */
 	public $callback;
+	/**
+	 * HTML attributes for this column.
+	 *
+	 * @var string
+	 */
 	public $attribs;
 
+	/**
+	 * Creates a new DisplayColumn.
+	 *
+	 * @param string $text
+	 * @param string $column
+	 * @param mixed $callback
+	 * @param string $attribs
+	 * @return DisplayColumn
+	 */
 	function DisplayColumn($text, $column, $callback = null, $attribs = null)
 	{
 		$this->text = $text;
@@ -567,20 +689,73 @@ class DisplayColumn
  */
 class EditorData
 {
+	/**
+	 * Unique name of this editor.
+	 *
+	 * @var string
+	 */
 	public $name;
 	/**
 	 * Dataset to interact with.
 	 *
 	 * @var DataSet
 	 */
-	public $ds; //!< Associated dataset.
+	public $ds;
+	/**
+	 * Filter to be passed to the DataSet in it's form.
+	 *
+	 * @var array
+	 * @see DataSet.WhereClause
+	 */
 	public $filter;
+	/**
+	 * Order to sort items, passed to the DataSet.
+	 *
+	 * @var array
+	 * @see DataSet.OrderClause
+	 */
 	public $sort;
+	/**
+	 * State of this editor.
+	 *
+	 * @var int
+	 * @see STATE_CREATE
+	 * @see STATE_EDIT
+	 */
 	public $state;
+	/**
+	 * Whether or not this editor allows sorting.
+	 *
+	 * @var bool
+	 */
 	public $sorting;
+	/**
+	 * Callback function for when an item is created.
+	 *
+	 * @var mixed
+	 * @deprecated  use $handler instead.
+	 */
 	public $oncreate;
+	/**
+	 * Calback function to be called when an item is updated.
+	 *
+	 * @var unknown_type
+	 * @deprecated  use $handler instead.
+	 */
 	public $onupdate;
+	/**
+	 * Callback function for when an item is deleted.
+	 *
+	 * @var mixed
+	 * @deprecated use $handler instead.
+	 */
 	public $ondelete;
+	/**
+	 * Callback function for when an item is swapped with another.
+	 *
+	 * @var mixed
+	 * @deprecated use $handler instead.
+	 */
 	public $onswap;
 
 	/**
@@ -715,6 +890,15 @@ class EditorData
 		}
 	}
 
+	/**
+	 * Looks like it converts database rows to an array for DataToSel or
+	 * something.
+	 *
+	 * @param array $items
+	 * @param mixed $sel
+	 * @deprecated No idea where it came from.
+	 * @return array
+	 */
 	function GetSelArray($items, $sel)
 	{
 		$ret = array();
@@ -725,6 +909,14 @@ class EditorData
 		return $ret;
 	}
 
+	/**
+	 * Gets a selection mask, for using 'selects' types and bitmasking the
+	 * results.
+	 *
+	 * @param array $items
+	 * @param int $sel
+	 * @return array
+	 */
 	function GetSelMask($items, $sel)
 	{
 		$ret = array();
@@ -736,6 +928,13 @@ class EditorData
 		return $ret;
 	}
 
+	/**
+	 * Gets the rendered HTML for this editor.
+	 *
+	 * @param string $target Filename that uses this editor.
+	 * @param mixed $ci ID of current item (eg. GetVar('ci'))
+	 * @return string
+	 */
 	function Get($target, $ci = null)
 	{
 		global $errors, $PERSISTS, $xlpath;
@@ -747,16 +946,35 @@ class EditorData
 		return $ret;
 	}
 
+	/**
+	 * Gets an UP image, usually used for sorting.
+	 *
+	 * @return string
+	 * @access private
+	 */
 	function GetUpButton()
 	{
 		return '<img src="lib/images/up.png" />';
 	}
 
+	/**
+	 * Gets a DOWN button, usually used for sorting.
+	 *
+	 * @return string
+	 */
 	function GetDownButton()
 	{
 		return '<img src="lib/images/down.png" />';
 	}
 
+	/**
+	 * Gets the HTML rendered table portion of this editor.
+	 *
+	 * @param string $target Filename that is using this editor.
+	 * @param mixed $ci Currently editing item (eg. GetVar('ci')).
+	 * @return string
+	 * @access private
+	 */
 	function GetTable($target, $ci)
 	{
 		$ret = null;
@@ -829,8 +1047,14 @@ class EditorData
 	}
 
 	/**
-	* @param Table $table Table to add rows to.
-	*/
+	 * Recursively populates $rows with child items.
+	 *
+	 * @param array $rows Referenced rows that are being populated.
+	 * @param string $target Filename of script using this editor.
+	 * @param TreeNode $node Node of this item, for recursion.
+	 * @param int $level Depth of these items.
+	 * @access private
+	 */
 	function AddRows(&$rows, $target, $node, $level)
 	{
 		global $xlpath;
@@ -889,6 +1113,13 @@ class EditorData
 		}
 	}
 
+	/**
+	 * Builds a recursive tree editable items.
+	 *
+	 * @param array $items Items to be inserted into the tree.
+	 * @return TreeNode
+	 * @see GetTable
+	 */
 	function BuildTree($items)
 	{
 		if (!empty($items))
@@ -964,6 +1195,14 @@ class EditorData
 		return null;
 	}
 
+	/**
+	 * Gets the form portion of this editor.
+	 *
+	 * @param string $target Filename of script that uses this editor.
+	 * @param mixed $ci Current Item (eg. GetVar('ci')).
+	 * @param int $curchild Current child by DataSet Relation.
+	 * @return string
+	 */
 	function GetForm($target, $ci, $curchild = null)
 	{
 		$ret = null;
@@ -1054,11 +1293,37 @@ define('ACCESS_ADMIN', 1);
  */
 class LoginManager
 {
-	public $datasets;
+	/**
+	 * Datasets that are associated with this LoginManager.
+	 *
+	 * @var array
+	 */
+	private $datasets;
+	/**
+	 * Type of this login manager. (CONTROL_SIMPLE or CONTROL_BOUND).
+	 *
+	 * @var int
+	 */
 	public $type;
+	/**
+	 * Static password for an unbound manager (must be MD5 prior to setting.).
+	 *
+	 * @var string
+	 */
 	public $pass;
+	/**
+	 * Access level of users that login with this manager. (ACCESS_GUEST or
+	 * ACCESS_ADMIN)
+	 *
+	 * @var int
+	 */
 	public $access;
 
+	/**
+	 * Creates a new LoginManager.
+	 *
+	 * @return LoginManager
+	 */
 	function LoginManager()
 	{
 		$this->type = CONTROL_SIMPLE;
@@ -1110,6 +1375,12 @@ class LoginManager
 		return false;
 	}
 
+	/**
+	 * Returns HTML rendered login form.
+	 *
+	 * @param string $target Target script using this manager.
+	 * @return string
+	 */
 	function Get($target)
 	{
 		global $errors, $_GET;
@@ -1122,12 +1393,27 @@ class LoginManager
 		return $f->Get('action="'.$target.'" method="post"');
 	}
 
+	/**
+	 * Associates a dataset with this login manager, this will immediately
+	 * turn it into a CONTROL_BOUND and render the associated static password
+	 * unused.
+	 *
+	 * @param DataSet $ds DataSet to associate.
+	 * @param string $passcol Column holding the password in $ds.
+	 * @param string $usercol Column holding the username in $ds.
+	 */
 	function AddDataset($ds = null, $passcol = 'pass', $usercol = 'user')
 	{
 		$this->type = CONTROL_BOUND;
 		$this->datasets[] = array($ds, $passcol, $usercol);
 	}
 
+	/**
+	 * Sets a static password on this manager. Must be made into MD5 prior to
+	 * setting.
+	 *
+	 * @param string $pass MD5 password.
+	 */
 	function SetPass($pass = null)
 	{
 		if (strlen($pass) != 32) die('Plaintext password! Use '.md5($pass)." instead.<br/>\n");
@@ -1214,20 +1500,41 @@ class DisplayObject
 
  * Enter description here...
  *
+ * @example test_present.php
  */
 class Validation
 {
-	public $field; //!< Field?
-	public $regex; //!< Regular expression?
-	public $error; //!< Error result.
-	public $validators; //!< Validator tree
+	/**
+	 * Associated field
+	 *
+	 * @var string
+	 */
+	public $field;
+	/**
+	 * Expression to check validation.
+	 *
+	 * @var string
+	 */
+	public $regex;
+	/**
+	 * Error or span for javascript error.
+	 *
+	 * @var string
+	 */
+	public $error;
+	/**
+	 * Children validators.
+	 *
+	 * @var array
+	 */
+	public $validators;
 
 	/**
 	 * Enter description here...
 	 *
-	 * @param $field String Name of field
-	 * @param $regex String Regular Expression to match value.
-	 * @param $error String Error message.
+	 * @param $field string Name of field
+	 * @param $regex string Regular Expression to match value.
+	 * @param $error string Error message.
 	 * @return Validation
 	 */
 	function Validation($field, $regex, $error)
@@ -1267,7 +1574,7 @@ class Validation
 			if (!validate) { spn_{$this->field}.innerHTML = ''; return ret; }
 			if (!/^{$this->regex}$/.test(chk_{$this->field}.value))
 			{
-				spn_{$this->field}.innerHTML = '$this->error';
+				spn_{$this->field}.innerHTML = '{$this->error}';
 				chk_{$this->field}.focus();
 				ret = false;\n";
 				foreach ($this->validators as $reg => $v)
@@ -1277,8 +1584,12 @@ class Validation
 			$ret .= "\t\t\treturn false;
 			}
 			else
-			{
-				spn_{$this->field}.innerHTML = '';\n";
+			{";
+				foreach ($this->validators as $reg => $v)
+				{
+					$ret .= "\t\t\t\t{$v->field}_check(0);\n";
+				}
+				$ret .= "spn_{$this->field}.innerHTML = '';\n";
 				foreach ($this->validators as $reg => $v)
 				{
 					$ret .= "\t\t\t\tret = {$v->field}_check(/^$reg$/.test(chk_{$this->field}.value));\n";
@@ -1288,6 +1599,22 @@ class Validation
 			return ret;
 		}\n";
 		return $ret;
+	}
+
+	/**
+	 * Get an associated error recursively from specified field name.
+	 *
+	 * @param string $field Name of the field that contains the error.
+	 */
+	function GetError($field)
+	{
+		if ($this->field == $field) return '<span class="error" id="span_'.$this->field.'"></span>';
+		foreach ($this->validators as $val)
+		{
+			$ret = $val->GetError($field);
+			if (isset($ret)) return $ret;
+		}
+		return null;
 	}
 
 	/**

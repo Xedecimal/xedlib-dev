@@ -19,6 +19,7 @@
 	</xsl:for-each>
 </p>
 
+<xsl:if test="root/variable">
 <p class="blue head">Properties</p>
 <p class="blue body item">
 <xsl:for-each select="root/variable">
@@ -30,6 +31,7 @@
 	<p><xsl:value-of select="doc/text()" /></p>
 </xsl:for-each>
 </p>
+</xsl:if>
 
 <p class="green head">Methods</p>
 <p class="green body">
@@ -37,7 +39,7 @@
 	<div class="green item">
 	<p>
 		<xsl:value-of select="doc/tag[@type='access']"/><xsl:text> </xsl:text>
-		<b><xsl:value-of select="doc/tag[@type='return']"/></b><xsl:text> </xsl:text>
+		<b><xsl:value-of select="doc/tag[@type='return']/@datatype"/></b><xsl:text> </xsl:text>
 	<xsl:value-of select="@name" />(
 		<xsl:for-each select="variable/@name">
 			<b><xsl:value-of select="../../doc/tag[@name=current()]/@datatype" /></b><xsl:text> </xsl:text>

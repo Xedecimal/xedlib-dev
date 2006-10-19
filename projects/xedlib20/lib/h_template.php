@@ -9,13 +9,48 @@
  */
 class Template
 {
-	public $vars; //!< Variables that have been set with set().
-	public $out; //!< Raw output to be rendered.
-	public $objs; //!< Set of objects to output to.
-	public $use_getvar; //!< Whether or not to use GetVar() for {{vars}}
-	public $handlers; //!< Handlers for specific features.
-	public $data; //!< Current data.
-	public $includes; //!< Files that will be included.
+	/**
+	 * Variables that have been set with set().
+	 *
+	 * @var array
+	 */
+	public $vars;
+	/**
+	 * Raw output to be rendered.
+	 *
+	 * @var string
+	 */
+	public $out;
+	/**
+	 * Set of objects to output to.
+	 *
+	 * @var array
+	 */
+	public $objs;
+	/**
+	 * Whether or not to use GetVar() for {{vars}}
+	 *
+	 * @var bool
+	 */
+	public $use_getvar;
+	/**
+	 * Handlers for specific features.
+	 *
+	 * @var array
+	 */
+	public $handlers;
+	/**
+	 * Current data.
+	 *
+	 * @var mixed
+	 */
+	public $data;
+	/**
+	 * Files that will be included.
+	 *
+	 * @var array
+	 */
+	public $includes;
 
 	/**
 	 * Creates a new template parser.
@@ -336,7 +371,12 @@ class Template
  */
 class VarParser
 {
-	public $vars; //!< Vars specified here override all else.
+	/**
+	 * Vars specified here override all else.
+	 *
+	 * @var array
+	 */
+	public $vars;
 
 	/**
 	 * Enter description here...

@@ -154,9 +154,9 @@ EOF;
 	}
 
 	/**
-	 * A different style of calandar display, displays
-	 * every event horizontally instead of just one
-	 * month.
+	 * A different style of calandar display, displays every event horizontally
+	 * instead of just one month.
+	 * @return string
 	 */
 	function GetVert()
 	{

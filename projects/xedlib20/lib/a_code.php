@@ -122,6 +122,12 @@ class CodeReader
 				
 				if ($tok[0] == T_STRING)
 				{
+					if ($getting == GET_DEFINE_VALUE)
+					{
+						$current->value = $tok[1];
+						$current = array_pop($tree);
+						$getting = GET_NONE;
+					}
 					if ($getting == GET_NONE && strtolower($tok[1]) == 'define')
 					{
 						$getting = GET_DEFINE_NAME;

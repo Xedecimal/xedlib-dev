@@ -18,15 +18,20 @@
 	</xsl:for-each>
 )
 </p>
-<p class="green body item">
-<p><xsl:value-of select="root/doc/text()" /></p>
-<p>
+<p class="green body">
+<p class="green item">
 	<xsl:for-each select="root/doc/tag[@type='param']">
 		<b><xsl:value-of select="@datatype"/></b>&#160;
 		<xsl:value-of select="@name"/>&#160;
 		<xsl:value-of select="."/><br/>
 	</xsl:for-each>
 </p>
+<p class="green item"><xsl:value-of select="root/doc/text()" /></p>
+<xsl:for-each select="root/doc/tag[@type='example']">
+	<pre class="yellow item">
+	<xsl:value-of select="text()" disable-output-escaping="yes" />
+	</pre>
+</xsl:for-each>
 </p>
 </body>
 </html>
