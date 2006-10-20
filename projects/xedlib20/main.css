@@ -1,8 +1,27 @@
-body { font-family: Verdana; font-size: 8pt; }
+body, table { font-family: Verdana; font-size: 8pt; }
+td { margin: 0px; }
 
-table { font-family: Verdana; font-size: 8pt; }
+img { border: 0px; }
 
 th { text-align: left; }
+
+.box_title
+{
+	padding: 10px;
+	background-color: #DDD;
+	-moz-border-radius: 10px 10px 0px 0px;
+	margin-bottom: 0;
+	font-weight: bold;
+}
+
+.box_body
+{
+	margin-top: 0;
+	padding: 10px;
+	background-color: #EEE;
+	-moz-border-radius: 0px 0px 10px 10px;
+
+}
 
 .box_row_even
 {

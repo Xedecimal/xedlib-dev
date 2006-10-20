@@ -17,25 +17,25 @@ class Calendar
 	 *
 	 * @var array
 	 */
-	public $events;
+	private $events;
 	/**
 	 * Array of dates in this calendar.
 	 *
 	 * @var array
 	 */
-	public $dates;
+	private $dates;
 	/**
 	 * Array indexed by day in this calendar.
 	 *
 	 * @var array
 	 */
-	public $datesbyday;
+	private $datesbyday;
 	/**
 	 * Body of the current day?
 	 *
 	 * @var unknown_type
 	 */
-	public $daybody;
+	private $daybody;
 
 	/**
 	* Adds an item to the calendar to be displayed in a given period of time
@@ -282,25 +282,25 @@ class CalendarMonth
 	 * Year this month is on.
 	 * @var int
 	 */
-	public $Year;
+	private $Year;
 	/**
 	 * Numeric month. 1 - 12
 	 *
 	 * @var int
 	 */
-	public $Month;
+	private $Month;
 	/**
 	 * Amount of blank days at start.
 	 *
 	 * @var int
 	 */
-	public $Pad;
+	private $Pad;
 	/**
 	 * Array of CalendarDay objects.
 	 *
 	 * @var int
 	 */
-	public $Days;
+	private $Days;
 
 	/**
 	 * Enter description here...
@@ -332,37 +332,37 @@ class CalendarDay
 	 *
 	 * @var int
 	 */
-	public $TimeStamp;
+	private $TimeStamp;
 	/**
 	 * true if this day is the first weekday.
 	 *
 	 * @var bool
 	 */
-	public $StartWeek;
+	private $StartWeek;
 	/**
 	 * true if this day is the last weekday.
 	 *
 	 * @var bool
 	 */
-	public $EndWeek;
+	private $EndWeek;
 	/**
 	 * Day of the month.
 	 *
 	 * @var int
 	 */
-	public $Day;
+	private $Day;
 	/**
 	 * Day of the week.
 	 *
 	 * @var int
 	 */
-	public $WeekDay;
+	private $WeekDay;
 	/**
 	 * True if this is the last day of the month.
 	 *
 	 * @var bool
 	 */
-	public $LastDay;
+	private $LastDay;
 
 	/**
 	 * Enter description here...

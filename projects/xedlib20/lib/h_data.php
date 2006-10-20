@@ -2,6 +2,16 @@
 
 /**
  * @package Data
+ * 
+ * on our way to the storage phase! We shall support the following!
+ * 
+ * sqlite: client data stored in filesystem
+ * firebird: database engine storage
+ * mssql: database engine storage
+ * mysql: database engine storage
+ * postgresql: database engine storage
+ * 
+ * odbc: proxy for many of the above
  */
 
 /**
@@ -22,9 +32,9 @@ define("GET_BOTH", MYSQL_BOTH);
 class Database
 {
 	/** A link returned from mysql_connect(), don't worry about it. */
-	public $link;
+	private $link;
 	/** Name of this database, set from constructor. */
-	public $name;
+	private $name;
 
 	/**
 	 * Instantiates a new xlDatabase object with the database name, hostname, user name and password.
@@ -100,6 +110,11 @@ class Database
 			echo "Database: Could not locate database, installing...<br/>\n";
 			mysql_query("CREATE DATABASE {$this->name}");
 		}
+	}
+
+	function GetLastInsertID()
+	{
+		return mysql_insert_id($this->link);
 	}
 }
 
@@ -177,21 +192,21 @@ class DataSet
 	 *
 	 * @var string
 	 */
-	private $table;
+	public $table;
 	/**
 	 * Array of Relation objects that make up associated children of the table
 	 * this DataSet is associated with.
 	 *
 	 * @var array
 	 */
-	private $children;
+	public $children;
 	/**
 	 * Name of the column that holds the primary key of the table that this
 	 * DataSet is associated with.
 	 *
 	 * @var string
 	 */
-	private $id;
+	public $id;
 	
 	/**
 	 * Array of DisplayColumn objects that this DataSet is associated with.
@@ -425,7 +440,7 @@ class DataSet
 			$query .= " ON DUPLICATE KEY UPDATE ".$this->GetSetString($columns);
 		}
 		$this->database->Query($query);
-		return mysql_insert_id($this->database->link);
+		return $this->database->GetLastInsertID();
 	}
 
 	/**
@@ -618,32 +633,53 @@ class DataSet
 	 */
 	function Swap($smatch, $dmatch, $pkey)
 	{
-		$this->database->query('CREATE TEMPORARY TABLE IF NOT EXISTS __TEMP (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY);');
-		/*$sitems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($smatch));
+		//Grab all the source items that are going to be swapped.
+		$sitems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($smatch));
 		$sitem = mysql_fetch_array($sitems, GET_ASSOC);
+		
+		//Grab all the destination items that are going to be swapped.
 		$ditems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($dmatch));
 		$ditem = mysql_fetch_array($ditems, GET_ASSOC);
+
+		//If we have children relations, it suddenly gets complicated.
 		if (!empty($this->children))
 		{
+			//Create a temporary table to store the remainder children ids for
+			//moving back to the source after the destination is copied.
+			$this->database->query('CREATE TEMPORARY TABLE IF NOT EXISTS __TEMP (id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY);');
+
 			foreach ($this->children as $child)
 			{
 				//Copy Source children into Temp
-				$query = "INSERT INTO `{$child['temp']}` SELECT `{$child['cpkey']}` FROM `{$child['ds']->table}` WHERE `{$child['ckey']}` = {$smatch[$child['pkey']]}";
-				$child['ds']->database->query($query);
+				$query = "INSERT INTO `__TEMP`
+					SELECT `{$child->ds->id}`
+					FROM `{$child->ds->table}`
+					WHERE `{$child->child_key}` = {$smatch[$child->parent_key]}";
+				$child->ds->database->query($query);
 
 				//Move Destination children into Source parent.
-				$child['ds']->Update(array($child['ckey'] => $ditem[$child['pkey']]), array($child['ckey'] => $sitem[$child['pkey']]));
+				$child->ds->Update(
+					array($child->child_key => $ditem[$child->parent_key]),
+					array($child->child_key => $sitem[$child->parent_key]));
 
 				//Move Temp children into Destination parent.
-				$query = "UPDATE `{$child['ds']->table}` JOIN `{$child['temp']}` SET {$child['ckey']} = {$ditem[$child['pkey']]} WHERE `{$child['temp']}`.`{$child['cpkey']}` = `{$child['ds']->table}`.`{$child['cpkey']}`";
-				$child['ds']->database->query($query);
+				$query = "UPDATE `{$child->ds->table}`
+					JOIN `__TEMP`
+					SET {$child->child_key} = {$ditem[$child->parent_key]}
+					WHERE `__TEMP`.`{$child->ds->id}` = `{$child->ds->table}`.`{$child->parent_key}`";
+				$child->ds->database->query($query);
 
-				$child['ds']->database->query("TRUNCATE `{$child['temp']}`");
+				$child->ds->database->query("TRUNCATE `__TEMP`");
 			}
 		}
+
+		//Pop off the ids, so they don't get changed, never want to change
+		//these for some reason according to mysql people.
 		unset($sitem['id'], $ditem['id']);
+
+		//Update source with dest and vice versa.
 		$this->Update($smatch, $ditem);
-		$this->Update($dmatch, $sitem);*/
+		$this->Update($dmatch, $sitem);
 	}
 
 	/**

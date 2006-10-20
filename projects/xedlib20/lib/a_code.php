@@ -222,25 +222,25 @@ class CodeObject
 	 *
 	 * @var int
 	 */
-	public $type;
+	private $type;
 	/**
 	 * Name of this object.
 	 *
 	 * @var string
 	 */
-	public $name;
+	private $name;
 	/**
 	 * Array of children that this object holds.
 	 *
 	 * @var array
 	 */
-	public $members;
+	private $members;
 	/**
 	 * Parent of this object.
 	 *
 	 * @var CodeObject
 	 */
-	public $parent;
+	private $parent;
 
 	/**
 	 * Creates a new document object.
