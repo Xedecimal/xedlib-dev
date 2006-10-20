@@ -8,6 +8,7 @@
 </head>
 <body>
 
+<div class="yellow">
 <p class="yellow head"><a href="index.xml">Index</a> :: <xsl:value-of select="root/@name" /></p>
 <p class="yellow body">
 	<p class="yellow item"><xsl:value-of select="root/doc/text()" /></p>
@@ -18,8 +19,10 @@
 		</pre>
 	</xsl:for-each>
 </p>
+</div>
 
 <xsl:if test="root/variable">
+<div class="blue">
 <p class="blue head">Properties</p>
 <p class="blue body item">
 <xsl:for-each select="root/variable">
@@ -31,8 +34,10 @@
 	<p><xsl:value-of select="doc/text()" /></p>
 </xsl:for-each>
 </p>
+</div>
 </xsl:if>
 
+<div class="green">
 <p class="green head">Methods</p>
 <p class="green body">
 <xsl:for-each select="root/function">
@@ -57,6 +62,7 @@
 	</div>
 </xsl:for-each>
 </p>
+</div>
 
 </body>
 </html>

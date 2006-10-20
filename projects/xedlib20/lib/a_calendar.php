@@ -272,7 +272,8 @@ EOF;
 }
 
 /**
- * Enter description here...
+ * A single month for use by the Calendar class.
+ * @see Calendar
  */
 class CalendarMonth
 {

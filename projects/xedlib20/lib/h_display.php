@@ -1497,44 +1497,49 @@ class DisplayObject
 //Form Functions
 
 /**
-
- * Enter description here...
+ * Processes validation on a form by means of regular expressions in javascript
+ * and server-side php.
  *
  * @example test_present.php
  */
 class Validation
 {
 	/**
-	 * Associated field
+	 * Associated form field, this uses the ID and the NAME attribute so make
+	 * sure you include both on your form.
 	 *
 	 * @var string
 	 */
 	public $field;
 	/**
-	 * Expression to check validation.
+	 * Regular expression to check validation. When applicable, this will
+	 * use $regex.test($field.value) in javascript and in php it will use
+	 * preg_match($regex, $values[$field])
 	 *
 	 * @var string
 	 */
 	public $regex;
 	/**
-	 * Error or span for javascript error.
+	 * Error text that will be displayed if this field does not pass the
+	 * test.
 	 *
 	 * @var string
 	 */
 	public $error;
 	/**
-	 * Children validators.
+	 * Array of children validators that will only be tested if this validator
+	 * passes.
 	 *
 	 * @var array
 	 */
 	public $validators;
 
 	/**
-	 * Enter description here...
+	 * Creates a new Validation object.
 	 *
-	 * @param $field string Name of field
-	 * @param $regex string Regular Expression to match value.
-	 * @param $error string Error message.
+	 * @param $field string Name of form field, see $field
+	 * @param $regex string Regular expression to test whether this is valid.
+	 * @param $error string Error message to display if test fails.
 	 * @return Validation
 	 */
 	function Validation($field, $regex, $error)
@@ -1546,9 +1551,11 @@ class Validation
 	}
 
 	/**
-	 * Enter description here...
+	 * Adds a child validation to this validation, child validations will only
+	 * be tested if this validation succeeds.
 	 *
-	 * @param $value String Name of field.
+	 * @param $value string Only if this field contains the value that is
+	 * specified by $value will the child be checked.
 	 * @param $child Validation Child validation object.
 	 */
 	function Add($value, $child)
@@ -1557,9 +1564,10 @@ class Validation
 	}
 
 	/**
-	 * Enter description here...
+	 * Gets the javascript associated with this validation.
 	 *
-	 * @return unknown
+	 * @access private
+	 * @return string
 	 */
 	function GetJS()
 	{
@@ -1604,7 +1612,9 @@ class Validation
 	/**
 	 * Get an associated error recursively from specified field name.
 	 *
+	 * @access private
 	 * @param string $field Name of the field that contains the error.
+	 * @return string
 	 */
 	function GetError($field)
 	{
@@ -1618,10 +1628,12 @@ class Validation
 	}
 
 	/**
-	 * Enter description here...
+	 * Requests that this validator checks for valdiation. You must send
+	 * true in $check if you wish it to actually test, otherwise it will
+	 * just set this object up.
 	 *
-	 * @param $check unknown
-	 * @param $ret unknown
+	 * @param bool $check Actually test the validation.
+	 * @param array $ret Array of errors for anything that did not pass.
 	 */
 	function Validate($check, &$ret)
 	{

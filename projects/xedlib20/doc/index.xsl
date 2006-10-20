@@ -7,7 +7,9 @@
 	<link href="../screen.css" type="text/css" rel="stylesheet" />
 </head>
 <body>
-<p class="yellow head"><b>Classes</b></p>
+
+<div class="yellow">
+<p class="head"><b>Classes</b></p>
 <p class="yellow body item">
 <xsl:for-each select="root/class">
 	<b><xsl:value-of select="doc/tag[@type='access']"/></b><xsl:text> </xsl:text>
@@ -28,6 +30,9 @@
 	</xsl:if><br />
 </xsl:for-each>
 </p>
+</div>
+
+<div class="blue">
 <p class="blue head"><b>Functions</b></p>
 <p class="blue body item">
 <xsl:for-each select="root/function">
@@ -40,7 +45,9 @@
 	<xsl:value-of select="@extends" />
 </xsl:for-each>
 </p>
+</div>
 
+<div class="green">
 <p class="green head">Variables</p>
 <p class="green body item">
 <b>Rule of thumb, have no existing global variables!</b><br/><br/>
@@ -53,8 +60,10 @@
 	</a>
 </xsl:for-each>
 </p>
+</div>
 
 <xsl:if test="root/define">
+<div class="red">
 <p class="red head">Defines</p>
 <p class="red body item">
 <table>
@@ -68,6 +77,7 @@
 </xsl:for-each>
 </table>
 </p>
+</div>
 </xsl:if>
 
 </body>
