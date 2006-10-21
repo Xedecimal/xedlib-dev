@@ -593,7 +593,7 @@ class EditorData
 	{
 		$ret = null;
 
-		$child = $curchild != 0 ? $this->ds->children[$curchild] : $this;
+		$child = $curchild != 0 ? $this->ds->children[$curchild-1] : $this;
 
 		if ($state == CONTROL_BOUND)
 		{
@@ -659,16 +659,20 @@ class EditorData
 
 	function GetForms($target, $ci, $curchild = null)
 	{
+		$context = $curchild != 0 ? $this->ds->children[$curchild-1] : $this;
+
 		$ret = GetBox('box_edit', 'Edit Selected Item',
 			$this->GetForm($target, $ci, $this->state, $curchild),
 			'templates/box.html');
+
 		if (isset($ci))
 		{
-			for ($ix = 0; $ix < count($this->ds->children); $ix++)
+			if (!empty($context->ds->children))
+			foreach ($context->ds->children as $ix => $child)
 			{
-				if (isset($this->ds->children[$ix]->ds->fields))
+				if (isset($child->ds->fields))
 				{
-					$ret .= GetBox('box_create_child_'.$this->ds->children[$ix]->ds->table,
+					$ret .= GetBox('box_create_child_'.$child->ds->table,
 						'Create new child',
 						$this->GetForm($target, $ci, STATE_CREATE, $ix),
 						'templates/box.html');

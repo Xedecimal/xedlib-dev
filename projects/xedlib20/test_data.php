@@ -17,18 +17,20 @@ require_once('lib/a_editor.php');
 
 //Data
 
-$db = new Database('etap', 'localhost', 'root', 'ransal');
-$ds = new DataSet($db, 'task');
-$ds->display = array(new DisplayColumn('Name', 'title'));
+$db = new Database('test', 'localhost', 'root', 'ransal');
+$ds = new DataSet($db, 'test');
+$ds->display = array(new DisplayColumn('Name', 'name'));
 $ds->fields = array(
-	'Name' => array('title', 'text')
+	'Name' => array('name', 'text')
 );
-$ds->AddChild(new Relation($ds, 'id', 'parent'));
-$dsComment = new DataSet($db, 'comment');
-$dsComment->display = array(
-	new DisplayColumn('Comment', 'title')
+$dsChild = new DataSet($db, 'child');
+$dsChild->display = array(
+	new DisplayColumn('Child', 'example')
 );
-$ds->AddChild(new Relation($dsComment, 'id', 'task'));
+$dsChild->fields = array(
+	'Example' => array('example', 'text')
+);
+$ds->AddChild(new Relation($dsChild, 'id', 'parent'));
 
 //Preparation
 
