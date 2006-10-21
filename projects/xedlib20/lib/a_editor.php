@@ -333,13 +333,12 @@ class EditorData
 	{
 		if (!empty($items))
 		{
-			//Build a list of dataset column ids we are going to use
-			//(child index => child keys)
-			//Why?
+			//ids[child index] = {child table}_{id column}
 
 			$ids = array(0 => $this->ds->table.'_'.$this->ds->id);
 
-			if (!empty($this->ds->children)) foreach ($this->ds->children as $ix => $child)
+			if (!empty($this->ds->children))
+			foreach ($this->ds->children as $ix => $child)
 			{
 				if ($child->ds->table != $this->ds->table)
 				{
@@ -347,28 +346,31 @@ class EditorData
 				}
 			}
 
-			//Build a list of column to node associations...
-
-			$flats = array();
+			//node_link[child index] = array(index = {child table}_{child column})
 
 			$node_link[0] = array("{$this->ds->table}_{$this->ds->id}");
-			foreach ($this->ds->display as $disp) $node_link[0][] = "{$this->ds->table}_{$disp->column}";
+			foreach ($this->ds->display as $disp)
+				$node_link[0][] = "{$this->ds->table}_{$disp->column}";
 
-			if (!empty($this->ds->children)) foreach ($this->ds->children as $ix => $child)
+			if (!empty($this->ds->children))
+			foreach ($this->ds->children as $ix => $child)
 			{
 				$link = array("{$child->ds->table}_{$child->ds->id}");
 				$link[] = $child->ds->table.'_'.$child->child_key;
-				foreach ($child->ds->display as $disp) $link[] = "{$child->ds->table}_{$disp->column}";
+				foreach ($child->ds->display as $disp)
+					$link[] = "{$child->ds->table}_{$disp->column}";
 				$node_link[$ix] = $link;
 			}
 
-			//Build array of flat associations...
+			//flats = array(row id => treenode)
+
+			$flats = array();
 
 			foreach ($items as $ix => $item)
 			{
 				foreach ($node_link as $child_id => $link)
 				{
-					if (strlen($item[$ids[$child_id]]) > 0) 
+					if (strlen($item[$ids[$child_id]]) > 0)
 					{
 						$data = array('_child' => $child_id);
 						foreach ($link as $col) $data[$col] = $item[$col];
@@ -378,23 +380,25 @@ class EditorData
 					}
 				}
 			}
-			
+
 			//Build tree of relations...
 
 			$tree = new TreeNode('Root');
 
 			foreach ($flats as $child_id => $items)
 			{
-				$child = $this->ds->children[$child_id];
+				if ($child_id == 0) $child = $this;
+				else $child = $this->ds->children[$child_id];
 
 				foreach ($items as $id => $node)
 				{
-					$parent_id = $node->data[$child->ds->table.'_'.$child->child_key];
-                    $id = $node->id;
+					if ($child_id != 0)
+						$pid = $node->data[$this->ds->table.'_'.$this->ds->id];
+					$id = $node->id;
 					if ($id)
 					{
-						if ($parent_id)
-                            $flats[0][$parent_id]->children[] = $node;
+						if (isset($pid))
+                            $flats[0][$pid]->children[] = $node;
 						else
                             $tree->children[] = $node;
 					}
@@ -421,15 +425,18 @@ class EditorData
 		{
 			$cols = array();
 			//Build columns so nothing overlaps (eg. id of this and child table)
-			$cols[$this->ds->table.'.'.$this->ds->id] = "{$this->ds->table}_{$this->ds->id}";
+			$cols[$this->ds->table.'.'.$this->ds->id] =
+				"{$this->ds->table}_{$this->ds->id}";
 			if (!empty($this->ds->display))
 			foreach ($this->ds->display as $ix => $disp)
 			{
-				$cols[$this->ds->table.'.'.$disp->column] = "{$this->ds->table}_{$disp->column}";
+				$cols[$this->ds->table.'.'.$disp->column] =
+					"{$this->ds->table}_{$disp->column}";
 			}
 
 			$joins = null;
-			if (!empty($this->ds->children)) foreach ($this->ds->children as $child)
+			if (!empty($this->ds->children))
+			foreach ($this->ds->children as $child)
 			{
 				$joins = array();
 
@@ -466,7 +473,7 @@ class EditorData
 			}
 			
 			//Gather children columns.
-			foreach ($this->ds->children as $child)
+			if (!empty($this->ds->children)) foreach ($this->ds->children as $child)
 			{
 				if ($child->ds->table != $this->ds->table)
 				foreach ($child->ds->display as $disp)
@@ -502,7 +509,8 @@ class EditorData
 	{
 		global $xlpath;
 
-		if (!empty($node->children)) foreach ($node->children as $index => $cnode)
+		if (!empty($node->children))
+		foreach ($node->children as $index => $cnode)
 		{
 			$row = array();
 
@@ -513,6 +521,8 @@ class EditorData
 			for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
 
 			//Show all displays...
+			if (isset($child))
+			if (!empty($child->ds->display))
 			foreach ($child->ds->display as $disp)
 			{
 				if (isset($disp->callback)) //Callback for field
@@ -606,7 +616,7 @@ class EditorData
 					}
 					else if ($data[1] == 'selects')
 					{
-						$value = $this->GetSelMask($data[2], $sel[$data[0]]);
+						$value = $this->GetSelMask($data[2], isset($sel) ? $sel[$data[0]] : null);
 					}
 					else if ($data[1] == 'password')
 					{
