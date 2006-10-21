@@ -509,22 +509,21 @@ class EditorData
 	function AddRows(&$rows, $target, $node, $level)
 	{
 		global $xlpath;
-
+		
 		if (!empty($node->children))
 		foreach ($node->children as $index => $cnode)
 		{
 			$row = array();
 
 			$child_id = $cnode->data['_child'];
-			$child = $this->ds->children[$child_id];
+			if (isset($this->ds->children[$child_id-1]))
+				$child = $this->ds->children[$child_id-1];
 
 			//Pad any missing initial display columns...
 			for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
 
-			//Show all displays...
-			if (isset($child))
-			if (!empty($child->ds->display))
-			foreach ($child->ds->display as $disp)
+			//Show all displays for this item.
+			foreach ($this->ds->display as $disp)
 			{
 				if (isset($disp->callback)) //Callback for field
 				{
@@ -532,9 +531,17 @@ class EditorData
 					$row[$child_id] = $callback($item->data, $disp->column);
 				}
 				//Regular field
-				else $row[$child_id] = stripslashes($cnode->data[$child->ds->table.'_'.$disp->column]);
+				else
+				{
+					$disp_index = $this->ds->table.'_'.$disp->column;
+					if (isset($cnode->data[$disp_index]))
+						$row[$child_id] = stripslashes($cnode->data[$disp_index]);
+				}
 
-				if ($child->ds->table != $this->ds->table) foreach ($child->ds->display as $disp)
+				//Show all children displays...
+				if (isset($child))
+				if ($child->ds->table != $this->ds->table)
+				foreach ($child->ds->display as $disp)
 				{
 					$row[$child_id] = $cnode->data[$child->ds->table.'_'.$disp->column];
 				}
