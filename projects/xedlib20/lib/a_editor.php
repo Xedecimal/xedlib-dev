@@ -341,12 +341,9 @@ class EditorData
 			if (!empty($this->ds->children))
 			foreach ($this->ds->children as $ix => $child)
 			{
-				if ($child->ds->table != $this->ds->table)
-				{
-					$ids[$ix+1] = $child->ds->table.'_'.$child->ds->id;
-				}
+				$ids[$ix+1] = $child->ds->table.'_'.$child->ds->id;
 			}
-
+			
 			//node_link[child index + 1]
 			//	array(index = {child table}_{child column})
 
@@ -363,7 +360,7 @@ class EditorData
 					$link[] = "{$child->ds->table}_{$disp->column}";
 				$node_link[$ix+1] = $link;
 			}
-
+			
 			//flats = array(row id => treenode)
 
 			$flats = array();
@@ -382,7 +379,7 @@ class EditorData
 					}
 				}
 			}
-
+			
 			//Build tree of relations...
 
 			$tree = new TreeNode('Root');
@@ -528,7 +525,9 @@ class EditorData
 			foreach ($this->ds->display as $did => $disp)
 			{
 				$disp_index = $this->ds->table.'_'.$disp->column;
-				if (isset($disp->callback)) //Callback for field
+
+				//Callback mapped
+				if (isset($disp->callback))
 				{
 					$callback = $disp->callback;
 					$row[$did] = $callback($cnode->data, $disp_index);
@@ -555,7 +554,7 @@ class EditorData
 			else $row[] = null;
 
 			//Pad any additional display columns...
-			for ($ix = $child_id+1; $ix < count($this->ds->children)+2; $ix++) $row[$ix] = "&nbsp;";
+			//for ($ix = $child_id+1; $ix < count($this->ds->children)+2; $ix++) $row[$ix] = "&nbsp;";
 
 			$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
 			$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
