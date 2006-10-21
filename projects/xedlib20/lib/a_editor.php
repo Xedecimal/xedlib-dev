@@ -205,7 +205,8 @@ class EditorData
 		else if ($action == $this->name.'_update')
 		{
 			global $ci;
-			$child = $this->ds->children[GetVar('child')];
+			$child_id = GetVar('child');
+			$child = $child_id > 0 ? $this->ds->children[$child_id-1] : $this;
 			$update = array();
 			foreach ($child->ds->fields as $name => $data)
 			{
