@@ -474,7 +474,8 @@ class EditorData
 			}
 			
 			//Gather children columns.
-			if (!empty($this->ds->children)) foreach ($this->ds->children as $child)
+			if (!empty($this->ds->children))
+			foreach ($this->ds->children as $child)
 			{
 				if ($child->ds->table != $this->ds->table)
 				foreach ($child->ds->display as $disp)
@@ -523,17 +524,17 @@ class EditorData
 			for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
 
 			//Show all displays for this item.
-			foreach ($this->ds->display as $disp)
+			foreach ($this->ds->display as $did => $disp)
 			{
+				$disp_index = $this->ds->table.'_'.$disp->column;
 				if (isset($disp->callback)) //Callback for field
 				{
 					$callback = $disp->callback;
-					$row[$child_id] = $callback($item->data, $disp->column);
+					$row[$did] = $callback($cnode->data, $disp_index);
 				}
 				//Regular field
 				else
 				{
-					$disp_index = $this->ds->table.'_'.$disp->column;
 					if (isset($cnode->data[$disp_index]))
 						$row[$child_id] = stripslashes($cnode->data[$disp_index]);
 				}
@@ -591,8 +592,7 @@ class EditorData
 	{
 		$ret = null;
 
-		if (isset($curchild)) $child = $this->ds->children[$curchild];
-		else $child = $this;
+		$child = $curchild != 0 ? $this->ds->children[$curchild] : $this;
 
 		if ($state == CONTROL_BOUND)
 		{
