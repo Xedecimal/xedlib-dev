@@ -555,7 +555,7 @@ class EditorData
 			else $row[] = null;
 
 			//Pad any additional display columns...
-			for ($ix = $child_id+1; $ix < count($this->ds->children)+1; $ix++) $row[$ix] = "&nbsp;";
+			for ($ix = $child_id+1; $ix < count($this->ds->children)+2; $ix++) $row[$ix] = "&nbsp;";
 
 			$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
 			$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
