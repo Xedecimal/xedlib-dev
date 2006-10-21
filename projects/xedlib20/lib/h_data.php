@@ -695,7 +695,7 @@ class DataSet
 		$this->database->Query($query);
 
 		//Prune off all children...
-		foreach ($this->children as $ix => $child)
+		if (!empty($this->children)) foreach ($this->children as $ix => $child)
 		{
 			$query = "DELETE c FROM {$child->ds->table} c LEFT JOIN {$this->table} p ON(c.{$child->child_key} = p.{$child->parent_key}) WHERE c.{$child->child_key} != 0 AND p.{$child->parent_key} IS NULL";
 			$this->database->Query($query);

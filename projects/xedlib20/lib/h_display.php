@@ -629,7 +629,7 @@ class TreeNode
 	 * @param $data mixed Data to associate with this node.
 	 * @return TreeNode
 	 */
-	function TreeNode($data)
+	function TreeNode($data = null)
 	{
 		$this->data = $data;
 		$this->children = array();

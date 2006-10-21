@@ -327,7 +327,7 @@ function DelTree($dir)
 function DataToArray($rows, $idcol)
 {
 	$ret = array();
-	foreach ($rows as $row) $ret[$row[$idcol]] = $row;
+	if (!empty($rows)) foreach ($rows as $row) $ret[$row[$idcol]] = $row;
 	return $ret;
 }
 

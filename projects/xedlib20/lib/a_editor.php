@@ -354,7 +354,7 @@ class EditorData
 			$node_link[0] = array("{$this->ds->table}_{$this->ds->id}");
 			foreach ($this->ds->display as $disp) $node_link[0][] = "{$this->ds->table}_{$disp->column}";
 
-			foreach ($this->ds->children as $ix => $child)
+			if (!empty($this->ds->children)) foreach ($this->ds->children as $ix => $child)
 			{
 				$link = array("{$child->ds->table}_{$child->ds->id}");
 				$link[] = $child->ds->table.'_'.$child->child_key;
