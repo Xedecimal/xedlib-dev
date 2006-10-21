@@ -342,11 +342,12 @@ class EditorData
 			{
 				if ($child->ds->table != $this->ds->table)
 				{
-					$ids[$ix] = $child->ds->table.'_'.$child->ds->id;
+					$ids[$ix+1] = $child->ds->table.'_'.$child->ds->id;
 				}
 			}
 
-			//node_link[child index] = array(index = {child table}_{child column})
+			//node_link[child index + 1]
+			//	array(index = {child table}_{child column})
 
 			$node_link[0] = array("{$this->ds->table}_{$this->ds->id}");
 			foreach ($this->ds->display as $disp)
@@ -359,7 +360,7 @@ class EditorData
 				$link[] = $child->ds->table.'_'.$child->child_key;
 				foreach ($child->ds->display as $disp)
 					$link[] = "{$child->ds->table}_{$disp->column}";
-				$node_link[$ix] = $link;
+				$node_link[$ix+1] = $link;
 			}
 
 			//flats = array(row id => treenode)
@@ -388,12 +389,12 @@ class EditorData
 			foreach ($flats as $child_id => $items)
 			{
 				if ($child_id == 0) $child = $this;
-				else $child = $this->ds->children[$child_id];
+				else $child = $this->ds->children[$child_id-1];
 
 				foreach ($items as $id => $node)
 				{
 					if ($child_id != 0)
-						$pid = $node->data[$this->ds->table.'_'.$this->ds->id];
+						$pid = $node->data[$this->ds->children[$child_id-1]->ds->table.'_'.$this->ds->id];
 					$id = $node->id;
 					if ($id)
 					{
