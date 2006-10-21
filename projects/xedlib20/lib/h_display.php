@@ -10,7 +10,6 @@
  * @param string $title Title of the returned box.
  * @param string $body Raw text contents of the returned box.
  * @param string $template Template file to use for the returned box.
- * 
  * @example test_present.php
  */
 function GetBox($name, $title, $body, $template = null)
@@ -219,7 +218,6 @@ class Table
 /**
  * A table with columns that can sort, a bit
  * more processing with a better user experience.
- * 
  */
 class SortTable extends Table
 {
@@ -531,7 +529,7 @@ function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 {
 	$ret = null;
 	if (isset($none)) $ret[0] = new SelOption($none, false, $default == 0);
-	foreach ($result as $res)
+	if (!empty($result)) foreach ($result as $res)
 	{
 		$ret[$res[$col_id]] = new SelOption($res[$col_disp], false, $default == $res[$col_id]);
 	}
@@ -774,7 +772,6 @@ class LoginManager
 
 /**
  * An easy way to display a set of tabs, they basically work like a menubar.
- * 
  * @todo Get rid of this thing or revise it.
  */
 class Tabs

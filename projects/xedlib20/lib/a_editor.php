@@ -422,6 +422,7 @@ class EditorData
 			$cols = array();
 			//Build columns so nothing overlaps (eg. id of this and child table)
 			$cols[$this->ds->table.'.'.$this->ds->id] = "{$this->ds->table}_{$this->ds->id}";
+			if (!empty($this->ds->display))
 			foreach ($this->ds->display as $ix => $disp)
 			{
 				$cols[$this->ds->table.'.'.$disp->column] = "{$this->ds->table}_{$disp->column}";
