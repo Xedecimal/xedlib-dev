@@ -354,11 +354,16 @@ class EditorData
 			if (!empty($this->ds->children))
 			foreach ($this->ds->children as $ix => $child)
 			{
-				$link = array("{$child->ds->table}_{$child->ds->id}");
-				$link[] = $child->ds->table.'_'.$child->child_key;
-				foreach ($child->ds->display as $disp)
-					$link[] = "{$child->ds->table}_{$disp->column}";
-				$node_link[$ix+1] = $link;
+				if ($child->ds->table == $this->ds->table)
+					$node_link[0][] = $child->ds->table.'_'.$child->child_key;
+				else
+				{
+					$link = array("{$child->ds->table}_{$child->ds->id}");
+					$link[] = $child->ds->table.'_'.$child->child_key;
+					foreach ($child->ds->display as $disp)
+						$link[] = "{$child->ds->table}_{$disp->column}";
+					$node_link[$ix+1] = $link;
+				}
 			}
 			
 			//flats = array(row id => treenode)
@@ -379,7 +384,7 @@ class EditorData
 					}
 				}
 			}
-			
+
 			//Build tree of relations...
 
 			$tree = new TreeNode('Root');
