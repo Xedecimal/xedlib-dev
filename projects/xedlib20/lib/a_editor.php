@@ -160,7 +160,8 @@ class EditorData
 		if ($action == $this->name.'_create')
 		{
 			$insert = array();
-			if (isset($parent)) $fields = $this->ds->children[GetVar('child')]->ds->fields;
+			$child_id = GetVar('child');
+			if (isset($parent)) $fields = $this->ds->children[$child_id]->ds->fields;
 			else $fields = $this->ds->fields;
 			foreach ($fields as $name => $data)
 			{
@@ -206,7 +207,7 @@ class EditorData
 		{
 			global $ci;
 			$child_id = GetVar('child');
-			$child = $child_id > 0 ? $this->ds->children[$child_id-1] : $this;
+			$child = $child_id > 0 ? $this->ds->children[$child_id] : $this;
 			$update = array();
 			foreach ($child->ds->fields as $name => $data)
 			{
@@ -317,14 +318,17 @@ class EditorData
 	 * @return string
 	 * @access private
 	 */
-	function GetSwapButton($target, $src, $dst, $up)
+	function GetSwapButton($target, $defaults, $src, $dst)
 	{
-		return '<a href="'.$target.'?ca='.$this->name.'_swap&amp;ci='.$src.'&amp;ct='.$dst.'">
-			<img src="lib/images/'. ($up ? 'up' : 'down'). '.png" alt='.($up ? 'Up' : 'Down').'/></a>';
+		$uri = $defaults;
+		$uri['ci'] = $src;
+		$uri['ct'] = $dst;
+		return '<a href="'.MakeURI($target, $uri).'">
+			<img src="lib/images/'. ($src > $dst ? 'up' : 'down'). '.png" alt='.($src < $dst ? 'Up' : 'Down').'/></a>';
 	}
 
 	/**
-	 * Builds a recursive tree editable items.
+	 * Builds a recursive tree of editable items.
 	 *
 	 * @param array $items Items to be inserted into the tree.
 	 * @return TreeNode
@@ -385,6 +389,7 @@ class EditorData
 					if (!$skip)
 					{
 						$tn = new TreeNode($data);
+						$tn->id = $item[$idcol];
 						$flats[$table][$item[$idcol]] = $tn;
 					}
 				}
@@ -584,10 +589,10 @@ class EditorData
 			if ($this->sorting && count($node->children) > 1)
 			{
 				if ($index > 0)
-					$row[] = $this->GetSwapButton($target, $cnode->id, $node->children[$index-1]->id, true);
+					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index-1]->id);
 				else $row[] = '&nbsp;';
 				if ($index < count($node->children)-1)
-					$row[] = $this->GetSwapButton($target, $cnode->id, $node->children[$index+1]->id, false);
+					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index+1]->id);
 				else $row[] = '&nbsp;';
 			}
 			else { $row[] = '&nbsp;'; $row[] = '&nbsp;'; }
@@ -610,7 +615,7 @@ class EditorData
 	{
 		$ret = null;
 
-		$child = $curchild != 0 ? $this->ds->children[$curchild-1] : $this;
+		$child = $curchild != 0 ? $this->ds->children[$curchild] : $this;
 
 		if ($state == CONTROL_BOUND)
 		{
@@ -678,7 +683,7 @@ class EditorData
 
 	function GetForms($target, $ci, $curchild = null)
 	{
-		$context = $curchild != 0 ? $this->ds->children[$curchild-1] : $this;
+		$context = $curchild != 0 ? $this->ds->children[$curchild] : $this;
 
 		$ret = GetBox('box_edit', 'Edit Selected Item',
 			$this->GetForm($target, $ci, $this->state, $curchild),
@@ -692,7 +697,7 @@ class EditorData
 				if (isset($child->ds->fields))
 				{
 					$ret .= GetBox('box_create_child_'.$child->ds->table,
-						'Create new child',
+						"Create new {$child->ds->table} child",
 						$this->GetForm($target, $ci, STATE_CREATE, $ix),
 						'templates/box.html');
 				}
