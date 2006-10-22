@@ -338,11 +338,13 @@ class EditorData
 			//* Gather all columns required for display and relation.
 			//Children
 			//* Map child names to child index.
-			$cols[$this->ds->table] = array();
+			$cols[$this->ds->table] = array($this->ds->id => 1);
 			foreach ($this->ds->display as $disp)
 			{
 				$cols[$this->ds->table][$disp->column] = 0;
 			}
+
+			if (!empty($this->ds->children))
 			foreach ($this->ds->children as $ix => $child)
 			{
 				$children[$child->ds->table] = $ix;
@@ -397,10 +399,15 @@ class EditorData
 			{
 				foreach ($items as $ix => $node)
 				{
-					$child_id = $children[$table];
+					$child_id = isset($children) ? $children[$table] : 0;
+					if (isset($children))
+					{
+						$ckeycol = $this->ds->children[$child_id]->child_key;
+						$pid = $node->data["{$table}_{$ckeycol}"];
+					}
+					else $pid = 0;
+
 					$node->data['_child'] = $child_id;
-					$ckeycol = $this->ds->children[$child_id]->child_key;
-					$pid = $node->data["{$table}_{$ckeycol}"];
 
 					if ($pid != 0)
 						$flats[$this->ds->table][$pid]->children[] = $node;
