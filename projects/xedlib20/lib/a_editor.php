@@ -155,14 +155,14 @@ class EditorData
 	 */
 	function Prepare($action)
 	{
-		$parent = GetVar('parent');
 		$this->state = GetVar('ca') == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
 		if ($action == $this->name.'_create')
 		{
 			$insert = array();
 			$child_id = GetVar('child');
-			if (isset($parent)) $fields = $this->ds->children[$child_id]->ds->fields;
-			else $fields = $this->ds->fields;
+			$context = $child_id > 0 ? $this->ds->children[$child_id] : $this;
+
+			$fields = $context->ds->fields;
 			foreach ($fields as $name => $data)
 			{
 				if (is_array($data))
@@ -323,6 +323,7 @@ class EditorData
 		$uri = $defaults;
 		$uri['ci'] = $src;
 		$uri['ct'] = $dst;
+		$uri['ca'] = $this->name.'_swap';
 		return '<a href="'.MakeURI($target, $uri).'">
 			<img src="lib/images/'. ($src > $dst ? 'up' : 'down'). '.png" alt='.($src < $dst ? 'Up' : 'Down').'/></a>';
 	}
@@ -577,7 +578,7 @@ class EditorData
 			else $row[] = null;
 
 			//Pad any additional display columns...
-			//for ($ix = $child_id+1; $ix < count($this->ds->children)+2; $ix++) $row[$ix] = "&nbsp;";
+			for ($ix = $child_id+1; $ix < count($this->ds->children)+2; $ix++) $row[$ix] = "&nbsp;";
 
 			$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
 			$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
@@ -588,10 +589,10 @@ class EditorData
 
 			if ($this->sorting && count($node->children) > 1)
 			{
-				if ($index > 0)
+				if ($index > 0 && $node->children[$index-1]->data['_child'] == $cnode->data['_child'])
 					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index-1]->id);
 				else $row[] = '&nbsp;';
-				if ($index < count($node->children)-1)
+				if ($index < count($node->children)-1 && $node->children[$index+1]->data['_child'] == $cnode->data['_child'])
 					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index+1]->id);
 				else $row[] = '&nbsp;';
 			}
