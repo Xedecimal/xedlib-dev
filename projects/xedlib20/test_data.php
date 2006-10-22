@@ -19,6 +19,7 @@ require_once('lib/a_editor.php');
 
 $db = new Database('test', 'localhost', 'root', 'ransal');
 $ds = new DataSet($db, 'test');
+$ds->AddChild(new Relation($ds, 'id', 'parent'));
 $ds->display = array(new DisplayColumn('Name', 'name'));
 $ds->fields = array(
 	'Name' => array('name', 'text')

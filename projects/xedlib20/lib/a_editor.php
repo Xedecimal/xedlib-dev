@@ -334,78 +334,78 @@ class EditorData
 	{
 		if (!empty($items))
 		{
-			//ids[child index] = {child table}_{id column}
-
-			$ids = array(0 => $this->ds->table.'_'.$this->ds->id);
-
-			if (!empty($this->ds->children))
-			foreach ($this->ds->children as $ix => $child)
-			{
-				$ids[$ix+1] = $child->ds->table.'_'.$child->ds->id;
-			}
-			
-			//node_link[child index + 1]
-			//	array(index = {child table}_{child column})
-
-			$node_link[0] = array("{$this->ds->table}_{$this->ds->id}");
+			//Columns
+			//* Gather all columns required for display and relation.
+			//Children
+			//* Map child names to child index.
+			$cols[$this->ds->table] = array();
 			foreach ($this->ds->display as $disp)
-				$node_link[0][] = "{$this->ds->table}_{$disp->column}";
-
-			if (!empty($this->ds->children))
+			{
+				$cols[$this->ds->table][$disp->column] = 0;
+			}
 			foreach ($this->ds->children as $ix => $child)
 			{
-				if ($child->ds->table == $this->ds->table)
-					$node_link[0][] = $child->ds->table.'_'.$child->child_key;
-				else
+				$children[$child->ds->table] = $ix;
+				$cols[$child->ds->table][$child->parent_key] = 1;
+				$cols[$child->ds->table][$child->child_key] = 0;
+				foreach ($child->ds->display as $disp)
 				{
-					$link = array("{$child->ds->table}_{$child->ds->id}");
-					$link[] = $child->ds->table.'_'.$child->child_key;
-					foreach ($child->ds->display as $disp)
-						$link[] = "{$child->ds->table}_{$disp->column}";
-					$node_link[$ix+1] = $link;
+					$cols[$child->ds->table][$disp->column] = 0;
 				}
 			}
 			
-			//flats = array(row id => treenode)
+			//Flats
+			//* Convert each item into separated TreeNodes
+			//* Associate all indexes by table, then id
 
 			$flats = array();
 
 			foreach ($items as $ix => $item)
 			{
-				foreach ($node_link as $child_id => $link)
+				foreach ($cols as $table => $columns)
 				{
-					if (strlen($item[$ids[$child_id]]) > 0)
+					$data = array();
+					$skip = false;
+					foreach ($columns as $column => $id)
 					{
-						$data = array('_child' => $child_id);
-						foreach ($link as $col) $data[$col] = $item[$col];
+						$colname = $table.'_'.$column;
+						if ($id)
+						{
+							if (empty($item[$colname]))
+							{
+								$skip = true;
+								break;
+							}
+							$idcol = $colname;
+						}
+						$data[$colname] = $item[$colname];
+					}
+					if (!$skip)
+					{
 						$tn = new TreeNode($data);
-						$tn->id = $item[$ids[$child_id]];
-						$flats[$child_id][$item[$ids[$child_id]]] = $tn;
+						$flats[$table][$item[$idcol]] = $tn;
 					}
 				}
 			}
 
-			//Build tree of relations...
+			//Tree
+			//* Construct tree out of all items and children.
 
 			$tree = new TreeNode('Root');
 
-			foreach ($flats as $child_id => $items)
+			foreach ($flats as $table => $items)
 			{
-				if ($child_id == 0) $child = $this;
-				else $child = $this->ds->children[$child_id-1];
-
-				foreach ($items as $id => $node)
+				foreach ($items as $ix => $node)
 				{
-					if ($child_id != 0)
-						$pid = $node->data[$this->ds->children[$child_id-1]->ds->table.'_'.$this->ds->id];
-					$id = $node->id;
-					if ($id)
-					{
-						if (isset($pid))
-                            $flats[0][$pid]->children[] = $node;
-						else
-                            $tree->children[] = $node;
-					}
+					$child_id = $children[$table];
+					$node->data['_child'] = $child_id;
+					$ckeycol = $this->ds->children[$child_id]->child_key;
+					$pid = $node->data["{$table}_{$ckeycol}"];
+
+					if ($pid != 0)
+						$flats[$this->ds->table][$pid]->children[] = $node;
+					else
+						$tree->children[] = $node;
 				}
 			}
 
@@ -428,7 +428,9 @@ class EditorData
 		if ($this->type == CONTROL_BOUND)
 		{
 			$cols = array();
+
 			//Build columns so nothing overlaps (eg. id of this and child table)
+
 			$cols[$this->ds->table.'.'.$this->ds->id] =
 				"{$this->ds->table}_{$this->ds->id}";
 			if (!empty($this->ds->display))
@@ -447,7 +449,7 @@ class EditorData
 				//Parent column of the child...
 				$cols[$child->ds->table.'.'.$child->child_key] = "{$child->ds->table}_{$child->child_key}";
 
-					//Coming from another table, we gotta join it in.
+				//Coming from another table, we gotta join it in.
 				if ($child->ds->table != $this->ds->table)
 				{
 					$joins[$child->ds->table] = "{$child->ds->table}.{$child->child_key} = {$this->ds->table}.{$child->parent_key}";
@@ -470,12 +472,14 @@ class EditorData
 		{
 			$cols = array();
 			$atrs = array();
+
+			//Columns and column attributes.
 			foreach ($this->ds->display as $disp)
 			{
 				$cols[] = "<b>{$disp->text}</b>";
 				$atrs[] = $disp->attribs;
 			}
-			
+
 			//Gather children columns.
 			if (!empty($this->ds->children))
 			foreach ($this->ds->children as $child)
@@ -520,16 +524,18 @@ class EditorData
 			$row = array();
 
 			$child_id = $cnode->data['_child'];
-			if (isset($this->ds->children[$child_id-1]))
-				$child = $this->ds->children[$child_id-1];
+
+			if (isset($this->ds->children[$child_id]))
+				$context = $this->ds->children[$child_id];
+			else $context = $this;
 
 			//Pad any missing initial display columns...
 			for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
 
-			//Show all displays for this item.
-			foreach ($this->ds->display as $did => $disp)
+			//Show all displays for this context.
+			foreach ($context->ds->display as $did => $disp)
 			{
-				$disp_index = $this->ds->table.'_'.$disp->column;
+				$disp_index = $context->ds->table.'_'.$disp->column;
 
 				//Callback mapped
 				if (isset($disp->callback))
@@ -545,11 +551,11 @@ class EditorData
 				}
 
 				//Show all children displays...
-				if (isset($child))
-				if ($child->ds->table != $this->ds->table)
-				foreach ($child->ds->display as $disp)
+				if (isset($context))
+				if ($context->ds->table != $this->ds->table)
+				foreach ($context->ds->display as $disp)
 				{
-					$row[$child_id] = $cnode->data[$child->ds->table.'_'.$disp->column];
+					$row[$child_id] = $cnode->data[$context->ds->table.'_'.$disp->column];
 				}
 			}
 
@@ -606,9 +612,11 @@ class EditorData
 
 		if (!empty($child->ds->fields))
 		{
-			$frm = new Form('form'.$this->name, array('align="right"', null, null));
+			$frm = new Form('form'.$this->name, array('align="right"', null,
+				null));
 			$frm->AddHidden('editor', $this->name);
-			$frm->AddHidden('ca', $state == STATE_EDIT ? $this->name.'_update' : $this->name.'_create');
+			$frm->AddHidden('ca', $state == STATE_EDIT ? $this->name.'_update' :
+				$this->name.'_create');
 			if ($state == STATE_EDIT) $frm->AddHidden('ci', $ci);
 			else if (isset($child)) $frm->AddHidden('parent', $ci);
 			if (isset($child)) $frm->AddHidden('child', $curchild);

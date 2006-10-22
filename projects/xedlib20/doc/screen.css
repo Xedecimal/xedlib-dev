@@ -1,4 +1,4 @@
-body table { font-family: Verdana, sans-serif; font-size: 10pt; }
+body, table { font-family: Verdana, sans-serif; font-size: 10pt; }
 
 .head
 {
