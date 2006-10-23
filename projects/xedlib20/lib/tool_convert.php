@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Strict//EN"
-						"http://www.w3.org/TR/html4/strict.dtd">
+	"http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
 	<title> PHP Converter </title>
@@ -31,15 +31,17 @@
 
 <?php
 
-$files = array(	   "a_calendar.php",
-				   "a_code.php",
-				   "a_editor.php",
-				   "a_file.php",
-				   "h_data.php",
-				   "h_display.php",
-				   "h_storage.php",
-				   "h_template.php",
-				   "h_utility.php");
+$files = array(
+	"a_calendar.php",
+	"a_code.php",
+	"a_editor.php",
+	"a_file.php",
+	"h_data.php",
+	"h_display.php",
+	"h_storage.php",
+	"h_template.php",
+	"h_utility.php"
+);
 
 //$files = array("h_data.php");
 //NOTE:  we will need something different for h_template, becuase that has

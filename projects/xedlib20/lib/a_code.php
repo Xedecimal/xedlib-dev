@@ -1,10 +1,10 @@
 <?php
 
-define('GET_NONE', 0);
-define('GET_NAME', 1);
-define('GET_DEFINE_NAME', 2);
-define('GET_DEFINE_VALUE', 3);
-define('GET_EXTENDS', 4);
+define('CODE_GET_NONE', 0);
+define('CODE_GET_NAME', 1);
+define('CODE_GET_DEFINE_NAME', 2);
+define('CODE_GET_DEFINE_VALUE', 3);
+define('CODE_GET_EXTENDS', 4);
 
 define('T_DEFINE', 900);
 
@@ -19,7 +19,7 @@ class CodeReader
 	 *
 	 * @var bool
 	 */
-	private $show_tree = false;
+	private $debug = false;
 
 	/**
 	 * Processes a file and returns the structure of it as a CodeObject.
@@ -36,7 +36,7 @@ class CodeReader
 
 		$class = null;
 		$doc = null;
-		$getting = GET_NONE;
+		$getting = CODE_GET_NONE;
 		$ret = null;
 		$current = null;
 		$modifier = 0;
@@ -57,7 +57,7 @@ class CodeReader
 					switch ($tok)
 					{
 						case '{':
-							if ($this->show_tree) echo str_repeat("\t", count($tree))."{$tok}\n";
+							if ($this->debug) echo str_repeat("\t", count($tree))."{$tok}\n";
 							array_push($tree, $current);
 
 							//We're done with function arguments.
@@ -66,7 +66,7 @@ class CodeReader
 							break;
 						case '}':
 							$current = array_pop($tree);
-							if ($this->show_tree) echo str_repeat("\t", count($tree))."{$tok}\n";
+							if ($this->debug) echo str_repeat("\t", count($tree))."{$tok}\n";
 							break;
 					}
 				}
@@ -80,41 +80,41 @@ class CodeReader
 
 				if ($tok[0] == T_CONSTANT_ENCAPSED_STRING)
 				{
-					if ($getting == GET_DEFINE_VALUE)
+					if ($getting == CODE_GET_DEFINE_VALUE)
 					{
 						$current->value = str_replace('"', '', str_replace("'", '', $tok[1]));
 						$current = array_pop($tree);
-						$getting = GET_NONE;
+						$getting = CODE_GET_NONE;
 					}
-					if ($getting == GET_DEFINE_NAME)
+					if ($getting == CODE_GET_DEFINE_NAME)
 					{
 						array_push($tree, $current);
 						$current = new CodeObject(T_DEFINE);
 						$current->name = str_replace('"', '', str_replace("'", '', $tok[1]));
 						$current->filename = $filename;
 						$ret->members[$current->name] = $current;
-						$getting = GET_DEFINE_VALUE;
+						$getting = CODE_GET_DEFINE_VALUE;
 					}
 				}
 				if ($tok[0] == T_CURLY_OPEN)
 				{
-					if ($this->show_tree) echo str_repeat("\t", count($tree))."{\n";
+					if ($this->debug) echo str_repeat("\t", count($tree))."{\n";
 					array_push($tree, $current);
 				}
 				
 				if ($tok[0] == T_FUNCTION)
 				{
-					if ($this->show_tree) echo str_repeat("\t", count($tree))."function ";
+					if ($this->debug) echo str_repeat("\t", count($tree))."function ";
 					$current = new CodeObject($tok[0]);
 					$current->doc = $doc;
 					$doc = null;
-					$getting = GET_NAME;
+					$getting = CODE_GET_NAME;
 				}
 
 				if ($tok[0] == T_CLASS)
 				{
-					if ($this->show_tree) echo "class ";
-					$getting = GET_NAME;
+					if ($this->debug) echo "class ";
+					$getting = CODE_GET_NAME;
 					$current = new CodeObject($tok[0]);
 					$current->doc = $doc;
 					$doc = null;
@@ -122,22 +122,22 @@ class CodeReader
 				
 				if ($tok[0] == T_STRING)
 				{
-					if ($getting == GET_DEFINE_VALUE)
+					if ($getting == CODE_GET_DEFINE_VALUE)
 					{
 						$current->value = $tok[1];
 						$current = array_pop($tree);
-						$getting = GET_NONE;
+						$getting = CODE_GET_NONE;
 					}
-					if ($getting == GET_NONE && strtolower($tok[1]) == 'define')
+					if ($getting == CODE_GET_NONE && strtolower($tok[1]) == 'define')
 					{
-						$getting = GET_DEFINE_NAME;
+						$getting = CODE_GET_DEFINE_NAME;
 					}
-					if ($getting == GET_EXTENDS)
+					if ($getting == CODE_GET_EXTENDS)
 					{
 						$current->extends = $tok[1];
-						$getting = GET_NONE;
+						$getting = CODE_GET_NONE;
 					}
-					if ($getting == GET_NAME)
+					if ($getting == CODE_GET_NAME)
 					{
 						$current->name = $tok[1];
 						if ($current->type == T_FUNCTION)
@@ -154,8 +154,8 @@ class CodeReader
 						{
 							$ret->members[$tok[1]] = $current;
 						}
-						$getting = GET_NONE;
-						if ($this->show_tree) echo $tok[1]."\n";
+						$getting = CODE_GET_NONE;
+						if ($this->debug) echo $tok[1]."\n";
 					}
 				}
 				
@@ -179,7 +179,9 @@ class CodeReader
 					}
 
 					//Member
-					else if (count($tree) == 1 && $tree[count($tree)-1]->type == T_CLASS)
+					else if (count($tree) == 1
+						&& $tree[count($tree)-1] != null
+						&& $tree[count($tree)-1]->type == T_CLASS)
 					{
 						$d->parent = $current;
 						$d->modifier = $modifier;
@@ -196,17 +198,17 @@ class CodeReader
 				
 				if ($tok[0] == T_LNUMBER)
 				{
-					if ($getting == GET_DEFINE_VALUE)
+					if ($getting == CODE_GET_DEFINE_VALUE)
 					{
 						$current->value = str_replace('"', '', str_replace("'", '', $tok[1]));
 						$current = array_pop($tree);
-						$getting = GET_NONE;
+						$getting = CODE_GET_NONE;
 					}
 				}
 				
 				if ($tok[0] == T_EXTENDS)
 				{
-					$getting = GET_EXTENDS;
+					$getting = CODE_GET_EXTENDS;
 				}
 			}
 		}
@@ -222,25 +224,25 @@ class CodeObject
 	 *
 	 * @var int
 	 */
-	private $type;
+	public $type;
 	/**
 	 * Name of this object.
 	 *
 	 * @var string
 	 */
-	private $name;
+	public $name;
 	/**
 	 * Array of children that this object holds.
 	 *
 	 * @var array
 	 */
-	private $members;
+	public $members;
 	/**
 	 * Parent of this object.
 	 *
 	 * @var CodeObject
 	 */
-	private $parent;
+	public $parent;
 
 	/**
 	 * Creates a new document object.

@@ -133,7 +133,7 @@ class DocGeneratorXML
 		}
 		$doc->appendChild($root);
 	
-		$doc->save($target."/{$type}_{$item->name}.xml");
+		$doc->save("{$target}/{$type}_{$item->name}.xml");
 	}
 	
 	function OutputTOC($toc, $parent, $item, $target)
@@ -166,6 +166,7 @@ class DocGeneratorXML
 			else if (isset($new))
 				$data->members = array_merge($data->members, $new->members);
 		}
+		ksort($data->members);
 	
 		if (!empty($data))
 		{
@@ -180,7 +181,9 @@ class DocGeneratorXML
 	}
 }
 
+echo '<pre>';
 $d = new DocGeneratorXML();
 $d->OutputFiles('lib/*.php', 'doc/output');
+echo '</pre>';
 
 ?>

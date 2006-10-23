@@ -112,6 +112,11 @@ class Database
 		}
 	}
 
+	/**
+	 * Returns the last unique ID that was inserted.
+	 *
+	 * @return mixed
+	 */
 	function GetLastInsertID()
 	{
 		return mysql_insert_id($this->link);

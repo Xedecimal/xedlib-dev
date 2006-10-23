@@ -688,6 +688,15 @@ class EditorData
 		}
 	}
 
+	/**
+	 * Get update and possibly children's create forms for the lower
+	 * section of this editor.
+	 *
+	 * @param string $target Target script asking for this information.
+	 * @param mixed $ci Identifier of current object.
+	 * @param int $curchild Current child.
+	 * @return string
+	 */
 	function GetForms($target, $ci, $curchild = null)
 	{
 		$context = $curchild != 0 ? $this->ds->children[$curchild] : $this;
