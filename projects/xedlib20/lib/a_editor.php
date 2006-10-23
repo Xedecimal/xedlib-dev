@@ -176,6 +176,12 @@ class EditorData
 					{
 						$insert[$data[0]] = md5($value);
 					}
+					else if ($data[1] == 'selects')
+					{
+						$newval = 0;
+						foreach ($value as $val) $newval |= $val;
+						$insert[$data[0]] = $newval;
+					}
 					else $insert[$data[0]] = $value;
 				}
 				else $insert[$name] = DeString($data);
