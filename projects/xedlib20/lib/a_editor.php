@@ -360,7 +360,7 @@ class EditorData
 					$cols[$child->ds->table][$disp->column] = 0;
 				}
 			}
-			
+
 			//Flats
 			//* Convert each item into separated TreeNodes
 			//* Associate all indexes by table, then id

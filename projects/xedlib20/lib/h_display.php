@@ -297,6 +297,12 @@ class Form extends Table
 	 * @var Validation
 	 */
 	public $Validation;
+	/**
+	 * Associated errors that are previously gotten with FormValidate().
+	 *
+	 * @var array
+	 */
+	public $Errors;
 
 	/**
 	* Instantiates this form with a unique name.
@@ -346,12 +352,12 @@ class Form extends Table
 				{
 					if ($val->field == $name)
 					{
-						$helptext = $val->GetError($name, $this->name).$helptext;
+						$helptext = '<span class="error">'.$this->Errors[$name].'</span>'.$helptext;
 						break;
 					}
 				}
 			}
-			else $helptext = $this->Validation->GetError($name, $this->name).$helptext;
+			else $helptext = $this->Errors[$name].$helptext;
 		}
 		switch ($type)
 		{
@@ -400,6 +406,20 @@ class Form extends Table
 				}
 				$strout .= "</select>\n";
 				break;
+			case 'checkboxes':
+				$strout = null;
+				if (is_array($value))
+				{
+					$vals = GetVar($name);
+					foreach ($value as $id => $opt)
+					{
+						$selected = $opt->selected ? ' checked="checked"' : null;
+						if (isset($vals[$id])) $selected = ' checked="checked"';
+						if ($opt->group) $strout .= "{$opt->text}<br/>\n";
+						else $strout .= "<input type=\"checkbox\" id=\"{$name}_{$id}\" name=\"{$name}[{$id}]\" value=\"1\"$selected /><label for=\"{$name}_{$id}\">".htmlspecialchars($opt->text)."</label><br/>\n";
+					}
+				}
+				break;
 			case "yesno":
 				$strout =  "<input type=\"radio\" name=\"$name\" value=\"{$value[0]}\" $attributes> Yes\n";
 				$strout .= "<input type=\"radio\" name=\"$name\" value=\"{$value[1]}\" checked=\"checked\" $attributes> No\n";
@@ -421,10 +441,11 @@ class Form extends Table
 				break;
 			case 'submit':
 				if (isset($this->Validation))
-					$attributes .= " onclick=\"{$this->name}_check(1); return false;\"";
+					$attributes .= " onclick=\"return {$this->name}_check(1);\"";
 			default:
 				if (isset($value)) $val = ' value="'.htmlspecialchars($value).'"';
-				else $val = "";
+				else if (isset($this->Errors)) $val = ' value="'.htmlspecialchars(GetVar($name)).'"';
+				else $val = null;
 				$strout = "<input id=\"{$this->name}_$name\" type=\"$type\" name=\"$name\"$attributes$val />";
 				break;
 		}
@@ -880,7 +901,7 @@ class Validation
 	 *
 	 * @var string
 	 */
-	public $regex;
+	public $check;
 	/**
 	 * Error text that will be displayed if this field does not pass the
 	 * test.
@@ -904,10 +925,10 @@ class Validation
 	 * @param $error string Error message to display if test fails.
 	 * @return Validation
 	 */
-	function Validation($field, $regex, $error)
+	function Validation($field, $check, $error)
 	{
 		$this->field = $field;
-		$this->regex = $regex;
+		$this->check = $check;
 		$this->error = $error;
 		$this->validators = array();
 	}
@@ -933,33 +954,46 @@ class Validation
 	 */
 	function GetJS($id = null)
 	{
-		if (!empty($this->validators)) foreach ($this->validators as $v)
-		{
+		if (!empty($this->validators))
+		foreach ($this->validators as $v)
 			$ret .= $v->GetJS($id);
-		}
-		$ret .= "\t\tfunction {$id}_{$this->field}_check(validate) \n\t\t{\n
+		$ret .= "\t\tfunction {$id}_{$this->field}_check(validate) \n\t\t{
 			ret = true;
 			chk_{$this->field} = document.getElementById('{$id}_{$this->field}');
 			spn_{$id}_{$this->field} = document.getElementById('span_{$id}_{$this->field}');
-			if (!validate) { spn_{$id}_{$this->field}.innerHTML = ''; return ret; }
-			if (!/^{$this->regex}$/.test(chk_{$this->field}.value))
+			if (!validate) { spn_{$id}_{$this->field}.innerHTML = ''; return ret; }";
+		if (is_array($this->check))
+		{
+			$ret .= "\n\t\t\tix = 0;";
+			foreach ($this->check[0] as $ix => $opt)
+			{
+				$ret .= "\n\t\t\tif (document.getElementById('{$this->field}_{$ix}').checked == true) ix++;";
+			}
+			$ret .= "\n\t\t\tif (ix < {$this->check[1]})
+			{
+				spn_{$id}_{$this->field}.innerHTML = '{$this->error}';
+				return false;
+			}";
+		}
+		else
+		{
+			$ret .= "\n\t\t\tif (!/^{$this->check}$/.test(chk_{$this->field}.value))
 			{
 				spn_{$id}_{$this->field}.innerHTML = '{$this->error}';
 				chk_{$this->field}.focus();
 				ret = false;\n";
 				foreach ($this->validators as $reg => $v)
-				{
 					$ret .= "\t\t\t\t{$id}_{$v->field}_check(0);\n";
-				}
-			$ret .= "\t\t\treturn false;
-			}
-			else
-			{";
+			$ret .= "\t\t\t\treturn false;
+			}";
+		}
+		$ret .= "\n\t\t\telse
+			{\n";
 				foreach ($this->validators as $reg => $v)
 				{
 					$ret .= "\t\t\t\t{$id}_{$v->field}_check(0);\n";
 				}
-				$ret .= "spn_{$id}_{$this->field}.innerHTML = '';\n";
+				$ret .= "\t\t\t\tspn_{$id}_{$this->field}.innerHTML = '';\n";
 				foreach ($this->validators as $reg => $v)
 				{
 					$ret .= "\t\t\t\tret = {$id}_{$v->field}_check(/^$reg$/.test(chk_{$this->field}.value));\n";
@@ -969,24 +1003,6 @@ class Validation
 			return ret;
 		}\n";
 		return $ret;
-	}
-
-	/**
-	 * Get an associated error recursively from specified field name.
-	 *
-	 * @access private
-	 * @param string $field Name of the field that contains the error.
-	 * @return string
-	 */
-	function GetError($field, $owner)
-	{
-		if ($this->field == $field) return '<span class="error" id="span_'.$owner.'_'.$this->field.'"></span>';
-		foreach ($this->validators as $val)
-		{
-			$ret = $val->GetError($field, $owner);
-			if (isset($ret)) return $ret;
-		}
-		return null;
 	}
 
 	/**
@@ -1001,6 +1017,15 @@ class Validation
 	{
 		if ($check)
 		{
+			if (is_array($this->check))
+			{
+				$vals = GetVar($this->field);
+				if (count($vals) < $this->check[1]) $ret['errors'][$this->field] = $this->error;
+			}
+			else
+			{
+				if (!preg_match("/$this->check/", GetVar($this->field))) $ret['errors'][$this->field] = $this->error;
+			}
 		}
 		else
 		{
@@ -1017,8 +1042,8 @@ function FormValidate($name, $arr, $check)
 	if (is_array($arr)) foreach ($arr as $key => $val)
 	{
 		$rec = RecurseReq($key, $val, $checks);
-		if ($check && strlen(GetVar($key)) < 1) $ret['errors'][$key] = $val;
-		else $ret['errors'][$key] = '<span class="error" id="span_'.$key.'"></span>';
+		if ($check && strlen(GetVar($key)) < 1) $val->Validate($check, $ret);
+		else $ret['errors'][$val->field] = '<span class="error" id="span_'.$name.'_'.$val->field.'"></span>';
 		$ret['js'] .= $val->GetJS($name);
 	}
 	else
@@ -1026,10 +1051,14 @@ function FormValidate($name, $arr, $check)
 		$arr->Validate($check, $ret);
 		$ret['js'] .= $arr->GetJS($name);
 	}
-	$ret['js'] .= "\t\tfunction {$name}_check(validate)\n\t\t{\n";
-	if (is_array($arr)) foreach ($arr as $v) $ret['js'] .= "\t\t\t{$name}_{$v->field}_check(validate);\n";
+	$ret['js'] .= "\t\tfunction {$name}_check(validate)\n\t\t{";
+	if (is_array($arr)) foreach ($arr as $v)
+	{
+		$ret['js'] .= "\n\t\t\tret = {$name}_{$v->field}_check(validate);";
+		$ret['js'] .= "\n\t\t\tif (!ret) return ret;";
+	}
 	else $ret['js'] .= "\t\t\tret = {$name}_{$arr->field}_check(validate);\n";
-	$ret['js'] .= "\t\t\treturn ret;\n\t\t}\n";
+	$ret['js'] .= "\n\t\t\treturn ret;\n\t\t}\n";
 	return $ret;
 }
 
