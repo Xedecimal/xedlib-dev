@@ -362,9 +362,7 @@ function array_get($array)
 function Reformat($file)
 {
 	$c = file_get_contents($file);
-	$c = preg_replace("/\tprivate/", "\tvar", $c);
-	$c = preg_replace("/\tprotected/", "\tvar", $c);
-	$c = preg_replace("/\tpublic/", "\tvar", $c);
+	$c = preg_replace("/\tprivate|\tprotected|\tpublic/", "\tvar", $c);
 	$pos = strpos($c, '<?php');
 	$c = str_replace('<?php', "<?php \$__checked_{$file} = true;", $c);
 	$fp = fopen($file, 'w+');
