@@ -33,7 +33,8 @@ $cboxes = array(
 	'of these items'
 );
 
-$vChecks = new Validation('checks', array($cboxes, 2), $imgError.'You must select at least 2.');
+$vChecks = new Validation('checks', array($cboxes, 2),
+	$imgError.'You must select at least 2.');
 
 $vContact->Add('email', $vEmail);
 $vContact->Add('phone', $vPhone);
@@ -82,20 +83,23 @@ $frm->AddInput('Phone:',   'text', 'phone');
 $frm->AddInput('Address:', 'text', 'address');
 $frm->AddInput('Checkboxes:', 'checkboxes', 'checks', ArrayToSelOptions($cboxes));
 $frm->AddInput(null, 'submit', 'butSubmit', 'Send');
-echo GetBox('box_test', 'Form With Array Validation', $frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
+echo GetBox('box_test', 'Form With Array Validation',
+	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
 
 $frm = new Form('formRecurse');
 $frm->AddHidden('ca', 'send');
 
 //Associate the parent level validation object to this form, you should also
-//be able to associate an array of validation objects, eg. $frm->Validation = array($v1, $v2, $v3).
+//be able to associate an array of validation objects, eg.
+//$frm->Validation = array($v1, $v2, $v3).
 $frm->Validation = $vContact;
 $frm->AddInput('Contact method', 'select', 'contact', ArrayToSelOptions($contacts));
 $frm->AddInput('Email:',   'text', 'email');
 $frm->AddInput('Phone:',   'text', 'phone');
 $frm->AddInput('Address:', 'text', 'address');
 $frm->AddInput(null, 'submit', 'butSubmit', 'Send');
-echo GetBox('box_test', 'Form With Recursive Validation', $frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
+echo GetBox('box_test', 'Form With Recursive Validation',
+	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
 
 ?>
 

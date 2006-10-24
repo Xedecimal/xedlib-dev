@@ -1,14 +1,16 @@
 <?php
 
 $me = GetVar("SCRIPT_NAME");
-$sname = GetVar('SERVER_NAME');
+$__sid = MD5(GetVar('SERVER_NAME'));
 
 $bypass = array(
-	"/[^.]*\.xedecimal\.net/"
+	'd603bfd6de7d894f5342ffa3ae23e992',
+	'24bc1846b0909dde190d6130d0c67f01',
+	'bde89811f59e28023f56db67372011a5'
 );
 
 foreach ($bypass as $check)
-if (preg_match($check, $sname))
+if ($__sid == $check)
 $__checked = true;
 
 if (!$__checked)
