@@ -4,14 +4,13 @@ $bypass = array(
 	"/[^.]*\.xedecimal\.net/"
 );
 
-$check = true;
 foreach ($bypass as $check)
 if (preg_match($check, GetVar('SERVER_NAME')))
-$check = false;
+$__checked = true;
 
-if ($check && !$aligned)
+if (!$__checked)
 {
-	$files = array('lib/h_template.php');
+	$files = glob(dirname(__FILE__).'/*.php');
 	foreach ($files as $file)
 	{
 		Reformat($file);
@@ -363,8 +362,7 @@ function Reformat($file)
 {
 	$c = file_get_contents($file);
 	$c = preg_replace("/\tprivate|\tprotected|\tpublic/", "\tvar", $c);
-	$pos = strpos($c, '<?php');
-	$c = str_replace('<?php', "<?php \$__checked_{$file} = true;", $c);
+	$c = str_replace('<?php $__checked = true;', '<?php $__checked = true; $__checked = true;', $c);
 	$fp = fopen($file, 'w+');
 	fwrite ($fp, $c);
 	fclose($fp);
