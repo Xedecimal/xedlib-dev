@@ -1,11 +1,14 @@
 <?php
 
+$me = GetVar("SCRIPT_NAME");
+$sname = GetVar('SERVER_NAME');
+
 $bypass = array(
 	"/[^.]*\.xedecimal\.net/"
 );
 
 foreach ($bypass as $check)
-if (preg_match($check, GetVar('SERVER_NAME')))
+if (preg_match($check, $sname))
 $__checked = true;
 
 if (!$__checked)
@@ -16,8 +19,6 @@ if (!$__checked)
 		Reformat($file);
 	}
 }
-
-$me = GetVar("SCRIPT_NAME");
 
 /**
  * @package Utility
