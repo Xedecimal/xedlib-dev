@@ -329,9 +329,9 @@ class EditorData
 		$uri['ci'] = $src;
 		$uri['ct'] = $dst;
 		$uri['ca'] = $this->name.'_swap';
-		$path = dirname(__FILE__);
+		$path = GetRelativePath(dirname(__FILE__));
 		return '<a href="'.MakeURI($target, $uri).'">
-			<img src="{$path}/images/'. ($src > $dst ? 'up' : 'down'). '.png" alt='.($src < $dst ? 'Up' : 'Down').'/></a>';
+			<img src="'.$path.'/images/'. ($src > $dst ? 'up' : 'down'). '.png" alt="'.($src < $dst ? 'Up' : 'Down').'" /></a>';
 	}
 
 	/**
@@ -636,6 +636,7 @@ class EditorData
 			if (isset($context->ds->Validation))
 			{
 				$frm->Validation = $context->ds->Validation;
+				$frm->Errors = $context->ds->Errors;
 			}
 			$frm->AddHidden('editor', $this->name);
 			$frm->AddHidden('ca', $state == STATE_EDIT ? $this->name.'_update' :

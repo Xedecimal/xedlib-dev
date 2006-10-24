@@ -31,6 +31,7 @@ $ds->fields = array(
 	'Name' => array('name', 'text')
 );
 $ds->Validation = $v;
+$ds->Errors = $ret['errors'];
 $dsChild = new DataSet($db, 'child');
 $dsChild->display = array(
 	new DisplayColumn('Child', 'example')

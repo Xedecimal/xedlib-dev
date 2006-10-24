@@ -8,6 +8,7 @@ require_once('lib/h_utility.php');
 $t = new Template();
 $page_body = '';
 $page_title = 'Utility Test';
+$page_head = '';
 
 ////////////////////////////////////////////////////////////////////////////////
 //Errors
@@ -64,6 +65,8 @@ $test2 = GetVar('test');
 $page_body .= "Grabbing session var 'test' which is: \"{$test2}\"<br/>\n";
 
 $page_body .= "Persisting a variable: \"".Persist('persisted', 'pervalue')."\"<br/>\n";
+
+$page_body .= "Current script path: ".GetRelativePath(dirname(__FILE__));
 
 echo $t->Get('template_test.html');
 

@@ -371,4 +371,10 @@ function Reformat($file)
 	fclose($fp);
 }
 
+function GetRelativePath($path)
+{
+	$npath = str_replace('\\', '/', $path);
+	return str_replace(GetVar('DOCUMENT_ROOT'), '', $npath);
+}
+
 ?>
