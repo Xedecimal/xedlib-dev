@@ -212,21 +212,29 @@ class DataSet
 	 * @var string
 	 */
 	public $id;
-	
+
+	//Display Related
+
 	/**
 	 * Array of DisplayColumn objects that this DataSet is associated with.
 	 *
 	 * @var array
 	 * @see EditorData
 	 */
-	public $display;
+	public $Display;
 	/**
 	 * Array of field information that this DataSet is associated with.
 	 *
 	 * @var array
 	 * @see EditorData
 	 */
-	public $fields;
+	public $Fields;
+	/**
+	 * A single or mutliple validations for the associated form.
+	 *
+	 * @var mixed
+	 */
+	public $Validation;
 
 	/**
 	 * Initialize a new CDataSet binded to $table in $db.

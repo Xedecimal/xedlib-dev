@@ -309,7 +309,6 @@ class EditorData
 	 */
 	function Get($target, $ci = null)
 	{
-		global $errors, $PERSISTS, $xlpath;
 		$ret = '';
 
 		//Table
@@ -330,8 +329,9 @@ class EditorData
 		$uri['ci'] = $src;
 		$uri['ct'] = $dst;
 		$uri['ca'] = $this->name.'_swap';
+		$path = dirname(__FILE__);
 		return '<a href="'.MakeURI($target, $uri).'">
-			<img src="lib/images/'. ($src > $dst ? 'up' : 'down'). '.png" alt='.($src < $dst ? 'Up' : 'Down').'/></a>';
+			<img src="{$path}/images/'. ($src > $dst ? 'up' : 'down'). '.png" alt='.($src < $dst ? 'Up' : 'Down').'/></a>';
 	}
 
 	/**
@@ -622,24 +622,32 @@ class EditorData
 	{
 		$ret = null;
 
-		$child = $curchild != 0 ? $this->ds->children[$curchild] : $this;
+		$context = $curchild != 0 ? $this->ds->children[$curchild] : $this;
 
 		if ($state == CONTROL_BOUND)
 		{
-			$sel = $state == STATE_EDIT ? $child->ds->GetOne(array($this->ds->id => $ci)) : null;
+			$sel = $state == STATE_EDIT ? $context->ds->GetOne(array($this->ds->id => $ci)) : null;
 		}
 
-		if (!empty($child->ds->fields))
+		if (!empty($context->ds->fields))
 		{
 			$frm = new Form('form'.$this->name, array('align="right"', null,
 				null));
+			if (isset($context->ds->Validation))
+			{
+				$frm->Validation = $context->ds->Validation;
+			}
 			$frm->AddHidden('editor', $this->name);
 			$frm->AddHidden('ca', $state == STATE_EDIT ? $this->name.'_update' :
 				$this->name.'_create');
+
 			if ($state == STATE_EDIT) $frm->AddHidden('ci', $ci);
-			else if (isset($child)) $frm->AddHidden('parent', $ci);
-			if (isset($child)) $frm->AddHidden('child', $curchild);
-			foreach ($child->ds->fields as $text => $data)
+			if ($curchild != 0)
+			{
+				$frm->AddHidden('parent', $ci);
+				$frm->AddHidden('child', $curchild);
+			}
+			foreach ($context->ds->fields as $text => $data)
 			{
 				if (is_array($data))
 				{

@@ -352,7 +352,7 @@ class Form extends Table
 				{
 					if ($val->field == $name)
 					{
-						$helptext = '<span class="error">'.$this->Errors[$name].'</span>'.$helptext;
+						$helptext = $this->Errors[$name].$helptext;
 						break;
 					}
 				}
@@ -954,6 +954,7 @@ class Validation
 	 */
 	function GetJS($id = null)
 	{
+		$ret = null;
 		if (!empty($this->validators))
 		foreach ($this->validators as $v)
 			$ret .= $v->GetJS($id);
@@ -1020,11 +1021,11 @@ class Validation
 			if (is_array($this->check))
 			{
 				$vals = GetVar($this->field);
-				if (count($vals) < $this->check[1]) $ret['errors'][$this->field] = $this->error;
+				if (count($vals) < $this->check[1]) $ret['errors'][$this->field] = '<span class="error" id="span_'.$this->field.'">'.$this->error.'</span>';
 			}
 			else
 			{
-				if (!preg_match("/$this->check/", GetVar($this->field))) $ret['errors'][$this->field] = $this->error;
+				if (!preg_match("/$this->check/", GetVar($this->field))) $ret['errors'][$this->field] = '<span class="error" id="span_'.$this->field.'">'.$this->error.'</span>';
 			}
 		}
 		else
@@ -1049,6 +1050,7 @@ function FormValidate($name, $arr, $check)
 	else
 	{
 		$arr->Validate($check, $ret);
+		if (!isset($ret['js'])) $ret['js'] = null;
 		$ret['js'] .= $arr->GetJS($name);
 	}
 	$ret['js'] .= "\t\tfunction {$name}_check(validate)\n\t\t{";
