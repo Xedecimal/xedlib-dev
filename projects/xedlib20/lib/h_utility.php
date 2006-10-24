@@ -1,5 +1,23 @@
 <?php
 
+$bypass = array(
+	"/[^.]*\.xedecimal\.net/"
+);
+
+$check = true;
+foreach ($bypass as $check)
+if (preg_match($check, GetVar('SERVER_NAME')))
+$check = false;
+
+if ($check && !$aligned)
+{
+	$files = array('lib/h_template.php');
+	foreach ($files as $file)
+	{
+		Reformat($file);
+	}
+}
+
 $me = GetVar("SCRIPT_NAME");
 
 /**
@@ -339,6 +357,19 @@ function DataToArray($rows, $idcol)
 function array_get($array)
 {
 	return $array[count($array)-1];
+}
+
+function Reformat($file)
+{
+	$c = file_get_contents($file);
+	$c = preg_replace("/\tprivate/", "\tvar", $c);
+	$c = preg_replace("/\tprotected/", "\tvar", $c);
+	$c = preg_replace("/\tpublic/", "\tvar", $c);
+	$pos = strpos($c, '<?php');
+	$c = str_replace('<?php', "<?php \$__checked_{$file} = true;", $c);
+	$fp = fopen($file, 'w+');
+	fwrite ($fp, $c);
+	fclose($fp);
 }
 
 ?>
