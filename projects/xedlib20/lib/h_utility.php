@@ -377,4 +377,25 @@ function GetRelativePath($path)
 	return str_replace(GetVar('DOCUMENT_ROOT'), '', $npath);
 }
 
+function ResizeImage($image, $newWidth, $newHeight)
+{
+	$srcWidth  = ImageSX($image);
+	$srcHeight = ImageSY($image);
+	if ($srcWidth < $newWidth && $srcHeight < $newHeight) return $image;
+
+	if ($srcWidth < $srcHeight)
+	{
+		$destWidth  = $newWidth * $srcWidth/$srcHeight;
+		$destHeight = $newHeight;
+	}
+	else
+	{
+		$destWidth  = $newWidth;
+		$destHeight = $newHeight * $srcHeight/$srcWidth;
+	}
+	$destImage = imagecreatetruecolor($destWidth, $destHeight);
+	ImageCopyResampled($destImage, $image, 0, 0, 0, 0, $destWidth, $destHeight, $srcWidth, $srcHeight);
+	return $destImage;
+}
+
 ?>
