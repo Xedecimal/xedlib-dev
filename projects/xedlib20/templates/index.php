@@ -19,7 +19,7 @@ $dsCats->AddChild(new Relation($dsCats, 'id', 'parent'));
 $dsCats->display = array(
 	new DisplayColumn('Name', 'name')
 );
-$dsCats->fields = array(
+$dsCats->Fields = array(
 	'Name' => array('name', 'text')
 );
 

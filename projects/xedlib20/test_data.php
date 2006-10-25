@@ -27,17 +27,17 @@ $page_head .= '<script type="text/javascript">'."\n".$ret['js'].'</script>';
 $db = new Database('test', 'localhost', 'root', 'ransal');
 $ds = new DataSet($db, 'test');
 $ds->AddChild(new Relation($ds, 'id', 'parent'));
-$ds->display = array(new DisplayColumn('Name', 'name'));
-$ds->fields = array(
+$ds->Display = array(new DisplayColumn('Name', 'name'));
+$ds->Fields = array(
 	'Name' => array('name', 'text')
 );
 $ds->Validation = $v;
 $ds->Errors = $ret['errors'];
 $dsChild = new DataSet($db, 'child');
-$dsChild->display = array(
+$dsChild->Display = array(
 	new DisplayColumn('Child', 'example')
 );
-$dsChild->fields = array(
+$dsChild->Fields = array(
 	'Example' => array('example', 'text')
 );
 $ds->AddChild(new Relation($dsChild, 'id', 'parent'));

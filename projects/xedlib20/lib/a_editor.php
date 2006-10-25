@@ -162,7 +162,7 @@ class EditorData
 			$child_id = GetVar('child');
 			$context = $child_id > 0 ? $this->ds->children[$child_id] : $this;
 
-			$fields = $context->ds->fields;
+			$fields = $context->ds->Fields;
 			foreach ($fields as $name => $data)
 			{
 				if (is_array($data))
@@ -215,7 +215,7 @@ class EditorData
 			$child_id = GetVar('child');
 			$child = $child_id > 0 ? $this->ds->children[$child_id] : $this;
 			$update = array();
-			foreach ($child->ds->fields as $name => $data)
+			foreach ($child->ds->Fields as $name => $data)
 			{
 				if (is_array($data))
 				{
@@ -635,7 +635,7 @@ class EditorData
 			$sel = $state == STATE_EDIT ? $context->ds->GetOne(array($this->ds->id => $ci)) : null;
 		}
 
-		if (!empty($context->ds->fields))
+		if (!empty($context->ds->Fields))
 		{
 			$frm = new Form('form'.$this->name, array('align="right"', null,
 				null));
@@ -654,7 +654,7 @@ class EditorData
 				$frm->AddHidden('parent', $ci);
 				$frm->AddHidden('child', $curchild);
 			}
-			foreach ($context->ds->fields as $text => $data)
+			foreach ($context->ds->Fields as $text => $data)
 			{
 				if (is_array($data))
 				{
@@ -725,7 +725,7 @@ class EditorData
 			if (!empty($context->ds->children))
 			foreach ($context->ds->children as $ix => $child)
 			{
-				if (isset($child->ds->fields))
+				if (isset($child->ds->Fields))
 				{
 					$ret .= GetBox('box_create_child_'.$child->ds->table,
 						"Create new {$child->ds->table} child",
