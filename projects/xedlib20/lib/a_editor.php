@@ -687,7 +687,7 @@ class EditorData
 			}
 			$frm->AddRow(array(
 				null,
-				'<input type="submit" value="'.($state == STATE_EDIT ? 'Update' : 'Create').'"/> '.
+				$frm->GetSubmitButton('butSubmit', $state == STATE_EDIT ? 'Update' : 'Create').
 				($state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null),
 				null
 			));
@@ -714,7 +714,7 @@ class EditorData
 			$this->GetForm($target, $ci, $this->state, $curchild),
 			'templates/box.html');
 
-		if (isset($ci))
+		if (isset($ci) && GetVar('ca') != $this->name.'_delete')
 		{
 			if (!empty($context->ds->children))
 			foreach ($context->ds->children as $ix => $child)

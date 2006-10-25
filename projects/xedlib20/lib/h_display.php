@@ -489,6 +489,14 @@ class Form extends Table
 		$ret .= "<!-- End Form: {$this->name} -->\n";
 		return $ret;
 	}
+
+	function GetSubmitButton($name, $text)
+	{
+		$ret = '<input type="submit" name="'.$name.'" value="'.$text.'"';
+		if (isset($this->Validation))
+			$ret .= " onclick=\"return {$this->name}_check(1);\"";
+		return $ret.' />';
+	}
 }
 
 /**
@@ -1014,23 +1022,23 @@ class Validation
 	 * @param bool $check Actually test the validation.
 	 * @param array $ret Array of errors for anything that did not pass.
 	 */
-	function Validate($check, &$ret)
+	function Validate($form, $check, &$ret)
 	{
 		if ($check)
 		{
 			if (is_array($this->check))
 			{
 				$vals = GetVar($this->field);
-				if (count($vals) < $this->check[1]) $ret['errors'][$this->field] = '<span class="error" id="span_'.$this->field.'">'.$this->error.'</span>';
+				if (count($vals) < $this->check[1]) $ret['errors'][$this->field] = '<span class="error" id="span_'.$form.'_'.$this->field.'">'.$this->error.'</span>';
 			}
 			else
 			{
-				if (!preg_match("/$this->check/", GetVar($this->field))) $ret['errors'][$this->field] = '<span class="error" id="span_'.$this->field.'">'.$this->error.'</span>';
+				if (!preg_match("/$this->check/", GetVar($this->field))) $ret['errors'][$this->field] = '<span class="error" id="span_'.$form.'_'.$this->field.'">'.$this->error.'</span>';
 			}
 		}
 		else
 		{
-			$ret['errors'][$this->field] = '<span class="error" id="span_'.$this->field.'"></span>';
+			$ret['errors'][$this->field] = '<span class="error" id="span_'.$form.'_'.$this->field.'"></span>';
 			foreach ($this->validators as $v) $v->Validate($check, $ret);
 		}
 	}
@@ -1049,7 +1057,7 @@ function FormValidate($name, $arr, $check)
 	}
 	else
 	{
-		$arr->Validate($check, $ret);
+		$arr->Validate($name, $check, $ret);
 		if (!isset($ret['js'])) $ret['js'] = null;
 		$ret['js'] .= $arr->GetJS($name);
 	}

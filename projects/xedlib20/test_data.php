@@ -17,7 +17,8 @@ require_once('lib/a_editor.php');
 
 //Data
 
-$v = new Validation('name', '.+', 'You must specify a name.');
+$imgError = ' <img src="'.GetRelativePath(dirname(__FILE__)).'/lib/images/error.png" alt="Error" />';
+$v = new Validation('name', '.+', $imgError.' You must specify a name.');
 
 $ret = FormValidate('formtest', $v, isset($ca));
 
