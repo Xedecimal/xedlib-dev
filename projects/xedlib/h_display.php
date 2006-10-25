@@ -589,6 +589,7 @@ class EditorData
 				if (!$handler->Create($insert)) return;
 			}
 			$id = $this->ds->Add($insert);
+			if (!empty($moves))
 			foreach ($moves as $field => $move)
 			{
 				move_uploaded_file($move[0], "{$move[1]}/{$id}.{$move[2]}");
