@@ -307,13 +307,14 @@ class EditorData
 	 * @param mixed $ci ID of current item (eg. GetVar('ci'))
 	 * @return string
 	 */
-	function Get($target, $ci = null)
+	function Get($target, $ci = null, $form_template = null)
 	{
 		$ret = '';
 
 		//Table
 		$ret .= $this->GetTable($target, $ci);
-		$ret .= $this->GetForms($target, $ci, GetVar('child'));
+		$ret .= $this->GetForms($target, $ci,
+			GetVar('child', -1), $form_template);
 		return $ret;
 	}
 
@@ -413,7 +414,8 @@ class EditorData
 			{
 				foreach ($items as $ix => $node)
 				{
-					$child_id = isset($children[$table]) ? $children[$table] : 0;
+					$child_id = isset($children[$table]) ? $children[$table] : -1;
+
 					if (isset($children[$table]))
 					{
 						$ckeycol = $this->ds->children[$child_id]->child_key;
@@ -540,22 +542,25 @@ class EditorData
 	 */
 	function AddRows(&$rows, $target, $node, $level)
 	{
-		global $xlpath;
-		
+		global $xlpath, $PERSISTS;
+
 		if (!empty($node->children))
 		foreach ($node->children as $index => $cnode)
 		{
 			$row = array();
 
 			$child_id = $cnode->data['_child'];
-
+			
 			if (isset($this->ds->children[$child_id]))
 				$context = $this->ds->children[$child_id];
 			else $context = $this;
 
+			//Don't display children that don't have a display to show.
+			if (empty($context->ds->Display)) continue;
+			
 			//Pad any missing initial display columns...
 			for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
-
+			
 			//Show all displays for this context.
 			if (!empty($context->ds->Display))
 			foreach ($context->ds->Display as $did => $disp)
@@ -576,7 +581,6 @@ class EditorData
 				}
 
 				//Show all children displays...
-				if (isset($context))
 				if ($context->ds->table != $this->ds->table)
 				foreach ($context->ds->Display as $disp)
 				{
@@ -585,6 +589,7 @@ class EditorData
 			}
 
 			$url_defaults = array('editor' => $this->name, 'child' => $child_id);
+
 			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
 
 			else $row[] = null;
@@ -628,7 +633,7 @@ class EditorData
 	{
 		$ret = null;
 
-		$context = $curchild != 0 ? $this->ds->children[$curchild] : $this;
+		$context = $curchild != -1 ? $this->ds->children[$curchild] : $this;
 
 		if ($state == CONTROL_BOUND)
 		{
@@ -712,13 +717,13 @@ class EditorData
 	 * @param int $curchild Current child.
 	 * @return string
 	 */
-	function GetForms($target, $ci, $curchild = null)
+	function GetForms($target, $ci, $curchild = -1, $form_template = null)
 	{
-		$context = $curchild != 0 ? $this->ds->children[$curchild] : $this;
+		$context = $curchild != -1 ? $this->ds->children[$curchild] : $this;
 
 		$ret = GetBox('box_edit', 'Edit Selected Item',
 			$this->GetForm($target, $ci, $this->state, $curchild),
-			'templates/box.html');
+			$form_template);
 
 		if (isset($ci) && GetVar('ca') != $this->name.'_delete')
 		{
@@ -730,7 +735,7 @@ class EditorData
 					$ret .= GetBox('box_create_child_'.$child->ds->table,
 						"Create new {$child->ds->table} child",
 						$this->GetForm($target, $ci, STATE_CREATE, $ix),
-						'templates/box.html');
+						$form_template);
 				}
 			}
 		}
