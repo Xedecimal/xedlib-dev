@@ -350,7 +350,8 @@ class EditorData
 			//Children
 			//* Map child names to child index.
 			$cols[$this->ds->table] = array($this->ds->id => 1);
-			foreach ($this->ds->display as $disp)
+			if (!empty($this->ds->Display))
+			foreach ($this->ds->Display as $disp)
 			{
 				$cols[$this->ds->table][$disp->column] = 0;
 			}
@@ -361,12 +362,13 @@ class EditorData
 				$children[$child->ds->table] = $ix;
 				$cols[$child->ds->table][$child->parent_key] = 1;
 				$cols[$child->ds->table][$child->child_key] = 0;
-				foreach ($child->ds->display as $disp)
+				if (!empty($child->ds->Display))
+				foreach ($child->ds->Display as $disp)
 				{
 					$cols[$child->ds->table][$disp->column] = 0;
 				}
 			}
-
+			
 			//Flats
 			//* Convert each item into separated TreeNodes
 			//* Associate all indexes by table, then id
@@ -411,8 +413,8 @@ class EditorData
 			{
 				foreach ($items as $ix => $node)
 				{
-					$child_id = isset($children) ? $children[$table] : 0;
-					if (isset($children))
+					$child_id = isset($children[$table]) ? $children[$table] : 0;
+					if (isset($children[$table]))
 					{
 						$ckeycol = $this->ds->children[$child_id]->child_key;
 						$pid = $node->data["{$table}_{$ckeycol}"];
@@ -452,8 +454,8 @@ class EditorData
 
 			$cols[$this->ds->table.'.'.$this->ds->id] =
 				"{$this->ds->table}_{$this->ds->id}";
-			if (!empty($this->ds->display))
-			foreach ($this->ds->display as $ix => $disp)
+			if (!empty($this->ds->Display))
+			foreach ($this->ds->Display as $ix => $disp)
 			{
 				$cols[$this->ds->table.'.'.$disp->column] =
 					"{$this->ds->table}_{$disp->column}";
@@ -474,7 +476,8 @@ class EditorData
 					$joins[$child->ds->table] = "{$child->ds->table}.{$child->child_key} = {$this->ds->table}.{$child->parent_key}";
 					//We also need to get the column names that we'll need...
 					$cols[$child->ds->table.'.'.$child->ds->id] = "{$child->ds->table}_{$child->ds->id}";
-					foreach ($child->ds->display as $ix => $disp)
+					if (!empty($child->ds->Display))
+					foreach ($child->ds->Display as $ix => $disp)
 					{
 						$cols[$child->ds->table.'.'.$disp->column] = "{$child->ds->table}_{$disp->column}";
 					}
@@ -493,7 +496,8 @@ class EditorData
 			$atrs = array();
 
 			//Columns and column attributes.
-			foreach ($this->ds->display as $disp)
+			if (!empty($this->ds->Display))
+			foreach ($this->ds->Display as $disp)
 			{
 				$cols[] = "<b>{$disp->text}</b>";
 				$atrs[] = $disp->attribs;
@@ -504,7 +508,8 @@ class EditorData
 			foreach ($this->ds->children as $child)
 			{
 				if ($child->ds->table != $this->ds->table)
-				foreach ($child->ds->display as $disp)
+				if (!empty($child->ds->Display))
+				foreach ($child->ds->Display as $disp)
 				{
 					$cols[] = "<b>{$disp->text}</b>";
 					$atrs[] = $disp->attribs;
@@ -552,7 +557,8 @@ class EditorData
 			for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
 
 			//Show all displays for this context.
-			foreach ($context->ds->display as $did => $disp)
+			if (!empty($context->ds->Display))
+			foreach ($context->ds->Display as $did => $disp)
 			{
 				$disp_index = $context->ds->table.'_'.$disp->column;
 
@@ -572,7 +578,7 @@ class EditorData
 				//Show all children displays...
 				if (isset($context))
 				if ($context->ds->table != $this->ds->table)
-				foreach ($context->ds->display as $disp)
+				foreach ($context->ds->Display as $disp)
 				{
 					$row[$child_id] = $cnode->data[$context->ds->table.'_'.$disp->column];
 				}
@@ -655,7 +661,7 @@ class EditorData
 					if ($data[1] == 'custom')
 					{
 						$fname = $data[2];
-						$fname($sel, $frm);
+						$fname(isset($sel) ? $sel : null, $frm);
 						continue;
 					}
 					else if ($data[1] == 'select')
