@@ -490,6 +490,14 @@ class Form extends Table
 		return $ret;
 	}
 
+	/**
+	 * Returns the properly scripted up submit button, should be used in place
+	 * of AddInput(null, 'submit').
+	 *
+	 * @param string $name Name of this button.
+	 * @param string $text Text displayed on this button.
+	 * @return string
+	 */
 	function GetSubmitButton($name, $text)
 	{
 		$ret = '<input type="submit" name="'.$name.'" value="'.$text.'"';
