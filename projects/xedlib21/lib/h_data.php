@@ -173,6 +173,12 @@ class Relation
 	}
 }
 
+/**
+ * A join specified singly or as an array to objects or methods like
+ * DataSet.Get.
+ *
+ * @see DataSet.Get
+ */
 class Join
 {
 	/**
