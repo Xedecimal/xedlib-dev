@@ -1047,7 +1047,7 @@ class Validation
 		else
 		{
 			$ret['errors'][$this->field] = '<span class="error" id="span_'.$form.'_'.$this->field.'"></span>';
-			foreach ($this->validators as $v) $v->Validate($check, $ret);
+			foreach ($this->validators as $v) $v->Validate($form, $check, $ret);
 		}
 	}
 }
@@ -1059,7 +1059,7 @@ function FormValidate($name, $arr, $check)
 	if (is_array($arr)) foreach ($arr as $key => $val)
 	{
 		$rec = RecurseReq($key, $val, $checks);
-		if ($check && strlen(GetVar($key)) < 1) $val->Validate($check, $ret);
+		if ($check && strlen(GetVar($key)) < 1) $val->Validate($name, $check, $ret);
 		else $ret['errors'][$val->field] = '<span class="error" id="span_'.$name.'_'.$val->field.'"></span>';
 		$ret['js'] .= $val->GetJS($name);
 	}
