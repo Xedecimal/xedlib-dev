@@ -80,11 +80,18 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum, $context)
 
 	$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
 
-	$err = "[{$errortype[$errno]}] <b>$errmsg</b><br/>";
+	$err = "[{$errortype[$errno]}] ".nl2br($errmsg)."<br/>";
 	$err .= "Error seems to be in one of these places...";
+	
+	$err .= GetCallstack(__FILE__, __LINE__);
 
-	$err .= "<table><tr><td>File</td><td>#</td><td>Function</td>\n";
-	$err .= "<tr><td>$filename</td><td>$linenum</td></tr>\n";
+	echo $err;
+}
+
+function GetCallstack($file, $line)
+{
+	$err = "<table><tr><td>File</td><td>#</td><td>Function</td>\n";
+	$err .= "<tr><td>$file</td><td>$line</td></tr>\n";
 	$array = debug_backtrace();
 	foreach ($array as $ix => $entry)
 	{
@@ -98,8 +105,7 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum, $context)
 		$err .= "<td></tr>";
 	}
 	$err .= "</table><hr size=\"1\">";
-
-	echo $err;
+	return $err;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -396,6 +402,30 @@ function ResizeImage($image, $newWidth, $newHeight)
 	$destImage = imagecreatetruecolor($destWidth, $destHeight);
 	ImageCopyResampled($destImage, $image, 0, 0, 0, 0, $destWidth, $destHeight, $srcWidth, $srcHeight);
 	return $destImage;
+}
+
+function RunCallback($cb, $param)
+{
+	if (is_array($cb))
+	{
+		if (is_object($cb[0])) return $cb[0]->$cb[1]($param);
+		$obj = new $cb[0];
+		return $obj->$cb[1]($param);
+	}
+}
+
+function RunCallbacks($array, $index, $data)
+{
+	$ret = null;
+	if (!empty($array[$index]))
+	foreach ($array[$index] as $cb)
+	$ret .= RunCallback($cb, $data);
+	return $ret;
+}
+
+function GetClass()
+{
+	
 }
 
 ?>

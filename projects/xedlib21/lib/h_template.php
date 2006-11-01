@@ -4,6 +4,43 @@
  * @package Presentation
  */
 
+function GetTemplateStack(&$data)
+{
+	$ret = null;
+	if (!empty($data['template.stack']))
+	{
+		$parsers = $data['template.parsers'];
+		$stack = $data['template.stack'];
+		for ($ix = count($data['template.stack'])-1; $ix >= 0; $ix--)
+		{
+			$ret .= "{$stack[$ix]} made it to line: ".
+				xml_get_current_line_number($parsers[$ix])."\n";
+		}
+	}
+	return $ret;
+}
+
+function RequireModule(&$data, $file, $class)
+{
+	if (isset($data['includes'][$class])) return $data['includes'][$class];
+	if (!file_exists($file))
+	{
+		Error("\n<b>What</b>: File ({$file}) does not exist.
+		<b>Who</b>: RequireModule()
+		<b>Where</b>: Template stack...\n".GetTemplateStack($data).
+		"<b>Why</b>: You may have moved or deleted this file.");
+	}
+	require_once($file);
+	if (!class_exists($class))
+		Error("\n<b>What</b>: Class ({$class}) does not exist.
+		<b>Who</b>: &lt;INCLUDE> tag
+		<b>Where</b>: Template stack...\n".GetTemplateStack($data).
+		"<b>Why</b>: You may have moved this class to another file.");
+	$mod = new $class($data);
+	$mod->Prepare($data);
+	$data['includes'][$class] = $mod;
+}
+
 /**
  * A template
  */
@@ -51,13 +88,14 @@ class Template
 	 * @var array
 	 */
 	public $includes;
+	public $parser;
 
 	/**
 	 * Creates a new template parser.
 	 *
 	 * @return Template
 	 */
-	function Template()
+	function Template(&$data = null)
 	{
 		$this->out = "";
 		$this->objs = array();
@@ -87,7 +125,7 @@ class Template
 				$handler = $attribs["HANDLER"];
 				if (file_exists("$handler.php")) require_once("$handler.php");
 				if (class_exists($handler)) $box = new $handler;
-				else die("Class does not exist ($handler).<br/>\n");
+				else die("Class does not exist ($handler).\n");
 			}
 			else $box = new Box();
 			if (isset($attribs['TITLE'])) $box->title = $attribs['TITLE'];
@@ -113,27 +151,10 @@ class Template
 		else if ($tag == 'IMG') $close = ' /';
 		else if ($tag == 'INCLUDE')
 		{
-			$inc_file = $attribs['FILE'];
-			if (!file_exists($inc_file))
-			{
-				Error("Template::Start_Tag()<br/>
-				&lt;INCLUDE> File ({$inc_file}) does not exist.<br/>
-				in {$this->template}
-				on line ".xml_get_current_line_number($parser)."<br/>");
-			}
-			require_once($inc_file);
+			$file = $attribs['FILE'];
 			$class = $attribs['CLASS'];
-			if (!class_exists($class)) Error("Template::Start_Tag()<br/>
-				&lt;INCLUDE> Class ({$class}) does not exist.
-				in {$this->template}
-				on line ".xml_get_current_line_number($parser)."<br/>");
-			$mod = new $class($this->data);
-			$mod->Prepare($this->data);
-			if (!isset($attribs['NAME'])) Error("Template::Start_Tag()<br/>
-				&lt;INCLUDE> Attribute 'NAME' does not exist.
-				in {$this->template}
-				on line ".xml_get_current_line_number($parser)."<br/>");
-			$this->includes[$attribs['NAME']] = $mod;
+
+			RequireModule($this->data, $file, $class);
 			$show = false;
 		}
 		else if ($tag == 'INPUT') $close = ' /';
@@ -143,7 +164,17 @@ class Template
 		else if ($tag == 'NULL') $show = false;
 		else if ($tag == 'PRESENT')
 		{
-			$this->objs[] = $this->includes[$attribs['NAME']];
+			$name = $attribs['NAME'];
+
+			if (!isset($this->data['includes'][$name]))
+			{
+				Error("\nWhat: Attempted to present a module that doesn't exist.
+				\nWho: Module ({$name})
+				\nWhere: {$this->template} on line ".
+				xml_get_current_line_number($parser)."
+				\nWhy: Data variable has possibly been altered.");
+			}
+			$this->objs[] = $this->data['includes'][$name];
 			$show = false;
 		}
 		else if ($tag == "TEMPLATE")
@@ -233,6 +264,8 @@ class Template
 		{
 			$objc = &$this->GetCurrentObject();
 			$objd = &$this->GetDestinationObject();
+			if (!isset($objc)) Error("Current object doesn't exist.");
+			if (!isset($objd)) Error("Destination object doesn't exist.");
 			$objd->out .= $objc->Get($this->data);
 			array_pop($this->objs);
 		}
@@ -323,29 +356,33 @@ class Template
 	 */
 	function Get($template)
 	{
+		$this->data['template.stack'][] = $template;
 		$this->template = $template;
 		$this->out = "";
 		if (!file_exists($template)) { trigger_error("Template not found (" . $template . ")", E_USER_ERROR); return NULL; }
-		$parser = xml_parser_create_ns();
+		$this->parser = xml_parser_create_ns();
+		$this->data['template.parsers'][] = $this->parser;
 		$data = array();
 		$index = array();
-		xml_set_object($parser, $this);
-		xml_set_element_handler($parser, "Start_Tag", "End_Tag");
-		xml_set_character_data_handler($parser, "CData");
- 		xml_set_default_handler($parser, "CData");
- 		xml_set_processing_instruction_handler($parser, "Process");
+		xml_set_object($this->parser, $this);
+		xml_set_element_handler($this->parser, "Start_Tag", "End_Tag");
+		xml_set_character_data_handler($this->parser, "CData");
+ 		xml_set_default_handler($this->parser, "CData");
+ 		xml_set_processing_instruction_handler($this->parser, "Process");
 
 		$lines = file($template);
 		foreach ($lines as $line)
 		{
-			if (!xml_parse($parser, $line))
+			if (!xml_parse($this->parser, $line))
 			{
-				echo "XML Error: " . xml_error_string(xml_get_error_code($parser)) .
-				" on line " . xml_get_current_line_number($parser) .
-				" of file " . $template . "<br/>\n";
+				echo "XML Error: " . xml_error_string(xml_get_error_code($this->parser)) .
+				" on line " . xml_get_current_line_number($this->parser) .
+				" of file " . $template . "\n";
 			}
 		}
-		xml_parser_free($parser);
+		xml_parser_free($this->parser);
+		array_pop($this->data['template.stack']);
+		array_pop($this->data['template.parsers']);
 		return preg_replace_callback("/\{{([^}]+)\}}/", array($this, "parse_vars"), $this->out);
 	}
 
@@ -361,6 +398,7 @@ class Template
 		if (key_exists($tvar, $this->vars)) return $this->vars[$tvar];
 		else if (isset($$tvar)) return $$tvar;
 		else if (defined($tvar)) return constant($tvar);
+		else if (isset($this->data[$tvar])) return $this->data[$tvar];
 		else if ($this->use_getvar) return GetVar($tvar);
 		return $match[0];
 	}

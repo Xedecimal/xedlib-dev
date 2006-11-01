@@ -314,7 +314,6 @@ class Form extends Table
 		$this->Table($name, null, $tblAttribs);
 		$this->name = $name;
 		$this->attribs = array();
-
 		$this->Persist = true;
 	}
 
@@ -472,14 +471,14 @@ class Form extends Table
 		$ret .= ">\n";
 		if ($this->Persist && !empty($PERSISTS))
 		{
-			foreach ($PERSISTS as $name => $value) $this->AddHidden($name, $value);
+			foreach ($PERSISTS as $name => $value) $this->AddHidden($name, $value, null, true);
 		}
 		if ($this->hiddens)
 		{
 			foreach ($this->hiddens as $hidden)
 			{
 				$fname = $hidden[3] ? $hidden[0] : $this->name.'_'.$hidden[0];
-				$ret .= "<input type=\"hidden\" id=\"$fname\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
+				$ret .= "<input type=\"hidden\" id=\"{$this->name}_{$fname}\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
 				if (isset($hidden[2])) $ret .= ' '.$hidden[2];
 				$ret .= " />\n";
 			}
@@ -764,6 +763,11 @@ class LoginManager
 		{
 			foreach ($this->datasets as $ds)
 			{
+				if (!isset($ds[0]))
+					Error("<br />What: Dataset is not set.
+					<br />Who: LoginManager::Prepare()
+					<br />Why: You may have set an incorrect dataset in the
+					creation of this LoginManager.");
 				$item = $ds[0]->GetOne(array(
 					$ds[1] => $check_pass,
 					$ds[2] => $check_user

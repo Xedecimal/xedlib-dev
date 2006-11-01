@@ -173,6 +173,20 @@ class Relation
 	}
 }
 
+class Join
+{
+	public $DataSet;
+	public $Condition;
+	public $Type;
+
+	function Join($dataset, $condition, $type = 'JOIN')
+	{
+		$this->DataSet = $dataset;
+		$this->Condition = $condition;
+		$this->Type = $type;
+	}
+}
+
 /**
  * A general dataset, good for binding to a database's table.
  * Used to generically retrieve, store, update and delete
@@ -212,6 +226,7 @@ class DataSet
 	 * @var string
 	 */
 	public $id;
+	public $Shortcut;
 
 	//Display Related
 
@@ -275,7 +290,7 @@ class DataSet
 			$ix = 0;
 			foreach ($cols as $col => $val)
 			{
-				if ($ix++ > 0) $ret .= ",";
+				if ($ix++ > 0) $ret .= ",\n";
 				$ret .= " {$col} AS `{$val}`";
 			}
 			return $ret;
@@ -308,7 +323,7 @@ class DataSet
 		{
 			if (is_array($match))
 			{
-				$ret = ' WHERE';
+				$ret = "\n WHERE";
 				$ix = 0;
 				foreach ($match as $col => $val)
 				{
@@ -320,6 +335,7 @@ class DataSet
 				}
 				return $ret;
 			}
+			else return " \nWHERE {$match}";
 		}
 		return null;
 	}
@@ -338,9 +354,16 @@ class DataSet
 			$ret = '';
 			if (is_array($joining))
 			{
-				foreach ($joining as $col => $on)
+				foreach ($joining as $table => $on)
 				{
-					$ret .= " LEFT JOIN {$col} ON({$on})";
+					if (is_object($on))
+					{
+						$ret .= "\n {$on->Type} `{$on->DataSet->table}`";
+						if (isset($on->DataSet->Shortcut)) $ret .= " {$on->DataSet->Shortcut}";
+						$ret .= " ON ({$on->Condition})";
+					}
+					else
+						$ret .= "\n LEFT JOIN `{$table}` ON({$on})";
 				}
 			}
 			return $ret;
@@ -385,10 +408,17 @@ class DataSet
 		if (isset($amount))
 		{
 			$ret = ' LIMIT';
-			if (is_array($amount)) $ret .= " {$amount[1]}, {$amount[0]}";
+			if (is_array($amount)) $ret .= " {$amount[0]}, {$amount[1]}";
 			else $ret .= " 0, {$amount}";
 			return $ret;
 		}
+		return null;
+	}
+
+	function GroupClause($group)
+	{
+		if (isset($group))
+		return " GROUP BY {$group}";
 		return null;
 	}
 
@@ -471,14 +501,72 @@ class DataSet
 		$filter = null,
 		$joins = null,
 		$columns = null,
+		$group = null,
+		$args = GET_BOTH)
+	{
+		//Error handling
+		if (!isset($this->database))
+		{
+			Error("<br />What: The database is not set.
+			<br />Who: DataSet::Get() on {$this->table}
+			<br />Why: You may have specified an incorrect database in
+			construction.");
+		}
+
+		//Prepare Query
+		$query = 'SELECT';
+		$query .= $this->ColsClause($columns);
+		$query .= "\n FROM `{$this->table}`";
+		if (isset($this->Shortcut)) $query .= " `{$this->Shortcut}`";
+		$query .= $this->JoinClause($joins);
+		$query .= $this->WhereClause($match);
+		$query .= $this->GroupClause($group);
+		$query .= $this->OrderClause($sort);
+		$query .= $this->AmountClause($filter);
+
+		//Execute Query
+		$rows = $this->database->Query($query);
+
+		//Prepare Data
+		$this->items = array();
+		if (mysql_affected_rows() < 1) return null;
+		while (($row = mysql_fetch_array($rows, $args)))
+		{
+			$newrow = array();
+			foreach ($row as $key => $val)
+			{
+				$newrow[$key] = stripslashes($val);
+			}
+			$this->items[] = $newrow;
+		}
+		return $this->items;
+	}
+
+	/**
+	 * Get a set of data given the specific arguments.
+	 * @param $match array Column to Value to match for in a WHERE statement.
+	 * @param $sort array Column to Direction array.
+	 * @param $filter array Column to Value array.
+	 * @param $joins array Table to ON Expression values.
+	 * @param $args int passed to mysql_fetch_array.
+	 * @return array Array of items selected.
+	 */
+	function GetInternal(
+		$match = null,
+		$sort = null,
+		$filter = null,
+		$joins = null,
+		$columns = null,
+		$group = null,
 		$args = GET_BOTH)
 	{
 		//Prepare Query
-		$query = 'SELECT';
+		$query = "SELECT\n";
 		$query .= $this->ColsClause($columns);
 		$query .= " FROM `{$this->table}`";
 		$query .= $this->JoinClause($joins);
 		$query .= $this->WhereClause($match);
+		$query .= $this->GroupClause($group);
 		$query .= $this->OrderClause($sort);
 		$query .= $this->AmountClause($filter);
 

@@ -486,7 +486,7 @@ class EditorData
 				}
 			}
 
-			$items = $this->ds->Get(null, $this->sort, $this->filter, $joins, $cols);
+			$items = $this->ds->GetInternal(null, $this->sort, $this->filter, $joins, $cols);
 			//Build a whole tree out of the items and children.
 			$root = $this->BuildTree($items);
 		}
@@ -554,7 +554,7 @@ class EditorData
 			if (isset($this->ds->children[$child_id]))
 				$context = $this->ds->children[$child_id];
 			else $context = $this;
-
+			
 			//Don't display children that don't have a display to show.
 			if (empty($context->ds->Display)) continue;
 			
@@ -566,7 +566,7 @@ class EditorData
 			foreach ($context->ds->Display as $did => $disp)
 			{
 				$disp_index = $context->ds->table.'_'.$disp->column;
-
+				
 				//Callback mapped
 				if (isset($disp->callback))
 				{
@@ -577,7 +577,7 @@ class EditorData
 				else
 				{
 					if (isset($cnode->data[$disp_index]))
-						$row[$child_id] = stripslashes($cnode->data[$disp_index]);
+						$row[$did] = stripslashes($cnode->data[$disp_index]);
 				}
 
 				//Show all children displays...
@@ -591,11 +591,14 @@ class EditorData
 			$url_defaults = array('editor' => $this->name, 'child' => $child_id);
 
 			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
-
-			else $row[] = null;
+			//else $row[] = null;
 
 			//Pad any additional display columns...
-			for ($ix = $child_id+1; $ix < count($this->ds->children)+2; $ix++) $row[$ix] = "&nbsp;";
+			if (!empty($this->ds->children))
+			foreach ($this->ds->children as $child)
+			{
+				$row[] = "&nbsp;";
+			}
 
 			$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
 			$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
@@ -637,6 +640,9 @@ class EditorData
 
 		if ($state == CONTROL_BOUND)
 		{
+			if (!isset($this->ds)) Error("<br />What: Dataset is not set.
+				<br />Who: EditorData({$this->name})::GetForm.
+				<br />Why: This editor was not created with a proper dataset.");
 			$sel = $state == STATE_EDIT ? $context->ds->GetOne(array($this->ds->id => $ci)) : null;
 		}
 
@@ -721,7 +727,7 @@ class EditorData
 	{
 		$context = $curchild != -1 ? $this->ds->children[$curchild] : $this;
 
-		$ret = GetBox('box_edit', 'Edit Selected Item',
+		$ret = GetBox('box_edit', $ci != null ? 'Edit Selected Item' : 'Create New Item',
 			$this->GetForm($target, $ci, $this->state, $curchild),
 			$form_template);
 
