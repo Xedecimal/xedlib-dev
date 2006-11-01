@@ -226,6 +226,13 @@ class DataSet
 	 * @var string
 	 */
 	public $id;
+	/**
+	 * A shortcut name for this dataset for use in SQL queries.
+	 * Eg. Translating AReallyLongName to arln for later using a join
+	 * clause suggesting arln.parent = parent.id.
+	 *
+	 * @var string
+	 */
 	public $Shortcut;
 
 	//Display Related
