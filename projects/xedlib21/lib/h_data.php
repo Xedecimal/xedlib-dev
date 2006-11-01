@@ -2,15 +2,15 @@
 
 /**
  * @package Data
- * 
+ *
  * on our way to the storage phase! We shall support the following!
- * 
+ *
  * sqlite: client data stored in filesystem
  * firebird: database engine storage
  * mssql: database engine storage
  * mysql: database engine storage
  * postgresql: database engine storage
- * 
+ *
  * odbc: proxy for many of the above
  */
 
@@ -175,10 +175,42 @@ class Relation
 
 class Join
 {
+	/**
+	 * The associated dataset in this join.
+	 *
+	 * @see DataSet.Get
+	 * @var DataSet
+	 */
 	public $DataSet;
+
+	/**
+	 * The condition of this join, For example: 'child.parent = parent.id'.
+	 *
+	 * @see DataSet.Get
+	 * @var string
+	 */
 	public $Condition;
+
+	/**
+	 * The type of this join, off hand I can think of three, 'LEFT JOIN', 'INNER JOIN'
+	 * and 'JOIN'.
+	 *
+	 * @see DataSet.Get
+	 * @var string
+	 */
 	public $Type;
 
+	/**
+	 * Creates a new Join object that will allow DataSet to identify the type
+	 * and context of where, when and how to use a join when it is needed. This
+	 * is used when you call DataSet.Get().
+	 *
+	 * @param DataSet $dataset Target DataSet to join.
+	 * @param string $condition Context of the join.
+	 * @param string $type Type of join, 'JOIN', 'LEFT JOIN' or 'INNER JOIN'.
+	 * @return Join
+	 * @see DataSet.Get
+	 */
 	function Join($dataset, $condition, $type = 'JOIN')
 	{
 		$this->DataSet = $dataset;
@@ -194,7 +226,7 @@ class Join
  * general guidelines, for one it must have an auto_increment
  * primary key for it's first field named 'id' so it can
  * easily locate fields.
- * 
+ *
  * @example doc\examples\dataset.php
  */
 class DataSet
@@ -422,6 +454,13 @@ class DataSet
 		return null;
 	}
 
+	/**
+	 * Gets a GROUP BY clause for grouping sets of items into a single row and unlocks
+	 * the almighty magical aggrigation functions.
+	 *
+	 * @param string $group Name of table and column to group by.
+	 * @return string
+	 */
 	function GroupClause($group)
 	{
 		if (isset($group))
@@ -744,7 +783,7 @@ class DataSet
 		//Grab all the source items that are going to be swapped.
 		$sitems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($smatch));
 		$sitem = mysql_fetch_array($sitems, GET_ASSOC);
-		
+
 		//Grab all the destination items that are going to be swapped.
 		$ditems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($dmatch));
 		$ditem = mysql_fetch_array($ditems, GET_ASSOC);

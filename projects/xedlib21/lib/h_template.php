@@ -88,7 +88,14 @@ class Template
 	 * @var array
 	 */
 	public $includes;
-	public $parser;
+
+	/**
+	 * The local parser that this template
+	 * is using to process XML files.
+	 *
+	 * @var resource
+	 */
+	private $parser;
 
 	/**
 	 * Creates a new template parser.
