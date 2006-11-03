@@ -363,7 +363,7 @@ class Form extends Table
 		{
 			case "area":
 				$strout = "<textarea name=\"".htmlspecialchars($name)."\"$attributes>";
-				if ($value) $strout .= $value;
+				if ($value) $strout .= htmlspecialchars($value);
 				$strout .= "</textarea>";
 				break;
 			case "select":
@@ -507,9 +507,6 @@ class Form extends Table
 	}
 }
 
-/**
- * Enter description here...
- */
 class SelOption
 {
 	/**
@@ -580,7 +577,8 @@ function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 {
 	$ret = null;
 	if (isset($none)) $ret[0] = new SelOption($none, false, $default == 0);
-	if (!empty($result)) foreach ($result as $res)
+	if (!empty($result))
+	foreach ($result as $res)
 	{
 		$ret[$res[$col_id]] = new SelOption($res[$col_disp], false, $default == $res[$col_id]);
 	}
@@ -688,9 +686,6 @@ class TreeNode
 define('ACCESS_GUEST', 0);
 define('ACCESS_ADMIN', 1);
 
-/**
- * Enter description here...
- */
 class LoginManager
 {
 	/**

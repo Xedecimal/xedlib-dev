@@ -252,7 +252,7 @@ class DataSet
 	/**
 	 * Adds a child relation to this DataSet for recursion.
 	 *
-	 * @param Relation $relation
+	 * @param Relation $relation Child to add.
 	 * @see EditorData
 	 */
 	function AddChild($relation)
@@ -276,7 +276,7 @@ class DataSet
 			foreach ($cols as $col => $val)
 			{
 				if ($ix++ > 0) $ret .= ",";
-				$ret .= " {$col} AS `{$val}`";
+				$ret .= " `{$col}` AS `{$val}`";
 			}
 			return $ret;
 		}
@@ -325,7 +325,7 @@ class DataSet
 	}
 
 	/**
-	 * Gets a LEFT JOIN clause in SQL format.
+	 * Gets a JOIN clause in SQL format.
 	 *
 	 * @param array $joining
 	 * @return string

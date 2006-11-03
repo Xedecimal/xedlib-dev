@@ -366,9 +366,6 @@ class Template
 	}
 }
 
-/**
- * Enter description here...
- */
 class VarParser
 {
 	/**
