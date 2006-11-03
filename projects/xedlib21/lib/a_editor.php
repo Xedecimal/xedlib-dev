@@ -49,6 +49,57 @@ class DisplayColumn
 }
 
 /**
+ * Check the example...
+ *
+ * @example doc/HandlerFile.php
+ *
+ */
+class HandlerFile
+{
+	public $target;
+	public $column;
+	public $conditions;
+
+	function HandlerFile($target, $column, $conditions)
+	{
+		$this->target = $target;
+		$this->column = $column;
+		$this->conditions = $conditions;
+	}
+
+	function Create($data)
+	{
+		$target = "{$this->target}/{$data[$this->column]}";
+		if (!isset($this->conditions)) mkdir($target);
+		foreach ($this->conditions as $col => $cond)
+		{
+			foreach ($cond as $val)
+			{
+				if ($data[$col] == $val) { mkdir($target); return true; }
+			}
+		}
+		return true;
+	}
+
+	function Update($id, $data, $update)
+	{
+		$source = "{$this->target}/{$data[$this->column]}";
+		if (file_exists($source))
+		{
+			rename($source, $this->target.'/'.$update[$this->column]);
+		}
+		return true;
+	}
+
+	function Delete($id, $data)
+	{
+		$folder = "{$this->target}/{$data[$this->column]}";
+		if (file_exists($folder)) DelTree($folder);
+		return true;
+	}
+}
+
+/**
  * A complex data editor.
  */
 class EditorData
