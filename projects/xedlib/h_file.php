@@ -24,6 +24,7 @@ class FileManager
 
 	//Display
 	public $show_title;
+	public $show_create;
 	public $show_files_header = 'Files';
 	public $show_folders_header = 'Folders';
 	/**
@@ -310,9 +311,10 @@ class FileManager
 		$name = ($this->show_title && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
 		if (is_file($file->path) && !$this->show_info)
-			$url = $this->root.$this->cf.$file->filename;
+			$url = $this->root.$this->cf.$file->filename.'" target="_new';
 		else $url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
-		$ret .= "<td><a href=\"$url\">{$name}</a>\n";
+		$ret .= "<td><a href=\"$url\">{$name}</a> ".
+			gmdate("m/d/y h:i", filectime($file->path))."\n";
 
 		$common = array(
 			'cf' => $this->cf,
@@ -549,7 +551,7 @@ class FileInfo
 				return $this->Filter = new $objname();
 			}
 		}
-		return $this->Filter = new DirFilter();
+		return $this->Filter = new FilterDefault();
 	}
 
 	function GetBit($off)

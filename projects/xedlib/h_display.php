@@ -711,7 +711,10 @@ class EditorData
 	function Get($target, $ci = null, $formAttribs = null)
 	{
 		global $errors, $PERSISTS, $xlpath;
-		$ret = '';
+
+		$ret['table'] = '';
+		$ret['form'] = '';
+
 		$table_classes = array('row_odd', 'row_even');
 		if ($this->type == CONTROL_BOUND)
 		{
@@ -772,8 +775,8 @@ class EditorData
 				$table->AddRow($data, 'class="'.$table_classes[$ix%2].'"');
 				$last_id = $i[$this->ds->id];
 			}
-			$ret .= "<a name=\"{$this->name}_table\" />";
-			$ret .= $table->Get('class="editor"');
+			$ret['table'] .= "<a name=\"{$this->name}_table\" />";
+			$ret['table'] .= $table->Get('class="editor"');
 		}
 
 		//Form
@@ -827,9 +830,9 @@ class EditorData
 				($this->state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null),
 				null
 			));
-			$ret .= "<a name=\"{$this->name}_editor\" />";
+			$ret['form'] .= "<a name=\"{$this->name}_editor\" />";
 			$fattribs = $formAttribs != null ? ' '.$formAttribs : null;
-			$ret .= $frm->Get("action=\"$target\" method=\"post\"{$fattribs}", 'width="100%"');
+			$ret['form'] .= $frm->Get("action=\"$target\" method=\"post\"{$fattribs}", 'width="100%"');
 		}
 		return $ret;
 	}
