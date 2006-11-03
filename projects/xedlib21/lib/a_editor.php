@@ -1,8 +1,5 @@
 <?php
 
-/**
- * Enter description here...
- */
 class DisplayColumn
 {
 	/**
@@ -409,11 +406,12 @@ class EditorData
 	 */
 	function Get($target, $ci = null, $form_template = null)
 	{
-		$ret = '';
+		$ret['table'] = '';
+		$ret['forms'] = '';
 
 		//Table
-		$ret .= $this->GetTable($target, $ci);
-		$ret .= $this->GetForms($target, $ci,
+		$ret['table'] .= $this->GetTable($target, $ci);
+		$ret['forms'] .= $this->GetForms($target, $ci,
 			GetVar('child', -1), $form_template);
 		return $ret;
 	}
