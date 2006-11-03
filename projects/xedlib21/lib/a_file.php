@@ -59,7 +59,7 @@ class FileManager
 	 */
 	private $files;
 
-	//Access Relation
+	//Access Restriction
 	/**
 	 * Whether or not file uploads are allowed.
 	 *
@@ -97,6 +97,12 @@ class FileManager
 	 * @var bool
 	 */
 	private $allow_edit;
+	/**
+	 * Whether users are allowed to change directory filters.
+	 *
+	 * @var bool
+	 */
+	private $allow_set_type;
 
 	//Display
 	/**
@@ -193,9 +199,10 @@ class FileManager
 		else if ($action == "delete")
 		{
 			if (!$this->allow_delete) return;
-			$fi = new FileInfo($this->root.$this->cf.GetVar('ci'));
-			$types = GetVar('type');
+			$path = $this->root.$this->cf.GetVar('ci');
+			$fi = new FileInfo($path, $this->DefaultFilter);
 			$fi->Filter->Delete($fi);
+			$types = GetVar('type');
 			$this->files = $this->GetDirectory();
 			$ix = 0;
 			foreach ($this->files[$types] as $file)
@@ -296,7 +303,7 @@ class FileManager
 			}
 		}
 
-		$ret .= $this->GetSetType($target, $fi);
+		if ($this->allow_set_type) $ret .= $this->GetSetType($target, $fi);
 		if ($this->allow_create_dir) $ret .= $this->GetCreateDirectory($target, $this->cf);
 		if ($this->allow_upload) $ret .= $this->GetUpload();
 		if ($action == 'rename')
@@ -359,6 +366,8 @@ class FileManager
 	 * @param string $target Target filename of all links.
 	 * @param FileInfo $fi File / Folder to create path out of.
 	 * @return string
+	 * @see Get
+	 * @see GetHeader
 	 */
 	function GetPath($target, $fi)
 	{
@@ -366,8 +375,11 @@ class FileManager
 		$ret = null;
 		$cpath = '';
 
-		$uri = MakeURI($target, array('editor' => $this->name));
-		$ret .= "<a href=\"{$uri}\">Home</a> / ";
+		if (isset($this->cf))
+		{
+			$uri = MakeURI($target, array('editor' => $this->name));
+			$ret .= "<a href=\"{$uri}\">Home</a> / ";
+		}
 
 		for ($ix = 0; $ix < count($items); $ix++)
 		{
@@ -424,9 +436,10 @@ class FileManager
 		$name = ($this->show_title && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
 		if (is_file($file->path) && !$this->show_info)
-			$url = $this->root.$this->cf.$file->filename;
+			$url = $this->root.$this->cf.$file->filename.'" target="_new';
 		else $url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
-		$ret .= "<td><a href=\"$url\">{$name}</a>\n";
+		$ret .= "<td><a href=\"$url\">{$name}</a> ".
+			gmdate("m/d/y h:i", filectime($file->path))."\n";
 
 		$common = array(
 			'cf' => $this->cf,
@@ -445,7 +458,7 @@ class FileManager
 			'cd' => 'down',
 			'index' => $index
 		)));
-		
+
 		$uriDel = MakeURI($target, array_merge($common, array(
 			'ca' => "delete",
 			'ci' => urlencode($file->filename)
@@ -498,12 +511,19 @@ class FileManager
 			if (is_dir($this->root.$this->cf.'/'.$file))
 			{
 				if (!isset($newfi->info['index'])) $newdirs[] = $newfi;
-				else $ret['dirs'][$newfi->info['index']] = $newfi;
+				else array_splice($ret['dirs'], $newfi->info['index'], 0, array($newfi));
 			}
 			else
 			{
 				if (!isset($newfi->info['index'])) $newfiles[] = $newfi;
-				else $ret['files'][$newfi->info['index']] = $newfi;
+				//We have to insert into the array so the merge doesn't end
+				//up overwriting items that don't have indexes.
+				else array_splice($ret['files'], $newfi->info['index'], 0, array($newfi));
+
+				//This is the old method in case the above breaks sorting
+				//functionality. Don't forgot to revert dirs too if this is the
+				//case.
+				//$ret['files'][$newfi->info['index']] = $newfi;
 			}
 		}
 		if (!empty($newdirs)) $ret['dirs'] = array_merge($newdirs, $ret['dirs']);
@@ -744,7 +764,7 @@ class FileInfo
 				return $this->Filter = new $objname();
 			}
 		}
-		return $this->Filter = new DirFilter();
+		return $this->Filter = new FilterDefault();
 	}
 
 	/**
@@ -787,6 +807,7 @@ class FilterDefault
 	 * @return string
 	 */
 	function GetName() { return "Normal"; }
+
 	/**
 	 * Places information into $fi for later use.
 	 *
@@ -794,7 +815,7 @@ class FilterDefault
 	 * @return FileInfo
 	 * @todo Replace this with ApplyInfo as reference with no return.
 	 */
-	function GetInfo($fi) { return $fi; }
+	function GetInfo(&$fi) { return $fi; }
 
 	/**
 	 * Returns an array of options that allow configuring this filter.
@@ -802,6 +823,7 @@ class FilterDefault
 	 * @return array
 	 */
 	function GetOptions() { return null; }
+
 	/**
 	 * Called when a file is requested to upload.
 	 *
@@ -812,6 +834,7 @@ class FilterDefault
 	{
 		move_uploaded_file($file['tmp_name'], "{$target->path}{$file['name']}");
 	}
+
 	/**
 	 * Called when a file is requested to be renamed.
 	 *
@@ -839,9 +862,6 @@ class FilterDefault
 	}
 }
 
-/**
- * Enter description here...
- */
 class FilterGallery extends FilterDefault
 {
 	/**
@@ -850,6 +870,7 @@ class FilterGallery extends FilterDefault
 	 * @return string
 	 */
 	function GetName() { return "Gallery"; }
+
 	/**
 	 * Appends the width, height, thumbnail and any other image related
 	 * information on this file.
@@ -857,16 +878,17 @@ class FilterGallery extends FilterDefault
 	 * @param FileInfo $fi
 	 * @return FileInfo
 	 */
-	function GetInfo($fi)
+	function GetInfo(&$fi)
 	{
-		$ret = parent::GetInfo($fi);
+		parent::GetInfo($fi);
 		if (substr($fi->filename, 0, 2) == 't_') return null;
-		$ret->info['Width'] = 'w';
-		$ret->info['Height'] = 'h';
+		$fi->info['thumb_width'] = 200;
+		$fi->info['thumb_height'] = 200;
 		if (file_exists($fi->dir."/t_".$fi->filename))
-			$ret->info['thumb'] = "<img src=\"{$fi->dir}/t_{$fi->filename}\" alt=\"Thumbnail\" title=\"Thumbnail\" />";
-		return $ret;
+			$fi->info['thumb'] = "<img src=\"{$fi->dir}/t_{$fi->filename}\" alt=\"Thumbnail\" title=\"Thumbnail\" />";
+		return $fi;
 	}
+
 	/**
 	 * Returns an array of options that allow configuring this filter.
 	 *
@@ -880,6 +902,7 @@ class FilterGallery extends FilterDefault
 			'Gallery Name' => array('gallery_name', 'text')
 		);
 	}
+
 	/**
 	 * Called when a file is requested to be renamed.
 	 *
@@ -892,6 +915,7 @@ class FilterGallery extends FilterDefault
 		$thumb = $fi->dir.'/t_'.$fi->filename;
 		if (file_exists($thumb)) rename($thumb, $fi->dir.'/t_'.$newname);
 	}
+
 	/**
 	* @param FileInfo $fi Target to be deleted.
 	*/
@@ -901,6 +925,7 @@ class FilterGallery extends FilterDefault
 		$thumb = $fi->dir.'/t_'.$fi->filename;
 		if (file_exists($thumb)) unlink($thumb);
 	}
+
 	/**
 	 * Called when a file is requested to upload.
 	 *
