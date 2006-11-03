@@ -97,30 +97,31 @@ class EditorData
 	 * Callback function for when an item is created.
 	 *
 	 * @var mixed
-	 * @deprecated  use $handler instead.
+	 * @deprecated  use AddHandler instead.
 	 */
 	public $oncreate;
 	/**
 	 * Calback function to be called when an item is updated.
 	 *
 	 * @var unknown_type
-	 * @deprecated  use $handler instead.
+	 * @deprecated  use AddHandler instead.
 	 */
 	public $onupdate;
 	/**
 	 * Callback function for when an item is deleted.
 	 *
 	 * @var mixed
-	 * @deprecated use $handler instead.
+	 * @deprecated use AddHandler instead.
 	 */
 	public $ondelete;
 	/**
 	 * Callback function for when an item is swapped with another.
 	 *
 	 * @var mixed
-	 * @deprecated use $handler instead.
+	 * @deprecated use AddHandler instead.
 	 */
 	public $onswap;
+	public $handlers;
 
 	/**
 	 * Default constructor.
@@ -137,6 +138,8 @@ class EditorData
 		require_once('h_utility.php');
 		$this->name = $name;
 		$this->filter = $filter;
+		$this->handlers = array();
+
 		if ($ds != null)
 		{
 			$this->ds = $ds;
@@ -145,6 +148,11 @@ class EditorData
 		}
 		else $this->type = CONTROL_SIMPLE;
 		$this->sorting = true;
+	}
+
+	function AddHandler($handler)
+	{
+		$this->handlers[] = $handler;
 	}
 
 	/**
@@ -176,6 +184,15 @@ class EditorData
 					{
 						$insert[$data[0]] = md5($value);
 					}
+					else if ($data[1] == 'file' && $value != null)
+					{
+						$finfo = pathinfo($value['name']);
+						$moves[] = array(
+							$value['tmp_name'],
+							$data[2],
+							$finfo['extension']
+						);
+					}
 					else if ($data[1] == 'selects')
 					{
 						$newval = 0;
@@ -186,10 +203,9 @@ class EditorData
 				}
 				else $insert[$name] = DeString($data);
 			}
-			if (isset($this->oncreate))
+			foreach ($this->handlers as $handler)
 			{
-				$handler = $this->oncreate;
-				if (!$handler($insert)) return;
+				if (!$handler->Create($insert)) return;
 			}
 			if (isset($parent))
 			{
@@ -198,16 +214,6 @@ class EditorData
 				$child->ds->Add($insert);
 			}
 			else $this->ds->Add($insert);
-		}
-		else if ($action == $this->name.'_delete')
-		{
-			global $ci;
-			if (isset($this->ondelete))
-			{
-				$handler = $this->ondelete;
-				if (!$handler($ci)) return;
-			}
-			$this->ds->Remove(array($this->ds->id => $ci));
 		}
 		else if ($action == $this->name.'_update')
 		{
@@ -237,28 +243,71 @@ class EditorData
 						foreach ($value as $val) $newval |= $val;
 						$update[$data[0]] = $newval;
 					}
+					else if ($data[1] == 'file')
+					{
+						if (strlen($value['tmp_name']) > 0)
+						{
+							$files = glob("{$data[2]}/{$ci}.*");
+							foreach ($files as $file) unlink($file);
+							$finfo = pathinfo($value['name']);
+
+							$src = $value['tmp_name'];
+							$dst = "{$data[2]}/{$ci}.{$finfo['extension']}";
+							move_uploaded_file($src, $dst);
+						}
+					}
 					else $update[$data[0]] = GetVar($data[0]);
 				}
 			}
 			if ($this->type == CONTROL_BOUND)
 				$child->ds->Update(array($this->ds->id => $ci), $update);
 
-			if (isset($this->onupdate))
+			if (count($this->handlers) > 0)
 			{
-				$handler = $this->onupdate;
-				if (!$handler($update)) return;
+				$data = $this->ds->GetOne(array($this->ds->id => $ci));
+				foreach ($this->handlers as $handler)
+				{
+					if (!$handler->Update($ci, $data, $update)) return;
+				}
 			}
+
+			if ($this->type == CONTROL_BOUND)
+				$this->ds->Update(array($this->ds->id => $ci), $update);
 		}
 		else if ($action == $this->name.'_swap')
 		{
 			global $ci;
 			$ct = GetVar('ct');
-			if (isset($this->onswap))
+
+			foreach ($this->handlers as $handler)
 			{
-				$handler = $this->onswap;
-				if (!$handler($ci, $ct)) return;
+				if (!$handler->Swap($ci, $ct)) return;
 			}
 			$this->ds->Swap(array($this->ds->id => $ci), array($this->ds->id => $ct), 'id');
+		}
+		else if ($action == $this->name.'_delete')
+		{
+			global $ci;
+			if (count($this->handlers) > 0)
+			{
+				$data = $this->ds->GetOne(array($this->ds->id => $ci));
+				foreach ($this->handlers as $handler)
+				{
+					if (!$handler->Delete($ci, $data)) return;
+				}
+			}
+			foreach ($this->ds->fields as $name => $data)
+			{
+				if (is_array($data))
+				{
+					if ($data[1] == 'file')
+					{
+						$files = glob("{$data[2]}/{$ci}.*");
+						foreach ($files as $file) unlink($file);
+					}
+				}
+			}
+			$this->ds->Remove(array($this->ds->id => $ci));
 		}
 	}
 
