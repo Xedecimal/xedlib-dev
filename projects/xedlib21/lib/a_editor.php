@@ -821,13 +821,11 @@ class EditorData
 	 * @param int $curchild Current child.
 	 * @return string
 	 */
-	function GetForms($target, $ci, $curchild = -1, $form_template = null)
+	function GetForms($target, $ci, $curchild = -1)
 	{
 		$context = $curchild != -1 ? $this->ds->children[$curchild] : $this;
 
-		$ret = GetBox('box_edit', $ci != null ? 'Edit Selected Item' : 'Create New Item',
-			$this->GetForm($target, $ci, $this->state, $curchild),
-			$form_template);
+		$ret = $this->GetForm($target, $ci, $this->state, $curchild);
 
 		if (isset($ci) && GetVar('ca') != $this->name.'_delete')
 		{

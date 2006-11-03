@@ -47,6 +47,12 @@ class FileManager
 	 */
 	private $DefaultFilter;
 	/**
+	 * Default options for any file.
+	 *
+	 * @var array
+	 */
+	public $DefaultOptionHandler;
+	/**
 	 * Whether or not files and folders can be manually sorted with an index.
 	 *
 	 * @var bool
@@ -65,38 +71,38 @@ class FileManager
 	 *
 	 * @var bool
 	 */
-	private $allow_upload;
+	public $allow_upload;
 	/**
 	 * Whether or not users are allowed to create directories.
 	 *
 	 * @var bool
 	 */
-	private $allow_create_dir;
+	public $allow_create_dir;
 	/**
 	 * Whether users are allowed to delete files.
 	 * @see AllowAll
 	 *
 	 * @var bool
 	 */
-	private $allow_delete;
+	public $allow_delete;
 	/**
 	 * Whether users are allowed to manually sort files.
 	 *
 	 * @var bool
 	 */
-	private $allow_sort;
+	public $allow_sort;
 	/**
 	 * Whether users are allowed to set filter types on folders.
 	 *
 	 * @var bool
 	 */
-	private $allow_rename;
+	public $allow_rename;
 	/**
 	 * Whether users are allowed to rename or update file information.
 	 *
 	 * @var bool
 	 */
-	private $allow_edit;
+	public $allow_edit;
 	/**
 	 * Whether users are allowed to change directory filters.
 	 *
@@ -110,19 +116,19 @@ class FileManager
 	 *
 	 * @var bool
 	 */
-	private $show_title;
+	public $show_title;
 	/**
 	 * Text of the header that comes before files.
 	 *
 	 * @var string
 	 */
-	private $show_files_header = 'Files';
+	public $show_files_header = 'Files';
 	/**
 	 * Text of the header that comes before folders.
 	 *
 	 * @var string
 	 */
-	private $show_folders_header = 'Folders';
+	public $show_folders_header = 'Folders';
 	/**
 	 * Whether files or folders come first.
 	 *
@@ -291,15 +297,26 @@ class FileManager
 			{
 				$title = isset($fi->info['title']) ? $fi->info['title'] : null;
 				//Additional information.
+				$form = new Form('formUpdate');
+				$form->AddHidden('editor', $this->name);
+				$form->AddHidden('ca', 'update_info');
+				$form->AddHidden('cf', $this->cf);
 				$ret .= "<form action=\"$target\" method=\"post\">\n";
-				$ret .= "<input type=\"hidden\" name=\"editor\" value=\"{$this->name}\" />";
-				$ret .= "<input type=\"hidden\" name=\"ca\" value=\"update_info\"/>";
-				$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$this->cf}\"/>";
-				$ret .= 'Title: <input type="text" name="info[title]"';
-				if (file_exists($info)) $ret .= ' value="'.htmlspecialchars($title).'"';
-				$ret .= " />\n";
-				$ret .= "<input type=\"submit\" value=\"Update\"/>\n";
-				$ret .= "</form>\n";
+				if (isset($this->DefaultOptionHandler))
+				{
+					$handler = $this->DefaultOptionHandler;
+					$def = $handler($fi);
+				}
+				else $def = null;
+				$options = $fi->Filter->GetOptions($def);
+				if (!empty($options)) foreach ($options as $text => $field)
+				{
+					if (isset($field[2])) $val = $field[2];
+					else $val = $fi->info[$field[0]];
+					$form->AddInput($text, $field[1], "info[{$field[0]}]", $val);
+				}
+				$form->AddInput(null, 'submit', null, 'Update');
+				$ret .= $form->Get('method="post" target="'.$target.'"');
 			}
 		}
 
@@ -425,6 +442,11 @@ class FileManager
 	{
 		$ret = '<tr>';
 		if (!$file->show) return;
+		if (!empty($file->info['access']) && !$this->show_all_files)
+		{
+			varinfo($file->info['access']);
+			if (!in_array($this->uid, $file->info['access'])) return;
+		}
 		$types = $file->type ? 'dirs' : 'files';
 		if (isset($file->info['thumb'])) $ret .= "<td>{$file->info['thumb']}</td>\n";
 		else
@@ -470,23 +492,23 @@ class FileManager
 		)));
 
 		if ($this->allow_sort && $index > 0)
-			$ret .= "<td><a href=\"$uriUp\"><img src=\"xedlib/up.png\"
+			$ret .= "<td><a href=\"$uriUp\"><img src=\"xedlib/images/up.png\"
 			border=\"0\" alt=\"Move Up\" title=\"Move Up\" /></a></td>";
 		else $ret .= '<td>&nbsp;</td>';
 
 		if ($this->allow_sort &&
 			$index < count($this->files[$types])-1)
-			$ret .= "<td><a href=\"$uriDown\"><img src=\"xedlib/down.png\"
+			$ret .= "<td><a href=\"$uriDown\"><img src=\"xedlib/images/down.png\"
 			border=\"0\" alt=\"Move Down\" title=\"Move Down\" /></a></td>";
 		else $ret .= '<td>&nbsp;</td>';
 
 		if ($this->allow_rename)
-			$ret .= "<td><a href=\"$uriEdit#rename\"><img src=\"xedlib/rename.png\"
+			$ret .= "<td><a href=\"$uriEdit#rename\"><img src=\"xedlib/images/rename.png\"
 			border=\"0\" alt=\"Rename\" title=\"Rename\" style=\"vertical-align: text-bottom\" /></a></td>";
 
 		if ($this->allow_delete)
 			$ret .= "<td><a href=\"$uriDel".
-				"\" onclick=\"return confirm('Are you sure you wish to delete this file?')\"><img src=\"xedlib/delete.png\" border=\"0\"
+				"\" onclick=\"return confirm('Are you sure you wish to delete this file?')\"><img src=\"xedlib/images/delete.png\" border=\"0\"
 				alt=\"Delete\" title=\"Delete\" style=\"vertical-align: text-bottom\" /></a>\n";
 		$ret .= '</td></tr>';
 
@@ -815,14 +837,24 @@ class FilterDefault
 	 * @return FileInfo
 	 * @todo Replace this with ApplyInfo as reference with no return.
 	 */
-	function GetInfo(&$fi) { return $fi; }
+	function GetInfo(&$fi)
+	{
+		return $fi;
+	}
 
 	/**
 	 * Returns an array of options that allow configuring this filter.
 	 *
 	 * @return array
 	 */
-	function GetOptions() { return null; }
+	function GetOptions(&$default)
+	{
+		$more = array(
+			'Title' => array('title', 'text')
+		);
+		if (!empty($default)) return array_merge($default, $more);
+		else return $more;
+	}
 
 	/**
 	 * Called when a file is requested to upload.
@@ -894,13 +926,14 @@ class FilterGallery extends FilterDefault
 	 *
 	 * @return array
 	 */
-	function GetOptions()
+	function GetOptions(&$default)
 	{
-		return array(
+		$more = array_merge(parent::GetOptions($default), array(
 			'Thumbnail Width' => array('thumb_width', 'text', 200),
 			'Thumbnail Height' => array('thumb_height', 'text', 200),
 			'Gallery Name' => array('gallery_name', 'text')
-		);
+		));
+		return array_merge($default, $more);
 	}
 
 	/**
