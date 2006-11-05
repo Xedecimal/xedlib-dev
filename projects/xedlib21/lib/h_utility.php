@@ -81,8 +81,8 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum, $context)
 	$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
 
 	$err = "[{$errortype[$errno]}] ".nl2br($errmsg)."<br/>";
-	$err .= "Error seems to be in one of these places...";
-	
+	$err .= "Error seems to be in one of these places...\n";
+
 	$err .= GetCallstack(__FILE__, __LINE__);
 
 	echo $err;
@@ -91,20 +91,21 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum, $context)
 function GetCallstack($file, $line)
 {
 	$err = "<table><tr><td>File</td><td>#</td><td>Function</td>\n";
-	$err .= "<tr><td>$file</td><td>$line</td></tr>\n";
+	$err .= "<tr>\n\t<td>$file</td>\n\t<td>$line</td>\n";
 	$array = debug_backtrace();
+	$err .= "\t<td>{$array[1]['function']}</td>\n</tr>";
 	foreach ($array as $ix => $entry)
 	{
-		if ($ix < 1) continue;
+		if ($ix < 2) continue;
 		//varinfo($entry);
-		$err .= "<tr>";
-		if (isset($entry['file'])) $err .= "<td>{$entry['file']}</td>";
-		if (isset($entry['line'])) $err .= "<td>{$entry['line']}</td>";
-		if (isset($entry['class'])) $err .= "</td><td>{$entry['class']}{$entry['type']}{$entry['function']}";
-		else if (isset($entry['function'])) $err .= "</td><td>{$entry['function']}";
-		$err .= "<td></tr>";
+		$err .= "<tr>\n";
+		if (isset($entry['file'])) $err .= "\t<td>{$entry['file']}</td>\n";
+		if (isset($entry['line'])) $err .= "\t<td>{$entry['line']}</td>\n";
+		if (isset($entry['class'])) $err .= "\t<td>{$entry['class']}{$entry['type']}{$entry['function']}</td>\n";
+		else if (isset($entry['function'])) $err .= "\t<td>{$entry['function']}</td>\n";
+		$err .= "</tr>";
 	}
-	$err .= "</table><hr size=\"1\">";
+	$err .= "</table>\n<hr size=\"1\">\n";
 	return $err;
 }
 
@@ -425,7 +426,7 @@ function RunCallbacks($array, $index, $data)
 
 function GetClass()
 {
-	
+
 }
 
 ?>
