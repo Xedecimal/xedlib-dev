@@ -340,7 +340,8 @@ class Form extends Table
 	* (also good for displaying errors in validation)
 	* @param $attributes string Any other attributes you wish to include.
 	*/
-	function AddInput($text, $type, $name, $value = null, $attributes = null, $helptext = null)
+	function AddInput($text, $type, $name,
+	$value = null, $attributes = null, $helptext = null)
 	{
 		if (isset($attributes)) $attributes = ' '.$attributes;
 		if (isset($this->Validation))

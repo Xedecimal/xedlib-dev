@@ -1,5 +1,10 @@
 <?php
 
+if (isset($_GET['browse']))
+{
+	echo "Browsing?";
+}
+
 /**
  * @package File
  *
@@ -103,6 +108,12 @@ class FileManager
 	 * @var bool
 	 */
 	public $allow_edit;
+	/**
+	 * Allow move.
+	 *
+	 * @var Allow moving files to another location.
+	 */
+	public $allow_move;
 	/**
 	 * Whether users are allowed to change directory filters.
 	 *
@@ -292,32 +303,6 @@ class FileManager
 			$size = filesize($this->root.$this->cf);
 			$ret .= "Size: $size bytes<br/>\n";
 			$ret .= "Last Modified: $time<br/>\n";
-
-			if ($this->allow_edit)
-			{
-				$title = isset($fi->info['title']) ? $fi->info['title'] : null;
-				//Additional information.
-				$form = new Form('formUpdate');
-				$form->AddHidden('editor', $this->name);
-				$form->AddHidden('ca', 'update_info');
-				$form->AddHidden('cf', $this->cf);
-				$ret .= "<form action=\"$target\" method=\"post\">\n";
-				if (isset($this->DefaultOptionHandler))
-				{
-					$handler = $this->DefaultOptionHandler;
-					$def = $handler($fi);
-				}
-				else $def = null;
-				$options = $fi->Filter->GetOptions($def);
-				if (!empty($options)) foreach ($options as $text => $field)
-				{
-					if (isset($field[2])) $val = $field[2];
-					else $val = $fi->info[$field[0]];
-					$form->AddInput($text, $field[1], "info[{$field[0]}]", $val);
-				}
-				$form->AddInput(null, 'submit', null, 'Update');
-				$ret .= $form->Get('method="post" target="'.$target.'"');
-			}
 		}
 
 		if ($this->allow_set_type) $ret .= $this->GetSetType($target, $fi);
@@ -325,7 +310,8 @@ class FileManager
 		if ($this->allow_upload) $ret .= $this->GetUpload();
 		if ($action == 'rename')
 		{
-			$file = GetVar('ci');
+			global $ci;
+			$file = $ci;
 			$types = GetVar('type');
 			$fi = new FileInfo($this->root.$this->cf.$file);
 
@@ -335,8 +321,36 @@ class FileManager
 			$form->AddHidden('ci', $file);
 			$form->AddHidden('type', $types);
 			$form->AddInput('Name', 'text', 'name', $fi->filename);
+			$form->AddRow(array('Or select a new location'));
+			$form->AddRow(array('<iframe src="xedlib/a_file.php?browse=true" /></iframe>'));
 			$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
-			$ret .= '<a name="rename"></a><b>Rename</b>'.$form->Get('method="post"');
+			global $me;
+			$ret .= '<a name="rename"></a><b>Rename</b>'.$form->Get('method="post" action="'.$me.'"');
+		}
+
+		if ($this->allow_edit)
+		{
+			//Filter options.
+			$form = new Form('formUpdate');
+			$form->AddHidden('editor', $this->name);
+			$form->AddHidden('ca', 'update_info');
+			$form->AddHidden('cf', $this->cf);
+			if (isset($this->DefaultOptionHandler))
+			{
+				$handler = $this->DefaultOptionHandler;
+				$def = $handler($fi);
+			}
+			else $def = null;
+			$options = $fi->Filter->GetOptions($def);
+			if (!empty($options)) foreach ($options as $text => $field)
+			{
+				if (isset($field[2])) $val = $field[2];
+				else $val = isset($fi->info[$field[0]]) ? $fi->info[$field[0]] : null;
+				$form->AddInput($text, $field[1], "info[{$field[0]}]", $val);
+			}
+			$form->AddInput(null, 'submit', 'butSubmit', 'Update');
+			$ret .= GetBox('box_options', "Configuration for {$this->cf}",
+				$form->Get('method="post" action="'.$target.'"'));
 		}
 		return $ret;
 	}
@@ -444,7 +458,6 @@ class FileManager
 		if (!$file->show) return;
 		if (!empty($file->info['access']) && !$this->show_all_files)
 		{
-			varinfo($file->info['access']);
 			if (!in_array($this->uid, $file->info['access'])) return;
 		}
 		$types = $file->type ? 'dirs' : 'files';
@@ -486,7 +499,7 @@ class FileManager
 			'ci' => urlencode($file->filename)
 		)));
 
-		$uriEdit = MakeURI($target, array_merge($common, array(
+		$uriRename = MakeURI($target, array_merge($common, array(
 			'ca' => "rename",
 			'ci' => urlencode($file->filename)
 		)));
@@ -503,8 +516,8 @@ class FileManager
 		else $ret .= '<td>&nbsp;</td>';
 
 		if ($this->allow_rename)
-			$ret .= "<td><a href=\"$uriEdit#rename\"><img src=\"xedlib/images/rename.png\"
-			border=\"0\" alt=\"Rename\" title=\"Rename\" style=\"vertical-align: text-bottom\" /></a></td>";
+			$ret .= "<td><a href=\"$uriRename#rename\"><img src=\"xedlib/images/rename.png\"
+			border=\"0\" alt=\"Rename or Move\" title=\"Rename or Move\" style=\"vertical-align: text-bottom\" /></a></td>";
 
 		if ($this->allow_delete)
 			$ret .= "<td><a href=\"$uriDel".
@@ -616,7 +629,7 @@ EOF;
 		ini_set('max_execution_time', 0);
 		ini_set('max_input_time', 0);
 		return <<<EOF
-<p><b>Upload Files to Current Folder</b></p>
+<p><b>Upload to Current Folder</b></p>
 <form action="{$me}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
 	<input type="hidden" name="editor" value="{$this->name}" />
