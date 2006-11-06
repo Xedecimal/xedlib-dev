@@ -25,7 +25,8 @@ if (!$__checked)
 	}
 	else //PHP 5, leave as is.
 	{
-		$fp = fopen(__FILE__, 'w');
+		$fp = fopen(__FILE__, 'a');
+		fseek($fp, 0);
 		fwrite($fp, '<?php $__checked = true; ?>\n\n"');
 		fclose($fp);
 	}
