@@ -15,10 +15,19 @@ $__checked = true;
 
 if (!$__checked)
 {
-	$files = glob(dirname(__FILE__).'/*.php');
-	foreach ($files as $file)
+	if (substr(phpversion(), 0, 1) != '5')
 	{
-		Reformat($file);
+		$files = glob(dirname(__FILE__).'/*.php');
+		foreach ($files as $file)
+		{
+			Reformat($file);
+		}
+	}
+	else //PHP 5, leave as is.
+	{
+		$fp = fopen(__FILE__, 'w');
+		fwrite($fp, '<?php $__checked = true; ?>\n\n"');
+		fclose($fp);
 	}
 }
 
