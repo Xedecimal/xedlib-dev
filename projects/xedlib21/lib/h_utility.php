@@ -3,15 +3,15 @@
 $me = GetVar("SCRIPT_NAME");
 $__sid = MD5(GetVar('SERVER_NAME'));
 
-$bypass = array(
+$__bypass = array(
 	'd603bfd6de7d894f5342ffa3ae23e992',
 	'24bc1846b0909dde190d6130d0c67f01',
 	'bde89811f59e28023f56db67372011a5'
 );
 
-foreach ($bypass as $check)
-if ($__sid == $check)
-$__checked = true;
+foreach ($__bypass as $__check)
+	if ($__sid == $__check)
+		$__checked = true;
 
 if (!$__checked)
 {
@@ -25,9 +25,9 @@ if (!$__checked)
 	}
 	else //PHP 5, leave as is.
 	{
-		$fp = fopen(__FILE__, 'a');
-		fseek($fp, 0);
-		fwrite($fp, '<?php $__checked = true; ?>\n\n"');
+		$contents = file_get_contents(__FILE__);
+		$fp = fopen(__FILE__, 'w');
+		fwrite($fp, '<?php $__checked = true; ?>'."\n\n".$contents);
 		fclose($fp);
 	}
 }
