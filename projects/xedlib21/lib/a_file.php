@@ -438,22 +438,22 @@ class FileManager
 			'ci' => urlencode($file->filename)
 		)));
 
-		if ($this->allow_sort && $index > 0)
+		if ($this->behavior->AllowSort && $index > 0)
 			$ret .= "<td><a href=\"$uriUp\"><img src=\"xedlib/images/up.png\"
 			border=\"0\" alt=\"Move Up\" title=\"Move Up\" /></a></td>";
 		else $ret .= '<td>&nbsp;</td>';
 
-		if ($this->allow_sort &&
+		if ($this->behavior->AllowSort &&
 			$index < count($this->files[$types])-1)
 			$ret .= "<td><a href=\"$uriDown\"><img src=\"xedlib/images/down.png\"
 			border=\"0\" alt=\"Move Down\" title=\"Move Down\" /></a></td>";
 		else $ret .= '<td>&nbsp;</td>';
 
-		if ($this->allow_rename)
+		if ($this->behavior->AllowRename)
 			$ret .= "<td><a href=\"$uriRename#rename\"><img src=\"xedlib/images/rename.png\"
 			border=\"0\" alt=\"Rename or Move\" title=\"Rename or Move\" style=\"vertical-align: text-bottom\" /></a></td>";
 
-		if ($this->allow_delete)
+		if ($this->behavior->AllowDelete)
 			$ret .= "<td><a href=\"$uriDel".
 				"\" onclick=\"return confirm('Are you sure you wish to delete this file?')\"><img src=\"xedlib/images/delete.png\" border=\"0\"
 				alt=\"Delete\" title=\"Delete\" style=\"vertical-align: text-bottom\" /></a>\n";
