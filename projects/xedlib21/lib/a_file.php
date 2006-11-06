@@ -19,6 +19,20 @@ class FileManager
 	 * @var string
 	 */
 	private $name;
+
+	/**
+	 * Behavior of this filemanager.
+	 *
+	 * @var FileManagerBehavior
+	 */
+	private $behavior;
+	/**
+	 * Enter description here...
+	 *
+	 * @var FileManagerView
+	 */
+	private $view;
+
 	/**
 	 * Array of filters that are available for this object.
 	 *
@@ -82,6 +96,9 @@ class FileManager
 		$this->filters = $filters;
 		$this->DefaultFilter = $DefaultFilter;
 		$this->root = $root;
+		
+		$this->behavior = new FileManagerBehavior();
+		$this->view = new FileManagerView();
 
 		//Append trailing slash.
 		if (!file_exists($root))
@@ -190,20 +207,20 @@ class FileManager
 		$ret .= $this->GetHeader($target, $fi);
 		if (is_dir($this->root.$this->cf))
 		{
-			if ($this->show_files_first)
+			if ($this->view->show_files_first)
 			{
-				$title = "<p>{$this->show_files_header}</p>\n";
+				$title = "<p>{$this->view->show_files_header}</p>\n";
 				$ret .= $this->GetFiles($target, 'files', $title);
 			}
 			else
 			{
-				$title = "<p>{$this->show_folders_header}</p>\n";
+				$title = "<p>{$this->view->show_folders_header}</p>\n";
 				$ret .= $this->GetFiles($target, 'dirs', $title);
 			}
 
-			if (!$this->show_files_first)
+			if (!$this->view->show_files_first)
 			{
-				$title = "<p>{$this->show_files_header}</p>\n";
+				$title = "<p>{$this->view->show_files_header}</p>\n";
 				$ret .= $this->GetFiles($target, 'files', $title);
 			}
 			else
@@ -221,7 +238,8 @@ class FileManager
 			$ret .= "Last Modified: $time<br/>\n";
 		}
 
-		if ($this->allow_set_type) $ret .= $this->GetSetType($target, $fi);
+		if ($this->behavior->AllowSetType)
+			$ret .= $this->GetSetType($target, $fi);
 		if ($this->allow_create_dir) $ret .= $this->GetCreateDirectory($target, $this->cf);
 		if ($this->allow_upload) $ret .= $this->GetUpload();
 		if ($action == 'rename')
@@ -384,9 +402,9 @@ class FileManager
 			if (isset($icon))
 				$ret .= '<td><img src="'.$icon.'" alt="'.$file->type.'" /></td> ';
 		}
-		$name = ($this->show_title && isset($file->info['title'])) ?
+		$name = ($this->view->show_title && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
-		if (is_file($file->path) && !$this->show_info)
+		if (is_file($file->path) && !$this->view->show_info)
 			$url = $this->root.$this->cf.$file->filename.'" target="_new';
 		else $url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
 		$ret .= "<td><a href=\"$url\">{$name}</a> ".
@@ -615,50 +633,50 @@ class FileManagerBehavior
 	 *
 	 * @var bool
 	 */
-	public $allow_upload;
+	public $AllowUpload;
 	/**
 	 * Whether or not users are allowed to create directories.
 	 *
 	 * @var bool
 	 */
-	public $allow_create_dir;
+	public $AllowCreateDir;
 	/**
 	 * Whether users are allowed to delete files.
 	 * @see AllowAll
 	 *
 	 * @var bool
 	 */
-	public $allow_delete;
+	public $AllowDelete;
 	/**
 	 * Whether users are allowed to manually sort files.
 	 *
 	 * @var bool
 	 */
-	public $allow_sort;
+	public $AllowSort;
 	/**
 	 * Whether users are allowed to set filter types on folders.
 	 *
 	 * @var bool
 	 */
-	public $allow_rename;
+	public $AllowRename;
 	/**
 	 * Whether users are allowed to rename or update file information.
 	 *
 	 * @var bool
 	 */
-	public $allow_edit;
+	public $AllowEdit;
 	/**
 	 * Allow move.
 	 *
 	 * @var Allow moving files to another location.
 	 */
-	public $allow_move;
+	public $AllowMove;
 	/**
 	 * Whether users are allowed to change directory filters.
 	 *
 	 * @var bool
 	 */
-	private $allow_set_type;
+	public $AllowSetType;
 }
 
 /**
@@ -946,12 +964,11 @@ class FilterGallery extends FilterDefault
 	 */
 	function GetOptions(&$default)
 	{
-		$more = array_merge(parent::GetOptions($default), array(
+		return array_merge(parent::GetOptions($default), array(
 			'Thumbnail Width' => array('thumb_width', 'text', 200),
 			'Thumbnail Height' => array('thumb_height', 'text', 200),
 			'Gallery Name' => array('gallery_name', 'text')
 		));
-		return array_merge($default, $more);
 	}
 
 	/**
