@@ -96,7 +96,7 @@ function GetCallstack($file, $line)
 	$err .= "\t<td>{$array[1]['function']}</td>\n</tr>";
 	foreach ($array as $ix => $entry)
 	{
-		if ($ix < 2) continue;
+		if ($ix < 1) continue;
 		//varinfo($entry);
 		$err .= "<tr>\n";
 		if (isset($entry['file'])) $err .= "\t<td>{$entry['file']}</td>\n";
@@ -405,28 +405,14 @@ function ResizeImage($image, $newWidth, $newHeight)
 	return $destImage;
 }
 
-function RunCallback($cb, $param)
+function RunCallbacks()
 {
-	if (is_array($cb))
-	{
-		if (is_object($cb[0])) return $cb[0]->$cb[1]($param);
-		$obj = new $cb[0];
-		return $obj->$cb[1]($param);
-	}
-}
-
-function RunCallbacks($array, $index, $data)
-{
+	$args = func_get_args();
+	$target = array_shift($args);
 	$ret = null;
-	if (!empty($array[$index]))
-	foreach ($array[$index] as $cb)
-	$ret .= RunCallback($cb, $data);
+	foreach ($target as $cb)
+		$ret .= call_user_func_array($cb, $args);
 	return $ret;
-}
-
-function GetClass()
-{
-
 }
 
 ?>

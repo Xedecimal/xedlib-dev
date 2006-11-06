@@ -66,7 +66,46 @@ $page_body .= "Grabbing session var 'test' which is: \"{$test2}\"<br/>\n";
 
 $page_body .= "Persisting a variable: \"".Persist('persisted', 'pervalue')."\"<br/>\n";
 
-$page_body .= "Current script path: ".GetRelativePath(dirname(__FILE__));
+////////////////////////////////////////////////////////////////////////////////
+//Files
+//
+
+$page_body .= "<h3>Files</h3>\n";
+
+$page_body .= "Current script path: ".GetRelativePath(dirname(__FILE__)."<br />\n");
+
+////////////////////////////////////////////////////////////////////////////////
+//Callbacks
+//
+
+$page_body .= "<h3>Callbacks</h3>\n";
+
+class DCallback
+{
+	function FunctionTwo($arg1, $arg2)
+	{
+		global $page_body;
+		$page_body .= "Arg1: {$arg1} and Arg2: {$arg2}<br/>\n";
+	}
+}
+
+class SCallback
+{
+	static function FunctionThree($arg1, $arg2, $arg3)
+	{
+		global $page_body;
+		$page_body .= "Arg1: {$arg1} and Arg2: {$arg2} Arg3: {$arg3}<br/>\n";
+	}
+}
+
+$dc = new DCallback();
+
+$callbacks = array(
+	array($dc, 'FunctionTwo'),
+	array('SCallback', 'FunctionThree')
+);
+
+RunCallbacks($callbacks, 'heya', 'mang', 'tree');
 
 echo $t->Get('template_test.html');
 

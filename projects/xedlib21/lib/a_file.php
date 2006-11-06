@@ -1,9 +1,7 @@
 <?php
 
-if (isset($_GET['browse']))
-{
-	echo "Browsing?";
-}
+require_once('h_utility.php');
+require_once('h_display.php');
 
 /**
  * @package File
@@ -70,89 +68,6 @@ class FileManager
 	 */
 	private $files;
 
-	//Access Restriction
-	/**
-	 * Whether or not file uploads are allowed.
-	 *
-	 * @var bool
-	 */
-	public $allow_upload;
-	/**
-	 * Whether or not users are allowed to create directories.
-	 *
-	 * @var bool
-	 */
-	public $allow_create_dir;
-	/**
-	 * Whether users are allowed to delete files.
-	 * @see AllowAll
-	 *
-	 * @var bool
-	 */
-	public $allow_delete;
-	/**
-	 * Whether users are allowed to manually sort files.
-	 *
-	 * @var bool
-	 */
-	public $allow_sort;
-	/**
-	 * Whether users are allowed to set filter types on folders.
-	 *
-	 * @var bool
-	 */
-	public $allow_rename;
-	/**
-	 * Whether users are allowed to rename or update file information.
-	 *
-	 * @var bool
-	 */
-	public $allow_edit;
-	/**
-	 * Allow move.
-	 *
-	 * @var Allow moving files to another location.
-	 */
-	public $allow_move;
-	/**
-	 * Whether users are allowed to change directory filters.
-	 *
-	 * @var bool
-	 */
-	private $allow_set_type;
-
-	//Display
-	/**
-	 * Whether titles of files or filenames are shown.
-	 *
-	 * @var bool
-	 */
-	public $show_title;
-	/**
-	 * Text of the header that comes before files.
-	 *
-	 * @var string
-	 */
-	public $show_files_header = 'Files';
-	/**
-	 * Text of the header that comes before folders.
-	 *
-	 * @var string
-	 */
-	public $show_folders_header = 'Folders';
-	/**
-	 * Whether files or folders come first.
-	 *
-	 * @var boolean
-	 */
-	public $show_files_first = false;
-	/**
-	 * Whether file information is shown, or file is simply downloaded on click.
-	 *
-	 * @var bool
-	 */
-	public $show_info = true;
-
 	/**
 	 * Enter description here...
 	 *
@@ -169,8 +84,9 @@ class FileManager
 		$this->root = $root;
 
 		//Append trailing slash.
-		if (!file_exists($root)) Error("FileManager::FileManager(): Root
-		($root) directory does not exist.");
+		if (!file_exists($root))
+			Error("FileManager::FileManager(): Root ($root) directory does
+			not exist.");
 		if (substr($this->root, -1) != '/') $this->root .= '/';
 		$this->cf = GetVar('cf');
 		if (is_dir($this->root.$this->cf)
@@ -349,8 +265,8 @@ class FileManager
 				$form->AddInput($text, $field[1], "info[{$field[0]}]", $val);
 			}
 			$form->AddInput(null, 'submit', 'butSubmit', 'Update');
-			$ret .= GetBox('box_options', "Configuration for {$this->cf}",
-				$form->Get('method="post" action="'.$target.'"'));
+			$ret .= "<p><b>Configuration for {$this->root}{$this->cf}</b></p>";
+			$ret .= $form->Get('method="post" action="'.$target.'"');
 		}
 		return $ret;
 	}
@@ -654,6 +570,95 @@ EOF;
 		$this->allow_sort =
 		$this->allow_upload = true;
 	}
+}
+
+class FileManagerView
+{
+	//Display
+	/**
+	 * Whether titles of files or filenames are shown.
+	 *
+	 * @var bool
+	 */
+	public $show_title;
+	/**
+	 * Text of the header that comes before files.
+	 *
+	 * @var string
+	 */
+	public $show_files_header = 'Files';
+	/**
+	 * Text of the header that comes before folders.
+	 *
+	 * @var string
+	 */
+	public $show_folders_header = 'Folders';
+	/**
+	 * Whether files or folders come first.
+	 *
+	 * @var boolean
+	 */
+	public $show_files_first = false;
+	/**
+	 * Whether file information is shown, or file is simply downloaded on click.
+	 *
+	 * @var bool
+	 */
+	public $show_info = true;
+}
+
+class FileManagerBehavior
+{
+	//Access Restriction
+	/**
+	 * Whether or not file uploads are allowed.
+	 *
+	 * @var bool
+	 */
+	public $allow_upload;
+	/**
+	 * Whether or not users are allowed to create directories.
+	 *
+	 * @var bool
+	 */
+	public $allow_create_dir;
+	/**
+	 * Whether users are allowed to delete files.
+	 * @see AllowAll
+	 *
+	 * @var bool
+	 */
+	public $allow_delete;
+	/**
+	 * Whether users are allowed to manually sort files.
+	 *
+	 * @var bool
+	 */
+	public $allow_sort;
+	/**
+	 * Whether users are allowed to set filter types on folders.
+	 *
+	 * @var bool
+	 */
+	public $allow_rename;
+	/**
+	 * Whether users are allowed to rename or update file information.
+	 *
+	 * @var bool
+	 */
+	public $allow_edit;
+	/**
+	 * Allow move.
+	 *
+	 * @var Allow moving files to another location.
+	 */
+	public $allow_move;
+	/**
+	 * Whether users are allowed to change directory filters.
+	 *
+	 * @var bool
+	 */
+	private $allow_set_type;
 }
 
 /**

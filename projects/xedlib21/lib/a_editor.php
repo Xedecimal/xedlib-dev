@@ -406,13 +406,9 @@ class EditorData
 	 */
 	function Get($target, $ci = null, $form_template = null)
 	{
-		$ret['table'] = '';
-		$ret['forms'] = '';
-
-		//Table
-		$ret['table'] .= $this->GetTable($target, $ci);
-		$ret['forms'] .= $this->GetForms($target, $ci,
-			GetVar('child', -1), $form_template);
+		$ret['table'] = $this->GetTable($target, $ci);
+		$ret['forms'] = $this->GetForms($target, $ci, GetVar('child', -1),
+			$form_template);
 		return $ret;
 	}
 
@@ -467,7 +463,7 @@ class EditorData
 					$cols[$child->ds->table][$disp->column] = 0;
 				}
 			}
-			
+
 			//Flats
 			//* Convert each item into separated TreeNodes
 			//* Associate all indexes by table, then id
@@ -648,23 +644,23 @@ class EditorData
 			$row = array();
 
 			$child_id = $cnode->data['_child'];
-			
+
 			if (isset($this->ds->children[$child_id]))
 				$context = $this->ds->children[$child_id];
 			else $context = $this;
-			
+
 			//Don't display children that don't have a display to show.
 			if (empty($context->ds->Display)) continue;
-			
+
 			//Pad any missing initial display columns...
 			for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
-			
+
 			//Show all displays for this context.
 			if (!empty($context->ds->Display))
 			foreach ($context->ds->Display as $did => $disp)
 			{
 				$disp_index = $context->ds->table.'_'.$disp->column;
-				
+
 				//Callback mapped
 				if (isset($disp->callback))
 				{
@@ -821,7 +817,7 @@ class EditorData
 	 * @param int $curchild Current child.
 	 * @return string
 	 */
-	function GetForms($target, $ci, $curchild = -1)
+	function GetForms($target, $ci, $curchild = -1, $form_template = null)
 	{
 		$context = $curchild != -1 ? $this->ds->children[$curchild] : $this;
 
