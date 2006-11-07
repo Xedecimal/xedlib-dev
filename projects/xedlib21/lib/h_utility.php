@@ -426,7 +426,4 @@ function RunCallbacks()
 	return $ret;
 }
 
-<<<<<<< .mine
 ?>
-<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"<?php $__checked = true; ?>\n\n"=======
-?>>>>>>>> .r967

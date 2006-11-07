@@ -387,7 +387,7 @@ class Form extends Table
 				$strout .= "</select>\n";
 				break;
 			case 'selects':
-				$strout = '<select id="'.$this->name.'_'.htmlspecialchars($name).'" name="'.$name."[]\" multiple=\"multiple\"$attributes>\n";
+				$strout = '<select id="'.$this->CleanID($this->name.'_'.$name).'" name="'.$name."[]\" multiple=\"multiple\"$attributes>\n";
 				if (is_array($value))
 				{
 					$ogstarted = false;
@@ -446,11 +446,17 @@ class Form extends Table
 				if (isset($value)) $val = ' value="'.htmlspecialchars($value).'"';
 				else if (isset($this->Errors)) $val = ' value="'.htmlspecialchars(GetVar($name)).'"';
 				else $val = null;
-				$strout = "<input id=\"{$this->name}_$name\" type=\"$type\" name=\"$name\"$attributes$val />";
+				$strout = "<input id=\"".$this->CleanID("{$this->name}_$name").
+					"\" type=\"$type\" name=\"$name\"$attributes$val />";
 				break;
 		}
 		if ($helptext != null) $this->AddRow(array('<label for="'.$this->name.'_'.htmlspecialchars($name).'">'.$text.'</label>', $strout, $helptext));
 		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"{$this->name}_$name\">$text</label>" : null, $strout, null));
+	}
+	
+	function CleanID($id)
+	{
+		return str_replace('[', '_', str_replace(']', '', $id));
 	}
 
 	/**

@@ -202,7 +202,7 @@ class FileManager
 
 		$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 		if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
-		$ret = '';
+		$ret = '<script type="text/javascript" src="xedlib/js/helper.js" />';
 
 		$ret .= $this->GetHeader($target, $fi);
 		if (is_dir($this->root.$this->cf))
@@ -238,6 +238,7 @@ class FileManager
 			$ret .= "Last Modified: $time<br/>\n";
 		}
 
+		$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">Options</a></p><br/>\n";
 		if ($this->behavior->AllowSetType)
 			$ret .= $this->GetSetType($target, $fi);
 		if ($this->allow_create_dir) $ret .= $this->GetCreateDirectory($target, $this->cf);
@@ -256,7 +257,7 @@ class FileManager
 			$form->AddHidden('type', $types);
 			$form->AddInput('Name', 'text', 'name', $fi->filename);
 			$form->AddRow(array('Or select a new location'));
-			$form->AddRow(array('<iframe src="xedlib/a_file.php?browse=true" /></iframe>'));
+			$form->AddRow(array($this->GetDirectorySelect('location')));
 			$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
 			global $me;
 			$ret .= '<a name="rename"></a><b>Rename</b>'.$form->Get('method="post" action="'.$me.'"');
@@ -286,6 +287,30 @@ class FileManager
 			$ret .= "<p><b>Configuration for {$this->root}{$this->cf}</b></p>";
 			$ret .= $form->Get('method="post" action="'.$target.'"');
 		}
+		$ret .= "</div>";
+		return $ret;
+	}
+
+	function GetDirectorySelect($name)
+	{
+		$ret = "<select name=\"{$name}\">";
+		$ret .= $this->GetDirectorySelectRecurse($this->root);
+		$ret .= '</select>';
+		return $ret;
+	}
+	
+	function GetDirectorySelectRecurse($path)
+	{
+		$ret = null;
+		$dp = opendir($path);
+		while ($file = readdir($dp))
+		{
+			if ($file[0] == '.') continue;
+			if (!is_dir($path.$file)) continue;
+			$ret .= "<option name=\"{$path}{$file}\">{$path}{$file}</option>";
+			$ret .= $this->GetDirectorySelectRecurse($path.$file.'/');
+		}
+		closedir($dp);
 		return $ret;
 	}
 
@@ -407,7 +432,7 @@ class FileManager
 		if (is_file($file->path) && !$this->view->show_info)
 			$url = $this->root.$this->cf.$file->filename.'" target="_new';
 		else $url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
-		$ret .= "<td><a href=\"$url\">{$name}</a> ".
+		$ret .= "<td><input type=\"checkbox\" /><a href=\"$url\">{$name}</a> ".
 			gmdate("m/d/y h:i", filectime($file->path))."\n";
 
 		$common = array(
