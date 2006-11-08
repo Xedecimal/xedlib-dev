@@ -198,7 +198,8 @@ class FileManager
 		$this->mass_avail = $this->Behavior->MassAvailable();
 		$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 		if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
-		$ret = '<script type="text/javascript" src="xedlib/js/helper.js"></script>';
+		$ret = '<script type="text/javascript" src="'.
+			GetRelativePath(dirname(__FILE__)).'/js/helper.js"></script>';
 
 		$ret .= $this->GetHeader($target, $fi);
 		if (is_dir($this->root.$this->cf))
@@ -622,20 +623,6 @@ EOF;
 </form>
 EOF;
 	}
-
-	/**
-	 * Turns on all allowances for administration usage.
-	 *
-	 */
-	function AllowAll()
-	{
-		$this->behavior->AllowCreateDir =
-		$this->behavior->AllowDelete =
-		$this->behavior->AllowEdit =
-		$this->behavior->AllowRename =
-		$this->behavior->AllowSort =
-		$this->behavior->AllowUpload = true;
-	}
 }
 
 class FileManagerView
@@ -746,6 +733,20 @@ class FileManagerBehavior
 	{
 		return $this->AllowMove ||
 			$this->AllowDelete;
+	}
+
+	/**
+	 * Turns on all allowances for administration usage.
+	 *
+	 */
+	function AllowAll()
+	{
+		$this->AllowCreateDir =
+		$this->AllowDelete =
+		$this->AllowEdit =
+		$this->AllowRename =
+		$this->AllowSort =
+		$this->AllowUpload = true;
 	}
 }
 
