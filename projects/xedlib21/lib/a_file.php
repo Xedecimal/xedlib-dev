@@ -136,10 +136,13 @@ class FileManager
 		else if ($action == 'rename')
 		{
 			if (!$this->Behavior->AllowRename) return;
-			$this->files = $this->GetDirectory();
+			//$this->files = $this->GetDirectory();
 			$fi = new FileInfo(GetVar('ci'));
 			$name = GetVar('name');
 			$fi->Filter->Rename($fi, $name);
+			$pinfo = pathinfo($this->cf);
+			if ($pinfo['basename'] == $fi->filename)
+				$this->cf = $pinfo['dirname'].'/'.$name;
 		}
 		else if ($action == "Delete")
 		{
@@ -278,14 +281,19 @@ class FileManager
 
 			$fi = new FileInfo($this->root.$this->cf);
 
-			$form = new Form('rename');
-			$form->AddHidden('editor', $this->name);
-			$form->AddHidden('ca', 'rename');
-			$form->AddHidden('ci', $fi->path);
-			$form->AddInput('Name', 'text', 'name', $fi->filename);
-			$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
-			global $me;
-			$ret .= '<a name="rename"></a><b>Rename</b>'.$form->Get('method="post" action="'.$me.'"');
+			if ($this->Behavior->AllowRename)
+			{
+				$form = new Form('rename');
+				$form->AddHidden('editor', $this->name);
+				$form->AddHidden('ca', 'rename');
+				$form->AddHidden('ci', $fi->path);
+				$form->AddHidden('cf', $this->cf);
+				$form->AddInput('Name', 'text', 'name', $fi->filename);
+				$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
+				global $me;
+				$ret .= '<a name="rename"></a><b>Rename</b>'.
+					$form->Get('method="post" action="'.$me.'"');
+			}
 
 			if ($this->Behavior->AllowEdit)
 			{
