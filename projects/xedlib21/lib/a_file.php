@@ -213,7 +213,7 @@ class FileManager
 
 		if ($this->mass_avail = $this->Behavior->MassAvailable())
 		{
-			$ret .= "<form action=\"{$me}\" method=\"post\">";
+			$ret .= "<form action=\"{$target}\" method=\"post\">";
 			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$this->cf}\" />";
 		}
 		$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
@@ -288,7 +288,6 @@ class FileManager
 			$form->AddHidden('editor', $this->name);
 			$form->AddHidden('ca', 'rename');
 			$form->AddHidden('ci', $fi->path);
-			$form->AddHidden('type', $types);
 			$form->AddInput('Name', 'text', 'name', $fi->filename);
 			$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
 			global $me;
@@ -336,7 +335,7 @@ class FileManager
 
 	function GetDirectorySelectRecurse($path)
 	{
-		$ret = "<option value=\"{$path}{$file}\">{$path}{$file}</option>";
+		$ret = "<option value=\"{$path}\">{$path}</option>";
 		$dp = opendir($path);
 		while ($file = readdir($dp))
 		{
