@@ -25,7 +25,7 @@ class FileManager
 	 *
 	 * @var FileManagerBehavior
 	 */
-	private $behavior;
+	public $Behavior;
 	/**
 	 * Enter description here...
 	 *
@@ -70,17 +70,12 @@ class FileManager
 	 */
 	public $DefaultOptionHandler;
 	/**
-	 * Whether or not files and folders can be manually sorted with an index.
-	 *
-	 * @var bool
-	 */
-	private $sortable;
-	/**
 	 * An array of files and folders.
 	 *
 	 * @var array
 	 */
 	private $files;
+	private $mass_avail;
 
 	/**
 	 * Enter description here...
@@ -97,8 +92,8 @@ class FileManager
 		$this->DefaultFilter = $DefaultFilter;
 		$this->root = $root;
 		
-		$this->behavior = new FileManagerBehavior();
-		$this->view = new FileManagerView();
+		$this->Behavior = new FileManagerBehavior();
+		$this->View = new FileManagerView();
 
 		//Append trailing slash.
 		if (!file_exists($root))
@@ -200,27 +195,28 @@ class FileManager
 		if (!file_exists($this->root.$this->cf))
 			return "FileManager::Get(): File doesn't exist ({$this->root}{$this->cf}).<br/>\n";
 
+		$this->mass_avail = $this->Behavior->MassAvailable();
 		$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 		if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
-		$ret = '<script type="text/javascript" src="xedlib/js/helper.js" />';
+		$ret = '<script type="text/javascript" src="xedlib/js/helper.js"></script>';
 
 		$ret .= $this->GetHeader($target, $fi);
 		if (is_dir($this->root.$this->cf))
 		{
-			if ($this->view->show_files_first)
+			if ($this->View->ShowFilesFirst)
 			{
 				$title = "<p>{$this->view->show_files_header}</p>\n";
 				$ret .= $this->GetFiles($target, 'files', $title);
 			}
 			else
 			{
-				$title = "<p>{$this->view->show_folders_header}</p>\n";
+				$title = "<p>{$this->View->FoldersHeader}</p>\n";
 				$ret .= $this->GetFiles($target, 'dirs', $title);
 			}
 
-			if (!$this->view->show_files_first)
+			if (!$this->View->ShowFilesFirst)
 			{
-				$title = "<p>{$this->view->show_files_header}</p>\n";
+				$title = "<p>{$this->View->FilesHeader}</p>\n";
 				$ret .= $this->GetFiles($target, 'files', $title);
 			}
 			else
@@ -238,56 +234,80 @@ class FileManager
 			$ret .= "Last Modified: $time<br/>\n";
 		}
 
-		$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">Options</a></p><br/>\n";
-		if ($this->behavior->AllowSetType)
-			$ret .= $this->GetSetType($target, $fi);
-		if ($this->allow_create_dir) $ret .= $this->GetCreateDirectory($target, $this->cf);
-		if ($this->allow_upload) $ret .= $this->GetUpload();
-		if ($action == 'rename')
-		{
-			global $ci;
-			$file = $ci;
-			$types = GetVar('type');
-			$fi = new FileInfo($this->root.$this->cf.$file);
+		$ret .= $this->GetOptions($fi, $target, $action);
 
-			$form = new Form('rename');
-			$form->AddHidden('editor', $this->name);
-			$form->AddHidden('ca', 'rename_done');
-			$form->AddHidden('ci', $file);
-			$form->AddHidden('type', $types);
-			$form->AddInput('Name', 'text', 'name', $fi->filename);
-			$form->AddRow(array('Or select a new location'));
-			$form->AddRow(array($this->GetDirectorySelect('location')));
-			$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
+		return $ret;
+	}
+
+	function GetOptions($fi, $target, $action)
+	{
+		$ret = null;
+		if ($this->Behavior->MassAvailable())
+		{
+			$ret .= "<div id=\"{$this->name}_mass_options\" style=\"display: none\">";
+			$ret .= "With selected files...<br/>\n";
+			$frmMove = new Form('formMove');
+			$frmMove->AddRow(array('Move To ', $this->GetDirectorySelect('ct')));
+			$frmMove->AddInput(null, 'submit', 'butSubmit', 'Move');
 			global $me;
-			$ret .= '<a name="rename"></a><b>Rename</b>'.$form->Get('method="post" action="'.$me.'"');
+			$ret .= $frmMove->Get('action="'.$me.'" method="post"');
+			$ret .= "</div>\n";
 		}
-
-		if ($this->allow_edit)
+		if ($this->Behavior->Available())
 		{
-			//Filter options.
-			$form = new Form('formUpdate');
-			$form->AddHidden('editor', $this->name);
-			$form->AddHidden('ca', 'update_info');
-			$form->AddHidden('cf', $this->cf);
-			if (isset($this->DefaultOptionHandler))
+			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">Options</a></p>\n";
+			$ret .= "<div id=\"{$this->name}_options\" style=\"display: none\">";
+			if ($this->Behavior->AllowSetType)
+				$ret .= $this->GetSetType($target, $fi);
+			if ($this->Behavior->AllowCreateDir)
+				$ret .= $this->GetCreateDirectory($target, $this->cf);
+			if ($this->Behavior->AllowUpload)
+				$ret .= $this->GetUpload();
+			if ($action == 'rename')
 			{
-				$handler = $this->DefaultOptionHandler;
-				$def = $handler($fi);
+				global $ci;
+				$file = $ci;
+				$types = GetVar('type');
+				$fi = new FileInfo($this->root.$this->cf.$file);
+
+				$form = new Form('rename');
+				$form->AddHidden('editor', $this->name);
+				$form->AddHidden('ca', 'rename_done');
+				$form->AddHidden('ci', $file);
+				$form->AddHidden('type', $types);
+				$form->AddInput('Name', 'text', 'name', $fi->filename);
+				$form->AddRow(array('Or select a new location'));
+				$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
+				global $me;
+				$ret .= '<a name="rename"></a><b>Rename</b>'.$form->Get('method="post" action="'.$me.'"');
 			}
-			else $def = null;
-			$options = $fi->Filter->GetOptions($def);
-			if (!empty($options)) foreach ($options as $text => $field)
+
+			if ($this->Behavior->AllowEdit)
 			{
-				if (isset($field[2])) $val = $field[2];
-				else $val = isset($fi->info[$field[0]]) ? $fi->info[$field[0]] : null;
-				$form->AddInput($text, $field[1], "info[{$field[0]}]", $val);
+				//Filter options.
+				$form = new Form('formUpdate');
+				$form->AddHidden('editor', $this->name);
+				$form->AddHidden('ca', 'update_info');
+				$form->AddHidden('cf', $this->cf);
+				if (isset($this->DefaultOptionHandler))
+				{
+					$handler = $this->DefaultOptionHandler;
+					$def = $handler($fi);
+				}
+				else $def = null;
+				$options = $fi->Filter->GetOptions($def);
+				if (!empty($options)) foreach ($options as $text => $field)
+				{
+					if (isset($field[2])) $val = $field[2];
+					else $val = isset($fi->info[$field[0]]) ? $fi->info[$field[0]] : null;
+					$form->AddInput($text, $field[1], "info[{$field[0]}]", $val);
+				}
+				$form->AddInput(null, 'submit', 'butSubmit', 'Update');
+				$ret .= "<p><b>Configuration for {$this->root}{$this->cf}</b></p>";
+				$ret .= $form->Get('method="post" action="'.$target.'"');
 			}
-			$form->AddInput(null, 'submit', 'butSubmit', 'Update');
-			$ret .= "<p><b>Configuration for {$this->root}{$this->cf}</b></p>";
-			$ret .= $form->Get('method="post" action="'.$target.'"');
+			$ret .= "</div>";
 		}
-		$ret .= "</div>";
 		return $ret;
 	}
 
@@ -298,7 +318,7 @@ class FileManager
 		$ret .= '</select>';
 		return $ret;
 	}
-	
+
 	function GetDirectorySelectRecurse($path)
 	{
 		$ret = null;
@@ -307,7 +327,7 @@ class FileManager
 		{
 			if ($file[0] == '.') continue;
 			if (!is_dir($path.$file)) continue;
-			$ret .= "<option name=\"{$path}{$file}\">{$path}{$file}</option>";
+			$ret .= "<option value=\"{$path}{$file}\">{$path}{$file}</option>";
 			$ret .= $this->GetDirectorySelectRecurse($path.$file.'/');
 		}
 		closedir($dp);
@@ -399,7 +419,7 @@ class FileManager
 			$ret .= $title;
 			$ret .= '<table>';
 			foreach($this->files[$type] as $ix => $file)
-				$ret .= $this->GetFile($target, $file, $ix);
+				$ret .= $this->GetFile($target, $file, $type, $ix);
 			$ret .= '</table>';
 		}
 		return $ret;
@@ -411,11 +431,11 @@ class FileManager
 	 * @param string $target
 	 * @param FileInfo $file
 	 */
-	function GetFile($target, $file, $index)
+	function GetFile($target, $file, $type, $index)
 	{
-		$ret = '<tr>';
+		$ret = "<tr>\n";
 		if (!$file->show) return;
-		if (!empty($file->info['access']) && !$this->show_all_files)
+		if (!empty($file->info['access']) && !$this->Behavior->ShowAllFiles)
 		{
 			if (!in_array($this->uid, $file->info['access'])) return;
 		}
@@ -427,13 +447,16 @@ class FileManager
 			if (isset($icon))
 				$ret .= '<td><img src="'.$icon.'" alt="'.$file->type.'" /></td> ';
 		}
-		$name = ($this->view->show_title && isset($file->info['title'])) ?
+		$name = ($this->View->ShowTitle && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
-		if (is_file($file->path) && !$this->view->show_info)
+		if (is_file($file->path) && !$this->Behavior->UseInfo)
 			$url = $this->root.$this->cf.$file->filename.'" target="_new';
 		else $url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
-		$ret .= "<td><input type=\"checkbox\" /><a href=\"$url\">{$name}</a> ".
-			gmdate("m/d/y h:i", filectime($file->path))."\n";
+		$ret .= "\t<td>\n";
+		if ($this->mass_avail)
+			$ret .= "\t\t<input type=\"checkbox\" id=\"sel_{$type}_{$index}\" name=\"sel\" onclick=\"toggleAny(['sel_files_', 'sel_dirs_'], '{$this->name}_mass_options');\" />\n";
+		$ret .= "\t\t<a href=\"$url\">{$name}</a> ".
+			gmdate("m/d/y h:i", filectime($file->path))."\n\t</td>\n";
 
 		$common = array(
 			'cf' => $this->cf,
@@ -463,26 +486,26 @@ class FileManager
 			'ci' => urlencode($file->filename)
 		)));
 
-		if ($this->behavior->AllowSort && $index > 0)
-			$ret .= "<td><a href=\"$uriUp\"><img src=\"xedlib/images/up.png\"
+		if ($this->Behavior->AllowSort && $index > 0)
+			$ret .= "\t\t<td><a href=\"$uriUp\"><img src=\"xedlib/images/up.png\"
 			border=\"0\" alt=\"Move Up\" title=\"Move Up\" /></a></td>";
-		else $ret .= '<td>&nbsp;</td>';
+		else $ret .= "\t<td>&nbsp;</td>\n";
 
-		if ($this->behavior->AllowSort &&
+		if ($this->Behavior->AllowSort &&
 			$index < count($this->files[$types])-1)
 			$ret .= "<td><a href=\"$uriDown\"><img src=\"xedlib/images/down.png\"
 			border=\"0\" alt=\"Move Down\" title=\"Move Down\" /></a></td>";
-		else $ret .= '<td>&nbsp;</td>';
+		else $ret .= "\t<td>&nbsp;</td>\n";
 
-		if ($this->behavior->AllowRename)
-			$ret .= "<td><a href=\"$uriRename#rename\"><img src=\"xedlib/images/rename.png\"
+		if ($this->Behavior->AllowRename)
+			$ret .= "\t\t<td><a href=\"$uriRename#rename\"><img src=\"xedlib/images/rename.png\"
 			border=\"0\" alt=\"Rename or Move\" title=\"Rename or Move\" style=\"vertical-align: text-bottom\" /></a></td>";
 
-		if ($this->behavior->AllowDelete)
+		if ($this->Behavior->AllowDelete)
 			$ret .= "<td><a href=\"$uriDel".
 				"\" onclick=\"return confirm('Are you sure you wish to delete this file?')\"><img src=\"xedlib/images/delete.png\" border=\"0\"
-				alt=\"Delete\" title=\"Delete\" style=\"vertical-align: text-bottom\" /></a>\n";
-		$ret .= '</td></tr>';
+				alt=\"Delete\" title=\"Delete\" style=\"vertical-align: text-bottom\" /></a></td>\n";
+		$ret .= "</tr>\n";
 
 		return $ret;
 	}
@@ -623,85 +646,107 @@ class FileManagerView
 	 *
 	 * @var bool
 	 */
-	public $show_title;
+	public $ShowTitle;
 	/**
 	 * Text of the header that comes before files.
 	 *
 	 * @var string
 	 */
-	public $show_files_header = 'Files';
+	public $FilesHeader = 'Files';
 	/**
 	 * Text of the header that comes before folders.
 	 *
 	 * @var string
 	 */
-	public $show_folders_header = 'Folders';
+	public $FoldersHeader = 'Folders';
 	/**
 	 * Whether files or folders come first.
 	 *
 	 * @var boolean
 	 */
-	public $show_files_first = false;
-	/**
-	 * Whether file information is shown, or file is simply downloaded on click.
-	 *
-	 * @var bool
-	 */
-	public $show_info = true;
+	public $ShowFilesFirst = false;
 }
 
 class FileManagerBehavior
 {
 	//Access Restriction
+
 	/**
 	 * Whether or not file uploads are allowed.
 	 *
 	 * @var bool
 	 */
-	public $AllowUpload;
+	public $AllowUpload = false;
 	/**
 	 * Whether or not users are allowed to create directories.
 	 *
 	 * @var bool
 	 */
-	public $AllowCreateDir;
+	public $AllowCreateDir = false;
 	/**
 	 * Whether users are allowed to delete files.
 	 * @see AllowAll
 	 *
 	 * @var bool
 	 */
-	public $AllowDelete;
+	public $AllowDelete = false;
 	/**
 	 * Whether users are allowed to manually sort files.
 	 *
 	 * @var bool
 	 */
-	public $AllowSort;
+	public $AllowSort = false;
 	/**
 	 * Whether users are allowed to set filter types on folders.
 	 *
 	 * @var bool
 	 */
-	public $AllowRename;
+	public $AllowRename = false;
 	/**
 	 * Whether users are allowed to rename or update file information.
 	 *
 	 * @var bool
 	 */
-	public $AllowEdit;
+	public $AllowEdit = false;
 	/**
 	 * Allow move.
 	 *
 	 * @var Allow moving files to another location.
 	 */
-	public $AllowMove;
+	public $AllowMove = false;
 	/**
 	 * Whether users are allowed to change directory filters.
 	 *
 	 * @var bool
 	 */
-	public $AllowSetType;
+	public $AllowSetType = false;
+	/**
+	 * Whether file information is shown, or file is simply downloaded on click.
+	 *
+	 * @var bool
+	 */
+	public $UseInfo = true;
+
+	/**
+	 * Return true if options are available.
+	 *
+	 */
+	function Available()
+	{
+		return $this->AllowCreateDir ||
+			$this->AllowUpload ||
+			$this->AllowEdit;
+	}
+	
+	/**
+	 * Return true if mass options are available.
+	 *
+	 */
+	function MassAvailable()
+	{
+		return $this->AllowMove ||
+			$this->AllowDelete;
+	}
 }
 
 /**
