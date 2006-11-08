@@ -955,11 +955,10 @@ class FilterDefault
 	{
 		$pinfo = pathinfo($newname);
 		$finfo = "{$fi->dir}/.{$fi->filename}";
-		$ddir = $pinfo['dirname'] == '.' ? $this->cf : $pinfo['dirname'];
-		varinfo($ddir);
-		//if (file_exists($finfo))
-			//rename($finfo, $ddir.'/.'.$pinfo['basename']);
-		//rename($fi->path, $ddir.'/'.$pinfo['basename']);
+		$ddir = $pinfo['dirname'] == '.' ? $fi->dir : $pinfo['dirname'];
+		if (file_exists($finfo))
+			rename($finfo, $ddir.'/.'.$pinfo['basename']);
+		rename($fi->path, $ddir.'/'.$pinfo['basename']);
 	}
 
 	/**
