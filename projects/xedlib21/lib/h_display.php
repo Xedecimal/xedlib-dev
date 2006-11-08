@@ -367,7 +367,7 @@ class Form extends Table
 				$strout .= "</textarea>";
 				break;
 			case "select":
-				$strout = '<select id="'.$this->name.'_'.htmlspecialchars($name).'" name="'.$name."\"{$attributes}>\n";
+				$strout = '<select id="'.$this->CleanID($this->name.'_'.$name).'" name="'.$name."\"{$attributes}>\n";
 				if (is_array($value))
 				{
 					$ogstarted = false;
