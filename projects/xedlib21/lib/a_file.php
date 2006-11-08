@@ -152,12 +152,6 @@ class FileManager
 				$types = GetVar('type');
 				$this->files = $this->GetDirectory();
 				$ix = 0;
-				//if (!empty($this->files[$types]))
-				/*foreach ($this->files[$types] as $file)
-				{
-					$file->info['index'] = $ix++;
-					$file->SaveInfo();
-				}*/
 			}
 		}
 		else if ($action == "createdir")
@@ -957,14 +951,15 @@ class FilterDefault
 	 * @param FileInfo $fi Source file information.
 	 * @param FileInfo $newname Destination file information.
 	 */
-	function Rename ($fi, $newname)
+	function Rename($fi, $newname)
 	{
 		$pinfo = pathinfo($newname);
-		varinfo($pinfo);
 		$finfo = "{$fi->dir}/.{$fi->filename}";
-		if (file_exists($finfo))
-			rename($finfo, $pinfo['dirname'].'/.'.$pinfo['basename']);
-		rename($fi->path, $pinfo['dirname'].'/'.$pinfo['basename']);
+		$ddir = $pinfo['dirname'] == '.' ? $this->cf : $pinfo['dirname'];
+		varinfo($ddir);
+		//if (file_exists($finfo))
+			//rename($finfo, $ddir.'/.'.$pinfo['basename']);
+		//rename($fi->path, $ddir.'/'.$pinfo['basename']);
 	}
 
 	/**
