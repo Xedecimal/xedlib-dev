@@ -392,7 +392,7 @@ function Reformat($file)
 function GetRelativePath($path)
 {
 	$npath = str_replace('\\', '/', $path);
-	return str_replace(GetVar('DOCUMENT_ROOT'), '', $npath);
+	return substr($npath, strlen(GetVar('DOCUMENT_ROOT')));
 }
 
 function ResizeImage($image, $newWidth, $newHeight)
