@@ -500,7 +500,7 @@ class FileManager
 		{
 			$img = GetRelativePath(dirname(__FILE__)).'/images/up.png';
 			$ret .= "\t<td><a href=\"$uriUp\"><img src=\"{$img}\" ".
-			"border=\"0\" alt=\"Move Up\" title=\"Move Up\" /></a></td>";
+			"alt=\"Move Up\" title=\"Move Up\" /></a></td>";
 		}
 		else $ret .= "\t<td>&nbsp;</td>\n";
 
@@ -509,7 +509,7 @@ class FileManager
 		{
 			$img = GetRelativePath(dirname(__FILE__)).'/images/down.png';
 			$ret .= "\t<td><a href=\"$uriDown\"><img src=\"{$img}\" ".
-			"border=\"0\" alt=\"Move Down\" title=\"Move Down\" /></a></td>";
+			"alt=\"Move Down\" title=\"Move Down\" /></a></td>";
 		}
 		else $ret .= "\t<td>&nbsp;</td>\n";
 		$ret .= "</tr>\n";
