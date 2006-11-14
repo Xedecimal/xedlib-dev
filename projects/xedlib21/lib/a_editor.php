@@ -699,8 +699,9 @@ class EditorData
 			$row[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
 			$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
 
-			$path = GetRelativePath(dirname(__FILE__));
-			$row[0] = str_repeat("<img src=\"{$path}/images/tree_i.png\" />", $level).$row[0];
+			//$path = GetRelativePath(dirname(__FILE__));
+			//$row[0] = str_repeat("<img src=\"{$path}/images/tree_i.png\" />", $level).$row[0];
+			$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
 
 			if ($this->sorting && count($node->children) > 1)
 			{
