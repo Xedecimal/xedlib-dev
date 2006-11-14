@@ -699,7 +699,8 @@ class EditorData
 			$row[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
 			$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
 
-			$row[0] = str_repeat('&nbsp;', $level*4).$row[0];
+			$path = GetRelativePath(dirname(__FILE__));
+			$row[0] = str_repeat("<img src=\"{$path}/images/tree_i.png\" />", $level).$row[0];
 
 			if ($this->sorting && count($node->children) > 1)
 			{
@@ -732,6 +733,8 @@ class EditorData
 
 		$context = $curchild != -1 ? $this->ds->children[$curchild] : $this;
 
+		$fullname = 'form_'.$state.'_'.$context->ds->table;
+		
 		if ($state == CONTROL_BOUND)
 		{
 			if (!isset($this->ds)) Error("<br />What: Dataset is not set.
@@ -742,8 +745,9 @@ class EditorData
 
 		if (!empty($context->ds->Fields))
 		{
-			$frm = new Form('form'.$this->name, array('align="right"', null,
-				null));
+			$frm = new Form($fullname,
+				array('align="right"', null, null));
+			$frm->AddRow(array("<a name=\"{$fullname}_editor\"></a>"));
 			if (isset($context->ds->Validation))
 			{
 				$frm->Validation = $context->ds->Validation;
@@ -802,9 +806,8 @@ class EditorData
 				($state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null),
 				null
 			));
-			$ret .= "<a name=\"{$this->name}_editor\"></a>";
 			$ret .= $frm->Get("action=\"$target\" method=\"post\"", 'width="100%"');
-			return $ret;
+			return $frm;
 		}
 	}
 
@@ -821,7 +824,7 @@ class EditorData
 	{
 		$context = $curchild != -1 ? $this->ds->children[$curchild] : $this;
 
-		$ret = $this->GetForm($target, $ci, $this->state, $curchild);
+		$ret[] = $this->GetForm($target, $ci, $this->state, $curchild);
 
 		if (isset($ci) && GetVar('ca') != $this->name.'_delete')
 		{
@@ -830,10 +833,7 @@ class EditorData
 			{
 				if (isset($child->ds->Fields))
 				{
-					$ret .= GetBox('box_create_child_'.$child->ds->table,
-						"Create new {$child->ds->table} child",
-						$this->GetForm($target, $ci, STATE_CREATE, $ix),
-						$form_template);
+					$ret[] = $this->GetForm($target, $ci, STATE_CREATE, $ix);
 				}
 			}
 		}

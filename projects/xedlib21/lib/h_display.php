@@ -190,7 +190,7 @@ class Table
 			}
 			foreach ($this->rows as $ix => $row)
 			{
-				$ret .= "<tr {$this->rowattribs[$ix]}>\n";
+				$ret .= "<tr{$this->rowattribs[$ix]}>\n";
 				if (count($row) < count($this->cols)) $span = " colspan=\"" . (count($this->cols) - count($row) + 1) . "\"";
 				else $span = "";
 				$x = 0;
@@ -357,7 +357,9 @@ class Form extends Table
 					}
 				}
 			}
-			else $helptext = $this->Errors[$name].$helptext;
+			else $helptext =
+				(isset($this->Errors[$name]) ? $this->Errors[$name] : null).
+				$helptext;
 		}
 		switch ($type)
 		{

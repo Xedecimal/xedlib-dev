@@ -27,9 +27,13 @@ $page_head .= '<script type="text/javascript">'."\n".$ret['js'].'</script>';
 $db = new Database('test', 'localhost', 'root', 'ransal');
 $ds = new DataSet($db, 'test');
 $ds->AddChild(new Relation($ds, 'id', 'parent'));
-$ds->Display = array(new DisplayColumn('Name', 'name'));
+$ds->Display = array(
+	new DisplayColumn('Name', 'name'),
+	new DisplayColumn('Second', 'second')
+);
 $ds->Fields = array(
-	'Name' => array('name', 'text')
+	'Name' => array('name', 'text'),
+	'Second' => array('second', 'text')
 );
 $ds->Validation = $v;
 $ds->Errors = $ret['errors'];
@@ -57,7 +61,10 @@ $edTest->Prepare($ca);
 $ed = $edTest->Get($me, $ci);
 
 $page_body = $ed['table'];
-$page_body .= $ed['forms'];
+foreach ($ed['forms'] as $frm)
+	$page_body .= GetBox("box_{$frm->name}", $frm->name,
+		$frm->Get('action="'.$me.'" method="post"'),
+		'templates/box.html');
 
 echo $t->Get('template_test.html');
 
