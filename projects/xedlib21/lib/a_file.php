@@ -909,12 +909,7 @@ class FileInfo
  */
 class FilterDefault
 {
-	/**
-	 * Returns the name of this filter.
-	 *
-	 * @return string
-	 */
-	function GetName() { return "Normal"; }
+	public $Name = "Default";
 
 	/**
 	 * Places information into $fi for later use.

@@ -580,7 +580,9 @@ class EditorData
 				}
 			}
 
-			$items = $this->ds->GetInternal(null, $this->sort, $this->filter, $joins, $cols);
+			//Changed during redball.. May be trouble, moved, filter from filter
+			//to the match argument. - Nick
+			$items = $this->ds->GetInternal($this->filter, $this->sort, null, $joins, $cols);
 			//Build a whole tree out of the items and children.
 			$root = $this->BuildTree($items);
 		}
@@ -664,8 +666,8 @@ class EditorData
 				//Callback mapped
 				if (isset($disp->callback))
 				{
-					$callback = $disp->callback;
-					$row[$did] = $callback($cnode->data, $disp_index);
+					call_user_func_array($disp->callback,
+						array($cnode->data, $disp_index));
 				}
 				//Regular field
 				else
