@@ -692,9 +692,12 @@ class EditorData
 				$i = 0;
 				while ($i <= $child_id)
 				{
-					$count = $i == 0 ? count($this->ds->Display) :
-						count($this->ds->children[$i]->ds->Display);
-					$ix += $count;
+					if ($i == $child_id)
+					{
+						$i++;
+						continue;
+					}
+					$ix += count($this->ds->children[$i]->ds->Display);
 					$i++;
 				}
 			}
