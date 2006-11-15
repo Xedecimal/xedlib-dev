@@ -313,10 +313,10 @@ class Form extends Table
 				$strout =  "<input type=\"radio\" name=\"$name\" value=\"{$value[0]}\" $attributes> Yes\n";
 				$strout .= "<input type=\"radio\" name=\"$name\" value=\"{$value[1]}\" checked=\"checked\" $attributes> No\n";
 				break;
-			case "date":
+			case 'date':
 				$strout = GetInputDate($name, $value, false);
 				break;
-			case "datetime":
+			case 'datetime':
 				$strout = GetInputDate($name, $value, true);
 				break;
 			case "image_upload":
