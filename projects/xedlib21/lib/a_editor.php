@@ -415,12 +415,11 @@ class EditorData
 	 * @param mixed $ci ID of current item (eg. GetVar('ci'))
 	 * @return string
 	 */
-	function Get($target, $ci = null, $form_template = null)
+	function Get($target, $ci = null)
 	{
 		$ret['table'] = $this->GetTable($target, $ci);
 		$ret['forms'] = $this->GetForms($target, $ci,
-			GetVar('editor') == $this->name ? GetVar('child') : null,
-			$form_template);
+			GetVar('editor') == $this->name ? GetVar('child') : null);
 		return $ret;
 	}
 
@@ -735,10 +734,12 @@ class EditorData
 
 			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
 
+			$p = GetRelativePath(dirname(__FILE__));
+			
 			$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
 			$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
-			$row[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
-			$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
+			$row[] = "<a href=\"$url_edit#{$this->name}_editor\"><img src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit Item\" /></a>";
+			$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\"><img src=\"{$p}/images/delete.png\" alt=\"Delete\" title=\"Delete Item\" /></a>";
 
 			$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
 
@@ -866,7 +867,7 @@ class EditorData
 	 * @param int $curchild Current child.
 	 * @return string
 	 */
-	function GetForms($target, $ci, $curchild = null, $form_template = null)
+	function GetForms($target, $ci, $curchild = null)
 	{
 		$context = $curchild != null ? $this->ds->children[$curchild] : $this;
 
