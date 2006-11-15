@@ -255,21 +255,23 @@ class EditorData
 			{
 				if (!$handler->Create($insert)) return;
 			}
+			
+			$parent = GetVar('parent');
+			
 			if (isset($parent))
 			{
 				$child = $this->ds->children[GetVar('child')];
 				$insert[$child->child_key] = $parent;
-				$child->ds->Add($insert);
 			}
-			else $this->ds->Add($insert);
+			$context->ds->Add($insert);
 		}
 		else if ($action == $this->name.'_update')
 		{
 			global $ci;
 			$child_id = GetVar('child');
-			$child = $child_id > 0 ? $this->ds->children[$child_id] : $this;
+			$context = $child_id > 0 ? $this->ds->children[$child_id] : $this;
 			$update = array();
-			foreach ($child->ds->Fields as $name => $data)
+			foreach ($context->ds->Fields as $name => $data)
 			{
 				if (is_array($data))
 				{
@@ -307,8 +309,6 @@ class EditorData
 					else $update[$data[0]] = GetVar($data[0]);
 				}
 			}
-			if ($this->type == CONTROL_BOUND)
-				$child->ds->Update(array($this->ds->id => $ci), $update);
 
 			if (count($this->handlers) > 0)
 			{
@@ -320,18 +320,21 @@ class EditorData
 			}
 
 			if ($this->type == CONTROL_BOUND)
-				$this->ds->Update(array($this->ds->id => $ci), $update);
+				$context->ds->Update(array($context->ds->id => $ci), $update);
 		}
 		else if ($action == $this->name.'_swap')
 		{
 			global $ci;
 			$ct = GetVar('ct');
+			
+			$child_id = GetVar('child');
+			$context = $child_id > 0 ? $this->ds->children[$child_id] : $this;
 
 			foreach ($this->handlers as $handler)
 			{
 				if (!$handler->Swap($ci, $ct)) return;
 			}
-			$this->ds->Swap(array($this->ds->id => $ci), array($this->ds->id => $ct), 'id');
+			$context->ds->Swap(array($context->ds->id => $ci), array($context->ds->id => $ct), 'id');
 		}
 		else if ($action == $this->name.'_delete')
 		{
@@ -419,7 +422,7 @@ class EditorData
 	 * @return string
 	 * @access private
 	 */
-	function GetSwapButton($target, $defaults, $src, $dst)
+	function GetSwapButton($target, $defaults, $src, $dst, $up)
 	{
 		$uri = $defaults;
 		$uri['ci'] = $src;
@@ -427,7 +430,9 @@ class EditorData
 		$uri['ca'] = $this->name.'_swap';
 		$path = GetRelativePath(dirname(__FILE__));
 		return '<a href="'.MakeURI($target, $uri).'">
-			<img src="'.$path.'/images/'. ($src > $dst ? 'up' : 'down'). '.png" alt="'.($src > $dst ? 'Up' : 'Down').'" title="'.($src > $dst ? 'Up' : 'Down').'" /></a>';
+			<img src="'.$path.'/images/'. ($up ? 'up' : 'down').
+			'.png" alt="'.($up ? 'Up' : 'Down').'" title="'.
+			($up ? 'Up' : 'Down').'" /></a>';
 	}
 
 	/**
@@ -726,10 +731,14 @@ class EditorData
 			if ($this->sorting && count($node->children) > 1)
 			{
 				if ($index > 0 && $node->children[$index-1]->data['_child'] == $cnode->data['_child'])
-					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index-1]->id);
+				{
+					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index-1]->id, true);
+				}
 				else $row[] = '&nbsp;';
 				if ($index < count($node->children)-1 && $node->children[$index+1]->data['_child'] == $cnode->data['_child'])
-					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index+1]->id);
+				{
+					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index+1]->id, false);
+				}
 				else $row[] = '&nbsp;';
 			}
 			else { $row[] = '&nbsp;'; $row[] = '&nbsp;'; }
