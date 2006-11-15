@@ -295,6 +295,8 @@ class DataSet
 	 * @var mixed
 	 */
 	public $Validation;
+	
+	public $Description;
 
 	/**
 	 * Initialize a new CDataSet binded to $table in $db.

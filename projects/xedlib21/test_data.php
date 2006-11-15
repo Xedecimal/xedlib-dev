@@ -31,6 +31,7 @@ $db = new Database('test', 'localhost', 'root', 'ransal');
 // dsChild
 
 $dsChild = new DataSet($db, 'child');
+$dsChild->Description = "Child";
 $dsChild->Display = array(
 	new DisplayColumn('Child', 'example')
 );
@@ -41,6 +42,7 @@ $dsChild->Fields = array(
 // dsBoth
 
 $dsBoth = new DataSet($db, 'test');
+$dsBoth->Description = "Both Item";
 $dsBoth->AddChild(new Relation($dsBoth, 'id', 'parent'));
 $dsBoth->Display = array(
 	new DisplayColumn('Name', 'name'),
@@ -58,6 +60,7 @@ $dsBoth->AddChild(new Relation($dsChild, 'id', 'parent'));
 // dsForeign
 
 $dsForeign = new DataSet($db, 'test');
+$dsForeign->Description = "Foreign Item";
 $dsForeign->Display = array(
 	new DisplayColumn('Name', 'name'),
 	new DisplayColumn('Second', 'second')
@@ -68,7 +71,10 @@ $dsForeign->Fields = array(
 );
 $dsForeign->AddChild(new Relation($dsChild, 'id', 'parent'));
 
+// dsSelf
+
 $dsSelf = new DataSet($db, 'test');
+$dsSelf->Description = "Self Item";
 $dsSelf->Display = array(
 	new DisplayColumn('Name', 'name'),
 	new DisplayColumn('Second', 'second')
@@ -105,26 +111,26 @@ $tbl = new Table('tblMain',
 $ret = $edSelf->Get($me, $ci);
 $row[0] = $ret['table'];
 foreach ($ret['forms'] as $frm)
-	$row[0] .= GetBox("box_{$frm->name}", $frm->name,
+	$row[0] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
 		$frm->Get('action="'.$me.'" method="post"'),
 		'templates/box.html');
 
 $ret = $edForeign->Get($me, $ci);
 $row[1] = $ret['table'];
 foreach ($ret['forms'] as $frm)
-	$row[1] .= GetBox("box_{$frm->name}", $frm->name,
+	$row[1] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
 		$frm->Get('action="'.$me.'" method="post"'),
 		'templates/box.html');
 		
 $ret = $edBoth->Get($me, $ci);
 $row[2] = $ret['table'];
 foreach ($ret['forms'] as $frm)
-	$row[2] .= GetBox("box_{$frm->name}", $frm->name,
+	$row[2] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
 		$frm->Get('action="'.$me.'" method="post"'),
 		'templates/box.html');
 
 $tbl->AddRow($row);
-		
+
 $page_body .= $tbl->Get();
 
 $page_body .= "Be careful about moving ROOT items in the foreign table. They
