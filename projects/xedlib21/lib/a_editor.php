@@ -216,7 +216,7 @@ class EditorData
 		{
 			$insert = array();
 			$child_id = GetVar('child');
-			$context = $child_id > 0 ? $this->ds->children[$child_id] : $this;
+			$context = isset($child_id) ? $this->ds->children[$child_id] : $this;
 
 			$fields = $context->ds->Fields;
 			foreach ($fields as $name => $data)
@@ -411,8 +411,7 @@ class EditorData
 	function Get($target, $ci = null, $form_template = null)
 	{
 		$ret['table'] = $this->GetTable($target, $ci);
-		$ret['forms'] = $this->GetForms($target, $ci, GetVar('child', -1),
-			$form_template);
+		$ret['forms'] = $this->GetForms($target, $ci, null, $form_template);
 		return $ret;
 	}
 
@@ -759,12 +758,10 @@ class EditorData
 	 */
 	function GetForm($target, $ci, $state, $curchild = null)
 	{
-		//$ret = null;
+		$context = $curchild != null ? $this->ds->children[$curchild] : $this;
 
-		$context = $curchild != -1 ? $this->ds->children[$curchild] : $this;
-		
 		$fullname = 'form_'.$state.'_'.$context->ds->table;
-		
+
 		if ($state == CONTROL_BOUND)
 		{
 			if (!isset($this->ds)) Error("<br />What: Dataset is not set.
@@ -788,7 +785,7 @@ class EditorData
 				$this->name.'_create');
 
 			if ($state == STATE_EDIT) $frm->AddHidden('ci', $ci);
-			if ($curchild != 0)
+			if (isset($curchild))
 			{
 				$frm->AddHidden('parent', $ci);
 				$frm->AddHidden('child', $curchild);
@@ -836,7 +833,7 @@ class EditorData
 				($state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null),
 				null
 			));
-			//$ret .= $frm->Get("action=\"$target\" method=\"post\"", 'width="100%"');
+
 			return $frm;
 		}
 	}
@@ -852,7 +849,7 @@ class EditorData
 	 */
 	function GetForms($target, $ci, $curchild = -1, $form_template = null)
 	{
-		$context = $curchild != -1 ? $this->ds->children[$curchild] : $this;
+		$context = $curchild != null ? $this->ds->children[$curchild] : $this;
 
 		$ret[] = $this->GetForm($target, $ci, $this->state, $curchild);
 

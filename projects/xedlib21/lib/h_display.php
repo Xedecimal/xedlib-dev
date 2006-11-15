@@ -482,7 +482,7 @@ class Form extends Table
 		{
 			foreach ($PERSISTS as $name => $value) $this->AddHidden($name, $value, null, true);
 		}
-		if ($this->hiddens)
+		if (!empty($this->hiddens))
 		{
 			foreach ($this->hiddens as $hidden)
 			{
