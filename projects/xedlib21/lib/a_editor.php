@@ -269,7 +269,7 @@ class EditorData
 		{
 			global $ci;
 			$child_id = GetVar('child');
-			$context = $child_id > 0 ? $this->ds->children[$child_id] : $this;
+			$context = $child_id != null ? $this->ds->children[$child_id] : $this;
 			$update = array();
 			foreach ($context->ds->Fields as $name => $data)
 			{
@@ -411,7 +411,7 @@ class EditorData
 	function Get($target, $ci = null, $form_template = null)
 	{
 		$ret['table'] = $this->GetTable($target, $ci);
-		$ret['forms'] = $this->GetForms($target, $ci, null, $form_template);
+		$ret['forms'] = $this->GetForms($target, $ci, GetVar('child'), $form_template);
 		return $ret;
 	}
 
@@ -513,7 +513,7 @@ class EditorData
 			{
 				foreach ($items as $ix => $node)
 				{
-					$child_id = isset($children[$table]) ? $children[$table] : -1;
+					$child_id = isset($children[$table]) ? $children[$table] : null;
 
 					if (isset($children[$table]))
 					{
@@ -547,7 +547,9 @@ class EditorData
 	
 	function SortByChild($a, $b)
 	{
-		return ($a->data['_child'] > $b->data['_child']) ? -1 : 1;
+		if (isset($a->data['_child']))
+			return ($a->data['_child'] > $b->data['_child']) ? -1 : 1;
+		return 0;
 	}
 
 	/**
@@ -661,24 +663,36 @@ class EditorData
 		if (!empty($node->children))
 		foreach ($node->children as $index => $cnode)
 		{
+			$ix = 0;
 			$row = array();
 
-			$child_id = $cnode->data['_child'];
+			if (isset($cnode->data['_child']))
+				$child_id = $cnode->data['_child'];
 
-			if (isset($this->ds->children[$child_id]))
-				$context = $this->ds->children[$child_id];
-			else $context = $this;
+			$context = isset($child_id) ? $this->ds->children[$child_id] : $this;
 
 			//Don't display children that don't have a display to show.
 			if (empty($context->ds->Display)) continue;
+
+			//Pad all existing columns to ensure proper width.
+			$total_cells = count($this->ds->Display);
+			if (!empty($this->ds->children))
+			foreach ($this->ds->children as $child)
+				if ($child->ds->table != $this->ds->table)
+					$total_cells += count($child->ds->Display);
+			$row = array_pad($row, $total_cells, '&nbsp;');
 			
-			//Pad any missing initial display columns...
-			for ($ix = 0; $ix < $child_id;)
+			//Move cursor (ix) to the first column we're displaying here.
+			if (isset($child_id))
 			{
-				$count = $ix == 0 ? count($this->ds->Display) :
-					count($this->ds->children[$ix]->ds->Display);
-				$row = array_fill($ix, $count, '&nbsp;');
-				$ix += $count;
+				$i = 0;
+				while ($i <= $child_id)
+				{
+					$count = $i == 0 ? count($this->ds->Display) :
+						count($this->ds->children[$i]->ds->Display);
+					$ix += $count;
+					$i++;
+				}
 			}
 
 			//Show all displays for this context.
@@ -708,17 +722,10 @@ class EditorData
 //				}
 			}
 
-			$url_defaults = array('editor' => $this->name, 'child' => $child_id);
+			$url_defaults = array('editor' => $this->name);
+			if (isset($child_id)) $url_defaults['child'] = $child_id;
 
 			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
-
-			//Pad any additional display columns...
-			$total_cells = count($this->ds->Display);
-			if (!empty($this->ds->children))
-			foreach ($this->ds->children as $child)
-				if ($child->ds->table != $this->ds->table)
-					$total_cells += count($child->ds->Display);
-			$row = array_pad($row, $total_cells, '&nbsp;');
 
 			$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
 			$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
@@ -729,8 +736,12 @@ class EditorData
 
 			if ($this->sorting && count($node->children) > 1)
 			{
-				if ($index > 0 && $node->children[$index-1]->data['_child'] == $cnode->data['_child'])
+				//We can possibly swap up
+				if ($index > 0)
 				{
+					//This is a child of some sort, but it doesn't match the
+					//prior child, this would require a change of parents.
+					if ($node->children[$index-1]->data['_child'] == $cnode->data['_child'])
 					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index-1]->id, true);
 				}
 				else $row[] = '&nbsp;';
@@ -759,7 +770,7 @@ class EditorData
 	function GetForm($target, $ci, $state, $curchild = null)
 	{
 		$context = $curchild != null ? $this->ds->children[$curchild] : $this;
-
+		
 		$fullname = 'form_'.$state.'_'.$context->ds->table;
 
 		if ($state == CONTROL_BOUND)
@@ -847,7 +858,7 @@ class EditorData
 	 * @param int $curchild Current child.
 	 * @return string
 	 */
-	function GetForms($target, $ci, $curchild = -1, $form_template = null)
+	function GetForms($target, $ci, $curchild = null, $form_template = null)
 	{
 		$context = $curchild != null ? $this->ds->children[$curchild] : $this;
 
