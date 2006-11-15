@@ -29,7 +29,6 @@ class CodeReader
 	 */
 	function Parse($filename)
 	{
-		echo "Processing $filename<br/>\n";
 		$parsing = true;
 		$tree = array();
 		$tokens = token_get_all(file_get_contents($filename));

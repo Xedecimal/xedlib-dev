@@ -44,6 +44,12 @@ class DocGeneratorXML
 				$tag = $match[1];
 				if (preg_match('#example (.+)#', $tag, $match))
 				{
+					if (!file_exists($match[1]) || !is_file($match[1]))
+					{
+						Error("File does not exist for example tag:
+							{$match[1]}");
+						continue;
+					}
 					$data = highlight_file($match[1], true);
 					$elTag = $doc->createElement('tag');
 					$elTag->appendChild($doc->createCDATASection($data));
@@ -161,6 +167,7 @@ class DocGeneratorXML
 		$data = null;
 		foreach ($files as $file)
 		{
+			echo "Processing {$file}<br/>\n";
 			$new = $d->Parse($file);
 			if (!isset($data)) $data = $new;
 			else if (isset($new))
