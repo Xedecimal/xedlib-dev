@@ -328,7 +328,7 @@ class EditorData
 			$ct = GetVar('ct');
 			
 			$child_id = GetVar('child');
-			$context = $child_id > 0 ? $this->ds->children[$child_id] : $this;
+			$context = isset($child_id) ? $this->ds->children[$child_id] : $this;
 
 			foreach ($this->handlers as $handler)
 			{
@@ -339,16 +339,20 @@ class EditorData
 		else if ($action == $this->name.'_delete')
 		{
 			global $ci;
+
+			$child_id = GetVar('child');
+			$context = isset($child_id) ? $this->ds->children[$child_id] : $this;
+
 			if (count($this->handlers) > 0)
 			{
-				$data = $this->ds->GetOne(array($this->ds->id => $ci));
+				$data = $context->ds->GetOne(array($context->ds->id => $ci));
 				foreach ($this->handlers as $handler)
 				{
 					if (!$handler->Delete($ci, $data)) return;
 				}
 			}
-			if (!empty($this->ds->fields))
-			foreach ($this->ds->fields as $name => $data)
+			if (!empty($context->ds->fields))
+			foreach ($context->ds->fields as $name => $data)
 			{
 				if (is_array($data))
 				{
@@ -359,7 +363,7 @@ class EditorData
 					}
 				}
 			}
-			$this->ds->Remove(array($this->ds->id => $ci));
+			$context->ds->Remove(array($context->ds->id => $ci));
 		}
 	}
 
@@ -769,7 +773,7 @@ class EditorData
 	 */
 	function GetForm($target, $ci, $state, $curchild = null)
 	{
-		$context = $curchild != null ? $this->ds->children[$curchild] : $this;
+		$context = isset($curchild) ? $this->ds->children[$curchild] : $this;
 		
 		$fullname = 'form_'.$state.'_'.$context->ds->table;
 

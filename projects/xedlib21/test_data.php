@@ -26,7 +26,7 @@ $page_head .= '<script type="text/javascript">'."\n".$ret['js'].'</script>';
 
 $db = new Database('test', 'localhost', 'root', 'ransal');
 $ds = new DataSet($db, 'test');
-//$ds->AddChild(new Relation($ds, 'id', 'parent'));
+$ds->AddChild(new Relation($ds, 'id', 'parent'));
 $ds->Display = array(
 	new DisplayColumn('Name', 'name'),
 	new DisplayColumn('Second', 'second')
