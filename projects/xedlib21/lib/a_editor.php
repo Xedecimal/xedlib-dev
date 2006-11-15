@@ -426,7 +426,7 @@ class EditorData
 		$uri['ca'] = $this->name.'_swap';
 		$path = GetRelativePath(dirname(__FILE__));
 		return '<a href="'.MakeURI($target, $uri).'">
-			<img src="'.$path.'/images/'. ($src < $dst ? 'up' : 'down'). '.png" alt="'.($src < $dst ? 'Up' : 'Down').'" /></a>';
+			<img src="'.$path.'/images/'. ($src > $dst ? 'up' : 'down'). '.png" alt="'.($src > $dst ? 'Up' : 'Down').'" title="'.($src > $dst ? 'Up' : 'Down').'" /></a>';
 	}
 
 	/**
