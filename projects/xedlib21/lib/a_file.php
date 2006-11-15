@@ -75,6 +75,11 @@ class FileManager
 	 * @var array
 	 */
 	private $files;
+	/**
+	 * Whether or not mass options are available and should be output.
+	 *
+	 * @var bool
+	 */
 	private $mass_avail;
 
 	/**
@@ -257,6 +262,14 @@ class FileManager
 		return $ret;
 	}
 
+	/**
+	 * Returns all specific and mass options for the current location.
+	 *
+	 * @param FileInfo $fi
+	 * @param string $target
+	 * @param string $action
+	 * @return string
+	 */
 	function GetOptions($fi, $target, $action)
 	{
 		$ret = null;
@@ -327,6 +340,12 @@ class FileManager
 		return $ret;
 	}
 
+	/**
+	 * Returns a tree selection of a directory mostly used for moving files.
+	 *
+	 * @param string $name Name of form item.
+	 * @return string
+	 */
 	function GetDirectorySelect($name)
 	{
 		$ret = "<select name=\"{$name}\">";
@@ -335,6 +354,13 @@ class FileManager
 		return $ret;
 	}
 
+	/**
+	 * Recurses a single item in a directory.
+	 *
+	 * @access private
+	 * @param string $path
+	 * @return string
+	 */
 	function GetDirectorySelectRecurse($path)
 	{
 		$ret = "<option value=\"{$path}\">{$path}</option>";
@@ -909,6 +935,11 @@ class FileInfo
  */
 class FilterDefault
 {
+	/**
+	 * Name of this filter for identification purposes.
+	 *
+	 * @var string
+	 */
 	public $Name = "Default";
 
 	/**
@@ -981,6 +1012,11 @@ class FilterDefault
 
 class FilterGallery extends FilterDefault
 {
+	/**
+	 * Name of this object for identification purposes.
+	 *
+	 * @var string
+	 */
 	public $Name = 'Gallery';
 
 	/**

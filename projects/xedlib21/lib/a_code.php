@@ -212,6 +212,7 @@ class CodeReader
 			}
 		}
 		
+		if (isset($ret)) $ret->file = $filename;
 		return $ret;
 	}
 }

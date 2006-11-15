@@ -456,6 +456,13 @@ class Form extends Table
 		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"{$this->name}_$name\">$text</label>" : null, $strout, null));
 	}
 	
+	/**
+	 * Returns a cleaned up string to work in an html id attribute without w3c
+	 * errors.
+	 *
+	 * @param string $id
+	 * @return string
+	 */
 	function CleanID($id)
 	{
 		return str_replace('[', '_', str_replace(']', '', $id));

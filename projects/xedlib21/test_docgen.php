@@ -171,7 +171,10 @@ class DocGeneratorXML
 			$new = $d->Parse($file);
 			if (!isset($data)) $data = $new;
 			else if (isset($new))
+			{
 				$data->members = array_merge($data->members, $new->members);
+				$data->file = $file;
+			}
 		}
 		ksort($data->members);
 	

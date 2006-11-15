@@ -169,6 +169,12 @@ class EditorData
 	 * @deprecated use AddHandler instead.
 	 */
 	public $onswap;
+	/**
+	 * An array of handlers used for extra functionality of create, update,
+	 * delete and swap.
+	 *
+	 * @var array
+	 */
 	public $handlers;
 
 	/**
@@ -198,6 +204,13 @@ class EditorData
 		$this->sorting = true;
 	}
 
+	/**
+	 * Adds a handler to extend the functionality of actions performed in this
+	 * editor.
+	 *
+	 * @param Handler $handler
+	 * @see HandlerFile
+	 */
 	function AddHandler($handler)
 	{
 		$this->handlers[] = $handler;
@@ -546,6 +559,13 @@ class EditorData
 		return null;
 	}
 	
+	/**
+	 * Fixes a tree of items so that foreign children appear on the top. Makes
+	 * it much more readable.
+	 *
+	 * @param TreeNode $tree
+	 * @see BuildTree
+	 */
 	function FixTree(&$tree)
 	{
 		usort($tree->children, array($this, "SortByChild"));
@@ -553,6 +573,16 @@ class EditorData
 		foreach ($tree->children as $cnode) $this->FixTree($cnode);
 	}
 	
+	/**
+	 * Simple callback to sort items by a child, used by FixTree
+	 *
+	 * @access private
+	 * @param TreeNode $a
+	 * @param TreeNode $b
+	 * @return int
+	 * @see FixTree
+	 * @see BuildTree
+	 */
 	function SortByChild($a, $b)
 	{
 		if (isset($a->data['_child']))
