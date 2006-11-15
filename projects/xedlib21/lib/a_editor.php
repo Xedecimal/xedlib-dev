@@ -211,7 +211,10 @@ class EditorData
 	 */
 	function Prepare($action)
 	{
-		$this->state = GetVar('ca') == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
+		// Don't speak unless spoken to.
+		if (GetVar('editor') != $this->name) return;
+
+		$this->state = $action == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
 		if ($action == $this->name.'_create')
 		{
 			$insert = array();
@@ -415,7 +418,9 @@ class EditorData
 	function Get($target, $ci = null, $form_template = null)
 	{
 		$ret['table'] = $this->GetTable($target, $ci);
-		$ret['forms'] = $this->GetForms($target, $ci, GetVar('child'), $form_template);
+		$ret['forms'] = $this->GetForms($target, $ci,
+			GetVar('editor') == $this->name ? GetVar('child') : null,
+			$form_template);
 		return $ret;
 	}
 
@@ -689,16 +694,12 @@ class EditorData
 			//Move cursor (ix) to the first column we're displaying here.
 			if (isset($child_id))
 			{
+				if ($this->ds->children[$child_id]->ds->table != $this->ds->table)
+					$ix += count($this->ds->Display);
 				$i = 0;
-				while ($i <= $child_id)
+				while ($i++ < $child_id-1)
 				{
-					if ($i == $child_id)
-					{
-						$i++;
-						continue;
-					}
 					$ix += count($this->ds->children[$i]->ds->Display);
-					$i++;
 				}
 			}
 
