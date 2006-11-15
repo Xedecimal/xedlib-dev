@@ -344,6 +344,7 @@ class EditorData
 					if (!$handler->Delete($ci, $data)) return;
 				}
 			}
+			if (!empty($this->ds->fields))
 			foreach ($this->ds->fields as $name => $data)
 			{
 				if (is_array($data))
@@ -525,10 +526,24 @@ class EditorData
 						$tree->children[] = $node;
 				}
 			}
-
+			//Put child table children above related
+			//children, helps to understand the display.
+			$this->FixTree($tree);
 			return $tree;
 		}
 		return null;
+	}
+	
+	function FixTree(&$tree)
+	{
+		usort($tree->children, array($this, "SortByChild"));
+		if (!empty($tree->children))
+		foreach ($tree->children as $cnode) $this->FixTree($cnode);
+	}
+	
+	function SortByChild($a, $b)
+	{
+		return ($a->data['_child'] > $b->data['_child']) ? -1 : 1;
 	}
 
 	/**
@@ -621,7 +636,6 @@ class EditorData
 
 			foreach ($rows as $row) $table->AddRow($row);
 
-			$ret .= "<a name=\"{$this->name}_table\" />";
 			$ret .= $table->Get('class="editor"');
 		}
 		return $ret;
@@ -638,7 +652,7 @@ class EditorData
 	 */
 	function AddRows(&$rows, $target, $node, $level)
 	{
-		global $xlpath, $PERSISTS;
+		global $PERSISTS;
 
 		if (!empty($node->children))
 		foreach ($node->children as $index => $cnode)
@@ -653,9 +667,15 @@ class EditorData
 
 			//Don't display children that don't have a display to show.
 			if (empty($context->ds->Display)) continue;
-
+			
 			//Pad any missing initial display columns...
-			for ($ix = 0; $ix < $child_id; $ix++) $row[$ix] = '&nbsp;';
+			for ($ix = 0; $ix < $child_id;)
+			{
+				$count = $ix == 0 ? count($this->ds->Display) :
+					count($this->ds->children[$ix]->ds->Display);
+				$row = array_fill($ix, $count, '&nbsp;');
+				$ix += $count;
+			}
 
 			//Show all displays for this context.
 			if (!empty($context->ds->Display))
@@ -673,36 +693,34 @@ class EditorData
 				else
 				{
 					if (isset($cnode->data[$disp_index]))
-						$row[$did] = stripslashes($cnode->data[$disp_index]);
+						$row[$ix++] = stripslashes($cnode->data[$disp_index]);
 				}
 
 				//Show all children displays...
-				if ($context->ds->table != $this->ds->table)
-				foreach ($context->ds->Display as $disp)
-				{
-					$row[$child_id] = $cnode->data[$context->ds->table.'_'.$disp->column];
-				}
+//				if ($context->ds->table != $this->ds->table)
+//				foreach ($context->ds->Display as $disp)
+//				{
+//					$row[$ix++] = $cnode->data[$context->ds->table.'_'.$disp->column];
+//				}
 			}
 
 			$url_defaults = array('editor' => $this->name, 'child' => $child_id);
 
 			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
-			//else $row[] = null;
 
 			//Pad any additional display columns...
+			$total_cells = count($this->ds->Display);
 			if (!empty($this->ds->children))
 			foreach ($this->ds->children as $child)
-			{
-				$row[] = "&nbsp;";
-			}
+				if ($child->ds->table != $this->ds->table)
+					$total_cells += count($child->ds->Display);
+			$row = array_pad($row, $total_cells, '&nbsp;');
 
 			$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
 			$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
 			$row[] = "<a href=\"$url_edit#{$this->name}_editor\">Edit</a>";
 			$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\">Delete</a>";
 
-			//$path = GetRelativePath(dirname(__FILE__));
-			//$row[0] = str_repeat("<img src=\"{$path}/images/tree_i.png\" />", $level).$row[0];
 			$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
 
 			if ($this->sorting && count($node->children) > 1)
@@ -732,10 +750,10 @@ class EditorData
 	 */
 	function GetForm($target, $ci, $state, $curchild = null)
 	{
-		$ret = null;
+		//$ret = null;
 
 		$context = $curchild != -1 ? $this->ds->children[$curchild] : $this;
-
+		
 		$fullname = 'form_'.$state.'_'.$context->ds->table;
 		
 		if ($state == CONTROL_BOUND)
@@ -750,7 +768,7 @@ class EditorData
 		{
 			$frm = new Form($fullname,
 				array('align="right"', null, null));
-			$frm->AddRow(array("<a name=\"{$fullname}_editor\"></a>"));
+
 			if (isset($context->ds->Validation))
 			{
 				$frm->Validation = $context->ds->Validation;
@@ -809,7 +827,7 @@ class EditorData
 				($state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null),
 				null
 			));
-			$ret .= $frm->Get("action=\"$target\" method=\"post\"", 'width="100%"');
+			//$ret .= $frm->Get("action=\"$target\" method=\"post\"", 'width="100%"');
 			return $frm;
 		}
 	}
@@ -829,7 +847,7 @@ class EditorData
 
 		$ret[] = $this->GetForm($target, $ci, $this->state, $curchild);
 
-		if (isset($ci) && GetVar('ca') != $this->name.'_delete')
+		if (isset($ci) && GetVar('ca') == $this->name.'_edit')
 		{
 			if (!empty($context->ds->children))
 			foreach ($context->ds->children as $ix => $child)
