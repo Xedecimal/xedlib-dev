@@ -624,8 +624,7 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	}
 	if (is_string($timestamp))
 	{
-		if ($include_time) $timestamp = MyDateTimestamp($timestamp);
-		else $timestamp = MyDateStamp($timestamp);
+		$timestamp = MyDateTimestamp($timestamp, $include_time);
 	}
 	if (!isset($timestamp)) $timestamp = time();
 	$strout = "";
