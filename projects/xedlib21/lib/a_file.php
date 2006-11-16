@@ -284,14 +284,14 @@ class FileManager
 		}
 		if ($this->Behavior->Available())
 		{
-			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">Options</a></p>\n";
+			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">View Options for this File or Folder</a></p>\n";
 			$ret .= "<div id=\"{$this->name}_options\" style=\"display: none\">";
 
-			if ($this->Behavior->AllowCreateDir)
-				$ret .= $this->GetCreateDirectory($target, $this->cf);
 			if ($this->Behavior->AllowUpload)
 				$ret .= $this->GetUpload();
-
+			if ($this->Behavior->AllowCreateDir)
+				$ret .= $this->GetCreateDirectory($target, $this->cf);
+				
 			$fi = new FileInfo($this->root.$this->cf);
 
 			if ($this->Behavior->AllowRename)
@@ -301,10 +301,14 @@ class FileManager
 				$form->AddHidden('ca', 'rename');
 				$form->AddHidden('ci', $fi->path);
 				$form->AddHidden('cf', $this->cf);
-				$form->AddInput('Name', 'text', 'name', $fi->filename);
+				$form->AddInput('Name', 'text', 'name', $fi->filename, null,
+					'<span style="color: #F00">* Caution, this will change the
+					name of the file or folder that you are viewing.</span>');
 				$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
 				global $me;
-				$ret .= '<a name="rename"></a><b>Rename</b>'.
+				$ret .= '<p class="heading">Rename File - <span style="font-size: 8pt;">Don\'t forget to
+					include the correct file extension with the name (i.e. -
+					.jpg, .zip, .doc, etc.)</span></p>'.
 					$form->Get('method="post" action="'.$me.'"');
 			}
 
@@ -321,7 +325,7 @@ class FileManager
 					$def = $handler($fi);
 				}
 				else $def = null;
-				if ($this->Behavior->AllowSetType)
+				if ($this->Behavior->AllowSetType && count($this->filters) > 1)
 				$form->AddInput('Change Type', 'select', 'info[type]',
 					ArrayToSelOptions($this->filters, $fi->Filter->Name, false));
 				$options = $fi->Filter->GetOptions($def);
@@ -332,7 +336,7 @@ class FileManager
 					$form->AddInput($text, $field[1], "info[{$field[0]}]", $val);
 				}
 				$form->AddInput(null, 'submit', 'butSubmit', 'Update');
-				$ret .= "<p><b>Settings for {$this->root}{$this->cf}</b></p>";
+				$ret .= "<p class=\"heading\">Settings for {$this->root}<span style=\"color: #800\">{$this->cf}</span></p>";
 				$ret .= $form->Get('method="post" action="'.$target.'"');
 			}
 			$ret .= "</div>";
@@ -587,7 +591,7 @@ class FileManager
 	function GetCreateDirectory($target)
 	{
 		return <<<EOF
-<p><b>Create New Folder</b></p>
+<p class="heading">Create New Folder</p>
 <form action="{$target}" method="post">
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="createdir" />
@@ -609,7 +613,7 @@ EOF;
 		ini_set('max_execution_time', 0);
 		ini_set('max_input_time', 0);
 		return <<<EOF
-<p><b>Upload to Current Folder</b></p>
+<p class="heading">Upload to Current Folder</p>
 <form action="{$me}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
 	<input type="hidden" name="editor" value="{$this->name}" />
@@ -962,7 +966,7 @@ class FilterDefault
 	function GetOptions(&$default)
 	{
 		$more = array(
-			'Title' => array('title', 'text')
+			'Display Name for File or Folder' => array('title', 'text')
 		);
 		if (!empty($default)) return array_merge($default, $more);
 		else return $more;

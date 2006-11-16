@@ -242,7 +242,7 @@ class EditorData
 					$value = GetVar($data[0]);
 					if ($data[1] == 'date')
 					{
-						$insert[$name] = $value[2].'-'.$value[0].'-'.$value[1];
+						$insert[$data[0]] = $value[2].'-'.$value[0].'-'.$value[1];
 					}
 					else if ($data[1] == 'password' && strlen($value) > 0)
 					{
@@ -741,7 +741,7 @@ class EditorData
 				//Callback mapped
 				if (isset($disp->callback))
 				{
-					call_user_func_array($disp->callback,
+					$row[$ix++] = call_user_func_array($disp->callback,
 						array($cnode->data, $disp_index));
 				}
 				//Regular field
