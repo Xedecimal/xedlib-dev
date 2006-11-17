@@ -355,8 +355,10 @@ EOF;
 				}
 				else $def = null;
 				if ($this->Behavior->AllowSetType && count($this->filters) > 1)
-				$form->AddInput('Change Type', 'select', 'info[type]',
-					ArrayToSelOptions($this->filters, $fi->Filter->Name, false));
+				$form->AddInput(new FormInput('Change Type', 'select',
+					'info[type]',
+					ArrayToSelOptions($this->filters, $fi->Filter->Name,
+					false)));
 				$options = $fi->Filter->GetOptions($def);
 				if (!empty($options)) foreach ($options as $text => $field)
 				{

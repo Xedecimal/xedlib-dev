@@ -222,7 +222,8 @@ class Template
 			else $help = NULL;
 
 			$obj = &$this->GetCurrentObject();
-			$obj->AddInput($text, $attribs["TYPE"], $name, $value, null, $help);
+			$obj->AddInput(new FormInput($text, $attribs["TYPE"], $name,
+				$value, null, $help));
 		}
 
 		if ($show)
