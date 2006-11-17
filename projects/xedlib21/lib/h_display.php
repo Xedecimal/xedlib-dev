@@ -71,7 +71,8 @@ class Box
 		$temp = isset($template) ? $template : $this->template;
 		if (file_exists($temp))
 		{
-			$t = new Template();
+			$d = null;
+			$t = new Template($d);
 			$t->set("box_name", $this->name);
 			$t->set("box_title", $this->title);
 			$t->set("box_body", $this->out);
