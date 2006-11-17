@@ -634,7 +634,9 @@ class FormInput
 			return "<textarea {$this->atrs}>{$this->valu}</textarea>";
 		return "<input type=\"{$this->type}\"
 			name=\"{$this->name}\"
-			id=\"{$parent}_{$this->name}\"/>";
+			id=\"{$parent}_{$this->name}\"".
+			(isset($this->valu) ? " value=\"{$this->valu}\"" : null).
+			"{$this->atrs}/>";
 	}
 }
 
