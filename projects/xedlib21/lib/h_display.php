@@ -170,10 +170,11 @@ class Table
 		if ($this->cols)
 		{
 			$ret .= "<tr>\n";
-			for ($x = 0; $x < count($this->cols); $x++)
+			$ix = 0;
+			foreach ($this->cols as $id => $col)
 			{
-				$col = $this->cols[$x];
-				if (isset($this->atrs)) $atrs = " " . $this->atrs[$x % count($this->atrs)];
+				if (isset($this->atrs)) $atrs = " ".
+					$this->atrs[$ix++ % count($this->atrs)];
 				else $atrs = "";
 				$ret .= "<td$atrs>{$col}</td>\n";
 			}
@@ -230,14 +231,15 @@ class SortTable extends Table
 	*/
 	function SortTable($name, $cols, $attributes = NULL)
 	{
-		if (!is_array($cols)) YPEError("If you are not going to specify any columns, you might as well just use Table.");
-
+		if (!is_array($cols)) Error("If you are not going to specify any
+			columns, you might as well just use Table.");
+		
 		$this->name = $name;
 
 		$sort = GetVar("sort");
 		$order = GetVar("order", "ASC");
 
-		global $me, $cs, $ca;
+		global $me, $PERSISTS;
 		$this->cols = array();
 		foreach ($cols as $id => $disp)
 		{
@@ -247,7 +249,16 @@ class SortTable extends Table
 				$append = $order == 'ASC' ? ' &uarr;' : ' &darr;';
 				($order == "ASC") ? $order = "DESC" : $order = "ASC";
 			}
-			$this->cols[] = "<a href=\"$me?cs=$cs&amp;ca=$ca&amp;sort=$id&amp;order=$order\">$disp</a>$append";
+
+			$uri_defaults = $PERSISTS;
+			$uri_defaults = array_merge($uri_defaults, array(
+				'sort' => $id,
+				'order' => $order
+			));
+
+			$this->cols[] = "<a href=\"".
+				MakeURI($me, $uri_defaults).
+				"\">$disp</a>$append";
 		}
 
 		$this->atrs = $attributes;
@@ -496,18 +507,6 @@ class Form extends Table
 	}
 
 	/**
-	 * Returns a cleaned up string to work in an html id attribute without w3c
-	 * errors.
-	 *
-	 * @param string $id
-	 * @return string
-	 */
-	function CleanID($id)
-	{
-		return str_replace('[', '_', str_replace(']', '', $id));
-	}
-
-	/**
 	* Returns the complete html rendered form for output purposes.
 	* @param $formAttribs string Additional form attributes (method, class, action, etc)
 	* @param $tblAttribs string To be passed to Table::GetTable()
@@ -566,72 +565,75 @@ class FormInput
 	public $text;
 	public $name;
 	public $type;
-	public $attr;
+	public $atrs;
 	public $help;
-	private $parent;
+	public $valu;
 
-	function FormInput($text, $type, $name, $attr = null, $help = null)
+	function FormInput($text, $type, $name, $valu, $atrs = null, $help = null)
 	{
 		$this->text = $text;
 		$this->type = $type;
 		$this->name = $name;
-		$this->attr = $attr;
+		$this->valu = $valu;
+		$this->atrs = $atrs;
 		$this->help = $help;
 	}
 
 	function Get($parent = null)
 	{
+		if ($this->type == 'select')
+		{
+			$ret = "<select name=\"{$this->name}\"
+				id=\"{$parent}_{$this->name}\">";
+			if (!empty($this->valu))
+				foreach ($this->valu as $id => $val)
+					$ret .= "<option
+						value=\"{$id}\">{$val->text}</option>";
+			return $ret.'</select>';
+		}
+		if ($this->type == 'checks')
+		{
+			$ret = null;
+			if (!empty($this->value))
+				foreach ($this->value as $id => $val)
+					$ret .= "<label><input
+						type=\"checkbox\"
+						name=\"{$this->name}[{$id}]\"
+						id=\"{$this->name}_{$id}\"{$this->attr}/>
+						{$val->text}</label><br />";
+			return $ret;
+		}
+		if ($this->type == 'selects')
+		{
+			$ret = '<select
+				id="'.CleanID($parent.'_'.$this->name).'"
+				name="'.$this->name."[]\"
+				multiple=\"multiple\"$this->atrs>\n";
+			if (!empty($this->valu))
+			{
+				$ogstarted = false;
+				foreach ($this->valu as $id => $opt)
+				{
+					$selected = $opt->selected ? ' selected="selected"' : "";
+					if ($opt->group)
+					{
+						if ($ogstarted) $ret .= "</optgroup>";
+						$ret .= "<optgroup label=\"{$opt->text}\">";
+						$ogstarted = true;
+					}
+					else $ret .= "<option value=\"{$id}\"$selected>".
+						htmlspecialchars($opt->text)."</option>\n";
+				}
+				if ($ogstarted) $ret .= "</optgroup>";
+			}
+			$ret .= "</select>\n";
+			return $ret;
+		}
+		if ($this->type == 'area')
+			return "<textarea {$this->atrs}>{$this->valu}</textarea>";
 		return "<input type=\"{$this->type}\"
 			name=\"{$this->name}\"
 			id=\"{$parent}_{$this->name}\"/>";
-	}
-}
-
-class FormInputValue extends FormInput
-{
-	public $value;
-	function FormInputValue($text, $type, $name, $valu, $attr = null,
-		$help = null)
-	{
-		parent::FormInput($text, $type, $name, $attr, $help);
-		$this->value = $valu;
-	}
-
-	function Get($parent = null)
-	{
-		if ($this->type == 'area')
-			return "<textarea {$this->attr}>{$this->value}</textarea>";
-		return "<input type=\"{$this->type}\" value=\"{$this->value}\"{$this->attr}/>";
-	}
-}
-
-class FormInputChecks extends FormInputValue
-{
-	function Get($parent = null)
-	{
-		$ret = null;
-		if (!empty($this->value))
-			foreach ($this->value as $id => $val)
-				$ret .= "<label><input
-					type=\"checkbox\"
-					name=\"{$this->name}[{$id}]\"
-					id=\"{$this->name}_{$id}\"{$this->attr}/>
-					{$val->text}</label><br />";
-		return $ret;
-	}
-}
-
-class FormInputSelect extends FormInputValue
-{
-	function Get($parent = null)
-	{
-		$ret = "<select name=\"{$this->name}\"
-			id=\"{$parent}_{$this->name}\">";
-		if (!empty($this->value))
-			foreach ($this->value as $id => $val)
-				$ret .= "<option
-					value=\"{$id}\">{$val->text}</option>";
-		return $ret.'</select>';
 	}
 }
 

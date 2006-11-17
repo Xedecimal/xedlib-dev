@@ -426,4 +426,16 @@ function RunCallbacks()
 	return $ret;
 }
 
+/**
+ * Returns a cleaned up string to work in an html id attribute without w3c
+ * errors.
+ *
+ * @param string $id
+ * @return string
+ */
+function CleanID($id)
+{
+	return str_replace('[', '_', str_replace(']', '', $id));
+}
+
 ?>

@@ -1,5 +1,9 @@
 <?php
 
+define('SORT_NONE',   0);
+define('SORT_MANUAL', 1);
+define('SORT_TABLE',  2);
+
 class DisplayColumn
 {
 	/**
@@ -136,9 +140,10 @@ class EditorData
 	 */
 	public $state;
 	/**
-	 * Whether or not this editor allows sorting.
+	 * The method used to handle sorting of the table portion of this
+	 * editor. Use either SORT_NONE (0), SORT_MANUAL (1) or SORT_TABLE (2).
 	 *
-	 * @var bool
+	 * @var int
 	 */
 	public $sorting;
 	/**
@@ -201,7 +206,7 @@ class EditorData
 			$this->type = CONTROL_BOUND;
 		}
 		else $this->type = CONTROL_SIMPLE;
-		$this->sorting = true;
+		$this->sorting = SORT_MANUAL;
 	}
 
 	/**
@@ -226,6 +231,9 @@ class EditorData
 	{
 		// Don't speak unless spoken to.
 		if (GetVar('editor') != $this->name) return;
+		
+		if ($this->sorting == SORT_TABLE)
+			$this->sort = array(GetVar('sort', $this->ds->id) => GetVar('order', 'ASC'));
 
 		$this->state = $action == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
 		if ($action == $this->name.'_create')
@@ -623,25 +631,32 @@ class EditorData
 				$joins = array();
 
 				//Parent column of the child...
-				$cols[$child->ds->table.'.'.$child->child_key] = "{$child->ds->table}_{$child->child_key}";
+				$cols[$child->ds->table.'.'.$child->child_key] =
+					"{$child->ds->table}_{$child->child_key}";
 
 				//Coming from another table, we gotta join it in.
 				if ($child->ds->table != $this->ds->table)
 				{
-					$joins[$child->ds->table] = "{$child->ds->table}.{$child->child_key} = {$this->ds->table}.{$child->parent_key}";
+					$joins[$child->ds->table] = "{$child->ds->table}.
+						{$child->child_key} = {$this->ds->table}.
+						{$child->parent_key}";
+					
 					//We also need to get the column names that we'll need...
-					$cols[$child->ds->table.'.'.$child->ds->id] = "{$child->ds->table}_{$child->ds->id}";
+					$cols[$child->ds->table.'.'.$child->ds->id] =
+						"{$child->ds->table}_{$child->ds->id}";
 					if (!empty($child->ds->Display))
 					foreach ($child->ds->Display as $ix => $disp)
 					{
-						$cols[$child->ds->table.'.'.$disp->column] = "{$child->ds->table}_{$disp->column}";
+						$cols[$child->ds->table.'.'.$disp->column] =
+							"{$child->ds->table}_{$disp->column}";
 					}
 				}
 			}
 
 			//Changed during redball.. May be trouble, moved, filter from filter
 			//to the match argument. - Nick
-			$items = $this->ds->GetInternal($this->filter, $this->sort, null, $joins, $cols);
+			$items = $this->ds->GetInternal($this->filter, $this->sort,
+				null, $joins, $cols);
 			//Build a whole tree out of the items and children.
 			$root = $this->BuildTree($items);
 		}
@@ -656,7 +671,7 @@ class EditorData
 			if (!empty($this->ds->Display))
 			foreach ($this->ds->Display as $disp)
 			{
-				$cols[] = "<b>{$disp->text}</b>";
+				$cols[$disp->column] = "<b>{$disp->text}</b>";
 				$atrs[] = $disp->attribs;
 			}
 
@@ -668,12 +683,15 @@ class EditorData
 				if (!empty($child->ds->Display))
 				foreach ($child->ds->Display as $disp)
 				{
-					$cols[] = "<b>{$disp->text}</b>";
+					$cols[$disp->column] = "<b>{$disp->text}</b>";
 					$atrs[] = $disp->attribs;
 				}
 			}
 
-			$table = new Table($this->name.'_table', $cols, $atrs);
+			if ($this->sorting == SORT_TABLE)
+				$table = new SortTable($this->name.'_table', $cols, $atrs);
+			else
+				$table = new Table($this->name.'_table', $cols, $atrs);
 
 			$rows = array();
 			$this->AddRows($rows, $target, $root, 0);
@@ -750,13 +768,6 @@ class EditorData
 					if (isset($cnode->data[$disp_index]))
 						$row[$ix++] = stripslashes($cnode->data[$disp_index]);
 				}
-
-				//Show all children displays...
-//				if ($context->ds->table != $this->ds->table)
-//				foreach ($context->ds->Display as $disp)
-//				{
-//					$row[$ix++] = $cnode->data[$context->ds->table.'_'.$disp->column];
-//				}
 			}
 
 			$url_defaults = array('editor' => $this->name);
@@ -773,7 +784,7 @@ class EditorData
 
 			$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
 
-			if ($this->sorting && count($node->children) > 1)
+			if ($this->sorting == SORT_MANUAL && count($node->children) > 1)
 			{
 				//We can possibly swap up
 				if ($index > 0)
@@ -865,12 +876,11 @@ class EditorData
 						else if (isset($data[2])) { $data[2]; }
 						else $value = null;
 						if (is_string($value)) $value = stripslashes($value);
-						$i = new FormInputValue($text, $data[1], $data[0],
-							$value, 'style="width: 100%"',
-							isset($data[3]) ? $data[3] : null,
-							isset($data[4]) ? $data[4] : null);
 					}
-					$frm->AddInput($i);
+
+					$frm->AddInput(new FormInput($text, $data[1], $data[0],
+							$value, isset($data[3]) ? $data[3] : null,
+							isset($data[4]) ? $data[4] : null));
 				}
 				else $frm->AddRow(array('&nbsp;'));
 			}

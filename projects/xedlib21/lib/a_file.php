@@ -225,8 +225,8 @@ class FileManager
 
 		$ret .= $this->GetHeader($target, $fi);
 		
-		$ret .= '<p><b>Select the checkbox of the file(s) or folder(s) that
-			you would like to delete or move.</b></p>';
+		$ret .= '<p>Select the checkbox of the file(s) or folder(s) that
+			you would like to delete or move.</p>';
 		
 		if (is_dir($this->root.$this->cf))
 		{
@@ -292,10 +292,35 @@ class FileManager
 			$ret .= "<div id=\"{$this->name}_options\" style=\"display: none\">";
 
 			if ($this->Behavior->AllowUpload)
-				$ret .= $this->GetUpload();
+			{
+				ini_set('max_execution_time', 0);
+				ini_set('max_input_time', 0);
+				$ret .= <<<EOF
+<p class="heading">Upload to Current Folder</p>
+<form action="{$target}" method="post" enctype="multipart/form-data">
+	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
+	<input type="hidden" name="editor" value="{$this->name}" />
+	<input type="hidden" name="ca" value="upload"/>
+	<input type="hidden" name="cf" value="{$this->cf}"/>
+	<input type="file" name="cu"/>
+	<input type="submit" value="Upload" />
+</form><br/><br/>
+EOF;
+			}
 			if ($this->Behavior->AllowCreateDir)
-				$ret .= $this->GetCreateDirectory($target, $this->cf);
-				
+			{
+				$ret .= <<<EOF
+<p class="heading">Create New Folder</p>
+<form action="{$target}" method="post">
+	<input type="hidden" name="editor" value="{$this->name}" />
+	<input type="hidden" name="ca" value="createdir" />
+	<input type="hidden" name="cf" value="{$this->cf}" />
+	<input type="text" name="name" />
+	<input type="submit" value="Create" />
+</form><br/><br/>
+EOF;
+			}
+
 			$fi = new FileInfo($this->root.$this->cf);
 
 			if ($this->Behavior->AllowRename)
@@ -336,14 +361,18 @@ class FileManager
 				if (!empty($options)) foreach ($options as $text => $field)
 				{
 					if (isset($field[2])) $val = $field[2];
-					else $val = isset($fi->info[$field[0]]) ? $fi->info[$field[0]] : null;
-					$form->AddInput($text, $field[1], "info[{$field[0]}]", $val);
+					else $val = isset($fi->info[$field[0]]) ?
+						$fi->info[$field[0]] : null;
+
+					$form->AddInput(new FormInput($text, $field[1],
+						"info[{$field[0]}]", $val, null,
+						isset($field[3]) ? $field[3] : null));
 				}
-				$form->AddInput(null, 'submit', 'butSubmit', 'Update');
+				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 				$ret .= "<p class=\"heading\">Settings for {$this->root}<span style=\"color: #800\">{$this->cf}</span></p>";
 				$ret .= $form->Get('method="post" action="'.$target.'"');
 			}
-			$ret .= "</div>";
+			$ret .= "</div><br/><br/><br/><br/>";
 		}
 		return $ret;
 	}
@@ -584,49 +613,6 @@ class FileManager
 	function cmp_file($f1, $f2)
 	{
 		return $f1->info['index'] < $f2->info['index'] ? -1 : 1;
-	}
-
-	/**
-	 * Gets the form used to create folders.
-	 *
-	 * @param string $target Script filename that uses this editor.
-	 * @return string
-	 */
-	function GetCreateDirectory($target)
-	{
-		return <<<EOF
-<p class="heading">Create New Folder</p>
-<form action="{$target}" method="post">
-	<input type="hidden" name="editor" value="{$this->name}" />
-	<input type="hidden" name="ca" value="createdir" />
-	<input type="hidden" name="cf" value="{$this->cf}" />
-	<input type="text" name="name" />
-	<input type="submit" value="Create" />
-</form>
-EOF;
-	}
-
-	/**
-	 * Gets the form used to upload files.
-	 *
-	 * @return string
-	 */
-	function GetUpload()
-	{
-		global $me, $cf;
-		ini_set('max_execution_time', 0);
-		ini_set('max_input_time', 0);
-		return <<<EOF
-<p class="heading">Upload to Current Folder</p>
-<form action="{$me}" method="post" enctype="multipart/form-data">
-	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
-	<input type="hidden" name="editor" value="{$this->name}" />
-	<input type="hidden" name="ca" value="upload"/>
-	<input type="hidden" name="cf" value="{$this->cf}"/>
-	<input type="file" name="cu"/>
-	<input type="submit" value="Upload" />
-</form>
-EOF;
 	}
 }
 
@@ -970,7 +956,9 @@ class FilterDefault
 	function GetOptions(&$default)
 	{
 		$more = array(
-			'Display Name for File or Folder' => array('title', 'text')
+			'Display Name for Current File or Folder' => array('title', 'text',
+			null, '* Notice, this will change the name of the file or folder
+			that you are currently in.')
 		);
 		if (!empty($default)) return array_merge($default, $more);
 		else return $more;
