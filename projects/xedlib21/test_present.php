@@ -78,11 +78,14 @@ $frm = new Form('formArray');
 $frm->Validation = array($vEmail, $vPhone, $vAddress, $vChecks);
 $frm->Errors = $ArrayV['errors'];
 $frm->AddHidden('cav', 'send');
-$frm->AddInput('Email:',   'text', 'email');
-$frm->AddInput('Phone:',   'text', 'phone');
-$frm->AddInput('Address:', 'text', 'address');
-$frm->AddInput('Checkboxes:', 'checkboxes', 'checks', ArrayToSelOptions($cboxes));
-$frm->AddInput(null, 'submit', 'butSubmit', 'Send');
+$frm->AddInput(
+	new FormInput('Email', 'text', 'email'),
+	new FormInput('Phone',   'text', 'phone'),
+	new FormInput('Address', 'text', 'address')
+);
+$frm->AddInput(new FormInputChecks('Checkboxes:', 'checkboxes', 'checks',
+	ArrayToSelOptions($cboxes)));
+$frm->AddInput(new FormInputValue(null, 'submit', 'butSubmit', 'Send'));
 echo GetBox('box_test', 'Form With Array Validation',
 	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
 
@@ -94,15 +97,15 @@ $frm->AddHidden('car', 'send');
 //$frm->Validation = array($v1, $v2, $v3).
 $frm->Validation = $vContact;
 $frm->Errors = $RecurseV['errors'];
-$frm->AddInput('Contact method', 'select', 'contact', ArrayToSelOptions($contacts));
-$frm->AddInput('Email:',   'text', 'email');
-$frm->AddInput('Phone:',   'text', 'phone');
-$frm->AddInput('Address:', 'text', 'address');
-$frm->AddInput(null, 'submit', 'butSubmit', 'Send');
+$frm->AddInput(new FormInputSelect('Contact method', 'select', 'contact',
+	ArrayToSelOptions($contacts)));
+$frm->AddInput(
+	new FormInput('Email:', 'text', 'email'),
+	new FormInput('Phone:',   'text', 'phone'),
+	new FormInput('Address:', 'text', 'address'));
+$frm->AddInput(new FormInputValue(null, 'submit', 'butSubmit', 'Send'));
 echo GetBox('box_test', 'Form With Recursive Validation',
 	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
-
 ?>
-
 </body>
 </html>

@@ -340,122 +340,163 @@ class Form extends Table
 	* (also good for displaying errors in validation)
 	* @param $attributes string Any other attributes you wish to include.
 	*/
-	function AddInput($text, $type, $name,
-	$value = null, $attributes = null, $helptext = null)
+//	function AddInput($text, $type, $name,
+//	$value = null, $attributes = null, $helptext = null)
+//	{
+//		if (isset($attributes)) $attributes = ' '.$attributes;
+//		if (isset($this->Validation))
+//		{
+//			if (is_array($this->Validation))
+//			{
+//				foreach ($this->Validation as $val)
+//				{
+//					if ($val->field == $name)
+//					{
+//						$helptext = $this->Errors[$name].$helptext;
+//						break;
+//					}
+//				}
+//			}
+//			else $helptext =
+//				(isset($this->Errors[$name]) ? $this->Errors[$name] : null).
+//				$helptext;
+//		}
+//		switch ($type)
+//		{
+//			case "area":
+//				$strout = "<textarea name=\"".htmlspecialchars($name)."\"$attributes>";
+//				if ($value) $strout .= $value;
+//				$strout .= "</textarea>";
+//				break;
+//			case "select":
+//				$strout = '<select id="'.$this->CleanID($this->name.'_'.$name).'" name="'.$name."\"{$attributes}>\n";
+//				if (is_array($value))
+//				{
+//					$ogstarted = false;
+//					foreach ($value as $id => $opt)
+//					{
+//						$selected = $opt->selected ? ' selected="selected"' : "";
+//						if ($opt->group)
+//						{
+//							if ($ogstarted) $strout .= "</optgroup>";
+//							$strout .= "<optgroup label=\"{$opt->text}\">";
+//							$ogstarted = true;
+//						}
+//						else $strout .= "<option value=\"{$id}\"$selected>".htmlspecialchars($opt->text)."</option>\n";
+//					}
+//					if ($ogstarted) $strout .= "</optgroup>";
+//				}
+//				$strout .= "</select>\n";
+//				break;
+//			case 'selects':
+//				$strout = '<select id="'.$this->CleanID($this->name.'_'.$name).'" name="'.$name."[]\" multiple=\"multiple\"$attributes>\n";
+//				if (is_array($value))
+//				{
+//					$ogstarted = false;
+//					foreach ($value as $id => $opt)
+//					{
+//						$selected = $opt->selected ? ' selected="selected"' : "";
+//						if ($opt->group)
+//						{
+//							if ($ogstarted) $strout .= "</optgroup>";
+//							$strout .= "<optgroup label=\"{$opt->text}\">";
+//							$ogstarted = true;
+//						}
+//						else $strout .= "<option value=\"{$id}\"$selected>".htmlspecialchars($opt->text)."</option>\n";
+//					}
+//					if ($ogstarted) $strout .= "</optgroup>";
+//				}
+//				$strout .= "</select>\n";
+//				break;
+//			case 'checkboxes':
+//				$strout = null;
+//				if (is_array($value))
+//				{
+//					$vals = GetVar($name);
+//					foreach ($value as $id => $opt)
+//					{
+//						$selected = $opt->selected ? ' checked="checked"' : null;
+//						if (isset($vals[$id])) $selected = ' checked="checked"';
+//						if ($opt->group) $strout .= "{$opt->text}<br/>\n";
+//						else $strout .= "<input type=\"checkbox\" id=\"{$name}_{$id}\" name=\"{$name}[{$id}]\" value=\"1\"$selected /><label for=\"{$name}_{$id}\">".htmlspecialchars($opt->text)."</label><br/>\n";
+//					}
+//				}
+//				break;
+//			case "yesno":
+//				$strout =  "<input type=\"radio\" name=\"$name\" value=\"{$value[0]}\" $attributes> Yes\n";
+//				$strout .= "<input type=\"radio\" name=\"$name\" value=\"{$value[1]}\" checked=\"checked\" $attributes> No\n";
+//				break;
+//			case "date":
+//				$strout = GetInputDate($name, $value, false);
+//				break;
+//			case "datetime":
+//				$strout = GetInputDate($name, $value, true);
+//				break;
+//			case "image_upload":
+//				$strout = "<img src=\"$value\"/><br/>\n";
+//				$strout .= "Upload Image: <input type=\"file\" name=\"{$name}\"/>\n";
+//				break;
+//			case 'checkbox':
+//				$attributes .= ' value="1"';
+//				if ($value) $attributes .= ' checked="checked"';
+//				$strout = "<input id=\"{$this->name}_$name\" type=\"$type\" name=\"$name\"$attributes />";
+//				break;
+//			case 'submit':
+//				if (isset($this->Validation))
+//					$attributes .= " onclick=\"return {$this->name}_check(1);\"";
+//			default:
+//				if (isset($value)) $val = ' value="'.htmlspecialchars($value).'"';
+//				else if (isset($this->Errors)) $val = ' value="'.htmlspecialchars(GetVar($name)).'"';
+//				else $val = null;
+//				$strout = "<input id=\"".$this->CleanID("{$this->name}_$name").
+//					"\" type=\"$type\" name=\"$name\"$attributes$val />";
+//				break;
+//		}
+//		if ($helptext != null) $this->AddRow(array('<label for="'.$this->name.'_'.htmlspecialchars($name).'">'.$text.'</label>', $strout, $helptext));
+//		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"{$this->name}_$name\">$text</label>" : null, $strout, null));
+//	}
+
+	function AddInput()
 	{
-		if (isset($attributes)) $attributes = ' '.$attributes;
-		if (isset($this->Validation))
+		if (func_num_args() < 1) Error("Not enough arguments.");
+		$args = func_get_args();
+		foreach ($args as $item)
 		{
-			if (is_array($this->Validation))
+			if ($item->type == 'submit' && isset($this->Validation))
 			{
-				foreach ($this->Validation as $val)
-				{
-					if ($val->field == $name)
-					{
-						$helptext = $this->Errors[$name].$helptext;
-						break;
-					}
-				}
+				$item->attr .= " onclick=\"return {$this->name}_check(1);\"";
 			}
-			else $helptext =
-				(isset($this->Errors[$name]) ? $this->Errors[$name] : null).
-				$helptext;
-		}
-		switch ($type)
-		{
-			case "area":
-				$strout = "<textarea name=\"".htmlspecialchars($name)."\"$attributes>";
-				if ($value) $strout .= $value;
-				$strout .= "</textarea>";
-				break;
-			case "select":
-				$strout = '<select id="'.$this->CleanID($this->name.'_'.$name).'" name="'.$name."\"{$attributes}>\n";
-				if (is_array($value))
+			$item->attr .= ' id="'.$this->name.'_'.
+			htmlspecialchars($item->name).'"';
+
+			$out = isset($item->text) ? '<label for="'.$this->name.'_'.
+				htmlspecialchars($item->name).'">'.$item->text.
+				'</label><br/>' : '<br/>';
+
+			if (isset($this->Validation))
+			{
+				if (is_array($this->Validation))
 				{
-					$ogstarted = false;
-					foreach ($value as $id => $opt)
+					foreach ($this->Validation as $val)
 					{
-						$selected = $opt->selected ? ' selected="selected"' : "";
-						if ($opt->group)
+						if ($val->field == $item->name)
 						{
-							if ($ogstarted) $strout .= "</optgroup>";
-							$strout .= "<optgroup label=\"{$opt->text}\">";
-							$ogstarted = true;
+							$helptext = $this->Errors[$item->name].$item->help;
+							break;
 						}
-						else $strout .= "<option value=\"{$id}\"$selected>".htmlspecialchars($opt->text)."</option>\n";
-					}
-					if ($ogstarted) $strout .= "</optgroup>";
-				}
-				$strout .= "</select>\n";
-				break;
-			case 'selects':
-				$strout = '<select id="'.$this->CleanID($this->name.'_'.$name).'" name="'.$name."[]\" multiple=\"multiple\"$attributes>\n";
-				if (is_array($value))
-				{
-					$ogstarted = false;
-					foreach ($value as $id => $opt)
-					{
-						$selected = $opt->selected ? ' selected="selected"' : "";
-						if ($opt->group)
-						{
-							if ($ogstarted) $strout .= "</optgroup>";
-							$strout .= "<optgroup label=\"{$opt->text}\">";
-							$ogstarted = true;
-						}
-						else $strout .= "<option value=\"{$id}\"$selected>".htmlspecialchars($opt->text)."</option>\n";
-					}
-					if ($ogstarted) $strout .= "</optgroup>";
-				}
-				$strout .= "</select>\n";
-				break;
-			case 'checkboxes':
-				$strout = null;
-				if (is_array($value))
-				{
-					$vals = GetVar($name);
-					foreach ($value as $id => $opt)
-					{
-						$selected = $opt->selected ? ' checked="checked"' : null;
-						if (isset($vals[$id])) $selected = ' checked="checked"';
-						if ($opt->group) $strout .= "{$opt->text}<br/>\n";
-						else $strout .= "<input type=\"checkbox\" id=\"{$name}_{$id}\" name=\"{$name}[{$id}]\" value=\"1\"$selected /><label for=\"{$name}_{$id}\">".htmlspecialchars($opt->text)."</label><br/>\n";
 					}
 				}
-				break;
-			case "yesno":
-				$strout =  "<input type=\"radio\" name=\"$name\" value=\"{$value[0]}\" $attributes> Yes\n";
-				$strout .= "<input type=\"radio\" name=\"$name\" value=\"{$value[1]}\" checked=\"checked\" $attributes> No\n";
-				break;
-			case "date":
-				$strout = GetInputDate($name, $value, false);
-				break;
-			case "datetime":
-				$strout = GetInputDate($name, $value, true);
-				break;
-			case "image_upload":
-				$strout = "<img src=\"$value\"/><br/>\n";
-				$strout .= "Upload Image: <input type=\"file\" name=\"{$name}\"/>\n";
-				break;
-			case 'checkbox':
-				$attributes .= ' value="1"';
-				if ($value) $attributes .= ' checked="checked"';
-				$strout = "<input id=\"{$this->name}_$name\" type=\"$type\" name=\"$name\"$attributes />";
-				break;
-			case 'submit':
-				if (isset($this->Validation))
-					$attributes .= " onclick=\"return {$this->name}_check(1);\"";
-			default:
-				if (isset($value)) $val = ' value="'.htmlspecialchars($value).'"';
-				else if (isset($this->Errors)) $val = ' value="'.htmlspecialchars(GetVar($name)).'"';
-				else $val = null;
-				$strout = "<input id=\"".$this->CleanID("{$this->name}_$name").
-					"\" type=\"$type\" name=\"$name\"$attributes$val />";
-				break;
+				else $helptext =
+					(isset($this->Errors[$item->name]) ? $this->Errors[$name] : null).
+					$item->help;
+			}
+			else $helptext = $item->help;
+			
+			$row[] = $out.$item->Get($this->name)."<br/>$helptext";
 		}
-		if ($helptext != null) $this->AddRow(array('<label for="'.$this->name.'_'.htmlspecialchars($name).'">'.$text.'</label>', $strout, $helptext));
-		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"{$this->name}_$name\">$text</label>" : null, $strout, null));
+		$this->AddRow($row);
 	}
-	
+
 	/**
 	 * Returns a cleaned up string to work in an html id attribute without w3c
 	 * errors.
@@ -519,6 +560,76 @@ class Form extends Table
 		if (isset($this->Validation))
 			$ret .= " onclick=\"return {$this->name}_check(1);\"";
 		return $ret.' />';
+	}
+}
+
+class FormInput
+{
+	public $text;
+	public $name;
+	public $type;
+	public $attr;
+	public $help;
+	private $parent;
+
+	function FormInput($text, $type, $name, $attr = null, $help = null)
+	{
+		$this->text = $text;
+		$this->type = $type;
+		$this->name = $name;
+		$this->attr = $attr;
+		$this->help = $help;
+	}
+
+	function Get($parent = null)
+	{
+		return "<input type=\"{$this->type}\"
+			name=\"{$this->name}\"
+			id=\"{$parent}_{$this->name}\"/>";
+	}
+}
+
+class FormInputValue extends FormInput
+{
+	public $value;
+	function FormInputValue($text, $type, $name, $valu, $attr = null,
+		$help = null)
+	{
+		parent::FormInput($text, $type, $name, $attr, $help);
+		$this->value = $valu;
+	}
+
+	function Get()
+	{
+		return "<input type=\"{$this->type}\" value=\"{$this->value}\"{$this->attr}/>";
+	}
+}
+
+class FormInputChecks extends FormInputValue
+{
+	function Get($parent = null)
+	{
+		$ret = null;
+		if (!empty($this->value))
+			foreach ($this->value as $id => $val)
+				$ret .= "<label><input
+					type=\"checkbox\"
+					name=\"{$this->name}[{$id}]\"
+					id=\"{$this->name}_{$id}\"{$this->attr}/>
+					{$val->text}</label><br />";
+		return $ret;
+	}
+}
+
+class FormInputSelect extends FormInputValue
+{
+	function Get($parent = null)
+	{
+		$ret = "<select name=\"{$this->name}\">";
+		if (!empty($this->value))
+			foreach ($this->value as $id => $val)
+				$ret .= "<option value=\"{$id}\">{$val->text}</option>";
+		return $ret.'</select>';
 	}
 }
 

@@ -822,8 +822,7 @@ class EditorData
 
 		if (!empty($context->ds->Fields))
 		{
-			$frm = new Form($fullname,
-				array('align="right"', null, null));
+			$frm = new Form($fullname);
 
 			if (isset($context->ds->Validation))
 			{
@@ -842,38 +841,36 @@ class EditorData
 			}
 			foreach ($context->ds->Fields as $text => $data)
 			{
-				if (is_array($data))
+				if (is_array($data) && !empty($data))
 				{
-					if ($data[1] == 'custom')
+					if ($data[1] == 'custom') //Callback
 					{
-						$fname = $data[2];
-						$fname(isset($sel) ? $sel : null, $frm);
+						$cb = $data[2];
+						call_user_func($cb, isset($sel) ? $sel : null, $frm);
 						continue;
 					}
-					else if ($data[1] == 'select')
+					else if ($data[1] == 'select') //FormInputSelect
 					{
 						if (isset($sel)) $data[2][$sel[$data[0]]]->selected = true;
 						$value = $data[2];
 					}
-					else if ($data[1] == 'selects')
+					else if ($data[1] == 'selects') //FormInputSelect
 					{
 						$value = $this->GetSelMask($data[2], isset($sel) ? $sel[$data[0]] : null);
 					}
-					else if ($data[1] == 'password')
+					else //FormInputValue
 					{
-						$value = '';
+						if ($data[1] == 'password') $value = '';
+						else if (isset($sel[$data[0]])) $value = $sel[$data[0]];
+						else if (isset($data[2])) { $data[2]; }
+						else $value = null;
+						if (is_string($value)) $value = stripslashes($value);
+						$i = new FormInputValue($text, $data[1], $data[0],
+							$value, 'style="width: 100%"',
+							isset($data[3]) ? $data[3] : null,
+							isset($data[4]) ? $data[4] : null);
 					}
-					else if (isset($sel[$data[0]])) $value = $sel[$data[0]];
-					else if (isset($data[2])) { $data[2]; }
-					else $value = null;
-					if (is_string($value)) $value = stripslashes($value);
-					$frm->AddInput(
-						$text,
-						$data[1],
-						$data[0],
-						$value,
-						'style="width: 100%"'. ((isset($data[3])) ? ' '.$data[3] : null),
-						isset($errors[$data[0]]) ? $errors[$data[0]] : isset($data[4]) ? $data[4] : null);
+					$frm->AddInput($i);
 				}
 				else $frm->AddRow(array('&nbsp;'));
 			}
