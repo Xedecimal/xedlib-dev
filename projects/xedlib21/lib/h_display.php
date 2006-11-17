@@ -588,9 +588,12 @@ class FormInput
 			$ret = "<select name=\"{$this->name}\"
 				id=\"{$parent}_{$this->name}\">";
 			if (!empty($this->valu))
-				foreach ($this->valu as $id => $val)
+				foreach ($this->valu as $id => $opt)
+				{
+					$selected = $opt->selected ? ' selected="selected"' : null;
 					$ret .= "<option
-						value=\"{$id}\">{$val->text}</option>";
+						value=\"{$id}\"$selected>{$opt->text}</option>";
+				}
 			return $ret.'</select>';
 		}
 		if ($this->type == 'checks')
@@ -616,7 +619,7 @@ class FormInput
 				$ogstarted = false;
 				foreach ($this->valu as $id => $opt)
 				{
-					$selected = $opt->selected ? ' selected="selected"' : "";
+					$selected = $opt->selected ? ' selected="selected"' : null;
 					if ($opt->group)
 					{
 						if ($ogstarted) $ret .= "</optgroup>";
@@ -632,7 +635,8 @@ class FormInput
 			return $ret;
 		}
 		if ($this->type == 'area')
-			return "<textarea {$this->atrs}>{$this->valu}</textarea>";
+			return "<textarea name=\"{$this->name}\"
+				{$this->atrs}>{$this->valu}</textarea>";
 		return "<input type=\"{$this->type}\"
 			name=\"{$this->name}\"
 			id=\"{$parent}_{$this->name}\"".
