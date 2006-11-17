@@ -599,6 +599,8 @@ class FormInputValue extends FormInput
 
 	function Get($parent = null)
 	{
+		if ($this->type == 'area')
+			return "<textarea {$this->attr}>{$this->value}</textarea>";
 		return "<input type=\"{$this->type}\" value=\"{$this->value}\"{$this->attr}/>";
 	}
 }
@@ -917,9 +919,10 @@ class LoginManager
 		foreach ($_GET as $key => $val) if ($key != 'ca' && $val != 'logout') Persist($key, $val);
 		$f = new Form('login', array(null, 'width="100%"'));
 		$f->AddHidden('ca', 'login');
-		if ($this->type != CONTROL_SIMPLE) $f->AddInput('Login', 'text', 'auth_user');
-		$f->AddInput('Password', 'password', 'auth_pass');
-		$f->AddInput(null, 'submit', 'butSubmit', 'Login');
+		if ($this->type != CONTROL_SIMPLE)
+			$f->AddInput(new FormInput('Login', 'text', 'auth_user'));
+		$f->AddInput(new FormInput('Password', 'password', 'auth_pass'));
+		$f->AddInput(new FormInputValue(null, 'submit', 'butSubmit', 'Login'));
 		return $f->Get('action="'.$target.'" method="post"');
 	}
 
