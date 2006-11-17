@@ -430,7 +430,7 @@ class EditorData
 	 */
 	function Get($target, $ci = null)
 	{
-		$ret['table'] = $this->GetTable($target, $ci);
+		if (GetVar('ca') != $this->name.'_edit') $ret['table'] = $this->GetTable($target, $ci);
 		$ret['forms'] = $this->GetForms($target, $ci,
 			GetVar('editor') == $this->name ? GetVar('child') : null);
 		return $ret;
