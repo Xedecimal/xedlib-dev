@@ -224,6 +224,10 @@ class FileManager
 			GetRelativePath(dirname(__FILE__)).'/js/helper.js"></script>';
 
 		$ret .= $this->GetHeader($target, $fi);
+		
+		$ret .= '<p><b>Select the checkbox of the file(s) or folder(s) that
+			you would like to delete or move.</b></p>';
+		
 		if (is_dir($this->root.$this->cf))
 		{
 			if ($this->View->ShowFilesFirst)
