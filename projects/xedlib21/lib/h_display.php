@@ -466,8 +466,6 @@ class Form extends Table
 			{
 				$item->attr .= " onclick=\"return {$this->name}_check(1);\"";
 			}
-			$item->attr .= ' id="'.$this->name.'_'.
-			htmlspecialchars($item->name).'"';
 
 			$out = isset($item->text) ? '<label for="'.$this->name.'_'.
 				htmlspecialchars($item->name).'">'.$item->text.
@@ -487,7 +485,7 @@ class Form extends Table
 					}
 				}
 				else $helptext =
-					(isset($this->Errors[$item->name]) ? $this->Errors[$name] : null).
+					(isset($this->Errors[$item->name]) ? $this->Errors[$item->name] : null).
 					$item->help;
 			}
 			else $helptext = $item->help;
@@ -599,7 +597,7 @@ class FormInputValue extends FormInput
 		$this->value = $valu;
 	}
 
-	function Get()
+	function Get($parent = null)
 	{
 		return "<input type=\"{$this->type}\" value=\"{$this->value}\"{$this->attr}/>";
 	}
@@ -625,10 +623,12 @@ class FormInputSelect extends FormInputValue
 {
 	function Get($parent = null)
 	{
-		$ret = "<select name=\"{$this->name}\">";
+		$ret = "<select name=\"{$this->name}\"
+			id=\"{$parent}_{$this->name}\">";
 		if (!empty($this->value))
 			foreach ($this->value as $id => $val)
-				$ret .= "<option value=\"{$id}\">{$val->text}</option>";
+				$ret .= "<option
+					value=\"{$id}\">{$val->text}</option>";
 		return $ret.'</select>';
 	}
 }
