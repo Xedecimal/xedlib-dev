@@ -102,7 +102,7 @@ class Template
 	 *
 	 * @return Template
 	 */
-	function Template(&$data = null)
+	function Template(&$data)
 	{
 		$this->out = "";
 		$this->objs = array();

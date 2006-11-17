@@ -330,10 +330,10 @@ EOF;
 				$form->AddHidden('ca', 'rename');
 				$form->AddHidden('ci', $fi->path);
 				$form->AddHidden('cf', $this->cf);
-				$form->AddInput('Name', 'text', 'name', $fi->filename, null,
+				$form->AddInput(new FormInput('Name', 'text', 'name', $fi->filename, null,
 					'<span style="color: #F00">* Caution, this will change the
-					name of the file or folder that you are viewing.</span>');
-				$form->AddInput(null, 'submit', 'butSubmit', 'Rename');
+					name of the file or folder that you are viewing.</span>'));
+				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Rename'));
 				global $me;
 				$ret .= '<p class="heading">Rename File - <span style="font-size: 8pt;">Don\'t forget to
 					include the correct file extension with the name (i.e. -

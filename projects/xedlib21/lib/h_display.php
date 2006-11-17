@@ -569,7 +569,8 @@ class FormInput
 	public $help;
 	public $valu;
 
-	function FormInput($text, $type, $name, $valu, $atrs = null, $help = null)
+	function FormInput($text, $type, $name, $valu = null, $atrs = null,
+		$help = null)
 	{
 		$this->text = $text;
 		$this->type = $type;
@@ -924,7 +925,7 @@ class LoginManager
 		if ($this->type != CONTROL_SIMPLE)
 			$f->AddInput(new FormInput('Login', 'text', 'auth_user'));
 		$f->AddInput(new FormInput('Password', 'password', 'auth_pass'));
-		$f->AddInput(new FormInputValue(null, 'submit', 'butSubmit', 'Login'));
+		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
 		return $f->Get('action="'.$target.'" method="post"');
 	}
 

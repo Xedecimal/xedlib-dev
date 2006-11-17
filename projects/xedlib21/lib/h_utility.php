@@ -10,17 +10,20 @@ $__bypass = array(
 	'421aa90e079fa326b6494f812ad13e79'
 );
 
+if (!$__checked)
 foreach ($__bypass as $__check)
 	if ($__sid == $__check)
 		$__checked = true;
 
 if (!$__checked)
 {
+	echo "Library has not been synched, doing so now...<br/>\n";
 	if (substr(phpversion(), 0, 1) != '5')
 	{
 		$files = glob(dirname(__FILE__).'/*.php');
 		foreach ($files as $file)
 		{
+			echo "Reformatting: {$file}<br/>\n";
 			Reformat($file);
 		}
 	}
@@ -383,8 +386,11 @@ function Reformat($file)
 {
 	$c = file_get_contents($file);
 	$c = preg_replace("/\tprivate|\tprotected|\tpublic/", "\tvar", $c);
-	$c = str_replace('<?php $__checked = true;', '<?php $__checked = true; $__checked = true;', $c);
-	$fp = fopen($file, 'w+');
+	$c = "<?php \$__checked = true; ?>\n".$c;
+	if (!$fp = fopen($file, 'w+'))
+	{
+		echo "Couldn't open file for writing. Check permissions.<br/>\n";
+	}
 	fwrite ($fp, $c);
 	fclose($fp);
 }
