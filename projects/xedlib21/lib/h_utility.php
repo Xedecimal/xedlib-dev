@@ -24,6 +24,7 @@ if (!$__checked)
 		foreach ($files as $file)
 		{
 			echo "Reformatting: {$file}<br/>\n";
+			chmod($file, 0666);
 			Reformat($file);
 		}
 	}
@@ -389,7 +390,12 @@ function Reformat($file)
 	$c = "<?php \$__checked = true; ?>\n".$c;
 	if (!$fp = fopen($file, 'w+'))
 	{
-		echo "Couldn't open file for writing. Check permissions.<br/>\n";
+		echo "Couldn't open file for writing, attempting to set
+			permissions...<br/>\n";
+		if (!chmod($file, 0666))
+			echo "Couldn't set the permissions, giving up.<br/>\n";
+		else
+			$fp = fopen($file, 'w+');
 	}
 	fwrite ($fp, $c);
 	fclose($fp);
