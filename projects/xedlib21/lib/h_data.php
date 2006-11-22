@@ -18,13 +18,16 @@
  * Associative get, returns arrays as $item['column'] instead of $item[index].
  * @todo Don't use defines, defines aren't redeclareable.
  */
-define("GET_ASSOC", MYSQL_ASSOC);
+define("GET_ASSOC", 1);
 /**
  * Both get, returns arrays as $item['column'] as well as $item[index] instead
  * of $item[index].
  * @todo Don't use defines, defines aren't redeclareable.
  */
-define("GET_BOTH", MYSQL_BOTH);
+define("GET_BOTH", 3);
+
+define('DB_MY', 0);
+define('DB_OD', 1);
 
 /**
  * A generic database interface, currently only supports MySQL apparently.
@@ -35,6 +38,25 @@ class Database
 	private $link;
 	/** Name of this database, set from constructor. */
 	private $name;
+	/**
+	 * Type of database this is attached to.
+	 *
+	 * @var int
+	 */
+	public $type;
+	
+	/**
+	 * Left quote compatible with whatever database we're sitting on.
+	 *
+	 * @var char
+	 */
+	public $lq;
+	/**
+	 * Right quote compatible with whatever server we are sitting on.
+	 *
+	 * @var char
+	 */
+	public $rq;
 
 	/**
 	 * Instantiates a new xlDatabase object with the database name, hostname, user name and password.
@@ -43,12 +65,31 @@ class Database
 	 * @param $user string Username to connect with, either specified or gathered from the defined constant XL_DBUSER.
 	 * @param $pass string Password to connect with, either specified or gathered from the defined constant XL_DBPASS.
 	 */
-	function Database($database, $host = null, $user = null, $pass = null)
+	function Database($url)
 	{
-		$this->link = mysql_connect($host, $user, $pass);
-		if (mysql_error()) die("MySQL Error on connect: ".mysql_error());
-		mysql_select_db($database, $this->link);
-		$this->name = $database;
+		preg_match('#([^:]+)://([^:]*):(.*)@([^/]*)/(.*)#', $url, $m);
+		switch ($m[1])
+		{
+			case 'mysql':
+				$this->link = mysql_connect($m[4], $m[2], $m[3]);
+				if (mysql_error()) die("MySQL Error on connect: ".mysql_error());
+				mysql_select_db($m[5], $this->link);
+				$this->type = DB_MY;
+				$this->lq = $this->rq = '`';
+				break;
+			case 'odbc':
+				$this->link = odbc_connect($m[5], $m[2], $m[3]);
+				if (!$this->link) die("ODBC Error on connect: ".
+					odbc_errormsg($this->link));
+				$this->type = DB_OD;
+				$this->lq = '[';
+				$this->rq = ']';
+				break;
+			default:
+				Error("Invalid database on Database creation.");
+				break;
+		}
+		$this->name = $m[5];
 	}
 
 	/**
@@ -61,11 +102,18 @@ class Database
 	 */
 	function Query($query, $silent = false)
 	{
-		$res = mysql_query($query, $this->link);
-		if (mysql_error())
+		switch ($this->type)
 		{
-			user_error("Query: $query<br>\nMySQL Error: ".mysql_error());
-			return null;
+			case DB_MY:
+				$res = mysql_query($query, $this->link);
+				if (mysql_error())
+					Error("Query: $query<br/>\nMySQL Error: ".mysql_error());
+				break;
+			case DB_OD:
+				$res = odbc_exec($this->link, $query);
+				if (odbc_error())
+					Error("Query: $query<br/>\nODBC Error: ".odbc_error());
+				break;
 		}
 		return $res;
 	}
@@ -119,7 +167,8 @@ class Database
 	 */
 	function GetLastInsertID()
 	{
-		return mysql_insert_id($this->link);
+		if ($this->type == DB_MY) return mysql_insert_id($this->link);
+		return 0;
 	}
 }
 
@@ -297,6 +346,8 @@ class DataSet
 	public $Validation;
 	
 	public $Description;
+	
+	private $func_fetch;
 
 	/**
 	 * Initialize a new CDataSet binded to $table in $db.
@@ -306,6 +357,17 @@ class DataSet
 	 */
 	function DataSet($db, $table, $id = 'id')
 	{
+		switch ($db->type)
+		{
+			case DB_OD:
+				$this->func_fetch = 'odbc_fetch_array';
+				$this->func_rows = 'odbc_num_rows';
+				break;
+			case DB_MY:
+				$this->func_fetch = 'mysql_fetch_array';
+				$this->func_rows = 'mysql_affected_rows';
+				break;
+		}
 		$this->database = $db;
 		$this->table = $table;
 		$this->id = $id;
@@ -338,7 +400,7 @@ class DataSet
 			foreach ($cols as $col => $val)
 			{
 				if ($ix++ > 0) $ret .= ",\n";
-				$ret .= " {$col} AS `{$val}`";
+				$ret .= " {$col} AS {$val}";
 			}
 			return $ret;
 		}
@@ -354,8 +416,11 @@ class DataSet
 	 */
 	function QuoteTable($name)
 	{
-		if (strpos($name, '.') > -1) return str_replace('.', '`.`', "`$name`");
-		return "`$name`";
+		$lq = $this->database->lq;
+		$rq = $this->database->rq;
+		if (strpos($name, '.') > -1)
+			return str_replace('.', "{$lq}.{$rq}", "{$lq}{$name}{$rq}");
+		return "{$lq}{$name}{$rq}";
 	}
 
 	/**
@@ -493,9 +558,10 @@ class DataSet
 			{
 				if (is_array($val))
 				{
-					if ($val[0] == "destring") $ret .= "`{$key}` = {$val[1]}";
+					if ($val[0] == "destring")
+						$ret .= $this->QuoteTable($key)." = {$val[1]}";
 				}
-				else $ret .= "`{$key}` = '".addslashes($val)."'";
+				else $ret .= $this->QuoteTable($key)." = '".addslashes($val)."'";
 				if ($x++ < count($values)-1) $ret .= ", ";
 			}
 		}
@@ -512,11 +578,11 @@ class DataSet
 	 */
 	function Add($columns, $update_existing = false)
 	{
-		$query = "INSERT INTO `{$this->table}` (";
+		$query = "INSERT INTO {$this->table} (";
 		foreach (array_keys($columns) as $ix => $key)
 		{
 			if ($ix != 0) $query .= ", ";
-			$query .= "`$key`";
+			$query .= "$key";
 		}
 		$query .= ") VALUES(";
 		$ix = 0;
@@ -570,7 +636,7 @@ class DataSet
 		//Prepare Query
 		$query = 'SELECT';
 		$query .= $this->ColsClause($columns);
-		$query .= "\n FROM `{$this->table}`";
+		$query .= "\n FROM {$this->database->lq}{$this->table}{$this->database->rq}";
 		if (isset($this->Shortcut)) $query .= " `{$this->Shortcut}`";
 		$query .= $this->JoinClause($joins);
 		$query .= $this->WhereClause($match);
@@ -582,18 +648,18 @@ class DataSet
 		$rows = $this->database->Query($query);
 
 		//Prepare Data
-		$this->items = array();
-		if (mysql_affected_rows() < 1) return null;
-		while (($row = mysql_fetch_array($rows, $args)))
+		//if (mysql_affected_rows() < 1) return null;
+		$items = null;
+		while (($row = call_user_func($this->func_fetch, $rows)))
 		{
 			$newrow = array();
 			foreach ($row as $key => $val)
 			{
 				$newrow[$key] = stripslashes($val);
 			}
-			$this->items[] = $newrow;
+			$items[] = $newrow;
 		}
-		return $this->items;
+		return $items;
 	}
 
 	/**
@@ -617,7 +683,7 @@ class DataSet
 		//Prepare Query
 		$query = "SELECT\n";
 		$query .= $this->ColsClause($columns);
-		$query .= " FROM `{$this->table}`";
+		$query .= " FROM {$this->table}";
 		$query .= $this->JoinClause($joins);
 		$query .= $this->WhereClause($match);
 		$query .= $this->GroupClause($group);
@@ -628,18 +694,17 @@ class DataSet
 		$rows = $this->database->Query($query);
 
 		//Prepare Data
-		$this->items = array();
-		if (mysql_affected_rows() < 1) return null;
-		while (($row = mysql_fetch_array($rows, $args)))
+		$items = null;
+		while (($row = call_user_func($this->func_fetch, $rows)))
 		{
 			$newrow = array();
 			foreach ($row as $key => $val)
 			{
 				$newrow[$key] = stripslashes($val);
 			}
-			$this->items[] = $newrow;
+			$items[] = $newrow;
 		}
-		return $this->items;
+		return $items;
 	}
 
 	/**
@@ -650,7 +715,7 @@ class DataSet
 	 */
 	function GetOne($match, $args = GET_BOTH)
 	{
-		$data = $this->Get($match, null, null, null, null, $args);
+		$data = $this->Get($match, null, null, null, null, null, $args);
 		if (isset($data)) return $data[0];
 		return $data;
 	}
@@ -689,7 +754,8 @@ class DataSet
 	 * @param $amount Result count to return.
 	 * @return array An array of results from the query specified or null if none.
 	 */
-	function GetAllSort($column, $order = "ASC", $start = NULL, $amount = NULL)
+	function GetAllSort($column, $order = "ASC", $start = NULL,
+		$amount = NULL)
 	{
 		$query = "SELECT * FROM {$this->table} ORDER BY $column $order";
 		if (isset($start))
@@ -775,7 +841,7 @@ class DataSet
 	 */
 	function Update($match, $values)
 	{
-		$query = "UPDATE `{$this->table}` SET ".$this->GetSetString($values);
+		$query = "UPDATE {$this->table} SET ".$this->GetSetString($values);
 		$this->database->Query($query.$this->WhereClause($match));
 	}
 
@@ -789,12 +855,12 @@ class DataSet
 	function Swap($smatch, $dmatch, $pkey)
 	{
 		//Grab all the source items that are going to be swapped.
-		$sitems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($smatch));
-		$sitem = mysql_fetch_array($sitems, GET_ASSOC);
+		$sitems = $this->database->query("SELECT * FROM {$this->table}".$this->WhereClause($smatch));
+		$sitem = call_user_func($this->func_fetch, $sitems);
 
 		//Grab all the destination items that are going to be swapped.
-		$ditems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($dmatch));
-		$ditem = mysql_fetch_array($ditems, GET_ASSOC);
+		$ditems = $this->database->query("SELECT * FROM {$this->table}".$this->WhereClause($dmatch));
+		$ditem = call_user_func($this->func_fetch, $ditems);
 
 		//If we have children relations, it suddenly gets complicated.
 		if (!empty($this->children))
@@ -845,7 +911,7 @@ class DataSet
 	function Remove($match)
 	{
 		$matches = array();
-		$query = "DELETE FROM `{$this->table}`";
+		$query = "DELETE FROM {$this->table}";
 		$query .= $this->WhereClause($match);
 		$this->database->Query($query);
 

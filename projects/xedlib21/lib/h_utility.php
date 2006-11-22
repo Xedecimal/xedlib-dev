@@ -10,7 +10,7 @@ $__bypass = array(
 	'421aa90e079fa326b6494f812ad13e79'
 );
 
-if (!$__checked)
+if (!isset($__checked))
 foreach ($__bypass as $__check)
 	if ($__sid == $__check)
 		$__checked = true;
