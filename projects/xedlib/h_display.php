@@ -454,7 +454,7 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	{
 		if (isset($timestamp[5]))
 			$timestamp = gmmktime($timestamp[3], $timestamp[4], $timestamp[5], $timestamp[0], $timestamp[1], $timestamp[2]);
-		else
+		else if (strlen($timestamp[0]) > 0 && strlen($timestamp[1]) > 0 && strlen($timestamp[2]) > 0)
 			$timestamp = gmmktime(0, 0, 0, $timestamp[0], $timestamp[1], $timestamp[2]);
 	}
 	if (is_string($timestamp))
