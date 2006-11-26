@@ -15,7 +15,7 @@ foreach ($__bypass as $__check)
 	if ($__sid == $__check)
 		$__checked = true;
 
-if (!$__checked)
+if (!isset($__checked))
 {
 	echo "Library has not been synched, doing so now...<br/>\n";
 	if (substr(phpversion(), 0, 1) != '5')

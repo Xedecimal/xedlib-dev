@@ -582,7 +582,7 @@ class DataSet
 		foreach (array_keys($columns) as $ix => $key)
 		{
 			if ($ix != 0) $query .= ", ";
-			$query .= "$key";
+			$query .= $this->QuoteTable($key);
 		}
 		$query .= ") VALUES(";
 		$ix = 0;
