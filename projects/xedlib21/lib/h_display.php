@@ -599,8 +599,6 @@ class FormInput
 			if (!empty($this->valu))
 				foreach ($this->valu as $id => $opt)
 				{
-					$selected = $opt->selected ? ' selected="selected"' : null;
-				{
 					$selected = $val->selected ? ' selected="selected"' : null;
 					$ret .= "<option
 						value=\"{$id}\"$selected>{$val->text}</option>";
