@@ -104,7 +104,6 @@ class Database
 	function Query($query, $silent = false)
 	{
 		if ($GLOBALS['debug']) varinfo($query);
-		$res = mysql_query($query, $this->link);
 		switch ($this->type)
 		{
 			case DB_MY:
