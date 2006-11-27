@@ -26,7 +26,7 @@ $ret = FormValidate('formtest', $v, isset($ca));
 
 $page_head = '<script type="text/javascript">'."\n".$ret['js'].'</script>';
 
-$db = new Database('test', 'localhost', 'root', 'ransal');
+$db = new Database('mysql://root:ransal@localhost/test');
 
 // dsChild
 
@@ -90,7 +90,8 @@ $dsSelf->AddChild(new Relation($dsSelf, 'id', 'parent'));
 $ca = GetVar('ca');
 $ci = GetVar('ci');
 
-$t = new Template();
+$data = null;
+$t = new Template($data);
 
 $edBoth = new EditorData('test_both', $dsBoth);
 if ($editor == 'test_both') $edBoth->Prepare($ca);

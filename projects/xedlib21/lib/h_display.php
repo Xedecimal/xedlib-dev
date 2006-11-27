@@ -485,7 +485,7 @@ class Form extends Table
 		{
 			if ($item->type == 'submit' && isset($this->Validation))
 			{
-				$item->attr .= " onclick=\"return {$this->name}_check(1);\"";
+				$item->atrs .= " onclick=\"return {$this->name}_check(1);\"";
 			}
 
 			$out = isset($item->text) ? '<label for="'.CleanID($this->name.'_'.

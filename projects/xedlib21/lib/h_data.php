@@ -67,7 +67,8 @@ class Database
 	 */
 	function Database($url)
 	{
-		preg_match('#([^:]+)://([^:]*):(.*)@([^/]*)/(.*)#', $url, $m);
+		if (preg_match('#([^:]+)://([^:]*):(.*)@([^/]*)/(.*)#', $url, $m) < 1)
+			Error("Invalid url for database.");
 		switch ($m[1])
 		{
 			case 'mysql':

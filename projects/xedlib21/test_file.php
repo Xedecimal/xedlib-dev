@@ -14,7 +14,8 @@ $fm->Behavior->AllowAll();
 $fm->Prepare($ca);
 $page_body = $fm->Get($me, $ca);
 
-$t = new Template();
+$context = null;
+$t = new Template($context);
 echo $t->Get('template_test.html');
 
 ?>

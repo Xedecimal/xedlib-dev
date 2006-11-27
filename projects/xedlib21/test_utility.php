@@ -5,7 +5,8 @@ session_start();
 require_once('lib/h_template.php');
 require_once('lib/h_utility.php');
 
-$t = new Template();
+$c = null;
+$t = new Template($c);
 $page_body = '';
 $page_title = 'Utility Test';
 $page_head = '';
