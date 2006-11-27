@@ -4,11 +4,6 @@ require_once('h_utility.php');
 require_once('h_display.php');
 
 /**
- * @package File
- *
- */
-
-/**
  * Allows a user to administrate files from a web browser.
  */
 class FileManager
@@ -31,7 +26,7 @@ class FileManager
 	 *
 	 * @var FileManagerView
 	 */
-	private $view;
+	public $View;
 
 	/**
 	 * Array of filters that are available for this object.
@@ -44,7 +39,7 @@ class FileManager
 	 *
 	 * @var string
 	 */
-	private $root;
+	public $root;
 	/**
 	 * Icons and their associated filetypes, overridden with FilterGallery.
 	 *
@@ -134,14 +129,15 @@ class FileManager
 			if (!$this->Behavior->AllowEdit) return;
 			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$info->info = GetVar("info");
-			$fp = fopen($info->dir.'/.'.$info->filename, "w+");
+			$p = $info->dir.'/.'.$info->filename;
+			$fp = fopen($p, "w+");
 			fwrite($fp, serialize($info->info));
 			fclose($fp);
+			chmod($p, 0666);
 		}
 		else if ($action == 'rename')
 		{
 			if (!$this->Behavior->AllowRename) return;
-			//$this->files = $this->GetDirectory();
 			$fi = new FileInfo(GetVar('ci'));
 			$name = GetVar('name');
 			$fi->Filter->Rename($fi, $name);
@@ -165,7 +161,9 @@ class FileManager
 		else if ($action == "createdir")
 		{
 			if (!$this->Behavior->AllowCreateDir) return;
-			mkdir($this->root.$this->cf.GetVar("name"));
+			$p = $this->root.$this->cf.GetVar("name");
+			mkdir($p);
+			chmod($p, 0666);
 		}
 		else if ($action == 'swap')
 		{
@@ -215,6 +213,8 @@ class FileManager
 
 		if ($this->mass_avail = $this->Behavior->MassAvailable())
 		{
+			$ret .= '<p>Select the checkbox of the file(s) or folder(s) that
+				you would like to delete or move.</p>';
 			$ret .= "<form action=\"{$target}\" method=\"post\">";
 			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$this->cf}\" />";
 		}
@@ -224,10 +224,7 @@ class FileManager
 			GetRelativePath(dirname(__FILE__)).'/js/helper.js"></script>';
 
 		$ret .= $this->GetHeader($target, $fi);
-		
-		$ret .= '<p>Select the checkbox of the file(s) or folder(s) that
-			you would like to delete or move.</p>';
-		
+
 		if (is_dir($this->root.$this->cf))
 		{
 			if ($this->View->ShowFilesFirst)
@@ -295,8 +292,7 @@ class FileManager
 			{
 				ini_set('max_execution_time', 0);
 				ini_set('max_input_time', 0);
-				$ret .= <<<EOF
-<p class="heading">Upload to Current Folder</p>
+				$out = <<<EOF
 <form action="{$target}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
 	<input type="hidden" name="editor" value="{$this->name}" />
@@ -304,21 +300,24 @@ class FileManager
 	<input type="hidden" name="cf" value="{$this->cf}"/>
 	<input type="file" name="cu"/>
 	<input type="submit" value="Upload" />
-</form><br/><br/>
+</form>
 EOF;
+				$ret .= GetBox('box_upload', 'Upload to Current Folder',
+					$out, 'template_box.html').'<br/><br/>';
 			}
 			if ($this->Behavior->AllowCreateDir)
 			{
-				$ret .= <<<EOF
-<p class="heading">Create New Folder</p>
+				$out = <<<EOF
 <form action="{$target}" method="post">
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="createdir" />
 	<input type="hidden" name="cf" value="{$this->cf}" />
 	<input type="text" name="name" />
 	<input type="submit" value="Create" />
-</form><br/><br/>
+</form>
 EOF;
+				$ret .= GetBox('box_createdir', 'Create New Folder',
+					$out, 'template_box.html').'<br/><br/>';
 			}
 
 			$fi = new FileInfo($this->root.$this->cf);
@@ -335,10 +334,12 @@ EOF;
 					name of the file or folder that you are viewing.</span>'));
 				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Rename'));
 				global $me;
-				$ret .= '<p class="heading">Rename File - <span style="font-size: 8pt;">Don\'t forget to
+				$out = '<p><span style="font-size: 8pt;">Don\'t forget to
 					include the correct file extension with the name (i.e. -
 					.jpg, .zip, .doc, etc.)</span></p>'.
 					$form->Get('method="post" action="'.$me.'"');
+				$ret .= GetBox('box_rename', 'Rename File', $out,
+					'template_box.html');
 			}
 
 			if ($this->Behavior->AllowEdit)
@@ -369,10 +370,12 @@ EOF;
 					$form->AddInput(new FormInput($text, $field[1],
 						"info[{$field[0]}]", $val, null,
 						isset($field[3]) ? $field[3] : null));
+					$form->AddRow('<br/>');
 				}
 				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
-				$ret .= "<p class=\"heading\">Settings for {$this->root}<span style=\"color: #800\">{$this->cf}</span></p>";
-				$ret .= $form->Get('method="post" action="'.$target.'"');
+
+				$ret .= GetBox('box_settings', "Settings for {$this->root}<span style=\"text-decoration: underline;\">{$this->cf}</span>",
+					$form->Get('method="post" action="'.$target.'"'), 'template_box.html').'<br/><br/>';
 			}
 			$ret .= "</div><br/><br/><br/><br/>";
 		}
@@ -515,9 +518,10 @@ EOF;
 	{
 		$ret = "\n<tr>\n";
 		if (!$file->show) return;
-		if (!empty($file->info['access']) && !$this->Behavior->ShowAllFiles)
+		if (!$this->Behavior->ShowAllFiles)
 		{
-			if (!in_array($this->uid, $file->info['access'])) return;
+			if (empty($file->info['access']) ||
+			!in_array($this->uid, $file->info['access'])) return;
 		}
 		$types = $file->type ? 'dirs' : 'files';
 		if (isset($file->info['thumb'])) $ret .= "<td>{$file->info['thumb']}</td>\n";
@@ -532,10 +536,11 @@ EOF;
 		if (is_file($file->path) && !$this->Behavior->UseInfo)
 			$url = $this->root.$this->cf.$file->filename.'" target="_new';
 		else $url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
+
 		$ret .= "\t<td>\n";
 		if ($this->mass_avail)
 			$ret .= "\t\t<input type=\"checkbox\" id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\" onclick=\"toggleAny(['sel_files_', 'sel_dirs_'], '{$this->name}_mass_options');\" />\n";
-		$ret .= "\t\t<a href=\"$url\">{$name}</a> ".
+		$ret .= "\t\t<a href=\"$url\">{$name}</a></td><td> ".
 			gmdate("m/d/y h:i", filectime($file->path))."\n\t</td>\n";
 
 		$common = array(
@@ -601,8 +606,16 @@ EOF;
 			if (is_dir($this->root.$this->cf.'/'.$file)) $ret['dirs'][] = $newfi;
 			else $ret['files'][] = $newfi;
 		}
-		usort($ret['files'], array($this, 'cmp_file'));
-		usort($ret['dirs'], array($this, 'cmp_file'));
+		if ($this->View->Sort == SORT_MANUAL)
+		{
+			usort($ret['dirs'], array($this, 'cmp_file'));
+			usort($ret['files'], array($this, 'cmp_file'));
+		}
+		else
+		{
+			asort($ret['dirs']);
+			asort($ret['files']);
+		}
 		return $ret;
 	}
 
@@ -645,6 +658,12 @@ class FileManagerView
 	 * @var boolean
 	 */
 	public $ShowFilesFirst = false;
+	/**
+	 * Sorting method used for files.
+	 *
+	 * @var int
+	 */
+	public $Sort = SORT_MANUAL;
 }
 
 class FileManagerBehavior
@@ -731,8 +750,7 @@ class FileManagerBehavior
 	 */
 	function MassAvailable()
 	{
-		return $this->AllowMove ||
-			$this->AllowDelete;
+		return $this->AllowMove || $this->AllowDelete;
 	}
 
 	/**

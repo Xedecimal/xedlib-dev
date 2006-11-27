@@ -242,12 +242,21 @@ class SortTable extends Table
 
 		global $me, $PERSISTS;
 		$this->cols = array();
+
+		$imgUp = '<img src="'.GetRelativePath(dirname(__FILE__)).
+		'/images/up.png" style="vertical-align: text-bottom;"
+		alt="Ascending" title="Ascending" />';
+		
+		$imgDown = '<img src="'.GetRelativePath(dirname(__FILE__)).
+		'/images/down.png" style="vertical-align: text-bottom;"
+		alt="Descending" title="Descending" align="middle"/>';
+
 		foreach ($cols as $id => $disp)
 		{
 			$append = "";
 			if ($sort == $id)
 			{
-				$append = $order == 'ASC' ? ' &uarr;' : ' &darr;';
+				$append = $order == 'ASC' ? $imgUp : $imgDown;
 				($order == "ASC") ? $order = "DESC" : $order = "ASC";
 			}
 
@@ -591,8 +600,10 @@ class FormInput
 				foreach ($this->valu as $id => $opt)
 				{
 					$selected = $opt->selected ? ' selected="selected"' : null;
+				{
+					$selected = $val->selected ? ' selected="selected"' : null;
 					$ret .= "<option
-						value=\"{$id}\"$selected>{$opt->text}</option>";
+						value=\"{$id}\"$selected>{$val->text}</option>";
 				}
 			return $ret.'</select>';
 		}
@@ -601,11 +612,15 @@ class FormInput
 			$ret = null;
 			if (!empty($this->value))
 				foreach ($this->value as $id => $val)
+				{
+					$selected = $val->selected ? ' selected="selected"' : null;
 					$ret .= "<label><input
 						type=\"checkbox\"
 						name=\"{$this->name}[{$id}]\"
-						id=\"{$this->name}_{$id}\"{$this->attr}/>
+						id=\"{$this->name}_{$id}\"
+						{$this->attr}{$selected}/>
 						{$val->text}</label><br />";
+				}
 			return $ret;
 		}
 		if ($this->type == 'selects')
@@ -626,7 +641,8 @@ class FormInput
 						$ret .= "<optgroup label=\"{$opt->text}\">";
 						$ogstarted = true;
 					}
-					else $ret .= "<option value=\"{$id}\"$selected>".
+					else $ret .=
+						"<option value=\"{$id}\"{$selected}>".
 						htmlspecialchars($opt->text)."</option>\n";
 				}
 				if ($ogstarted) $ret .= "</optgroup>";

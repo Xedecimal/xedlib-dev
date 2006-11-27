@@ -49,13 +49,21 @@ class DisplayColumn
 	}
 }
 
+class EditorHandler
+{
+	function Create(&$data) { return true; }
+	function Created($id) { return true; }
+	function Update($id, $data, &$update) { return true; }
+	function Delete($id, &$data) { return true; }
+}
+
 /**
  * Check the example...
  *
  * @example doc/HandlerFile.php
  *
  */
-class HandlerFile
+class HandlerFile extends EditorHandler
 {
 	public $target;
 	public $column;
@@ -68,7 +76,7 @@ class HandlerFile
 		$this->conditions = $conditions;
 	}
 
-	function Create($data)
+	function Create(&$data)
 	{
 		$target = "{$this->target}/{$data[$this->column]}";
 		if (!isset($this->conditions)) mkdir($target);
@@ -82,7 +90,7 @@ class HandlerFile
 		return true;
 	}
 
-	function Update($id, $data, $update)
+	function Update($id, $data, &$update)
 	{
 		$source = "{$this->target}/{$data[$this->column]}";
 		if (file_exists($source))
@@ -92,7 +100,7 @@ class HandlerFile
 		return true;
 	}
 
-	function Delete($id, $data)
+	function Delete($id, &$data)
 	{
 		$folder = "{$this->target}/{$data[$this->column]}";
 		if (file_exists($folder)) DelTree($folder);
@@ -267,13 +275,15 @@ class EditorData
 					}
 					else if ($data[1] == 'selects')
 					{
-						$newval = 0;
-						foreach ($value as $val) $newval |= $val;
-						$insert[$data[0]] = $newval;
+						//We don't want to stick with bitmasking selects
+						//because it could end up with gigantic numbers.
+						//$newval = 0;
+						//foreach ($value as $val) $newval |= $val;
+						$insert[$data[0]] = $value;
 					}
 					else $insert[$data[0]] = $value;
 				}
-				else $insert[$name] = DeString($data);
+				else if (is_string($name)) $insert[$name] = DeString($data);
 			}
 			foreach ($this->handlers as $handler)
 			{
@@ -281,13 +291,18 @@ class EditorData
 			}
 			
 			$parent = GetVar('parent');
-			
+
 			if (isset($parent))
 			{
 				$child = $this->ds->children[GetVar('child')];
 				$insert[$child->child_key] = $parent;
 			}
-			$context->ds->Add($insert);
+			$id = $context->ds->Add($insert);
+			
+			foreach ($this->handlers as $handler)
+			{
+				$handler->Created($id);
+			}
 		}
 		else if ($action == $this->name.'_update')
 		{
@@ -299,6 +314,7 @@ class EditorData
 			{
 				if (is_array($data))
 				{
+					if (!isset($data[0])) continue;
 					$value = GetVar($data[0]);
 					if ($data[1] == 'date')
 					{
@@ -313,9 +329,12 @@ class EditorData
 						$update[$data[0]] = ($value == 1) ? $value : 0;
 					else if ($data[1] == 'selects')
 					{
-						$newval = 0;
-						foreach ($value as $val) $newval |= $val;
-						$update[$data[0]] = $newval;
+						//We don't want to stick with bitmasking selects
+						//because it could end up with gigantic numbers.
+						//$newval = 0;
+						//if (!empty($value))
+						//	foreach ($value as $val) $newval |= $val;
+						$update[$data[0]] = $value;
 					}
 					else if ($data[1] == 'file')
 					{
@@ -330,7 +349,8 @@ class EditorData
 							move_uploaded_file($src, $dst);
 						}
 					}
-					else $update[$data[0]] = GetVar($data[0]);
+					else if (is_string($name))
+						$update[$data[0]] = GetVar($data[0]);
 				}
 			}
 
@@ -561,7 +581,7 @@ class EditorData
 			}
 			//Put child table children above related
 			//children, helps to understand the display.
-			$this->FixTree($tree);
+			if (count($this->ds->children) > 0) $this->FixTree($tree);
 			return $tree;
 		}
 		return null;
@@ -653,8 +673,8 @@ class EditorData
 				}
 			}
 
-			//Changed during redball.. May be trouble, moved, filter from filter
-			//to the match argument. - Nick
+			//Changed during redball.. May be trouble, moved filter -> match
+			//Nick
 			$items = $this->ds->GetInternal($this->filter, $this->sort,
 				null, $joins, $cols);
 			//Build a whole tree out of the items and children.
@@ -860,16 +880,20 @@ class EditorData
 						call_user_func($cb, isset($sel) ? $sel : null, $frm);
 						continue;
 					}
-					else if ($data[1] == 'select') //FormInputSelect
+					else if ($data[1] == 'select')
 					{
-						if (isset($sel)) $data[2][$sel[$data[0]]]->selected = true;
+						if (isset($sel) && strlen($data[0]) > 0)
+							$data[2][$sel[$data[0]]]->selected = true;
 						$value = $data[2];
 					}
-					else if ($data[1] == 'selects') //FormInputSelect
+					else if ($data[1] == 'selects')
 					{
-						$value = $this->GetSelMask($data[2], isset($sel) ? $sel[$data[0]] : null);
+						if (isset($sel) && isset($sel[$data[0]]))
+						$value = $this->GetSelMask($data[2], isset($sel) &&
+							strlen($data[0]) > 0 ? $sel[$data[0]] : null);
+						else $value = $data[2];
 					}
-					else //FormInputValue
+					else
 					{
 						if ($data[1] == 'password') $value = '';
 						else if (isset($sel[$data[0]])) $value = $sel[$data[0]];
@@ -882,7 +906,7 @@ class EditorData
 							$value, isset($data[3]) ? $data[3] : null,
 							isset($data[4]) ? $data[4] : null));
 				}
-				else $frm->AddRow(array('&nbsp;'));
+				else $frm->AddRow(is_numeric($text) ? $data : '&nbsp;');
 			}
 			$frm->State = $state == STATE_EDIT ? 'Update' : 'Create';
 			$frm->Description = $context->ds->Description;
