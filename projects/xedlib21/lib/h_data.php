@@ -44,7 +44,7 @@ class Database
 	 * @var int
 	 */
 	public $type;
-	
+
 	/**
 	 * Left quote compatible with whatever database we're sitting on.
 	 *
@@ -102,6 +102,8 @@ class Database
 	 */
 	function Query($query, $silent = false)
 	{
+		if ($GLOBALS['debug']) varinfo($query);
+		$res = mysql_query($query, $this->link);
 		switch ($this->type)
 		{
 			case DB_MY:
@@ -344,9 +346,9 @@ class DataSet
 	 * @var mixed
 	 */
 	public $Validation;
-	
+
 	public $Description;
-	
+
 	private $func_fetch;
 
 	/**
@@ -400,7 +402,7 @@ class DataSet
 			foreach ($cols as $col => $val)
 			{
 				if ($ix++ > 0) $ret .= ",\n";
-				$ret .= " {$col} AS {$val}";
+				$ret .= ' '.$this->QuoteTable($col).' AS '.$this->QuoteTable($val);
 			}
 			return $ret;
 		}
@@ -419,7 +421,7 @@ class DataSet
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 		if (strpos($name, '.') > -1)
-			return str_replace('.', "{$lq}.{$rq}", "{$lq}{$name}{$rq}");
+			return preg_replace('#([^(]+)\.([^ )]+)#', '`\1`.`\2`', $name);
 		return "{$lq}{$name}{$rq}";
 	}
 
@@ -440,10 +442,17 @@ class DataSet
 				foreach ($match as $col => $val)
 				{
 					if ($ix++ > 0) $ret .= ' AND';
-					if (is_array($val) && $val[0] = 'destring')
-						$ret .= ' '.$this->QuoteTable($col)." = {$val[1]}";
-					else
-						$ret .= ' '.$this->QuoteTable($col)." = '{$val}'";
+					if (is_string($col)) //array('col' => 'value')
+					{
+						if (is_array($val) && $val[0] = 'destring')
+							$ret .= ' '.$this->QuoteTable($col)." = {$val[1]}";
+						else
+							$ret .= ' '.$this->QuoteTable($col)." = '{$val}'";
+					}
+					else //"col = 'value'"
+					{
+						$ret .= " {$val}";
+					}
 				}
 				return $ret;
 			}
@@ -493,7 +502,7 @@ class DataSet
 	{
 		if (isset($sorting))
 		{
-			$ret = ' ORDER BY';
+			$ret = "\n ORDER BY";
 			if (is_array($sorting))
 			{
 				$ix = 0;
@@ -537,7 +546,7 @@ class DataSet
 	function GroupClause($group)
 	{
 		if (isset($group))
-		return " GROUP BY {$group}";
+		return "\n GROUP BY {$group}";
 		return null;
 	}
 

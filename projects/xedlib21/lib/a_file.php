@@ -470,7 +470,7 @@ EOF;
 
 		if (isset($this->cf))
 		{
-			$uri = MakeURI($target, array('editor' => $this->name));
+			$uri = URL($target, array('editor' => $this->name));
 			$ret .= "<a href=\"{$uri}\">Home</a> / ";
 		}
 
@@ -478,7 +478,7 @@ EOF;
 		{
 			if (strlen($items[$ix]) < 1) continue;
 			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
-			$uri = MakeURI($target, array('editor' => $this->name,
+			$uri = URL($target, array('editor' => $this->name,
 				'cf' => $cpath));
 			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
 			if ($ix < count($items)-1) $ret .= " / \n";
@@ -549,19 +549,19 @@ EOF;
 			'type' => $types,
 		);
 
-		$uriUp = MakeURI($target, array_merge($common, array(
+		$uriUp = URL($target, array_merge($common, array(
 			'ca' => 'swap',
 			'cd' => 'up',
 			'index' => $index
 		)));
 
-		$uriDown = MakeURI($target, array_merge($common, array(
+		$uriDown = URL($target, array_merge($common, array(
 			'ca' => 'swap',
 			'cd' => 'down',
 			'index' => $index
 		)));
 
-		$uriDel = MakeURI($target, array_merge($common, array(
+		$uriDel = URL($target, array_merge($common, array(
 			'ca' => "delete",
 			'ci' => urlencode($file->filename)
 		)));

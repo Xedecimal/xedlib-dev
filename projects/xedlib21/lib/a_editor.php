@@ -477,7 +477,7 @@ class EditorData
 		$uri['ct'] = $dst;
 		$uri['ca'] = $this->name.'_swap';
 		$path = GetRelativePath(dirname(__FILE__));
-		return '<a href="'.MakeURI($target, $uri).'">
+		return '<a href="'.URL($target, $uri).'">
 			<img src="'.$path.'/images/'. ($up ? 'up' : 'down').
 			'.png" alt="'.($up ? 'Up' : 'Down').'" title="'.
 			($up ? 'Up' : 'Down').'" /></a>';
@@ -797,8 +797,8 @@ class EditorData
 
 			$p = GetRelativePath(dirname(__FILE__));
 			
-			$url_edit = MakeURI($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
-			$url_del = MakeURI($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
+			$url_edit = URL($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
+			$url_del = URL($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
 			$row[] = "<a href=\"$url_edit#{$this->name}_editor\"><img src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit Item\" /></a>";
 			$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\"><img src=\"{$p}/images/delete.png\" alt=\"Delete\" title=\"Delete Item\" /></a>";
 

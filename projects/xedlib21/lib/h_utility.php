@@ -207,7 +207,7 @@ function Persist($name, $value)
  * @param $uri array URI appended on URL and cleaned.
  * @return string Cleaned URI+URL
  */
-function MakeURI($url, $uri = null)
+function URL($url, $uri = null)
 {
 	$ret = str_replace(' ', '%20', $url);
 
@@ -223,7 +223,6 @@ function MakeURI($url, $uri = null)
 			}
 		}
 	}
-
 	return $ret;
 }
 
@@ -237,7 +236,7 @@ function Redirect($url, $getvars = NULL)
 {
 	session_write_close();
 	$redir = GetVar("cr", $url);
-	if (is_array($getvars)) $redir = MakeURI($url, $getvars);
+	if (is_array($getvars)) $redir = URL($url, $getvars);
 	header("Location: $redir");
 	die();
 }
@@ -371,6 +370,14 @@ function DelTree($dir)
 //Array
 //
 
+/**
+ * Returns a new array with the idcol into the keys of each item's idcol
+ * set instead of numeric offset.
+ *
+ * @param array $rows
+ * @param string $idcol
+ * @return array
+ */
 function DataToArray($rows, $idcol)
 {
 	$ret = array();
@@ -405,6 +412,14 @@ function GetRelativePath($path)
 {
 	$npath = str_replace('\\', '/', $path);
 	return substr($npath, strlen(GetVar('DOCUMENT_ROOT')));
+}
+
+function GetButDel($url = null)
+{
+	$ret = '<img src="'.GetRelativePath(dirname(__FILE__)).'/images/delete.png"
+		alt="delete" title="Delete Item" />';
+	if (strlen($url) > 0) $ret = '<a href="'.$url.'">'.$ret.'</a>';
+	return $ret;
 }
 
 function ResizeImage($image, $newWidth, $newHeight)

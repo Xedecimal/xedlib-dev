@@ -267,7 +267,7 @@ class SortTable extends Table
 			));
 
 			$this->cols[] = "<a href=\"".
-				MakeURI($me, $uri_defaults).
+				URL($me, $uri_defaults).
 				"\">$disp</a>$append";
 		}
 
@@ -488,8 +488,8 @@ class Form extends Table
 				$item->attr .= " onclick=\"return {$this->name}_check(1);\"";
 			}
 
-			$out = isset($item->text) ? '<label for="'.$this->name.'_'.
-				htmlspecialchars($item->name).'">'.$item->text.
+			$out = isset($item->text) ? '<label for="'.CleanID($this->name.'_'.
+				$item->name).'">'.$item->text.
 				'</label><br/>' : '<br/>';
 
 			if (isset($this->Validation))
@@ -595,13 +595,15 @@ class FormInput
 		if ($this->type == 'select')
 		{
 			$ret = "<select name=\"{$this->name}\"
-				id=\"{$parent}_{$this->name}\">";
+				id=\"".CleanID($parent.'_'.$this->name)."\">";
 			if (!empty($this->valu))
 				foreach ($this->valu as $id => $opt)
 				{
-					$selected = $val->selected ? ' selected="selected"' : null;
+					$selected = $opt->selected ? ' selected="selected"' : null;
 					$ret .= "<option
-						value=\"{$id}\"$selected>{$val->text}</option>";
+						value=\"{$id}\"$selected>".
+						htmlspecialchars($opt->text).
+						"</option>";
 				}
 			return $ret.'</select>';
 		}
@@ -615,8 +617,7 @@ class FormInput
 					$ret .= "<label><input
 						type=\"checkbox\"
 						name=\"{$this->name}[{$id}]\"
-						id=\"{$this->name}_{$id}\"
-						{$this->attr}{$selected}/>
+						id=\"".CleanID($this->name.'_'.$id)."\"{$this->attr}/>
 						{$val->text}</label><br />";
 				}
 			return $ret;
@@ -653,7 +654,7 @@ class FormInput
 				{$this->atrs}>{$this->valu}</textarea>";
 		return "<input type=\"{$this->type}\"
 			name=\"{$this->name}\"
-			id=\"{$parent}_{$this->name}\"".
+			id=\"".CleanID($parent.'_'.$this->name)."\"".
 			(isset($this->valu) ? " value=\"{$this->valu}\"" : null).
 			"{$this->atrs}/>";
 	}
