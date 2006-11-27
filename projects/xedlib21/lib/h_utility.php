@@ -309,20 +309,23 @@ function MyDateTimestamp($date, $include_time = false)
 
 function GetDateOffset($ts)
 {
-	$ret = '';
-	$Y = gmdate('y') - gmdate('y', $ts);
-	$M = gmdate('m') - gmdate('m', $ts);
-	$D = gmdate('d') - gmdate('d', $ts);
-	$HH = gmdate('H') - gmdate('H', $ts);
-	$MM = gmdate('i') - gmdate('i', $ts);
-	$SS = gmdate('s') - gmdate('s', $ts);
+	$ss = time()-$ts;
+	$mm = $ss / 60;
+	$hh = $mm / 60;
+	
+	$d = $hh / 24;
+	$w = $d / 7;
+	$m = $d / 31;
+	$y = $d / 365;
 
-	if ($Y > 0) $ret = "$Y year".($Y != 1 ? 's' : null);
-	else if ($M > 0) $ret = "$M month".($M != 1 ? 's' : null);
-	else if ($D > 0) $ret = "$D day".($D != 1 ? 's' : null);
-	else if ($HH > 0) $ret = "$HH hour".($HH != 1 ? 's' : null);
-	else if ($MM > 0) $ret = "$MM minute".($MM != 1 ? 's' : null);
-	else $ret = "$SS second".($SS != 1 ? 's' : null);
+	$ret = null;
+	if ($y >= 1) $ret = number_format($y, 1).' year'.($y > 1 ? 's' : null);
+	else if ($m >= 1) $ret = number_format($m, 1).' month'.($m > 1 ? 's' : null);
+	else if ($w >= 1) $ret = number_format($w, 1).' week'.($w > 1 ? 's' : null);
+	else if ($d >= 1) $ret = number_format($d, 1).' day'.($d > 1 ? 's' : null);
+	else if ($hh >= 1) $ret = number_format($hh, 1).' hour'.($hh > 1 ? 's' : null);
+	else if ($mm >= 1) $ret = number_format($mm, 1).' minute'.($mm > 1 ? 's' : null);
+	else $ret = number_format($ss, 1).' second'.($ss > 1 ? 's' : null);
 	return $ret.' ago';
 }
 

@@ -196,13 +196,15 @@ class Table
 				if (count($row) < count($this->cols)) $span = " colspan=\"" . (count($this->cols) - count($row) + 1) . "\"";
 				else $span = "";
 				$x = 0;
+				$atrs = null;
+				
 				if (is_array($row))
 				{
 					foreach ($row as $val) //$x = 0; $x < count($row); $x++)
 					{
 						if (isset($this->atrs)) $atrs = ' '.$this->atrs[$x % count($this->atrs)];
 						else if (is_array($val)) { $atrs = ' '.$val[0]; $val = $val[1]; }
-						else $atrs = "";
+						else $atrs = null;
 						$ret .= "<td$span$atrs>{$val}</td>\n";
 						$x++;
 					}
