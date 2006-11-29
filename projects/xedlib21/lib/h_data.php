@@ -347,8 +347,19 @@ class DataSet
 	 */
 	public $Validation;
 
+	/**
+	 * Readable description of this dataset (eg. User instead of mydb_user)
+	 *
+	 * @var string
+	 */
 	public $Description;
 
+	/**
+	 * Which function is used to actually fetch the data, depending on the
+	 * type of the underlying database.
+	 *
+	 * @var string
+	 */
 	private $func_fetch;
 
 	/**

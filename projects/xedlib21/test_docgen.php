@@ -29,15 +29,19 @@ class DocGeneratorXML
 		return $doc;
 	}
 
-	function GetDocumentElement($doc, $data)
+	function GetDocumentElement($doc, $item)
 	{
 		$elDoc = $doc->createElement('doc');
-		preg_match_all('#/*([^*/]+)#', $data, $matches);
+		preg_match_all("#^[ \t*/]*(.*)[/]*$#m", $item->doc, $matches);
+
+		//varinfo($matches);
+		
 		$ret = null;
-		foreach ($matches[0] as $line)
+		foreach ($matches[1] as $line)
 		{
 			$line = chop($line);
-			
+			if (strlen($line) < 1) continue;
+
 			//Tag
 			if (preg_match('#@(.+)#', $line, $match))
 			{
@@ -46,8 +50,8 @@ class DocGeneratorXML
 				{
 					if (!file_exists($match[1]) || !is_file($match[1]))
 					{
-						Error("File does not exist for example tag:
-							{$match[1]}");
+						Error("File does not exist for example tag: ".
+							"{$match[1]} (".$item->file.':'.$item->line.')');
 						continue;
 					}
 					$data = highlight_file($match[1], true);
@@ -100,7 +104,9 @@ class DocGeneratorXML
 		if (isset($item->modifier))
 			$e->setAttribute('modifier', GetTypeName($item->modifier));
 		if (isset($item->doc))
-			$e->appendChild($this->GetDocumentElement($doc, $item->doc));
+		{
+			$e->appendChild($this->GetDocumentElement($doc, $item));
+		}
 		else
 		{
 			if ($item->parent->type != T_FUNCTION)
@@ -110,11 +116,12 @@ class DocGeneratorXML
 				while (isset($t->parent))
 				{
 					$path = '(<b>'.GetTypeName($t->parent->type).'</b>)'
-					.$t->parent->name.' -> '
+					.$t->parent->name.'->'
 					.$path;
 					$t = $t->parent;
 				}
-				echo "Item not documented {$path} {$item->name}<br/>\n";
+				echo "Item not documented {$path}{$item->name}".
+					" ({$item->file}:{$item->line})\n";
 			}
 		}
 		if (!empty($item->members)) foreach ($item->members as $member)
@@ -130,7 +137,7 @@ class DocGeneratorXML
 	
 		$root = $doc->createElement('root');
 		$root->setAttribute('name', $item->name);
-		if (isset($item->doc)) $root->appendChild($this->GetDocumentElement($doc, $item->doc));
+		if (isset($item->doc)) $root->appendChild($this->GetDocumentElement($doc, $item));
 	
 		//Arguments and methods
 		if (!empty($item->members)) foreach ($item->members as $member)
@@ -152,7 +159,7 @@ class DocGeneratorXML
 		if (isset($item->extends)) $element->setAttribute('extends', $item->extends);
 		if (isset($item->filename)) $element->setAttribute('filename', $item->filename);
 		if (isset($item->doc))
-			$element->appendChild($this->GetDocumentElement($toc, $item->doc));
+			$element->appendChild($this->GetDocumentElement($toc, $item));
 
 		//Create xml document for this object.
 		if ($item->type != T_DEFINE) $this->OutputDetail($item, $target);
@@ -167,7 +174,7 @@ class DocGeneratorXML
 		$data = null;
 		foreach ($files as $file)
 		{
-			echo "Processing {$file}<br/>\n";
+			echo "Processing {$file}\n";
 			$new = $d->Parse($file);
 			if (!isset($data)) $data = $new;
 			else if (isset($new))

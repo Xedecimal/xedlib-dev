@@ -574,13 +574,55 @@ class Form extends Table
 
 class FormInput
 {
+	/**
+	 * Text of this input object, displayed above the actual field.
+	 *
+	 * @var string
+	 */
 	public $text;
+	/**
+	 * Name of this input object, used in conjunction with the associated form.
+	 *
+	 * @var string
+	 */
 	public $name;
+	/**
+	 * Type of this input object. (text, select, string, checks, etc)
+	 *
+	 * @var string
+	 */
 	public $type;
+	/**
+	 * Manual HTML attributes for this input object.
+	 *
+	 * @var string
+	 */
 	public $atrs;
+	/**
+	 * Help text is displayed below the form field. Usually in case of error or
+	 * to provide better information on the input wanted.
+	 *
+	 * @var string
+	 */
 	public $help;
+	/**
+	 * Default value of this input object.
+	 *
+	 * @var string
+	 */
 	public $valu;
 
+	/**
+	 * Creates a new input object with many properties pre-set.
+	 *
+	 * @param string $text
+	 * @param string $type
+	 * @param string $name
+	 * @param string $valu
+	 * @param string $atrs
+	 * @param string $help
+	 * @return FormInput
+	 */
 	function FormInput($text, $type, $name, $valu = null, $atrs = null,
 		$help = null)
 	{
@@ -592,6 +634,12 @@ class FormInput
 		$this->help = $help;
 	}
 
+	/**
+	 * Returns this input object rendered in html.
+	 *
+	 * @param string $parent name of the parent.
+	 * @return string
+	 */
 	function Get($parent = null)
 	{
 		if ($this->type == 'select')

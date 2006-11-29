@@ -732,6 +732,12 @@ class FileManagerBehavior
 	 * @var boolean
 	 */
 	public $Recycle = false;
+	/**
+	 * Override file hiding.
+	 *
+	 * @var boolean
+	 */
+	public $ShowAllFiles = false;
 
 	/**
 	 * Return true if options are available.

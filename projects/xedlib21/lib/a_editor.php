@@ -51,24 +51,79 @@ class DisplayColumn
 
 class EditorHandler
 {
+	/**
+	 * Default handler for creating an item.
+	 * If you extend this object and reutrn false, it will not add the item.
+	 *
+	 * @param array $data Context
+	 * @return boolean true by default (meant to be overriden)
+	 */
 	function Create(&$data) { return true; }
+	/**
+	 * After an item is created, this contains the id of the new item. You
+	 * cannot halt the item from being inserted at this point.
+	 *
+	 * @param int $id
+	 * @return boolean true by default (meant to be overridden)
+	 */
 	function Created($id) { return true; }
-	function Update($id, $data, &$update) { return true; }
+	/**
+	 * Before an item is updated, this function is called. If you extend this
+	 * object and return false, it will not be updated.
+	 *
+	 * @param int $id id of item to update.
+	 * @param array $data Context
+	 * @param array $update Columns suggested to get updated.
+	 * @return boolean true by default (meant to be overridden)
+	 */
+	function Update($id, &$data, &$update) { return true; }
+	/**
+	 * Called before and item is deleted. If you extend this object and return
+	 * false, it will not be deleted.
+	 *
+	 * @param int $id ID of deleted items
+	 * @param array $data Context
+	 * @return boolean true by default (meant to be overridden)
+	 */
 	function Delete($id, &$data) { return true; }
 }
 
 /**
  * Check the example...
  *
- * @example doc/HandlerFile.php
+ * @example doc/examples/HandlerFile.php
  *
  */
 class HandlerFile extends EditorHandler
 {
+	/**
+	 * Root location to create folders.
+	 *
+	 * @var string
+	 */
 	public $target;
+	/**
+	 * Database column associated with the items created.
+	 *
+	 * @var string
+	 */
 	public $column;
+	/**
+	 * Conditions that can exemplify the creation of certain items.
+	 * specified as conditions['column'] = 'match';
+	 *
+	 * @var array
+	 */
 	public $conditions;
 
+	/**
+	 * Creates a new file handler.
+	 *
+	 * @param string $target
+	 * @param string $column
+	 * @param array $conditions
+	 * @return HandlerFile
+	 */
 	function HandlerFile($target, $column, $conditions)
 	{
 		$this->target = $target;
@@ -76,6 +131,12 @@ class HandlerFile extends EditorHandler
 		$this->conditions = $conditions;
 	}
 
+	/**
+	 * Called when an item is created.
+	 *
+	 * @param array $data row data
+	 * @return boolean True to allow the creation.
+	 */
 	function Create(&$data)
 	{
 		$target = "{$this->target}/{$data[$this->column]}";
@@ -90,6 +151,14 @@ class HandlerFile extends EditorHandler
 		return true;
 	}
 
+	/**
+	 * Called when an item is updated.
+	 *
+	 * @param mixed $id
+	 * @param array $data
+	 * @param array $update
+	 * @return boolean
+	 */
 	function Update($id, $data, &$update)
 	{
 		$source = "{$this->target}/{$data[$this->column]}";
@@ -100,6 +169,13 @@ class HandlerFile extends EditorHandler
 		return true;
 	}
 
+	/**
+	 * Called when an item is deleted.
+	 *
+	 * @param mixed $id
+	 * @param array $data
+	 * @return boolean
+	 */
 	function Delete($id, &$data)
 	{
 		$folder = "{$this->target}/{$data[$this->column]}";

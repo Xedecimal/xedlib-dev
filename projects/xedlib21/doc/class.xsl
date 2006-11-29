@@ -52,13 +52,15 @@
 		</xsl:for-each>
 	)</p>
 	<p><xsl:value-of select="doc/text()" /></p>
-	<p>
+	<table>
 		<xsl:for-each select="doc/tag[@type='param']">
-			<b><xsl:value-of select="@datatype"/></b>&#160;
-			<xsl:value-of select="@name"/>&#160;
-			<xsl:value-of select="."/><br/>
+			<tr>
+			<td><b><xsl:value-of select="@datatype"/></b></td>
+			<td><xsl:value-of select="@name"/></td>
+			<td><xsl:value-of select="."/></td>
+			</tr>
 		</xsl:for-each>
-	</p>
+	</table>
 	</div>
 </xsl:for-each>
 </p>

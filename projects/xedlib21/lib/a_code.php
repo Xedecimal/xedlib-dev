@@ -15,13 +15,6 @@ define('T_DEFINE', 900);
 class CodeReader
 {
 	/**
-	 * Whether or not to display a debug tree of all objects parsed.
-	 *
-	 * @var bool
-	 */
-	private $debug = false;
-
-	/**
 	 * Processes a file and returns the structure of it as a CodeObject.
 	 *
 	 * @param string $filename
@@ -39,9 +32,12 @@ class CodeReader
 		$ret = null;
 		$current = null;
 		$modifier = 0;
+		$line = 1;
 
 		foreach ($tokens as $tok)
 		{
+			$this->MoveCaret($tok, $line);
+
 			if (!is_array($tok))
 			{
 				switch ($tok)
@@ -56,16 +52,19 @@ class CodeReader
 					switch ($tok)
 					{
 						case '{':
-							if ($this->debug) echo str_repeat("\t", count($tree))."{$tok}\n";
+							Trace(str_repeat("\t",
+								count($tree))."{$tok}\n");
 							array_push($tree, $current);
 
 							//We're done with function arguments.
-							if (isset($current) && $current->type == T_FUNCTION)
+							if (isset($current) &&
+								$current->type == T_FUNCTION)
 								$current = null;
 							break;
 						case '}':
 							$current = array_pop($tree);
-							if ($this->debug) echo str_repeat("\t", count($tree))."{$tok}\n";
+							Trace(str_repeat("\t",
+								count($tree))."{$tok}\n");
 							break;
 					}
 				}
@@ -81,7 +80,8 @@ class CodeReader
 				{
 					if ($getting == CODE_GET_DEFINE_VALUE)
 					{
-						$current->value = str_replace('"', '', str_replace("'", '', $tok[1]));
+						$current->value = str_replace('"', '',
+							str_replace("'", '', $tok[1]));
 						$current = array_pop($tree);
 						$getting = CODE_GET_NONE;
 					}
@@ -89,7 +89,10 @@ class CodeReader
 					{
 						array_push($tree, $current);
 						$current = new CodeObject(T_DEFINE);
-						$current->name = str_replace('"', '', str_replace("'", '', $tok[1]));
+						$current->file = $filename;
+						$current->line = $line;
+						$current->name = str_replace('"', '',
+							str_replace("'", '', $tok[1]));
 						$current->filename = $filename;
 						$ret->members[$current->name] = $current;
 						$getting = CODE_GET_DEFINE_VALUE;
@@ -97,14 +100,16 @@ class CodeReader
 				}
 				if ($tok[0] == T_CURLY_OPEN)
 				{
-					if ($this->debug) echo str_repeat("\t", count($tree))."{\n";
+					Trace(str_repeat("\t", count($tree))."{\n");
 					array_push($tree, $current);
 				}
 				
 				if ($tok[0] == T_FUNCTION)
 				{
-					if ($this->debug) echo str_repeat("\t", count($tree))."function ";
+					Trace(str_repeat("\t", count($tree))."function ");
 					$current = new CodeObject($tok[0]);
+					$current->file = $filename;
+					$current->line = $line;
 					$current->doc = $doc;
 					$doc = null;
 					$getting = CODE_GET_NAME;
@@ -112,9 +117,11 @@ class CodeReader
 
 				if ($tok[0] == T_CLASS)
 				{
-					if ($this->debug) echo "class ";
+					Trace("class ");
 					$getting = CODE_GET_NAME;
 					$current = new CodeObject($tok[0]);
+					$current->file = $filename;
+					$current->line = $line;
 					$current->doc = $doc;
 					$doc = null;
 				}
@@ -127,7 +134,8 @@ class CodeReader
 						$current = array_pop($tree);
 						$getting = CODE_GET_NONE;
 					}
-					if ($getting == CODE_GET_NONE && strtolower($tok[1]) == 'define')
+					if ($getting == CODE_GET_NONE &&
+						strtolower($tok[1]) == 'define')
 					{
 						$getting = CODE_GET_DEFINE_NAME;
 					}
@@ -154,7 +162,7 @@ class CodeReader
 							$ret->members[$tok[1]] = $current;
 						}
 						$getting = CODE_GET_NONE;
-						if ($this->debug) echo $tok[1]."\n";
+						Trace($tok[1]."\n");
 					}
 				}
 				
@@ -166,6 +174,8 @@ class CodeReader
 				if ($tok[0] == T_VARIABLE)
 				{
 					$d = new CodeObject(T_VARIABLE);
+					$d->file = $filename;
+					$d->line = $line;
 					$d->name = $tok[1];
 					$d->doc = $doc;
 					$doc = null;
@@ -199,7 +209,8 @@ class CodeReader
 				{
 					if ($getting == CODE_GET_DEFINE_VALUE)
 					{
-						$current->value = str_replace('"', '', str_replace("'", '', $tok[1]));
+						$current->value = str_replace('"', '',
+							str_replace("'", '', $tok[1]));
 						$current = array_pop($tree);
 						$getting = CODE_GET_NONE;
 					}
@@ -214,6 +225,18 @@ class CodeReader
 		
 		if (isset($ret)) $ret->file = $filename;
 		return $ret;
+	}
+
+	/**
+	 * Moves the internal caret position for locating the token later.
+	 *
+	 * @param mixed $token
+	 * @param int $line
+	 */
+	function MoveCaret($token, &$line)
+	{
+		if (is_array($token)) $line += substr_count($token[1], "\n");
+		else $line += substr_count($token, "\n");
 	}
 }
 

@@ -10,6 +10,7 @@ $ca = GetVar('ca');
 
 $fm = new FileManager('fman', 'test', array('Default', 'Gallery'));
 $fm->Behavior->Recycle = true;
+$fm->Behavior->ShowAllFiles = true;
 $fm->Behavior->AllowAll();
 $fm->Prepare($ca);
 $page_body = $fm->Get($me, $ca);
