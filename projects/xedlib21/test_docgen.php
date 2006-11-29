@@ -32,60 +32,41 @@ class DocGeneratorXML
 	function GetDocumentElement($doc, $item)
 	{
 		$elDoc = $doc->createElement('doc');
-		preg_match_all("#^[ \t*/]*(.*)[/]*$#m", $item->doc, $matches);
 
-		//varinfo($matches);
-		
-		$ret = null;
-		foreach ($matches[1] as $line)
+		if (isset($item->doc->example))
 		{
-			$line = chop($line);
-			if (strlen($line) < 1) continue;
-
-			//Tag
-			if (preg_match('#@(.+)#', $line, $match))
-			{
-				$tag = $match[1];
-				if (preg_match('#example (.+)#', $tag, $match))
-				{
-					if (!file_exists($match[1]) || !is_file($match[1]))
-					{
-						Error("File does not exist for example tag: ".
-							"{$match[1]} (".$item->file.':'.$item->line.')');
-						continue;
-					}
-					$data = highlight_file($match[1], true);
-					$elTag = $doc->createElement('tag');
-					$elTag->appendChild($doc->createCDATASection($data));
-					$elTag->setAttribute('type', 'example');
-					$elDoc->appendChild($elTag);
-				}
-				else if (preg_match('#param ([^ ]+) ([^ ]+)(.*)#', $tag, $match))
-				{
-					$elTag = $doc->createElement('tag', $match[3]);
-					$elTag->setAttribute('type', 'param');
-					$elTag->setAttribute('datatype', $match[1]);
-					$elTag->setAttribute('name', $match[2]);
-					$elDoc->appendChild($elTag);
-				}
-				else if (preg_match('#return ([^ ]+)(.*)#', $line, $match))
-				{
-					$elTag = $doc->createElement('tag', isset($match[3]) ? $match[3] : null);
-					$elTag->setAttribute('type', 'return');
-					$elTag->setAttribute('datatype', $match[1]);
-					$elTag->setAttribute('text', $match[2]);
-					$elDoc->appendChild($elTag);
-				}
-				else
-				{
-					$elTag = $doc->createElement('tag', isset($match[2]) ? $match[2] : null);
-					$elTag->setAttribute('type', $tag);
-					$elDoc->appendChild($elTag);
-				}
-			}
-			else $ret .= $line;
+			if (!file_exists($item->doc->example) ||
+				!is_file($item->doc->example))
+				$data = $item->doc->example;
+			else
+				$data = highlight_file($match[1], true);
+			$elTag = $doc->createElement('tag');
+			$elTag->appendChild($doc->createCDATASection($data));
+			$elTag->setAttribute('type', 'example');
+			$elDoc->appendChild($elTag);
 		}
-		$elDoc->appendChild($doc->createCDATASection($ret));
+		else if (isset($item->doc->params))
+		{
+			$elTag = $doc->createElement('tag', $match[3]);
+			$elTag->setAttribute('type', 'param');
+			$elTag->setAttribute('datatype', $match[1]);
+			$elTag->setAttribute('name', $match[2]);
+			$elDoc->appendChild($elTag);
+		}
+		else if (isset($item->doc->return))
+		{
+			$elTag = $doc->createElement('tag', isset($match[3]) ? $match[3] : null);
+			$elTag->setAttribute('type', 'return');
+			$elTag->setAttribute('datatype', $match[1]);
+			$elTag->setAttribute('text', $match[2]);
+			$elDoc->appendChild($elTag);
+		}
+
+		//$elTag = $doc->createElement('tag', isset($match[2]) ? $match[2] : null);
+		//$elTag->setAttribute('type');
+		//$elDoc->appendChild($elTag);
+
+		$elDoc->appendChild($doc->createCDATASection($item->doc->body));
 		return $elDoc;
 	}
 
@@ -137,13 +118,13 @@ class DocGeneratorXML
 	
 		$root = $doc->createElement('root');
 		$root->setAttribute('name', $item->name);
-		if (isset($item->doc)) $root->appendChild($this->GetDocumentElement($doc, $item));
+		if (isset($item->doc))
+			$root->appendChild($this->GetDocumentElement($doc, $item));
 	
 		//Arguments and methods
-		if (!empty($item->members)) foreach ($item->members as $member)
-		{
+		if (!empty($item->members))
+		foreach ($item->members as $member)
 			$this->OutputMember($doc, $root, $member);
-		}
 		$doc->appendChild($root);
 	
 		$doc->save("{$target}/{$type}_{$item->name}.xml");
@@ -155,9 +136,14 @@ class DocGeneratorXML
 	
 		$element = $toc->createElement($type);
 		$element->setAttribute('name', $item->name);
-		if (isset($item->value)) $element->setAttribute('value', $item->value);
-		if (isset($item->extends)) $element->setAttribute('extends', $item->extends);
-		if (isset($item->filename)) $element->setAttribute('filename', $item->filename);
+		if (isset($item->value))
+			$element->setAttribute('value', $item->value);
+		if (isset($item->extends))
+			$element->setAttribute('extends', $item->extends);
+		if (isset($item->filename))
+			$element->setAttribute('filename', $item->filename);
+		if (isset($item->line))
+			$element->setAttribute('line', $item->line);
 		if (isset($item->doc))
 			$element->appendChild($this->GetDocumentElement($toc, $item));
 
@@ -174,7 +160,6 @@ class DocGeneratorXML
 		$data = null;
 		foreach ($files as $file)
 		{
-			echo "Processing {$file}\n";
 			$new = $d->Parse($file);
 			if (!isset($data)) $data = $new;
 			else if (isset($new))
@@ -183,6 +168,9 @@ class DocGeneratorXML
 				$data->file = $file;
 			}
 		}
+		
+		//varinfo($data);
+		
 		ksort($data->members);
 	
 		if (!empty($data))
@@ -191,7 +179,8 @@ class DocGeneratorXML
 
 			$doc = $this->CreateDoc('index');
 			$root = $doc->createElement('root');
-			foreach ($data->members as $item) $this->OutputTOC($doc, $root, $item, $target);
+			foreach ($data->members as $item)
+				$this->OutputTOC($doc, $root, $item, $target);
 			$doc->appendChild($root);
 			$doc->save($target.'/index.xml');
 		}
@@ -199,8 +188,10 @@ class DocGeneratorXML
 }
 
 echo '<pre>';
+$stime = microtime();
 $d = new DocGeneratorXML();
 $d->OutputFiles('lib/*.php', 'doc/output');
+echo 'Done in '.($stime-microtime())." seconds.<br/>\n";
 echo '</pre>';
 
 ?>
