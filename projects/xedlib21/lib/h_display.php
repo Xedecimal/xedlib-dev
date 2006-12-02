@@ -168,6 +168,8 @@ class Table
 		$ret = "<!-- Start Table: {$this->name} -->\n";
 		$ret .= "<table$attributes>\n";
 
+		$atrs = null;
+
 		if ($this->cols)
 		{
 			$ret .= "<tr>\n";
@@ -184,23 +186,26 @@ class Table
 
 		if ($this->rows)
 		{
-			if (!isset($this->cols)) //No columns, need to find out how many cells this table spans.
+			if (!isset($this->cols))
 			{
 				$span = 0;
 				foreach ($this->rows as $row) if (count($row) > $span) $span = count($row);
-				for ($ix = 0; $ix < $span; $ix++) $this->cols[] = '';
+				for ($ix = 0; $ix < $span; $ix++) $this->cols[] = null;
 			}
 			foreach ($this->rows as $ix => $row)
 			{
-				$ret .= "<tr{$this->rowattribs[$ix]}>\n";
-				if (count($row) < count($this->cols)) $span = " colspan=\"" . (count($this->cols) - count($row) + 1) . "\"";
-				else $span = "";
+				$ret .= "<tr>\n";
+				if (count($row) < count($this->cols))
+					$span = " colspan=\"".
+						(count($this->cols) - count($row) + 1).
+						"\"{$this->rowattribs[$ix]}";
+				else $span = " {$this->rowattribs[$ix]}";
 				$x = 0;
 				$atrs = null;
 				
 				if (is_array($row))
 				{
-					foreach ($row as $val) //$x = 0; $x < count($row); $x++)
+					foreach ($row as $val)
 					{
 						if (isset($this->atrs)) $atrs = ' '.$this->atrs[$x % count($this->atrs)];
 						else if (is_array($val)) { $atrs = ' '.$val[0]; $val = $val[1]; }
@@ -485,6 +490,8 @@ class Form extends Table
 		$args = func_get_args();
 		foreach ($args as $item)
 		{
+			$helptext = null;
+
 			if ($item->type == 'submit' && isset($this->Validation))
 			{
 				$item->atrs .= " onclick=\"return {$this->name}_check(1);\"";
@@ -494,28 +501,28 @@ class Form extends Table
 				$item->name).'">'.$item->text.
 				'</label><br/>' : '<br/>';
 
+			$helptext = $item->help;
 			if (isset($this->Validation))
 			{
-				if (is_array($this->Validation))
-				{
-					foreach ($this->Validation as $val)
-					{
-						if ($val->field == $item->name)
-						{
-							$helptext = $this->Errors[$item->name].$item->help;
-							break;
-						}
-					}
-				}
-				else $helptext =
-					(isset($this->Errors[$item->name]) ? $this->Errors[$item->name] : null).
-					$item->help;
+				//if (is_array($this->Validation))
+				//{
+					//foreach ($this->Validation as $val)
+					//{
+						//if ($val->field == $item->name)
+						//{
+							//$helptext .= $this->Errors[$item->name];
+							//break;
+						//}
+					//}
+				//}
+				/*else*/ $helptext .=
+					(isset($this->Errors[$item->name]) ?
+						$this->Errors[$item->name] : null);
 			}
-			else $helptext = $item->help;
 			
 			$row[] = $out.$item->Get($this->name)."<br/>$helptext";
 		}
-		$this->AddRow($row);
+		$this->AddRow($row, ' valign="top"');
 	}
 
 	/**
@@ -642,6 +649,17 @@ class FormInput
 	 */
 	function Get($parent = null)
 	{
+		if ($this->type == 'yesno')
+		{
+			$ret =  "<label><input type=\"radio\" name=\"{$this->name}\"
+				value=\"{$this->valu[0]}\"
+				{$this->atrs}/> Yes</label>\n".
+			"<label><input type=\"radio\" name=\"{$this->name}\"
+				value=\"{$this->valu[1]}\"
+				checked=\"checked\"
+				{$this->atrs}/> No</label>\n";
+			return $ret;
+		}
 		if ($this->type == 'select')
 		{
 			$ret = "<select name=\"{$this->name}\"
@@ -660,8 +678,8 @@ class FormInput
 		if ($this->type == 'checks')
 		{
 			$ret = null;
-			if (!empty($this->value))
-				foreach ($this->value as $id => $val)
+			if (!empty($this->valu))
+				foreach ($this->valu as $id => $val)
 				{
 					$selected = $val->selected ? ' selected="selected"' : null;
 					$ret .= "<label><input
@@ -700,7 +718,9 @@ class FormInput
 			return $ret;
 		}
 		if ($this->type == 'area')
-			return "<textarea name=\"{$this->name}\"
+			return "<textarea
+				name=\"{$this->name}\"
+				id=\"".CleanID($parent.'_'.$this->name)."\"
 				{$this->atrs}>{$this->valu}</textarea>";
 		return "<input type=\"{$this->type}\"
 			name=\"{$this->name}\"
@@ -1240,41 +1260,63 @@ class Validation
 	 */
 	function Validate($form, $check, &$ret)
 	{
+		$passed = true;
 		if ($check)
 		{
 			if (is_array($this->check))
 			{
 				$vals = GetVar($this->field);
-				if (count($vals) < $this->check[1]) $ret['errors'][$this->field] = '<span class="error" id="span_'.$form.'_'.$this->field.'">'.$this->error.'</span>';
+				if (count($vals) < $this->check[1])
+				{
+					$ret['errors'][$this->field] =
+						'<span class="error"
+						id="span_'.$form.'_'.$this->field.'">'.
+						$this->error.'</span>';
+					$passed = false;
+				}
 			}
 			else
 			{
-				if (!preg_match("/$this->check/", GetVar($this->field))) $ret['errors'][$this->field] = '<span class="error" id="span_'.$form.'_'.$this->field.'">'.$this->error.'</span>';
+				if (!preg_match("/$this->check/", GetVar($this->field)))
+				{
+					$ret['errors'][$this->field] =
+						'<span class="error"
+						id="span_'.$form.'_'.$this->field.'">'.
+						$this->error.'</span>';
+					$passed = false;
+				}
 			}
 		}
 		else
 		{
-			$ret['errors'][$this->field] = '<span class="error" id="span_'.$form.'_'.$this->field.'"></span>';
+			$ret['errors'][$this->field] =
+				'<span class="error"
+				id="span_'.$form.'_'.$this->field.'"></span>';
 			foreach ($this->validators as $v) $v->Validate($form, $check, $ret);
 		}
+		return $passed;
 	}
 }
 
-function FormValidate($name, $arr, $check)
+function FormValidate($name, $arr, &$ret, $check)
 {
-	$ret = array();
+	$ret['js'] = null;
 	$checks = null;
-	if (is_array($arr)) foreach ($arr as $key => $val)
+	$passed = true;
+	if (is_array($arr))
+	foreach ($arr as $key => $val)
 	{
 		$rec = RecurseReq($key, $val, $checks);
-		if ($check && strlen(GetVar($key)) < 1) $val->Validate($name, $check, $ret);
-		else $ret['errors'][$val->field] = '<span class="error" id="span_'.$name.'_'.$val->field.'"></span>';
+		if (!$val->Validate($name, $check, $ret))
+			$passed = false;
+		else
+			$ret['errors'][$val->field] = '<span class="error"
+			id="span_'.$name.'_'.$val->field.'"></span>';
 		$ret['js'] .= $val->GetJS($name);
 	}
 	else
 	{
-		$arr->Validate($name, $check, $ret);
-		if (!isset($ret['js'])) $ret['js'] = null;
+		if (!$arr->Validate($name, $check, $ret)) $passed = false;
 		$ret['js'] .= $arr->GetJS($name);
 	}
 	$ret['js'] .= "\t\tfunction {$name}_check(validate)\n\t\t{";
@@ -1285,7 +1327,8 @@ function FormValidate($name, $arr, $check)
 	}
 	else $ret['js'] .= "\t\t\tret = {$name}_{$arr->field}_check(validate);\n";
 	$ret['js'] .= "\n\t\t\treturn ret;\n\t\t}\n";
-	return $ret;
+
+	return $passed;
 }
 
 function RecurseReq($key, $val, &$checks)
