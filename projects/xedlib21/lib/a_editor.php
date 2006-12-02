@@ -159,7 +159,7 @@ class HandlerFile extends EditorHandler
 	 * @param array $update
 	 * @return boolean
 	 */
-	function Update($id, $data, &$update)
+	function Update($id, &$data, &$update)
 	{
 		$source = "{$this->target}/{$data[$this->column]}";
 		if (file_exists($source))
