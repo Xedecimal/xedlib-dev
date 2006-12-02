@@ -598,7 +598,10 @@ class DataSet
 	 */
 	function Add($columns, $update_existing = false)
 	{
-		$query = "INSERT INTO {$this->table} (";
+		$lq = $this->database->lq;
+		$rq = $this->database->rq;
+
+		$query = "INSERT INTO {$lq}{$this->table}{$rq} (";
 		foreach (array_keys($columns) as $ix => $key)
 		{
 			if ($ix != 0) $query .= ", ";
@@ -673,7 +676,14 @@ class DataSet
 		//Prepare Data
 		//if (mysql_affected_rows() < 1) return null;
 		$items = null;
-		while (($row = call_user_func($this->func_fetch, $rows)))
+
+		if ($this->database->type == 'mysql')
+		{
+			$a = MYSQL_BOTH;
+			if ($args == GET_ASSOC) $a = MYSQL_ASSOC;
+		}
+
+		while (($row = call_user_func($this->func_fetch, $rows, $a)))
 		{
 			$newrow = array();
 			foreach ($row as $key => $val)
@@ -882,12 +892,16 @@ class DataSet
 	function Swap($smatch, $dmatch, $pkey)
 	{
 		//Grab all the source items that are going to be swapped.
-		$sitems = $this->database->query("SELECT * FROM {$this->table}".$this->WhereClause($smatch));
-		$sitem = call_user_func($this->func_fetch, $sitems);
+		$sitems = $this->Get($smatch, null, null, null, null, null, GET_ASSOC);
+		$sitem = $sitems[0];
+		//$sitems = $this->database->query("SELECT * FROM {$this->table}".$this->WhereClause($smatch));
+		//$sitem = call_user_func($this->func_fetch, $sitems);
 
 		//Grab all the destination items that are going to be swapped.
-		$ditems = $this->database->query("SELECT * FROM {$this->table}".$this->WhereClause($dmatch));
-		$ditem = call_user_func($this->func_fetch, $ditems);
+		//$ditems = $this->database->query("SELECT * FROM {$this->table}".$this->WhereClause($dmatch));
+		//$ditem = call_user_func($this->func_fetch, $ditems);
+		$ditems = $this->Get($dmatch, null, null, null, null, null, GET_ASSOC);
+		$ditem = $ditems[0];
 
 		//If we have children relations, it suddenly gets complicated.
 		if (!empty($this->children))
