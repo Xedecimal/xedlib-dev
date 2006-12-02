@@ -534,6 +534,7 @@ class EditorData
 		{
 			$this->ds = $ds;
 			$this->sort = $sort;
+			$this->filter = $filter;
 			$this->type = CONTROL_BOUND;
 		}
 		else $this->type = CONTROL_SIMPLE;
