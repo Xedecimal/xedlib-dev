@@ -287,10 +287,10 @@ function TimestampToMsSql($ts)
 function MyDateTimestamp($date, $include_time = false)
 {
 	if ($include_time) {
-		return gmmktime(
-			substr($date, 11, 2), //h
-			substr($date, 14, 2), //i
-			substr($date, 17, 2), //s
+		return mktime(
+			substr($date, 11, 2), //hh
+			substr($date, 14, 2), //mm
+			substr($date, 17, 2), //ss
 			substr($date, 5, 2), //m
 			substr($date, 8, 2), //d
 			substr($date, 0, 4) //y
@@ -299,7 +299,7 @@ function MyDateTimestamp($date, $include_time = false)
 	else
 	{
 		if (!preg_match('/([0-9]+)-([0-9]+)-([0-9]+)/', $date, $match)) return null;
-		return gmmktime(0, 0, 0,
+		return mktime(0, 0, 0,
 			$match[2], //m
 			$match[3], //d
 			$match[1] //y
