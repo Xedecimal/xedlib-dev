@@ -652,11 +652,14 @@ class DataSet
 			<br />Why: You may have specified an incorrect database in
 			construction.");
 		}
+		
+		$lq = $this->database->lq;
+		$rq = $this->database->rq;
 
 		//Prepare Query
 		$query = 'SELECT';
 		$query .= $this->ColsClause($columns);
-		$query .= "\n FROM {$this->database->lq}{$this->table}{$this->database->rq}";
+		$query .= "\n FROM {$lq}{$this->table}{$rq}";
 		if (isset($this->Shortcut)) $query .= " `{$this->Shortcut}`";
 		$query .= $this->JoinClause($joins);
 		$query .= $this->WhereClause($match);
@@ -700,10 +703,14 @@ class DataSet
 		$group = null,
 		$args = GET_BOTH)
 	{
+
+		$lq = $this->database->lq;
+		$rq = $this->database->rq;
+	
 		//Prepare Query
 		$query = "SELECT\n";
 		$query .= $this->ColsClause($columns);
-		$query .= " FROM {$this->table}";
+		$query .= " FROM {$lq}{$this->table}{$rq}";
 		$query .= $this->JoinClause($joins);
 		$query .= $this->WhereClause($match);
 		$query .= $this->GroupClause($group);

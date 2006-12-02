@@ -534,6 +534,7 @@ class EditorData
 	 */
 	function Get($target, $ci = null)
 	{
+		$ret['ds'] = $this->ds;
 		if (GetVar('ca') != $this->name.'_edit') $ret['table'] = $this->GetTable($target, $ci);
 		$ret['forms'] = $this->GetForms($target, $ci,
 			GetVar('editor') == $this->name ? GetVar('child') : null);
@@ -1010,7 +1011,8 @@ class EditorData
 	{
 		$context = $curchild != null ? $this->ds->children[$curchild] : $this;
 
-		$ret[] = $this->GetForm($target, $ci, $this->state, $curchild);
+		$frm = $this->GetForm($target, $ci, $this->state, $curchild);
+		if ($frm != null) $ret[] = $frm;
 
 		if (isset($ci) && GetVar('ca') == $this->name.'_edit')
 		{
@@ -1023,6 +1025,17 @@ class EditorData
 				}
 			}
 		}
+		return $ret;
+	}
+
+	static function GetUI($target, &$data)
+	{
+		$ret = null;
+		if (isset($data['table'])) $ret .= GetBox('box_items',
+			"{$data['ds']->Description}s", $data['table']);
+		foreach ($data['forms'] as $frm)
+			$ret .= GetBox('box_user_form', "{$frm->State} {$frm->Description}",
+				$frm->Get('method="post" action="'.$target.'"'));
 		return $ret;
 	}
 }
