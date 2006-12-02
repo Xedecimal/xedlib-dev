@@ -931,7 +931,7 @@ class DataSet
 					WHERE `__TEMP`.`{$child->ds->id}` = `{$child->ds->table}`.`{$child->parent_key}`";
 				$child->ds->database->query($query);
 
-				$child->ds->database->query("TRUNCATE `__TEMP`");
+				$child->ds->database->query("DROP DATABASE `__TEMP`");
 			}
 		}
 
