@@ -1009,6 +1009,7 @@ class EditorData
 	 */
 	function GetForms($target, $ci, $curchild = null)
 	{
+		$ret = null;
 		$context = $curchild != null ? $this->ds->children[$curchild] : $this;
 
 		$frm = $this->GetForm($target, $ci, $this->state, $curchild);

@@ -45,7 +45,7 @@ class FileManager
 	 *
 	 * @var array
 	 */
-	private $icons;
+	public $icons;
 	/**
 	 * Current File
 	 *
@@ -518,10 +518,9 @@ EOF;
 	{
 		$ret = "\n<tr>\n";
 		if (!$file->show) return;
-		if (!$this->Behavior->ShowAllFiles)
+		if (!$this->Behavior->ShowAllFiles && !empty($file->info['access']))
 		{
-			if (empty($file->info['access']) ||
-			!in_array($this->uid, $file->info['access'])) return;
+			if (!in_array($this->uid, $file->info['access'])) return;
 		}
 		$types = $file->type ? 'dirs' : 'files';
 		if (isset($file->info['thumb'])) $ret .= "<td>{$file->info['thumb']}</td>\n";
