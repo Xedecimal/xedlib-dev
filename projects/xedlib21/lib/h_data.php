@@ -432,7 +432,8 @@ class DataSet
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 		if (strpos($name, '.') > -1)
-			return preg_replace('#([^(]+)\.([^ )]+)#', '`\1`.`\2`', $name);
+			return preg_replace('#([^(]+)\.([^ )]+)#',
+			"{$lq}\\1{$rq}.{$lq}\\2{$rq}", $name);
 		return "{$lq}{$name}{$rq}";
 	}
 
@@ -677,6 +678,7 @@ class DataSet
 		//if (mysql_affected_rows() < 1) return null;
 		$items = null;
 
+		$a = null;
 		if ($this->database->type == 'mysql')
 		{
 			$a = MYSQL_BOTH;
