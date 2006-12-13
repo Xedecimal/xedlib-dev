@@ -140,12 +140,16 @@ class HandlerFile extends EditorHandler
 	function Create(&$data)
 	{
 		$target = "{$this->target}/{$data[$this->column]}";
-		if (!isset($this->conditions)) mkdir($target);
+		if (!isset($this->conditions) && !file_exists($target)) mkdir($target);
 		foreach ($this->conditions as $col => $cond)
 		{
 			foreach ($cond as $val)
 			{
-				if ($data[$col] == $val) { mkdir($target); return true; }
+				if ($data[$col] == $val && !file_exists($target))
+				{
+					mkdir($target);
+					return true;
+				}
 			}
 		}
 		return true;
@@ -178,8 +182,9 @@ class HandlerFile extends EditorHandler
 	 */
 	function Delete($id, &$data)
 	{
-		$folder = "{$this->target}/{$data[$this->column]}";
-		if (file_exists($folder)) DelTree($folder);
+		if (strlen($data['user']) < 1) return true;
+		if (file_exists("{$this->target}/{$data['user']}"))
+			DelTree("{$this->target}/{$data['user']}");
 		return true;
 	}
 }
@@ -300,7 +305,7 @@ class EditorData
 	 * @param Handler $handler
 	 * @see HandlerFile
 	 */
-	function AddHandler($handler)
+	function AddHandler(&$handler)
 	{
 		$this->handlers[] = $handler;
 	}
@@ -361,6 +366,7 @@ class EditorData
 				}
 				else if (is_string($name)) $insert[$name] = DeString($data);
 			}
+
 			foreach ($this->handlers as $handler)
 			{
 				if (!$handler->Create($insert)) return;
@@ -377,7 +383,7 @@ class EditorData
 			
 			foreach ($this->handlers as $handler)
 			{
-				$handler->Created($id);
+				$handler->Created($id, $insert);
 			}
 		}
 		else if ($action == $this->name.'_update')

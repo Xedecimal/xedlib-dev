@@ -163,7 +163,7 @@ class FileManager
 			if (!$this->Behavior->AllowCreateDir) return;
 			$p = $this->root.$this->cf.GetVar("name");
 			mkdir($p);
-			chmod($p, 0666);
+			chmod($p, 0755);
 		}
 		else if ($action == 'swap')
 		{
@@ -211,19 +211,21 @@ class FileManager
 
 		$ret = null;
 
+		$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
+
+		$ret .= $this->GetHeader($target, $fi);
+		
 		if ($this->mass_avail = $this->Behavior->MassAvailable())
 		{
 			$ret .= '<p>Select the checkbox of the file(s) or folder(s) that
 				you would like to delete or move.</p>';
 			$ret .= "<form action=\"{$target}\" method=\"post\">";
+			$ret .= "<input type=\"hidden\" name=\"editor\" value=\"{$this->name}\" />";
 			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$this->cf}\" />";
 		}
-		$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 		if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
 		$ret .= '<script type="text/javascript" src="'.
 			GetRelativePath(dirname(__FILE__)).'/js/helper.js"></script>';
-
-		$ret .= $this->GetHeader($target, $fi);
 
 		if (is_dir($this->root.$this->cf))
 		{
@@ -360,6 +362,7 @@ EOF;
 					'info[type]',
 					ArrayToSelOptions($this->filters, $fi->Filter->Name,
 					false)));
+
 				$options = $fi->Filter->GetOptions($def);
 				if (!empty($options)) foreach ($options as $text => $field)
 				{
@@ -471,7 +474,8 @@ EOF;
 		if (isset($this->cf))
 		{
 			$uri = URL($target, array('editor' => $this->name));
-			$ret .= "<a href=\"{$uri}\">Home</a> / ";
+			$ret .= "To navigate back, or choose another folder, click the
+			link(s) below<br/> <a href=\"{$uri}\">Home</a> / ";
 		}
 
 		for ($ix = 0; $ix < count($items); $ix++)
@@ -520,7 +524,7 @@ EOF;
 		if (!$file->show) return;
 		if (!$this->Behavior->ShowAllFiles && !empty($file->info['access']))
 		{
-			if (!in_array($this->uid, $file->info['access'])) return;
+			if (!$this->GetVisible($file)) return;
 		}
 		$types = $file->type ? 'dirs' : 'files';
 		if (isset($file->info['thumb'])) $ret .= "<td>{$file->info['thumb']}</td>\n";
@@ -627,6 +631,18 @@ EOF;
 	function cmp_file($f1, $f2)
 	{
 		return $f1->info['index'] < $f2->info['index'] ? -1 : 1;
+	}
+
+	function GetVisible($file)
+	{
+		if (!isset($file->info['access']) &&
+			dirname($file->path) != dirname($this->root))
+			return $this->GetVisible(new FileInfo($file->dir));
+		
+		if (!empty($file->info['access']) &&
+			in_array($this->uid, $file->info['access'])) return true;
+
+		return false;
 	}
 }
 
