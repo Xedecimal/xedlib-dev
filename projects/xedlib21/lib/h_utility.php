@@ -471,4 +471,10 @@ function CleanID($id)
 	return str_replace('[', '_', str_replace(']', '', $id));
 }
 
+function Plural($str)
+{
+	if (substr($str, -1) != 's') return "{$str}s";
+	return $str;
+}
+
 ?>

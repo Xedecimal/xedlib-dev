@@ -685,7 +685,7 @@ class FormInput
 					$ret .= "<label><input
 						type=\"checkbox\"
 						name=\"{$this->name}[{$id}]\"
-						id=\"".CleanID($this->name.'_'.$id)."\"{$this->attr}/>
+						id=\"".CleanID($this->name.'_'.$id)."\"{$this->atrs}/>
 						{$val->text}</label><br />";
 				}
 			return $ret;
