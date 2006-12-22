@@ -1013,7 +1013,8 @@ class FilterDefault
 	 */
 	function Upload($file, $target)
 	{
-		move_uploaded_file($file['tmp_name'], "{$target->path}{$file['name']}");
+		$dest = "{$target->path}{$file['name']}";
+		move_uploaded_file($file['tmp_name'], $dest);
 	}
 
 	/**

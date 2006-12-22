@@ -363,7 +363,9 @@ function DelTree($dir)
 	while (($obj = readdir($dh)))
 	{
 		if ($obj == '.' || $obj == '..') continue;
-		if (!@unlink("{$dir}/{$obj}")) DelTree($dir.'/'.$obj);
+		$target = "{$dir}/{$obj}";
+		if (is_dir($target)) DelTree($target);
+		else unlink($target);
 	}
 	closedir($dh);
 	@rmdir($dir);
