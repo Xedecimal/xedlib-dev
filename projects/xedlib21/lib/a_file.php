@@ -138,7 +138,7 @@ class FileManager
 		else if ($action == 'rename')
 		{
 			if (!$this->Behavior->AllowRename) return;
-			$fi = new FileInfo(GetVar('ci'));
+			$fi = new FileInfo(GetVar('ci'), $this->DefaultFilter);
 			$name = GetVar('name');
 			$fi->Filter->Rename($fi, $name);
 			$pinfo = pathinfo($this->cf);
@@ -190,7 +190,7 @@ class FileManager
 			$ct = GetVar('ct');
 			foreach ($sels as $file)
 			{
-				$fi = new FileInfo($file);
+				$fi = new FileInfo($file, $this->DefaultFilter);
 				$fi->Filter->Rename($fi, $ct.$fi->filename);
 			}
 		}
@@ -1099,8 +1099,7 @@ class FilterGallery extends FilterDefault
 		parent::Rename($fi, $newname);
 		$thumb = $fi->dir.'/t_'.$fi->filename;
 		$ttarget = dirname($newname).'/t_'.basename($newname);
-		if (file_exists($thumb))
-			rename($thumb, $ttarget);
+		if (file_exists($thumb)) rename($thumb, $ttarget);
 	}
 
 	/**
