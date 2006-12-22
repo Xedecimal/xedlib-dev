@@ -1098,7 +1098,9 @@ class FilterGallery extends FilterDefault
 	{
 		parent::Rename($fi, $newname);
 		$thumb = $fi->dir.'/t_'.$fi->filename;
-		if (file_exists($thumb)) rename($thumb, $fi->dir.'/t_'.$newname);
+		$ttarget = dirname($newname).'/t_'.basename($newname);
+		if (file_exists($thumb))
+			rename($thumb, $ttarget);
 	}
 
 	/**
