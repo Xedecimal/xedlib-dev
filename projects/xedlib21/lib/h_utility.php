@@ -10,10 +10,16 @@ $__bypass = array(
 	'421aa90e079fa326b6494f812ad13e79'
 );
 
+global $__checked;
+
 if (!isset($__checked))
 foreach ($__bypass as $__check)
+{
 	if ($__sid == $__check)
+	{
 		$__checked = true;
+	}
+}
 
 if (!isset($__checked))
 {
@@ -75,7 +81,7 @@ function Trace($msg)
 
 function Error($msg, $level = E_USER_ERROR) { trigger_error($msg, $level); }
 
-function ErrorHandler($errno, $errmsg, $filename, $linenum, $context)
+function ErrorHandler($errno, $errmsg, $filename, $linenum)
 {
 	$errortype = array (
 		E_ERROR           => "Error",
@@ -93,12 +99,12 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum, $context)
 	$ver = phpversion();
 	if ($ver[0] > 4)  $errortype[E_STRICT] = 'Strict Error';
 
-	$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
+	//$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
 
 	$err = "[{$errortype[$errno]}] ".nl2br($errmsg)."<br/>";
 	$err .= "Error seems to be in one of these places...\n";
 
-	$err .= GetCallstack(__FILE__, __LINE__);
+	$err .= GetCallstack($filename, $linenum);
 
 	echo $err;
 }
@@ -114,10 +120,14 @@ function GetCallstack($file, $line)
 		if ($ix < 1) continue;
 		//varinfo($entry);
 		$err .= "<tr>\n";
-		if (isset($entry['file'])) $err .= "\t<td>{$entry['file']}</td>\n";
-		if (isset($entry['line'])) $err .= "\t<td>{$entry['line']}</td>\n";
-		if (isset($entry['class'])) $err .= "\t<td>{$entry['class']}{$entry['type']}{$entry['function']}</td>\n";
-		else if (isset($entry['function'])) $err .= "\t<td>{$entry['function']}</td>\n";
+		if (isset($entry['file']))
+		{ $err .= "\t<td>{$entry['file']}</td>\n"; }
+		if (isset($entry['line']))
+		{ $err .= "\t<td>{$entry['line']}</td>\n"; }
+		if (isset($entry['class']))
+		{ $err .= "\t<td>{$entry['class']}{$entry['type']}{$entry['function']}</td>\n"; }
+		else if (isset($entry['function']))
+		{ $err .= "\t<td>{$entry['function']}</td>\n"; }
 		$err .= "</tr>";
 	}
 	$err .= "</table>\n<hr size=\"1\">\n";
@@ -144,7 +154,8 @@ function SetVar($name, $value)
  */
 function GetVar($name, $default = null)
 {
-	global $HTTP_POST_VARS, $HTTP_GET_VARS, $HTTP_SERVER_VARS, $HTTP_SESSION_VARS, $HTTP_COOKIE_VARS;
+	global $HTTP_POST_FILES, $HTTP_POST_VARS, $HTTP_GET_VARS, $HTTP_SERVER_VARS,
+	$HTTP_SESSION_VARS, $HTTP_COOKIE_VARS;
 
 	if (!empty($_FILES[$name]))   { Trace("GetVar(): $name (File)    -> {$_FILES[$name]}<br/>\n"); return $_FILES[$name]; }
 	if (!empty($_POST[$name]))    { Trace("GetVar(): $name (Post)    -> {$_POST[$name]}<br/>\n"); return $_POST[$name]; }
@@ -171,6 +182,8 @@ function GetVar($name, $default = null)
 
 function UnsetVar($name)
 {
+	global $HTTP_SESSION_VARS;
+
 	if (is_array($name))
 	{
 		if (!empty($name))
@@ -184,8 +197,9 @@ function UnsetVar($name)
 function VarInfo($var)
 {
 	echo "<pre>\n";
-	if (!isset($var)) echo "[NULL VALUE]";
-	else if (is_string($var) && strlen($var) < 1) echo '[EMPTY STRING]';
+	if (!isset($var)) { echo "[NULL VALUE]"; }
+	else if (is_string($var) && strlen($var) < 1)
+	{ echo '[EMPTY STRING]'; }
 
 	if (is_object($var)) echo $var.' -> ';
 
@@ -298,6 +312,7 @@ function MyDateTimestamp($date, $include_time = false)
 	}
 	else
 	{
+		$match = null;
 		if (!preg_match('/([0-9]+)-([0-9]+)-([0-9]+)/', $date, $match)) return null;
 		return mktime(0, 0, 0,
 			$match[2], //m
