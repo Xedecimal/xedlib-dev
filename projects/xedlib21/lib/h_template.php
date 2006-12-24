@@ -22,7 +22,14 @@ function GetTemplateStack(&$data)
 
 function RequireModule(&$data, $file, $class)
 {
-	if (isset($data['includes'][$class])) return $data['includes'][$class];
+	if (isset($data['includes'][$class]))
+	{
+		if ($GLOBALS['debug'])
+			echo "RequireModule: Returning already included module.
+			({$class})<br/>\n";
+		return $data['includes'][$class];
+	}
+
 	if (!file_exists($file))
 	{
 		Error("\n<b>What</b>: File ({$file}) does not exist.
@@ -30,15 +37,18 @@ function RequireModule(&$data, $file, $class)
 		<b>Where</b>: Template stack...\n".GetTemplateStack($data).
 		"<b>Why</b>: You may have moved or deleted this file.");
 	}
+
 	require_once($file);
+
 	if (!class_exists($class))
 		Error("\n<b>What</b>: Class ({$class}) does not exist.
 		<b>Who</b>: &lt;INCLUDE> tag
 		<b>Where</b>: Template stack...\n".GetTemplateStack($data).
 		"<b>Why</b>: You may have moved this class to another file.");
+
 	$mod = new $class($data);
-	$mod->Prepare($data);
 	$data['includes'][$class] = $mod;
+	$mod->Prepare($data);
 }
 
 /**

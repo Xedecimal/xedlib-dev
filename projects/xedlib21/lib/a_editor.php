@@ -1042,7 +1042,7 @@ class EditorData
 			Plural($data['ds']->Description), $data['table']);
 		foreach ($data['forms'] as $frm)
 			$ret .= GetBox('box_user_form', "{$frm->State} {$frm->Description}",
-				$frm->Get('method="post" action="'.$target.'"'));
+				$frm->Get('method="post" action="'.$target.'"', 'class="form"'));
 		return $ret;
 	}
 }
