@@ -335,11 +335,11 @@ class Form extends Table
 	/**
 	* Instantiates this form with a unique name.
 	* @param $name string Unique name only used in Html comments for identification.
-	* @param $tblAttribs array Array of table's column attributes.
+	* @param $colAttribs array Array of table's column attributes.
 	*/
-	function Form($name, $tblAttribs = null)
+	function Form($name, $colAttribs = null)
 	{
-		$this->Table($name, null, $tblAttribs);
+		$this->Table($name, null, $colAttribs);
 		$this->name = $name;
 		$this->attribs = array();
 		$this->Persist = true;
@@ -1384,56 +1384,56 @@ function GetYearSelect($name, $year)
 function GetStateSelect($name, $state)
 {
 	$options = array(
-		new SelOption(0, 'Alabama'),
-		new SelOption(1, 'Alaska'),
-		new SelOption(2, 'Arizona'),
-		new SelOption(3, 'Arkansas'),
-		new SelOption(4, 'California'),
-		new SelOption(5, 'Colorado'),
-		new SelOption(6, 'Connecticut'),
-		new SelOption(7, 'Delaware'),
-		new SelOption(8, 'Florida'),
-		new SelOption(9, 'Georgia'),
-		new SelOption(10, 'Hawaii'),
-		new SelOption(11, 'Idaho'),
-		new SelOption(12, 'Illinois'),
-		new SelOption(13, 'Indiana'),
-		new SelOption(14, 'Iowa'),
-		new SelOption(15, 'Kansas'),
-		new SelOption(16, 'Kentucky'),
-		new SelOption(17, 'Louisiana'),
-		new SelOption(18, 'Maine'),
-		new SelOption(19, 'Maryland'),
-		new SelOption(20, 'Massachusetts'),
-		new SelOption(21, 'Michigan'),
-		new SelOption(22, 'Minnesota'),
-		new SelOption(23, 'Mississippi'),
-		new SelOption(24, 'Missouri'),
-		new SelOption(25, 'Montana'),
-		new SelOption(26, 'Nebraska'),
-		new SelOption(27, 'Nevada'),
-		new SelOption(28, 'New Hampshire'),
-		new SelOption(29, 'New Jersey'),
-		new SelOption(30, 'New Mexico'),
-		new SelOption(31, 'New York'),
-		new SelOption(32, 'North Carolina'),
-		new SelOption(33, 'North Dakota'),
-		new SelOption(34, 'Ohio'),
-		new SelOption(35, 'Oklahoma'),
-		new SelOption(36, 'Oregon'),
-		new SelOption(37, 'Pennsylvania'),
-		new SelOption(38, 'Rhode Island'),
-		new SelOption(39, 'South Carolina'),
-		new SelOption(40, 'South Dakota'),
-		new SelOption(41, 'Tennessee'),
-		new SelOption(42, 'Texas'),
-		new SelOption(43, 'Utah'),
-		new SelOption(44, 'Vermont'),
-		new SelOption(45, 'Virginia'),
-		new SelOption(46, 'Washington'),
-		new SelOption(47, 'West Virginia'),
-		new SelOption(48, 'Wisconsin'),
-		new SelOption(49, 'Wyoming')
+		new SelOption('Alabama'),
+		new SelOption('Alaska'),
+		new SelOption('Arizona'),
+		new SelOption('Arkansas'),
+		new SelOption('California'),
+		new SelOption('Colorado'),
+		new SelOption('Connecticut'),
+		new SelOption('Delaware'),
+		new SelOption('Florida'),
+		new SelOption('Georgia'),
+		new SelOption('Hawaii'),
+		new SelOption('Idaho'),
+		new SelOption('Illinois'),
+		new SelOption('Indiana'),
+		new SelOption('Iowa'),
+		new SelOption('Kansas'),
+		new SelOption('Kentucky'),
+		new SelOption('Louisiana'),
+		new SelOption('Maine'),
+		new SelOption('Maryland'),
+		new SelOption('Massachusetts'),
+		new SelOption('Michigan'),
+		new SelOption('Minnesota'),
+		new SelOption('Mississippi'),
+		new SelOption('Missouri'),
+		new SelOption('Montana'),
+		new SelOption('Nebraska'),
+		new SelOption('Nevada'),
+		new SelOption('New Hampshire'),
+		new SelOption('New Jersey'),
+		new SelOption('New Mexico'),
+		new SelOption('New York'),
+		new SelOption('North Carolina'),
+		new SelOption('North Dakota'),
+		new SelOption('Ohio'),
+		new SelOption('Oklahoma'),
+		new SelOption('Oregon'),
+		new SelOption('Pennsylvania'),
+		new SelOption('Rhode Island'),
+		new SelOption('South Carolina'),
+		new SelOption('South Dakota'),
+		new SelOption('Tennessee'),
+		new SelOption('Texas'),
+		new SelOption('Utah'),
+		new SelOption('Vermont'),
+		new SelOption('Virginia'),
+		new SelOption('Washington'),
+		new SelOption('West Virginia'),
+		new SelOption('Wisconsin'),
+		new SelOption('Wyoming')
 	);
 
 	return MakeSelect($name, $options, null, $state);
