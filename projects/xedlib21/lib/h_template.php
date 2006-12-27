@@ -112,8 +112,10 @@ class Template
 	 *
 	 * @return Template
 	 */
-	function Template(&$data)
+	function Template()
 	{
+		$args = func_get_args();
+		if (isset($args[0])) $data = &$args[0];
 		$this->out = "";
 		$this->objs = array();
 		$this->vars = array();
