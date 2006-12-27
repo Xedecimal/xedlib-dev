@@ -198,7 +198,7 @@ class Template
 		{
 			if (isset($attribs["FILE"]))
 			{
-				$t = new Template();
+				$t = new Template($this->data);
 				$obj = &$this->GetCurrentObject();
 				$obj->out .= $t->Get($attribs["FILE"]);
 			}
