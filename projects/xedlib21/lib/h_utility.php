@@ -428,13 +428,19 @@ function Reformat($file)
 	fclose($fp);
 }
 
+/**
+ * Gets the webserver path for a given local filesystem directory.
+ *
+ * @param string $path
+ * @return string Translated path.
+ */
 function GetRelativePath($path)
 {
-	$droot = GetVar('DOCUMENT_ROOT',
-		substr(GetVar('ORIG_PATH_TRANSLATED'),0,
-			strlen(GetVar('SCRIPT_NAME')) * -1));
-	$npath = str_replace('\\', '/', $path);
-	return substr($npath, strlen($droot));
+	$pt = GetVar('PATH_TRANSLATED', GetVar('ORIG_PATH_TRANSLATED'));
+	$sn = GetVar('SCRIPT_NAME');
+	$droot = str_replace('\\\\', '\\',
+		GetVar('DOCUMENT_ROOT', substr($pt, 0, strlen($sn) * -1)));
+	return substr($path, strlen($droot));
 }
 
 function GetButDel($url = null)
