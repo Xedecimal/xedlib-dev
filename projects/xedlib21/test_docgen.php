@@ -169,8 +169,6 @@ class DocGeneratorXML
 			}
 		}
 		
-		//varinfo($data);
-		
 		ksort($data->members);
 	
 		if (!empty($data))
