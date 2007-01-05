@@ -133,7 +133,7 @@ class FileManager
 			$fp = fopen($p, "w+");
 			fwrite($fp, serialize($info->info));
 			fclose($fp);
-			chmod($p, 0666);
+			chmod($p, 0755);
 		}
 		else if ($action == 'rename')
 		{
@@ -527,7 +527,7 @@ EOF;
 			if (!$this->GetVisible($file)) return;
 		}
 		$types = $file->type ? 'dirs' : 'files';
-		if (isset($file->info['thumb'])) $ret .= "<td>{$file->info['thumb']}</td>\n";
+		if (isset($file->info['thumb'])) $ret .= "<td><img src=\"{$file->info['thumb']}\" /></td>\n";
 		else
 		{
 			if (isset($this->icons[$file->type])) $icon = $this->icons[$file->type];
@@ -1071,7 +1071,7 @@ class FilterGallery extends FilterDefault
 		$fi->info['thumb_width'] = 200;
 		$fi->info['thumb_height'] = 200;
 		if (file_exists($fi->dir."/t_".$fi->filename))
-			$fi->info['thumb'] = "<img src=\"{$fi->dir}/t_{$fi->filename}\" alt=\"Thumbnail\" title=\"Thumbnail\" />";
+			$fi->info['thumb'] = "{$fi->dir}/t_{$fi->filename}";
 		return $fi;
 	}
 
