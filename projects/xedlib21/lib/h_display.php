@@ -649,6 +649,10 @@ class FormInput
 	 */
 	function Get($parent = null)
 	{
+		if ($this->type == 'date')
+		{
+			return GetInputDate($this->name, $this->valu);
+		}
 		if ($this->type == 'yesno')
 		{
 			$ret =  "<label><input type=\"radio\" name=\"{$this->name}\"

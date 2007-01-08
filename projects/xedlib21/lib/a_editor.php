@@ -979,7 +979,12 @@ class EditorData
 					else
 					{
 						if ($data[1] == 'password') $value = '';
-						else if (isset($sel[$data[0]])) $value = $sel[$data[0]];
+						else if (isset($sel[$data[0]]))
+						{
+							if ($data[1] == 'date')
+								$value = MyDateTimestamp($sel[$data[0]]);
+							else $value = $sel[$data[0]];
+						}
 						else if (isset($data[2])) { $data[2]; }
 						else $value = null;
 						if (is_string($value)) $value = stripslashes($value);
