@@ -3,6 +3,8 @@
 require_once('h_utility.php');
 require_once('h_display.php');
 
+define('SORT_MANUAL', -1);
+
 /**
  * Allows a user to administrate files from a web browser.
  */
@@ -322,8 +324,6 @@ EOF;
 					$out, 'template_box.html').'<br/><br/>';
 			}
 
-			$fi = new FileInfo($this->root.$this->cf);
-
 			if ($this->Behavior->AllowRename)
 			{
 				$form = new Form('rename');
@@ -364,11 +364,11 @@ EOF;
 					false)));
 
 				$options = $fi->Filter->GetOptions($def);
+
 				if (!empty($options)) foreach ($options as $text => $field)
 				{
-					if (isset($field[2])) $val = $field[2];
-					else $val = isset($fi->info[$field[0]]) ?
-						$fi->info[$field[0]] : null;
+					$val = isset($fi->info[$field[0]]) ?
+						$fi->info[$field[0]] : $field[2];
 
 					$form->AddInput(new FormInput($text, $field[1],
 						"info[{$field[0]}]", $val, null,
@@ -1068,8 +1068,8 @@ class FilterGallery extends FilterDefault
 	{
 		parent::GetInfo($fi);
 		if (substr($fi->filename, 0, 2) == 't_') return null;
-		$fi->info['thumb_width'] = 200;
-		$fi->info['thumb_height'] = 200;
+		if (!isset($fi->info['thumb_width'])) $fi->info['thumb_width'] = 200;
+		if (!isset($fi->info['thumb_height'])) $fi->info['thumb_height'] = 200;
 		if (file_exists($fi->dir."/t_".$fi->filename))
 			$fi->info['thumb'] = "{$fi->dir}/t_{$fi->filename}";
 		return $fi;

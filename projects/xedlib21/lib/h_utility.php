@@ -436,11 +436,12 @@ function Reformat($file)
  */
 function GetRelativePath($path)
 {
-	$pt = GetVar('PATH_TRANSLATED', GetVar('ORIG_PATH_TRANSLATED'));
-	$sn = GetVar('SCRIPT_NAME');
-	$droot = str_replace('\\\\', '\\',
-		GetVar('DOCUMENT_ROOT', substr($pt, 0, strlen($sn) * -1)));
-	return substr($path, strlen($droot));
+	$pt = GetVar('DOCUMENT_ROOT', GetVar('PATH_TRANSLATED',
+		GetVar('ORIG_PATH_TRANSLATED')));
+
+	$droot = substr(str_replace('\\', '/', $path), strlen($pt));
+
+	return $droot;
 }
 
 function GetButDel($url = null)
