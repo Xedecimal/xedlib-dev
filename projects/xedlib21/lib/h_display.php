@@ -484,6 +484,11 @@ class Form extends Table
 //		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"{$this->name}_$name\">$text</label>" : null, $strout, null));
 //	}
 
+
+	/**
+	 * Adds an input item to this form.
+	 * 
+	 */
 	function AddInput()
 	{
 		if (func_num_args() < 1) Error("Not enough arguments.");
@@ -649,20 +654,13 @@ class FormInput
 	 */
 	function Get($parent = null)
 	{
-		if ($this->type == 'date')
-		{
-			return GetInputDate($this->name, $this->valu);
-		}
 		if ($this->type == 'yesno')
 		{
-			$ret =  "<label><input type=\"radio\" name=\"{$this->name}\"
-				value=\"{$this->valu[0]}\"
-				{$this->atrs}/> Yes</label>\n".
-			"<label><input type=\"radio\" name=\"{$this->name}\"
-				value=\"{$this->valu[1]}\"
-				checked=\"checked\"
-				{$this->atrs}/> No</label>\n";
-			return $ret;
+			return GetInputYesNo($this->name, $this->valu);
+		}
+		if ($this->type == 'date')
+		{
+			return GetInputdate($this->name, $this->valu);
 		}
 		if ($this->type == 'select')
 		{
@@ -726,6 +724,7 @@ class FormInput
 				name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\"
 				{$this->atrs}>{$this->valu}</textarea>";
+
 		return "<input type=\"{$this->type}\"
 			name=\"{$this->name}\"
 			id=\"".CleanID($parent.'_'.$this->name)."\"".
