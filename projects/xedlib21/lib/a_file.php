@@ -3,7 +3,7 @@
 require_once('h_utility.php');
 require_once('h_display.php');
 
-define('SORT_MANUAL', -1);
+define('FM_SORT_MANUAL', -1);
 
 /**
  * Allows a user to administrate files from a web browser.
@@ -609,7 +609,7 @@ EOF;
 			if (is_dir($this->root.$this->cf.'/'.$file)) $ret['dirs'][] = $newfi;
 			else $ret['files'][] = $newfi;
 		}
-		if ($this->View->Sort == SORT_MANUAL)
+		if ($this->View->Sort == FM_SORT_MANUAL)
 		{
 			usort($ret['dirs'], array($this, 'cmp_file'));
 			usort($ret['files'], array($this, 'cmp_file'));
@@ -678,7 +678,7 @@ class FileManagerView
 	 *
 	 * @var int
 	 */
-	public $Sort = SORT_MANUAL;
+	public $Sort = FM_SORT_MANUAL;
 }
 
 class FileManagerBehavior

@@ -1,8 +1,8 @@
 <?php
 
-define('SORT_NONE',   0);
-define('SORT_MANUAL', 1);
-define('SORT_TABLE',  2);
+define('ED_SORT_NONE',   0);
+define('ED_SORT_MANUAL', 1);
+define('ED_SORT_TABLE',  2);
 
 class DisplayColumn
 {
@@ -230,7 +230,7 @@ class EditorData
 	public $state;
 	/**
 	 * The method used to handle sorting of the table portion of this
-	 * editor. Use either SORT_NONE (0), SORT_MANUAL (1) or SORT_TABLE (2).
+	 * editor. Use either ED_SORT_NONE (0), ED_SORT_MANUAL (1) or ED_SORT_TABLE (2).
 	 *
 	 * @var int
 	 */
@@ -295,7 +295,7 @@ class EditorData
 			$this->type = CONTROL_BOUND;
 		}
 		else $this->type = CONTROL_SIMPLE;
-		$this->sorting = SORT_MANUAL;
+		$this->sorting = ED_SORT_MANUAL;
 	}
 
 	/**
@@ -321,7 +321,7 @@ class EditorData
 		// Don't speak unless spoken to.
 		if (GetVar('editor') != $this->name) return;
 		
-		if ($this->sorting == SORT_TABLE)
+		if ($this->sorting == ED_SORT_TABLE)
 			$this->sort = array(GetVar('sort', $this->ds->id) => GetVar('order', 'ASC'));
 
 		$this->state = $action == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
@@ -791,7 +791,7 @@ class EditorData
 				}
 			}
 
-			if ($this->sorting == SORT_TABLE)
+			if ($this->sorting == ED_SORT_TABLE)
 				$table = new SortTable($this->name.'_table', $cols, $atrs);
 			else
 				$table = new Table($this->name.'_table', $cols, $atrs);
@@ -887,7 +887,7 @@ class EditorData
 
 			$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
 
-			if ($this->sorting == SORT_MANUAL && count($node->children) > 1)
+			if ($this->sorting == ED_SORT_MANUAL && count($node->children) > 1)
 			{
 				//We can possibly swap up
 				if ($index > 0)
