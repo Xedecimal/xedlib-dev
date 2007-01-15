@@ -1040,7 +1040,7 @@ class EditorData
 		return $ret;
 	}
 
-	static function GetUI($target, &$data, $form_atrs = null)
+	static function GetUI($target, $data, $form_atrs = null)
 	{
 		$ret = null;
 		if (isset($data['table'])) $ret .= GetBox('box_items',
