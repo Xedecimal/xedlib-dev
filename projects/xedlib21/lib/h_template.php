@@ -49,6 +49,7 @@ function RequireModule(&$data, $file, $class)
 	$mod = new $class($data);
 	$data['includes'][$class] = $mod;
 	$mod->Prepare($data);
+	return $mod;
 }
 
 /**

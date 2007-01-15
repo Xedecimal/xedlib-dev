@@ -79,18 +79,8 @@ class Box
 			return $t->get($temp);
 		}
 		$ret  = "<!-- Start Box: {$this->title} -->\n";
-		$ret .= "<table class=\"box_main\">\n";
-		$ret .= "  <tr class=\"box_row_even\">\n";
-		$ret .= "    <th>\n";
-		$ret .= "      <b>{$this->title}</b>\n";
-		$ret .= "    </th>\n";
-		$ret .= "  </tr>\n";
-		$ret .= "  <tr class=\"box_row_odd\">\n";
-		$ret .= "    <td class=\"box_body\">\n";
-		$ret .= $this->out;
-		$ret .= "    </td>\n";
-		$ret .= "  </tr>\n";
-		$ret .= "</table>\n";
+		$ret .= "<div class=\"box_title\">{$this->title}</div>\n";
+		$ret .= "<div class=\"box_body\">{$this->out}</div>\n";
 		$ret .= "<!-- End Box {$this->title} -->\n";
 		return $ret;
 	}
@@ -541,7 +531,7 @@ class Form extends Table
 		global $PERSISTS;
 		$ret  = "<!-- Begin Form: {$this->name} -->\n";
 		if ($formAttribs != null) $formAttribs = " " . $formAttribs;
-		$ret .= "<form$formAttribs";
+		$ret .= "<form class=\"form\"$formAttribs";
 		if (isset($this->attribs))
 		{
 			foreach ($this->attribs as $atr => $val) $ret .= " $atr=\"$val\"";
@@ -664,7 +654,7 @@ class FormInput
 		}
 		if ($this->type == 'select')
 		{
-			$ret = "<select name=\"{$this->name}\"
+			$ret = "<select class=\"input_select\" name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\">";
 			if (!empty($this->valu))
 				foreach ($this->valu as $id => $opt)
@@ -721,11 +711,13 @@ class FormInput
 		}
 		if ($this->type == 'area')
 			return "<textarea
+				class=\"input_area\"
 				name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\"
 				{$this->atrs}>{$this->valu}</textarea>";
 
 		return "<input type=\"{$this->type}\"
+			class=\"".($this->type == 'button' || $this->type == 'submit' ? 'input_button' : 'input_generic')."\"
 			name=\"{$this->name}\"
 			id=\"".CleanID($parent.'_'.$this->name)."\"".
 			(isset($this->valu) ? " value=\"{$this->valu}\"" : null).
