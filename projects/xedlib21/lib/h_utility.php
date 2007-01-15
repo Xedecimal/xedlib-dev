@@ -497,6 +497,7 @@ function CleanID($id)
 
 function Plural($str)
 {
+	if (substr($str, -1) == 'y') return substr($str, 0, -1).'ies';
 	if (substr($str, -1) != 's') return "{$str}s";
 	return $str;
 }

@@ -1040,14 +1040,15 @@ class EditorData
 		return $ret;
 	}
 
-	static function GetUI($target, &$data)
+	static function GetUI($target, &$data, $form_atrs = null)
 	{
 		$ret = null;
 		if (isset($data['table'])) $ret .= GetBox('box_items',
 			Plural($data['ds']->Description), $data['table']);
 		foreach ($data['forms'] as $frm)
 			$ret .= GetBox('box_user_form', "{$frm->State} {$frm->Description}",
-				$frm->Get('method="post" action="'.$target.'"', 'class="form"'));
+				$frm->Get('method="post" action="'.$target.'"', 'class="form"'
+				.(isset($form_atrs) ? ' '.$form_atrs : null)));
 		return $ret;
 	}
 }
