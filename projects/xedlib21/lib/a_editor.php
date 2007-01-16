@@ -799,7 +799,11 @@ class EditorData
 			$rows = array();
 			$this->AddRows($rows, $target, $root, 0);
 
-			foreach ($rows as $row) $table->AddRow($row);
+			foreach ($rows as $ix => $row)
+			{
+				$class = $ix % 2 == 0 ? 'row_even' : 'row_odd';
+				$table->AddRow($row, "class=\"{$class}\"");
+			}
 
 			$ret .= $table->Get('class="editor"');
 		}

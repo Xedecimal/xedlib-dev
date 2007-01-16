@@ -327,7 +327,7 @@ function GetDateOffset($ts)
 	$ss = time()-$ts;
 	$mm = $ss / 60;
 	$hh = $mm / 60;
-	
+
 	$d = $hh / 24;
 	$w = $d / 7;
 	$m = $d / 31;
@@ -414,6 +414,7 @@ function Reformat($file)
 {
 	$c = file_get_contents($file);
 	$c = preg_replace("/\tprivate|\tprotected|\tpublic/", "\tvar", $c);
+	$c = preg_replace("/\tstatic/", "\t", $c);
 	$c = "<?php \$__checked = true; ?>\n".$c;
 	if (!$fp = fopen($file, 'w+'))
 	{

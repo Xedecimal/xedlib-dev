@@ -679,6 +679,18 @@ class FileManagerView
 	 * @var int
 	 */
 	public $Sort = FM_SORT_MANUAL;
+	/**
+	 * Whether or not to show the date next to files.
+	 *
+	 * @var boolean
+	 */
+	public $ShowDate = true;
+	/**
+	 * Whether to float items instead of displaying them in a table.
+	 *
+	 * @var bool
+	 */
+	public $FloatItems = false;
 }
 
 class FileManagerBehavior
