@@ -98,6 +98,7 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 	);
 	$ver = phpversion();
 	if ($ver[0] > 4)  $errortype[E_STRICT] = 'Strict Error';
+	if ($ver[0] > 4 && $ver[2] > 1) $errortype[E_RECOVERABLE_ERROR] = 'Recoverable Error';
 
 	//$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
 
@@ -453,10 +454,18 @@ function GetButDel($url = null)
 	return $ret;
 }
 
+/**
+ * Resizes an image bicubicly and constrains proportions.
+ *
+ * @param resource $image Use imagecreate*
+ * @param int $newWidth
+ * @param int $newHeight
+ * @return resource Resized/sampled image.
+ */
 function ResizeImage($image, $newWidth, $newHeight)
 {
-	$srcWidth  = ImageSX($image);
-	$srcHeight = ImageSY($image);
+	$srcWidth  = imagesx($image);
+	$srcHeight = imagesy($image);
 	if ($srcWidth < $newWidth && $srcHeight < $newHeight) return $image;
 
 	if ($srcWidth < $srcHeight)

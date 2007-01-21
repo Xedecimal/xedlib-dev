@@ -4,6 +4,7 @@ require_once('h_utility.php');
 require_once('h_display.php');
 
 define('FM_SORT_MANUAL', -1);
+define('FM_SORT_TABLE', -2);
 
 /**
  * Allows a user to administrate files from a web browser.
@@ -130,7 +131,8 @@ class FileManager
 		{
 			if (!$this->Behavior->AllowEdit) return;
 			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
-			$info->info = GetVar("info");
+			$info->Filter->Updated($info);
+			$info->info = GetPost("info");
 			$p = $info->dir.'/.'.$info->filename;
 			$fp = fopen($p, "w+");
 			fwrite($fp, serialize($info->info));
@@ -351,24 +353,33 @@ EOF;
 				$form->AddHidden('editor', $this->name);
 				$form->AddHidden('ca', 'update_info');
 				$form->AddHidden('cf', $this->cf);
+
 				if (isset($this->DefaultOptionHandler))
 				{
 					$handler = $this->DefaultOptionHandler;
 					$def = $handler($fi);
 				}
 				else $def = null;
+
 				if ($this->Behavior->AllowSetType && count($this->filters) > 1)
 				$form->AddInput(new FormInput('Change Type', 'select',
 					'info[type]',
 					ArrayToSelOptions($this->filters, $fi->Filter->Name,
 					false)));
 
-				$options = $fi->Filter->GetOptions($def);
+				$options = $fi->Filter->GetOptions($fi, $def);
 
-				if (!empty($options)) foreach ($options as $text => $field)
+				if (!empty($options))
+				foreach ($options as $text => $field)
 				{
-					$val = isset($fi->info[$field[0]]) ?
-						$fi->info[$field[0]] : $field[2];
+					//$field[4] == Always use default.
+					if ((isset($field[4]) && $field[4]) ||
+					(!isset($fi->info[$field[0]]) && isset($field[2])))
+						$val = $field[2];
+					else if (isset($fi->info[$field[0]]))
+						$val = stripslashes($fi->info[$field[0]]);
+					else
+						$val = null;
 
 					$form->AddInput(new FormInput($text, $field[1],
 						"info[{$field[0]}]", $val, null,
@@ -432,12 +443,12 @@ EOF;
 	function GetHeader($target, $source)
 	{
 		$ret = null;
-		if (is_dir($this->root.$source))
+		if (is_dir($source->path) && $this->Behavior->Search)
 		{
 			$ret .= "<form action=\"$target\" method=\"post\">\n";
 			$ret .= "<input type=\"hidden\" name=\"editor\" value=\"$this->name\" />\n";
 			$ret .= "<input type=\"hidden\" name=\"ca\" value=\"search\"/>\n";
-			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"$source\"/>\n";
+			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$source->path}\"/>\n";
 			$ret .= "Search in: /\n";
 		}
 		//else $ret .= '<p>';
@@ -445,7 +456,7 @@ EOF;
 
 		if (is_file($source->path))
 			$ret .= " [<a href=\"{$source->path}\" target=\"_blank\">Download</a>]</p>";
-		if (is_dir($this->root.$source))
+		if (is_dir($source->path) && $this->Behavior->Search)
 		{
 			$ret .= " for <input type=\"text\" name=\"cq\"/>\n";
 			$ret .= "<input type=\"submit\" value=\"Search\"/>\n";
@@ -1006,7 +1017,7 @@ class FilterDefault
 	 *
 	 * @return array
 	 */
-	function GetOptions(&$default)
+	function GetOptions(&$fi, $default)
 	{
 		$more = array(
 			'Display Name for Current File or Folder' => array('title', 'text',
@@ -1045,6 +1056,10 @@ class FilterDefault
 		rename($fi->path, $ddir.'/'.$pinfo['basename']);
 	}
 
+	function Updated(&$fi)
+	{
+	}
+	
 	/**
 	* Delete a file or folder.
 	*
@@ -1092,7 +1107,7 @@ class FilterGallery extends FilterDefault
 	 *
 	 * @return array
 	 */
-	function GetOptions(&$default)
+	function GetOptions(&$fi, $default)
 	{
 		return array_merge(parent::GetOptions($default), array(
 			'Thumbnail Width' => array('thumb_width', 'text', 200),

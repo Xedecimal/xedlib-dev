@@ -66,7 +66,7 @@ class EditorHandler
 	 * @param int $id
 	 * @return boolean true by default (meant to be overridden)
 	 */
-	function Created($id) { return true; }
+	function Created($id, $inserted) { return true; }
 	/**
 	 * Before an item is updated, this function is called. If you extend this
 	 * object and return false, it will not be updated.
@@ -86,6 +86,7 @@ class EditorHandler
 	 * @return boolean true by default (meant to be overridden)
 	 */
 	function Delete($id, &$data) { return true; }
+	function GetFields(&$form, $data) {}
 }
 
 /**
@@ -355,13 +356,7 @@ class EditorData
 						);
 					}
 					else if ($data[1] == 'selects')
-					{
-						//We don't want to stick with bitmasking selects
-						//because it could end up with gigantic numbers.
-						//$newval = 0;
-						//foreach ($value as $val) $newval |= $val;
 						$insert[$data[0]] = $value;
-					}
 					else $insert[$data[0]] = $value;
 				}
 				else if (is_string($name)) $insert[$name] = DeString($data);
@@ -1000,6 +995,9 @@ class EditorData
 				}
 				else $frm->AddRow(is_numeric($text) ? $data : '&nbsp;');
 			}
+
+			foreach ($this->handlers as $handler) $handler->GetFields($sel, $frm);
+			
 			$frm->State = $state == STATE_EDIT ? 'Update' : 'Create';
 			$frm->Description = $context->ds->Description;
 			$frm->AddRow(array(
