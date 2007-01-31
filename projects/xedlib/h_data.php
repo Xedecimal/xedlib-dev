@@ -136,6 +136,11 @@ class DataSet
 	 */
 	public $database;
 
+	/**
+	 * Associated table.
+	 *
+	 * @var DataTable
+	 */
 	public $table;
 	public $children;
 	public $display;
