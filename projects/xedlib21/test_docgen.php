@@ -36,10 +36,8 @@ class DocGeneratorXML
 		if (isset($item->doc->example))
 		{
 			if (!file_exists($item->doc->example) ||
-				!is_file($item->doc->example))
-				$data = $item->doc->example;
-			else
-				$data = highlight_file($match[1], true);
+				!is_file($item->doc->example)) $data = $item->doc->example;
+			else $data = highlight_file($match[1], true);
 			$elTag = $doc->createElement('tag');
 			$elTag->appendChild($doc->createCDATASection($data));
 			$elTag->setAttribute('type', 'example');
@@ -133,7 +131,7 @@ class DocGeneratorXML
 	function OutputTOC($toc, $parent, $item, $target)
 	{
 		$type = GetTypeName($item->type);
-	
+
 		$element = $toc->createElement($type);
 		$element->setAttribute('name', $item->name);
 		if (isset($item->value))
@@ -189,7 +187,7 @@ echo '<pre>';
 $stime = microtime();
 $d = new DocGeneratorXML();
 $d->OutputFiles('lib/*.php', 'doc/output');
-echo 'Done in '.($stime-microtime())." seconds.<br/>\n";
+echo 'Done in '.(microtime()-$stime)." seconds.<br/>\n";
 echo '</pre>';
 
 ?>

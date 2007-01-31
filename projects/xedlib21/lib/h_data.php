@@ -35,7 +35,7 @@ define('DB_OD', 1);
 class Database
 {
 	/** A link returned from mysql_connect(), don't worry about it. */
-	private $link;
+	public $link;
 	/** Name of this database, set from constructor. */
 	private $name;
 	/**

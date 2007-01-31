@@ -494,7 +494,7 @@ class Form extends Table
 
 			$out = isset($item->text) ? '<label for="'.CleanID($this->name.'_'.
 				$item->name).'">'.$item->text.
-				'</label><br/>' : '<br/>';
+				'</label><br/>' : '';
 
 			$helptext = $item->help;
 			if (isset($this->Validation))
