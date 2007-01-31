@@ -46,12 +46,6 @@ if ($cf['type'] == 'text/x-sql' || substr($cf['name'], -3) == 'sql')
 	$data = file_get_contents($cf['tmp_name']);
 	DoItToIt($data);
 }
-else if (substr($cf['name'], -3) == 'zip')
-{
-	$zip = new ZipArchive;
-	$zip->open($cf['tmp_name']);
-	$zip->close();
-}
 else if (substr($cf['name'], -2) == 'gz')
 {
 	$zp = gzopen($cf['tmp_name'], 'r');
