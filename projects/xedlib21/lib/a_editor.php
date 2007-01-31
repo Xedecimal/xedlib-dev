@@ -1047,6 +1047,7 @@ class EditorData
 		$ret = null;
 		if (isset($data['table'])) $ret .= GetBox('box_items',
 			Plural($data['ds']->Description), $data['table']);
+		if (!empty($data['forms']))
 		foreach ($data['forms'] as $frm)
 			$ret .= GetBox('box_user_form', "{$frm->State} {$frm->Description}",
 				$frm->Get('method="post" action="'.$target.'"', 'class="form"'

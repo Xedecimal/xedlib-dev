@@ -443,7 +443,7 @@ EOF;
 	function GetHeader($target, $source)
 	{
 		$ret = null;
-		if (is_dir($source->path) && $this->Behavior->Search)
+		if (is_dir($source->path) && $this->Behavior->AllowSearch)
 		{
 			$ret .= "<form action=\"$target\" method=\"post\">\n";
 			$ret .= "<input type=\"hidden\" name=\"editor\" value=\"$this->name\" />\n";
@@ -456,7 +456,7 @@ EOF;
 
 		if (is_file($source->path))
 			$ret .= " [<a href=\"{$source->path}\" target=\"_blank\">Download</a>]</p>";
-		if (is_dir($source->path) && $this->Behavior->Search)
+		if (is_dir($source->path) && $this->Behavior->AllowSearch)
 		{
 			$ret .= " for <input type=\"text\" name=\"cq\"/>\n";
 			$ret .= "<input type=\"submit\" value=\"Search\"/>\n";
@@ -776,6 +776,12 @@ class FileManagerBehavior
 	 * @var boolean
 	 */
 	public $ShowAllFiles = false;
+	/**
+	 * Allow searching files.
+	 *
+	 * @var boolean
+	 */
+	public $AllowSearch = false;
 
 	/**
 	 * Return true if options are available.

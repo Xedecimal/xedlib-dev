@@ -438,12 +438,16 @@ function Reformat($file)
  */
 function GetRelativePath($path)
 {
-	$pt = GetVar('DOCUMENT_ROOT', GetVar('PATH_TRANSLATED',
-		GetVar('ORIG_PATH_TRANSLATED')));
+	$dr = GetVar('DOCUMENT_ROOT');
 
-	$droot = substr(str_replace('\\', '/', $path), strlen($pt));
+	if (empty($dr)) //Probably IIS
+	{
+		//Get the document root from the translated path.
+		$pt = str_replace('\\\\', '/', GetVar('PATH_TRANSLATED'));
+		$dr = substr($pt, 0, -strlen(GetVar('SCRIPT_NAME')));
+	}
 
-	return $droot;
+	return substr(str_replace('\\', '/', $path), strlen($dr));
 }
 
 function GetButDel($url = null)
@@ -507,6 +511,7 @@ function CleanID($id)
 
 function Plural($str)
 {
+	if (strlen($str) < 1) return null;
 	if (substr($str, -1) == 'y') return substr($str, 0, -1).'ies';
 	if (substr($str, -1) != 's') return "{$str}s";
 	return $str;
