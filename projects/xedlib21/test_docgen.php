@@ -29,6 +29,13 @@ class DocGeneratorXML
 		return $doc;
 	}
 
+	/**
+	 * Enter description here...
+	 *
+	 * @param unknown_type $doc
+	 * @param CodeObject $item
+	 * @return unknown
+	 */
 	function GetDocumentElement($doc, $item)
 	{
 		$elDoc = $doc->createElement('doc');
@@ -107,7 +114,7 @@ class DocGeneratorXML
 			$this->OutputMember($doc, $e, $member);
 		$parent->appendChild($e);
 	}
-	
+
 	function OutputDetail($item, $target)
 	{
 		$type = GetTypeName($item->type);
@@ -127,7 +134,7 @@ class DocGeneratorXML
 	
 		$doc->save("{$target}/{$type}_{$item->name}.xml");
 	}
-	
+
 	function OutputTOC($toc, $parent, $item, $target)
 	{
 		$type = GetTypeName($item->type);
@@ -149,7 +156,7 @@ class DocGeneratorXML
 		if ($item->type != T_DEFINE) $this->OutputDetail($item, $target);
 		$parent->appendChild($element);
 	}
-	
+
 	function OutputFiles($mask, $target)
 	{
 		$d = new CodeReader();
@@ -158,7 +165,7 @@ class DocGeneratorXML
 		$data = null;
 		foreach ($files as $file)
 		{
-			$new = $d->Parse($file);
+			$new = $d->Parse($files[0]);
 			if (!isset($data)) $data = $new;
 			else if (isset($new))
 			{
@@ -167,6 +174,8 @@ class DocGeneratorXML
 			}
 		}
 		
+		varinfo($data->members);
+
 		ksort($data->members);
 	
 		if (!empty($data))
