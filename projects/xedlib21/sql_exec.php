@@ -13,12 +13,12 @@ $cf = GetVar('upfile');
 if (!isset($ch))
 {
 	$frm = new Form('send');
-	$frm->AddInput(new FormInput('Host', 'text', 'host', 'localhost'));
-	$frm->AddInput(new FormInput('Database', 'text', 'data', 'bonnema'));
-	$frm->AddInput(new FormInput('Username', 'text', 'user', 'root'));
+	$frm->AddInput(new FormInput('Host',     'text',     'host', 'localhost'));
+	$frm->AddInput(new FormInput('Database', 'text',     'data', 'bonnema'));
+	$frm->AddInput(new FormInput('Username', 'text',     'user', 'root'));
 	$frm->AddInput(new FormInput('Password', 'password', 'pass', 'ransal'));
-	$frm->AddInput(new FormInput('File', 'file', 'upfile'));
-	$frm->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Upload'));
+	$frm->AddInput(new FormInput('File',     'file',     'upfile'));
+	$frm->AddInput(new FormInput(null,       'submit',   'butSubmit', 'Upload'));
 	die($frm->Get('method="post" enctype="multipart/form-data"'));
 }
 
