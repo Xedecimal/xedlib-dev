@@ -37,7 +37,7 @@ class Database
 	/** A link returned from mysql_connect(), don't worry about it. */
 	public $link;
 	/** Name of this database, set from constructor. */
-	private $name;
+	public $name;
 	/**
 	 * Type of database this is attached to.
 	 *
@@ -656,7 +656,7 @@ class DataSet
 			<br />Why: You may have specified an incorrect database in
 			construction.");
 		}
-		
+
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 
@@ -718,7 +718,7 @@ class DataSet
 
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
-	
+
 		//Prepare Query
 		$query = "SELECT\n";
 		$query .= $this->ColsClause($columns);

@@ -1,28 +1,38 @@
 <?php
 
-require_once('lib/h_utility.php');
-require_once('lib/h_display.php');
-require_once('lib/h_data.php');
+require_once('h_main.php');
 
-$ch = GetVar('host');
-$cd = GetVar('data');
-$cu = GetVar('user');
-$cp = GetVar('pass');
+$ca = GetVar('ca');
 $cf = GetVar('upfile');
 
-if (!isset($ch))
+if (!isset($ca))
 {
 	$frm = new Form('send');
-	$frm->AddInput(new FormInput('Host',     'text',     'host', 'localhost'));
-	$frm->AddInput(new FormInput('Database', 'text',     'data', 'bonnema'));
-	$frm->AddInput(new FormInput('Username', 'text',     'user', 'root'));
-	$frm->AddInput(new FormInput('Password', 'password', 'pass', 'ransal'));
+	$frm->AddHidden('ca', 'upload');
 	$frm->AddInput(new FormInput('File',     'file',     'upfile'));
 	$frm->AddInput(new FormInput(null,       'submit',   'butSubmit', 'Upload'));
-	die($frm->Get('method="post" enctype="multipart/form-data"'));
+	$out = '<table><tr><td>Upload Backup'.
+	$out .= $frm->Get('method="post" enctype="multipart/form-data"');
+	$out .= <<<EOF
+	</td><td valign="top"><a href="{$me}?ca=download">Download Backup</a></td>
+</tr>
+EOF;
+	die($out);
 }
 
-$db = new Database("mysql://{$cu}:{$cp}@{$ch}/{$cd}");
+//Download backup.
+if ($ca == 'download')
+{
+	$tname = addslashes(tempnam(null, 'xldatadump'));
+
+	$tables = $db->Query('SHOW TABLES');
+	while ($table = mysql_fetch_array($tables))
+	{
+		echo "Doing one.";
+		$db->Query("SELECT * INTO OUTFILE '{$tname}' FROM {$table[0]}");
+		echo file_get_contents($tname);
+	}
+}
 
 function DoItToIt($sql)
 {
@@ -32,8 +42,6 @@ function DoItToIt($sql)
 	foreach ($coms as $com)
 	{
 		if (strlen($com) < 3) continue;
-		echo "Doing a query...<br/>\n";
-		varinfo($com);
 		$db->Query($com);
 		$rows += mysql_affected_rows($db->link);
 	}
