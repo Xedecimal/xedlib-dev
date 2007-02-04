@@ -29,6 +29,8 @@ define("GET_BOTH", 3);
 define('DB_MY', 0);
 define('DB_OD', 1);
 
+define('ER_NO_SUCH_TABLE', 1146);
+
 /**
  * A generic database interface, currently only supports MySQL apparently.
  */
@@ -57,6 +59,20 @@ class Database
 	 * @var char
 	 */
 	public $rq;
+	
+	public $Handlers;
+
+	function CheckMyError($query, $handler)
+	{
+		if (mysql_errno())
+		{
+			if (isset($handler))
+				if (call_user_func($handler, mysql_errno())) return;
+			if (isset($this->Handlers[mysql_errno()]))
+				if (call_user_func($this->Handlers[mysql_errno()])) return;
+			echo "MySQL Error [".mysql_errno().']: '.mysql_error();
+		}
+	}
 
 	/**
 	 * Instantiates a new xlDatabase object with the database name, hostname, user name and password.
@@ -65,15 +81,19 @@ class Database
 	 * @param $user string Username to connect with, either specified or gathered from the defined constant XL_DBUSER.
 	 * @param $pass string Password to connect with, either specified or gathered from the defined constant XL_DBPASS.
 	 */
-	function Database($url)
+	function Database()
+	{
+	}
+
+	function Open($url)
 	{
 		if (preg_match('#([^:]+)://([^:]*):(.*)@([^/]*)/(.*)#', $url, $m) < 1)
 			Error("Invalid url for database.");
 		switch ($m[1])
 		{
 			case 'mysql':
+				$this->ErrorHandler = array($this, 'CheckMyError');
 				$this->link = mysql_connect($m[4], $m[2], $m[3]);
-				if (mysql_error()) die("MySQL Error on connect: ".mysql_error());
 				mysql_select_db($m[5], $this->link);
 				$this->type = DB_MY;
 				$this->lq = $this->rq = '`';
@@ -90,6 +110,7 @@ class Database
 				Error("Invalid database on Database creation.");
 				break;
 		}
+		call_user_func($this->ErrorHandler, null, null);
 		$this->name = $m[5];
 	}
 
@@ -101,15 +122,14 @@ class Database
 	 * @param $silent bool Should we return an error?
 	 * @return object Query result object.
 	 */
-	function Query($query, $silent = false)
+	function Query($query, $silent = false, $handler = null)
 	{
 		if ($GLOBALS['debug']) varinfo($query);
 		switch ($this->type)
 		{
 			case DB_MY:
 				$res = mysql_query($query, $this->link);
-				if (mysql_error())
-					Error("Query: $query<br/>\nMySQL Error: ".mysql_error());
+				call_user_func($this->ErrorHandler, $query, $handler);
 				break;
 			case DB_OD:
 				$res = odbc_exec($this->link, $query);
@@ -353,6 +373,8 @@ class DataSet
 	 * @var string
 	 */
 	public $Description;
+
+	public $ErrorHandler;
 
 	/**
 	 * Which function is used to actually fetch the data, depending on the
@@ -672,7 +694,8 @@ class DataSet
 		$query .= $this->AmountClause($filter);
 
 		//Execute Query
-		$rows = $this->database->Query($query);
+		$rows = $this->database->Query($query, !empty($this->ErrorHandler),
+			$this->ErrorHandler);
 
 		//Prepare Data
 		//if (mysql_affected_rows() < 1) return null;
@@ -842,7 +865,7 @@ class DataSet
 	 */
 	function GetCustom($query, $silent = false, $args = GET_BOTH)
 	{
-		$rows = $this->database->Query($query, $silent);
+		$rows = $this->database->Query($query, $silent, $this->ErrorHandler);
 		if ($rows == null) return null;
 		$ret = array();
 		while (($row = mysql_fetch_array($rows, $args)))

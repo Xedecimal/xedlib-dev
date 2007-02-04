@@ -202,8 +202,6 @@ function VarInfo($var)
 	else if (is_string($var) && strlen($var) < 1)
 	{ echo '[EMPTY STRING]'; }
 
-	if (is_object($var)) echo $var.' -> ';
-
 	echo str_replace("<", "&lt;", print_r($var, true));
 	echo "</pre>\n";
 }
