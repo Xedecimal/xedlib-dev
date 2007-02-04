@@ -11,7 +11,7 @@ if (!isset($ca))
 	$frm->AddHidden('ca', 'upload');
 	$frm->AddInput(new FormInput('File',     'file',     'upfile'));
 	$frm->AddInput(new FormInput(null,       'submit',   'butSubmit', 'Upload'));
-	$out = '<table><tr><td>Upload Backup'.
+	$out = '<table><tr><td>Upload Backup';
 	$out .= $frm->Get('method="post" enctype="multipart/form-data"');
 	$out .= <<<EOF
 	</td><td valign="top"><a href="{$me}?ca=download">Download Backup</a></td>
