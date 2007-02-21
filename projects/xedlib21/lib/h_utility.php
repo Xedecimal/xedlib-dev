@@ -181,6 +181,18 @@ function GetVar($name, $default = null)
 	return $default;
 }
 
+function GetPost($name, $default = null)
+{
+	global $HTTP_POST_VARS;
+
+	if (!empty($_POST[$name]))    { Trace("GetVar(): $name (Post)    -> {$_POST[$name]}<br/>\n"); return $_POST[$name]; }
+
+	if (isset($HTTP_POST_VARS[$name]) && strlen($HTTP_POST_VARS[$name]) > 0)
+		return $HTTP_POST_VARS[$name];
+
+	return $default;
+}
+
 function UnsetVar($name)
 {
 	global $HTTP_SESSION_VARS;

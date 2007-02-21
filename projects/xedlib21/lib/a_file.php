@@ -235,7 +235,7 @@ class FileManager
 		{
 			if ($this->View->ShowFilesFirst)
 			{
-				$title = "<p>{$this->view->show_files_header}</p>\n";
+				$title = "<p>{$this->View->FilesHeader}</p>\n";
 				$ret .= $this->GetFiles($target, 'files', $title);
 			}
 			else
@@ -251,7 +251,7 @@ class FileManager
 			}
 			else
 			{
-				$title = "<p>{$this->show_folders_header}</p>\n";
+				$title = "<p>{$this->View->FoldersHeader}</p>\n";
 				$ret .= $this->GetFiles($target, 'dirs', $title);
 			}
 		}
@@ -326,26 +326,6 @@ EOF;
 					$out, 'template_box.html').'<br/><br/>';
 			}
 
-			if ($this->Behavior->AllowRename)
-			{
-				$form = new Form('rename');
-				$form->AddHidden('editor', $this->name);
-				$form->AddHidden('ca', 'rename');
-				$form->AddHidden('ci', $fi->path);
-				$form->AddHidden('cf', $this->cf);
-				$form->AddInput(new FormInput('Name', 'text', 'name', $fi->filename, null,
-					'<span style="color: #F00">* Caution, this will change the
-					name of the file or folder that you are viewing.</span>'));
-				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Rename'));
-				global $me;
-				$out = '<p><span style="font-size: 8pt;">Don\'t forget to
-					include the correct file extension with the name (i.e. -
-					.jpg, .zip, .doc, etc.)</span></p>'.
-					$form->Get('method="post" action="'.$me.'"');
-				$ret .= GetBox('box_rename', 'Rename File', $out,
-					'template_box.html');
-			}
-
 			if ($this->Behavior->AllowEdit)
 			{
 				//Filter options.
@@ -390,6 +370,26 @@ EOF;
 
 				$ret .= GetBox('box_settings', "Settings for {$this->root}<span style=\"text-decoration: underline;\">{$this->cf}</span>",
 					$form->Get('method="post" action="'.$target.'"'), 'template_box.html').'<br/><br/>';
+			}
+			
+			if ($this->Behavior->AllowRename)
+			{
+				$form = new Form('rename');
+				$form->AddHidden('editor', $this->name);
+				$form->AddHidden('ca', 'rename');
+				$form->AddHidden('ci', $fi->path);
+				$form->AddHidden('cf', $this->cf);
+				$form->AddInput(new FormInput('Name', 'text', 'name', $fi->filename, null,
+					'<span style="color: #F00">* Caution, this will change the
+					name of the file or folder that you are viewing.</span>'));
+				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Rename'));
+				global $me;
+				$out = '<p><span style="font-size: 8pt;">Don\'t forget to
+					include the correct file extension with the name (i.e. -
+					.jpg, .zip, .doc, etc.)</span></p>'.
+					$form->Get('method="post" action="'.$me.'"');
+				$ret .= GetBox('box_rename', 'Rename File', $out,
+					'template_box.html');
 			}
 			$ret .= "</div><br/><br/><br/><br/>";
 		}
@@ -555,7 +555,7 @@ EOF;
 		if ($this->mass_avail)
 			$ret .= "\t\t<input type=\"checkbox\" id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\" onclick=\"toggleAny(['sel_files_', 'sel_dirs_'], '{$this->name}_mass_options');\" />\n";
 		$ret .= "\t\t<a href=\"$url\">{$name}</a></td><td> ".
-			gmdate("m/d/y h:i", filectime($file->path))."\n\t</td>\n";
+		($this->View->ShowDate ? gmdate("m/d/y h:i", filectime($file->path)) : null)."\n\t</td>\n";
 
 		$common = array(
 			'cf' => $this->cf,
@@ -940,7 +940,8 @@ class FileInfo
 			if (file_exists($dinfo))
 			{
 				$dinfo = unserialize(file_get_contents($dinfo));
-				$this->info = array_merge($dinfo, $this->info);
+				if (is_array($dinfo))
+					$this->info = array_merge($dinfo, $this->info);
 			}
 		}
 		if (isset($this->info['type']))
