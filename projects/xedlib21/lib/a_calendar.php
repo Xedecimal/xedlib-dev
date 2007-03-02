@@ -35,7 +35,7 @@ class Calendar
 	 *
 	 * @var unknown_type
 	 */
-	private $daybody;
+	public $daybody;
 
 	/**
 	* Adds an item to the calendar to be displayed in a given period of time
@@ -294,13 +294,13 @@ class CalendarMonth
 	 *
 	 * @var int
 	 */
-	private $Pad;
+	public $Pad;
 	/**
 	 * Array of CalendarDay objects.
 	 *
 	 * @var int
 	 */
-	private $Days;
+	public $Days;
 
 	/**
 	 * Enter description here...
@@ -332,37 +332,37 @@ class CalendarDay
 	 *
 	 * @var int
 	 */
-	private $TimeStamp;
+	public $TimeStamp;
 	/**
 	 * true if this day is the first weekday.
 	 *
 	 * @var bool
 	 */
-	private $StartWeek;
+	public $StartWeek;
 	/**
 	 * true if this day is the last weekday.
 	 *
 	 * @var bool
 	 */
-	private $EndWeek;
+	public $EndWeek;
 	/**
 	 * Day of the month.
 	 *
 	 * @var int
 	 */
-	private $Day;
+	public $Day;
 	/**
 	 * Day of the week.
 	 *
 	 * @var int
 	 */
-	private $WeekDay;
+	public $WeekDay;
 	/**
 	 * True if this is the last day of the month.
 	 *
 	 * @var bool
 	 */
-	private $LastDay;
+	public $LastDay;
 
 	/**
 	 * Enter description here...
