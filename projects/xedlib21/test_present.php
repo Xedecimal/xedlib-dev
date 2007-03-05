@@ -43,9 +43,9 @@ $vContact->Add('mail', $vAddress);
 //Validation must be prepared. This generates nessecary spans and javascript to
 //use the generated spans, you must always display the error value whether it
 //has passed or not or the javascript will not work.
-$ArrayV = FormValidate('formArray', array($vEmail, $vPhone, $vAddress, $vChecks),
-	GetVar('cav') == 'send');
-$RecurseV = FormValidate('formRecurse', $vContact, GetVar('car') == 'send');
+$array_passed = FormValidate('formArray', array($vEmail, $vPhone, $vAddress, $vChecks),
+	$ArrayV, GetVar('cav') == 'send');
+$recurse_passed = FormValidate('formRecurse', $vContact, $RecurseV, GetVar('car') == 'send');
 
 //Array for a dropdown list, will be converted using ArrayToSelOptions().
 $contacts = array(

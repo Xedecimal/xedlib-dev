@@ -1293,6 +1293,16 @@ class Validation
 	}
 }
 
+/**
+ * Validates a form and generates the errors and information in $ret.
+ *
+ * @param string $name Name of the form.
+ * @param mixed $arr Validation(s) to check for fields of $name form.
+ * @param array $ret Resulting information
+ * @param boolean $check Whether to actually validate the form or prepare to.
+ * @return Whether the form failed or succeeded validation (if $check is false
+ * it will always pass.)
+ */
 function FormValidate($name, $arr, &$ret, $check)
 {
 	$ret['js'] = null;

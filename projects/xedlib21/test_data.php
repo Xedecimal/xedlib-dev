@@ -22,11 +22,12 @@ $editor = GetVar('editor');
 $imgError = ' <img src="'.GetRelativePath(dirname(__FILE__)).'/lib/images/error.png" alt="Error" />';
 $v = new Validation('name', '.+', $imgError.' You must specify a name.');
 
-$ret = FormValidate('formtest', $v, isset($ca));
+$ret = FormValidate('formtest', $v, $ret, isset($ca));
 
-$page_head = '<script type="text/javascript">'."\n".$ret['js'].'</script>';
+$page_head = "<script type=\"text/javascript\">\n".$ret['js'].'</script>';
 
-$db = new Database('mysql://root:ransal@localhost/test');
+$db = new Database();
+$db->Open('mysql://root:ransal@localhost/test');
 
 // dsChild
 
