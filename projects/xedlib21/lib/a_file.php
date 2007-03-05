@@ -1116,7 +1116,7 @@ class FilterGallery extends FilterDefault
 	 */
 	function GetOptions(&$fi, $default)
 	{
-		return array_merge(parent::GetOptions($default), array(
+		return array_merge(parent::GetOptions($fi, $default), array(
 			'Thumbnail Width' => array('thumb_width', 'text', 200),
 			'Thumbnail Height' => array('thumb_height', 'text', 200),
 		));

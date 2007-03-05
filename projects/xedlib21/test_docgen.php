@@ -24,6 +24,7 @@ class DocGeneratorXML
 	function CreateDoc($type)
 	{
 		$doc = new DOMDocument();
+		$d = new DOMElement("Test");
 		$doc->appendChild($doc->createProcessingInstruction(
 			'xml-stylesheet', "href=\"../{$type}.xsl\" type=\"text/xsl\""));
 		return $doc;
@@ -39,6 +40,7 @@ class DocGeneratorXML
 	function GetDocumentElement($doc, $item)
 	{
 		$elDoc = $doc->createElement('doc');
+		varinfo($item->type);
 
 		if (isset($item->doc->example))
 		{
@@ -165,7 +167,9 @@ class DocGeneratorXML
 		$data = null;
 		foreach ($files as $file)
 		{
-			$new = $d->Parse($files[0]);
+			echo "Doing file: {$file}<br/>\n";
+
+			$new = $d->Parse($file);
 			if (!isset($data)) $data = $new;
 			else if (isset($new))
 			{
@@ -174,8 +178,6 @@ class DocGeneratorXML
 			}
 		}
 		
-		varinfo($data->members);
-
 		ksort($data->members);
 	
 		if (!empty($data))

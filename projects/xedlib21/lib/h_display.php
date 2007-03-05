@@ -1351,7 +1351,7 @@ function RecurseReq($key, $val, &$checks)
 	else
 	{
 		$checks .= "\tchk_{$key} = document.getElementById('{$key}')\n";
-		$checks .= "\tif (chk_{$key}.value.length < 1) { alert('{$val}'); chk_{$key}.focus(); return false; }\n";
+		$checks .= "\tif (chk_{$key}.value.length < 1) { alert('{$val->error}'); chk_{$key}.focus(); return false; }\n";
 	}
 }
 
