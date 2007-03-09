@@ -6,6 +6,14 @@ require_once('h_display.php');
 define('FM_SORT_MANUAL', -1);
 define('FM_SORT_TABLE', -2);
 
+define('FM_ACTION_UNKNOWN', 0);
+define('FM_ACTION_CREATE', 5);
+define('FM_ACTION_DELETE', 2);
+define('FM_ACTION_MOVE', 3);
+define('FM_ACTION_RENAME', 6);
+define('FM_ACTION_UPDATE', 4);
+define('FM_ACTION_UPLOAD', 1);
+
 /**
  * Allows a user to administrate files from a web browser.
  */
@@ -126,6 +134,9 @@ class FileManager
 			$file = GetVar("cu");
 			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$fi->Filter->Upload($file, $info);
+			if (!empty($this->Behavior->Watcher))
+				RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
+				$this->root.$this->cf.$file['name']);
 		}
 		else if ($action == "update_info")
 		{
@@ -138,6 +149,9 @@ class FileManager
 			fwrite($fp, serialize($info->info));
 			fclose($fp);
 			chmod($p, 0755);
+			if (!empty($this->Behavior->Watcher))
+				RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPDATE,
+					$info->path);
 		}
 		else if ($action == 'rename')
 		{
@@ -148,6 +162,9 @@ class FileManager
 			$pinfo = pathinfo($this->cf);
 			if ($pinfo['basename'] == $fi->filename)
 				$this->cf = $pinfo['dirname'].'/'.$name;
+			if (!empty($this->Behavior->Watcher))
+				RunCallbacks($this->Behavior->Watcher, FM_ACTION_RENAME,
+					$fi->path.' to '.$name);
 		}
 		else if ($action == "Delete")
 		{
@@ -160,6 +177,9 @@ class FileManager
 				$types = GetVar('type');
 				$this->files = $this->GetDirectory();
 				$ix = 0;
+				if (!empty($this->Behavior->Watcher))
+					RunCallbacks($this->Behavior->Watcher, FM_ACTION_DELETE,
+						$fi->path);
 			}
 		}
 		else if ($action == "createdir")
@@ -168,6 +188,9 @@ class FileManager
 			$p = $this->root.$this->cf.GetVar("name");
 			mkdir($p);
 			chmod($p, 0755);
+			if (!empty($this->Behavior->Watcher))
+				RunCallbacks($this->Behavior->Watcher, FM_ACTION_CREATE,
+					$p);
 		}
 		else if ($action == 'swap')
 		{
@@ -187,6 +210,9 @@ class FileManager
 				$file->info['index'] = $ix;
 				$file->SaveInfo();
 			}
+			if (!empty($this->Behavior->Watcher))
+				RunCallbacks($this->Behavior->Watcher, FM_ACTION_REORDER,
+					$sfile . ' ' . ($cd ? 'up' : 'down'));
 		}
 		else if ($action == 'Move')
 		{
@@ -196,6 +222,10 @@ class FileManager
 			{
 				$fi = new FileInfo($file, $this->DefaultFilter);
 				$fi->Filter->Rename($fi, $ct.$fi->filename);
+
+				if (!empty($this->Behavior->Watcher))
+					RunCallbacks($this->Behavior->Watcher, FM_ACTION_MOVE,
+						$fi->path . ' to ' . $ct);
 			}
 		}
 
@@ -782,6 +812,12 @@ class FileManagerBehavior
 	 * @var boolean
 	 */
 	public $AllowSearch = false;
+	/**
+	 * Location of where to store logs.
+	 *
+	 * @var callback
+	 */
+	public $Watchers = null;
 
 	/**
 	 * Return true if options are available.
@@ -1076,7 +1112,12 @@ class FilterDefault
 	{
 		$finfo = "{$fi->dir}/.{$fi->filename}";
 		if (file_exists($finfo)) unlink($finfo);
-		if ($save) rename($fi->path, $fi->dir.'/.deleted_'.$fi->filename);
+		if ($save)
+		{
+			$r_target = $fi->dir.'/.deleted_'.$fi->filename;
+			if (file_exists($r_target)) unlink($r_target);
+			rename($fi->path, $fi->dir.'/.deleted_'.$fi->filename);
+		}
 		else if (is_dir($fi->path)) DelTree($fi->path);
 		else unlink($fi->path);
 	}

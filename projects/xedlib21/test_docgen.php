@@ -40,7 +40,6 @@ class DocGeneratorXML
 	function GetDocumentElement($doc, $item)
 	{
 		$elDoc = $doc->createElement('doc');
-		varinfo($item->type);
 
 		if (isset($item->doc->example))
 		{
@@ -167,8 +166,6 @@ class DocGeneratorXML
 		$data = null;
 		foreach ($files as $file)
 		{
-			echo "Doing file: {$file}<br/>\n";
-
 			$new = $d->Parse($file);
 			if (!isset($data)) $data = $new;
 			else if (isset($new))
@@ -193,6 +190,8 @@ class DocGeneratorXML
 		}
 	}
 }
+
+$GLOBALS['debug'] = true;
 
 echo '<pre>';
 $stime = microtime();
