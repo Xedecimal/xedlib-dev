@@ -10,6 +10,7 @@ define('FM_ACTION_UNKNOWN', 0);
 define('FM_ACTION_CREATE', 5);
 define('FM_ACTION_DELETE', 2);
 define('FM_ACTION_MOVE', 3);
+define('FM_ACTION_REORDER', 7);
 define('FM_ACTION_RENAME', 6);
 define('FM_ACTION_UPDATE', 4);
 define('FM_ACTION_UPLOAD', 1);
@@ -212,7 +213,7 @@ class FileManager
 			}
 			if (!empty($this->Behavior->Watcher))
 				RunCallbacks($this->Behavior->Watcher, FM_ACTION_REORDER,
-					$sfile . ' ' . ($cd ? 'up' : 'down'));
+					$sfile->path . ' ' . ($cd == 'up' ? 'up' : 'down'));
 		}
 		else if ($action == 'Move')
 		{

@@ -21,6 +21,7 @@ $fm_actions = array(
 	FM_ACTION_UNKNOWN => 'Unknown',
 	FM_ACTION_CREATE => 'Created',
 	FM_ACTION_DELETE => 'Deleted',
+	FM_ACTION_REORDER => 'Reordered',
 	FM_ACTION_RENAME => 'Renamed',
 	FM_ACTION_UPDATE => 'Updated',
 	FM_ACTION_UPLOAD => 'Uploaded',
@@ -51,6 +52,7 @@ $fm->Behavior->AllowAll();
 $fm->Prepare($ca);
 $page_body = $fm->Get($me, $ca);
 
+$logger->TrimByCount(5);
 $page_body .= $logger->Get(10);
 
 $context = null;
