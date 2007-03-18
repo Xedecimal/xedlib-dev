@@ -340,7 +340,7 @@ class FileManager
 </form>
 EOF;
 				$ret .= GetBox('box_upload', 'Upload to Current Folder',
-					$out, 'template_box.html').'<br/><br/>';
+					$out, 'template_box.html');
 			}
 			if ($this->Behavior->AllowCreateDir)
 			{
@@ -353,8 +353,8 @@ EOF;
 	<input type="submit" value="Create" />
 </form>
 EOF;
-				$ret .= GetBox('box_createdir', 'Create New Folder',
-					$out, 'template_box.html').'<br/><br/>';
+				$ret .= GetBox('box_createdir', $this->View->TextCreateFolder,
+					$out, 'template_box.html');
 			}
 
 			if ($this->Behavior->AllowEdit)
@@ -364,7 +364,7 @@ EOF;
 				$form->AddHidden('editor', $this->name);
 				$form->AddHidden('ca', 'update_info');
 				$form->AddHidden('cf', $this->cf);
-
+				
 				if (isset($this->DefaultOptionHandler))
 				{
 					$handler = $this->DefaultOptionHandler;
@@ -381,26 +381,18 @@ EOF;
 				$options = $fi->Filter->GetOptions($fi, $def);
 
 				if (!empty($options))
-				foreach ($options as $text => $field)
 				{
-					//$field[4] == Always use default.
-					if ((isset($field[4]) && $field[4]) ||
-					(!isset($fi->info[$field[0]]) && isset($field[2])))
-						$val = $field[2];
-					else if (isset($fi->info[$field[0]]))
-						$val = stripslashes($fi->info[$field[0]]);
-					else
-						$val = null;
+					foreach ($options as $col => $field)
+					{
+						$form->AddInput($field);
+					}
+					$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
-					$form->AddInput(new FormInput($text, $field[1],
-						"info[{$field[0]}]", $val, null,
-						isset($field[3]) ? $field[3] : null));
-					$form->AddRow('<br/>');
+					$end = strrchr(substr($this->cf, 0, -1), '/');
+					$start = substr($this->cf, 0, -strlen($end)-1);
+					$ret .= GetBox('box_settings', "Settings for {$this->root}{$start}<span style=\"text-decoration: underline;\">{$end}</span>",
+						$form->Get('method="post" action="'.$target.'"'), 'template_box.html');
 				}
-				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
-
-				$ret .= GetBox('box_settings', "Settings for {$this->root}<span style=\"text-decoration: underline;\">{$this->cf}</span>",
-					$form->Get('method="post" action="'.$target.'"'), 'template_box.html').'<br/><br/>';
 			}
 			
 			if ($this->Behavior->AllowRename)
@@ -733,6 +725,7 @@ class FileManagerView
 	 * @var bool
 	 */
 	public $FloatItems = false;
+	public $TextCreateFolder = 'Create New Folder';
 }
 
 class FileManagerBehavior

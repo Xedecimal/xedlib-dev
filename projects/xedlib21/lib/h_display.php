@@ -485,39 +485,44 @@ class Form extends Table
 		$args = func_get_args();
 		foreach ($args as $item)
 		{
-			$helptext = null;
-
-			if ($item->type == 'submit' && isset($this->Validation))
-			{
-				$item->atrs .= " onclick=\"return {$this->name}_check(1);\"";
-			}
-
-			$out = isset($item->text) ? '<label for="'.CleanID($this->name.'_'.
-				$item->name).'">'.$item->text.
-				'</label><br/>' : '';
-
-			$helptext = $item->help;
-			if (isset($this->Validation))
-			{
-				//if (is_array($this->Validation))
-				//{
-					//foreach ($this->Validation as $val)
-					//{
-						//if ($val->field == $item->name)
-						//{
-							//$helptext .= $this->Errors[$item->name];
-							//break;
-						//}
-					//}
-				//}
-				/*else*/ $helptext .=
-					(isset($this->Errors[$item->name]) ?
-						$this->Errors[$item->name] : null);
-			}
-			
-			$row[] = $out.$item->Get($this->name)."<br/>$helptext";
+			$row[] = $this->IterateInput($item);
 		}
 		$this->AddRow($row, ' valign="top"');
+	}
+	
+	function IterateInput($input)
+	{
+		if (is_array($input) && !empty($input))
+		{
+			$out = null;
+
+			foreach ($input as $item)
+			{
+				$out .= $this->IterateInput($item);
+			}
+			
+			return $out;
+		}
+
+		$helptext = null;
+
+		if ($input->type == 'submit' && isset($this->Validation))
+		{
+			$input->atrs .= " onclick=\"return {$this->name}_check(1);\"";
+		}
+
+		$out = isset($input->text) ? '<label for="'.CleanID($this->name.'_'.
+			$input->name).'">'.$input->text.
+			'</label> ' : '';
+
+		$helptext = $input->help;
+		if (isset($this->Validation))
+		{
+			$helptext .= (isset($this->Errors[$input->name]) ?
+				$this->Errors[$input->name] :
+				null);
+		}
+		return $out.$input->Get($this->name)." {$helptext}";
 	}
 
 	/**

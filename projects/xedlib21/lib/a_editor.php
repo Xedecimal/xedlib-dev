@@ -455,7 +455,7 @@ class EditorData
 			{
 				if (!$handler->Swap($ci, $ct)) return;
 			}
-			$context->ds->Swap(array($context->ds->id => $ci), array($context->ds->id => $ct), 'id');
+			$context->ds->Swap(array($context->ds->id => $ci), array($context->ds->id => $ct), $context->ds->id);
 		}
 		else if ($action == $this->name.'_delete')
 		{
@@ -930,7 +930,7 @@ class EditorData
 			if (!isset($this->ds)) Error("<br />What: Dataset is not set.
 				<br />Who: EditorData({$this->name})::GetForm.
 				<br />Why: This editor was not created with a proper dataset.");
-			$sel = $state == STATE_EDIT ? $context->ds->GetOne(array($this->ds->id => $ci)) : null;
+			$sel = $state == STATE_EDIT ? $context->ds->GetOne(array($context->ds->id => $ci)) : null;
 		}
 
 		if (!empty($context->ds->Fields))
@@ -985,7 +985,7 @@ class EditorData
 							else $value = $sel[$data[0]];
 						}
 						else if (isset($data[2])) { $data[2]; }
-						else $value = null;
+						else { $value = null; }
 						if (is_string($value)) $value = stripslashes($value);
 					}
 
