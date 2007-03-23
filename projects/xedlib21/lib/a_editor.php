@@ -928,7 +928,7 @@ class EditorData
 		if ($state == CONTROL_BOUND)
 		{
 			if (!isset($this->ds)) Error("<br />What: Dataset is not set.
-				<br />Who: EditorData({$this->name})::GetForm.
+				<br />Where: EditorData({$this->name})::GetForm.
 				<br />Why: This editor was not created with a proper dataset.");
 			$sel = $state == STATE_EDIT ? $context->ds->GetOne(array($context->ds->id => $ci)) : null;
 		}
@@ -996,7 +996,7 @@ class EditorData
 				else $frm->AddRow(is_numeric($text) ? $data : '&nbsp;');
 			}
 
-			foreach ($this->handlers as $handler) $handler->GetFields($sel, $frm);
+			foreach ($this->handlers as $handler) $handler->GetFields($frm, isset($sel) ? $sel : null);
 			
 			$frm->State = $state == STATE_EDIT ? 'Update' : 'Create';
 			$frm->Description = $context->ds->Description;

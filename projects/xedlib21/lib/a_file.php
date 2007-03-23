@@ -131,6 +131,7 @@ class FileManager
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
+			if (!$this->Behavior->AllowUpload) return;
 			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$file = GetVar("cu");
 			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
@@ -144,15 +145,19 @@ class FileManager
 			if (!$this->Behavior->AllowEdit) return;
 			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$info->Filter->Updated($info);
-			$info->info = GetPost("info");
-			$p = $info->dir.'/.'.$info->filename;
-			$fp = fopen($p, "w+");
-			fwrite($fp, serialize($info->info));
-			fclose($fp);
-			chmod($p, 0755);
-			if (!empty($this->Behavior->Watcher))
-				RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPDATE,
-					$info->path);
+			$newinfo = GetPost('info');
+			if (!empty($newinfo))
+			{
+				$info->info = array_merge($info->info, $newinfo);
+				$p = $info->dir.'/.'.$info->filename;
+				$fp = fopen($p, "w+");
+				fwrite($fp, serialize($info->info));
+				fclose($fp);
+				chmod($p, 0755);
+				if (!empty($this->Behavior->Watcher))
+					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPDATE,
+						$info->path);
+			}
 		}
 		else if ($action == 'rename')
 		{
@@ -384,11 +389,12 @@ EOF;
 				{
 					foreach ($options as $col => $field)
 					{
-						$form->AddInput($field);
+						if (is_string($field)) $form->AddRow(array($field));
+						else $form->AddInput($field);
 					}
 					$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
-					$end = strrchr(substr($this->cf, 0, -1), '/');
+					$end = substr(strrchr(substr($this->cf, 0, -1), '/'), 1);
 					$start = substr($this->cf, 0, -strlen($end)-1);
 					$ret .= GetBox('box_settings', "Settings for {$this->root}{$start}<span style=\"text-decoration: underline;\">{$end}</span>",
 						$form->Get('method="post" action="'.$target.'"'), 'template_box.html');
