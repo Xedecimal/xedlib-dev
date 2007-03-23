@@ -149,6 +149,7 @@ class HandlerFile extends EditorHandler
 				if ($data[$col] == $val && !file_exists($target))
 				{
 					mkdir($target);
+					chmod($target, 0777);
 					return true;
 				}
 			}

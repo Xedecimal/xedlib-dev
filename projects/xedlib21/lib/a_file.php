@@ -133,9 +133,16 @@ class FileManager
 		{
 			if (!$this->Behavior->AllowUpload) return;
 			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
-			$file = GetVar("cu");
-			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
-			$fi->Filter->Upload($file, $info);
+			$files = GetVar("cu");
+			foreach ($files['name'] as $ix => $file)
+			{
+				$newup = array(
+					'name' => $files['name'][$ix],
+					'type' => $files['type'][$ix],
+					'tmp_name' => $files['tmp_name'][$ix]
+				);
+				$fi->Filter->Upload($newup, $fi);
+			}
 			if (!empty($this->Behavior->Watcher))
 				RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
 				$this->root.$this->cf.$file['name']);
@@ -340,7 +347,7 @@ class FileManager
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="upload"/>
 	<input type="hidden" name="cf" value="{$this->cf}"/>
-	<input type="file" name="cu"/>
+	<input type="file" name="cu[]"/>
 	<input type="submit" value="Upload" />
 </form>
 EOF;
