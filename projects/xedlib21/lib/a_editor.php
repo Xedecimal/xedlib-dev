@@ -350,6 +350,7 @@ class EditorData
 					else if ($data[1] == 'file' && $value != null)
 					{
 						$finfo = pathinfo($value['name']);
+						varinfo($finfo);
 						$moves[] = array(
 							$value['tmp_name'],
 							$data[2],
@@ -1051,8 +1052,7 @@ class EditorData
 		if (!empty($data['forms']))
 		foreach ($data['forms'] as $frm)
 			$ret .= GetBox('box_user_form', "{$frm->State} {$frm->Description}",
-				$frm->Get('method="post" action="'.$target.'"', 'class="form"'
-				.(isset($form_atrs) ? ' '.$form_atrs : null)));
+				$frm->Get('method="post" action="'.$target.'"'.(isset($form_atrs) ? ' '.$form_atrs : null), 'class="form"'));
 		return $ret;
 	}
 }
