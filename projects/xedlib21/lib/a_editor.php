@@ -349,13 +349,11 @@ class EditorData
 					}
 					else if ($data[1] == 'file' && $value != null)
 					{
+						$insert[$data[0]] = $value['name'];
+
 						$finfo = pathinfo($value['name']);
-						varinfo($finfo);
-						$moves[] = array(
-							$value['tmp_name'],
-							$data[2],
-							$finfo['extension']
-						);
+						move_uploaded_file($value['tmp_name'], $data[2].'/'.$value['name']);
+						chmod($data[2].'/'.$value['name'], 0777);
 					}
 					else if ($data[1] == 'selects')
 						$insert[$data[0]] = $value;
