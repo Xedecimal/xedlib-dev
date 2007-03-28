@@ -962,7 +962,7 @@ class DataSet
 
 		//Pop off the ids, so they don't get changed, never want to change
 		//these for some reason according to mysql people.
-		unset($sitem['id'], $ditem['id']);
+		unset($sitem[$this->id], $ditem[$this->id]);
 
 		//Update source with dest and vice versa.
 		$this->Update($smatch, $ditem);
