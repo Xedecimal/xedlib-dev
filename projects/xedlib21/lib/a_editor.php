@@ -477,8 +477,6 @@ class EditorData
 						foreach ($files as $file)
 						{
 							$info = pathinfo("{$data[2]}/{$file}");
-							//varinfo($info);
-							//echo "Renaming: {$file} to {$data[2]}/tmp_{$info['filename']}.{$info['extension']}<br/>\n";
 							rename($file, "{$data[2]}/tmp_{$info['filename']}.{$info['extension']}");
 						}
 
@@ -486,7 +484,6 @@ class EditorData
 						$files = glob("{$data[2]}/{$ct}.*");
 						foreach ($files as $file)
 						{
-							echo "Renaming: {$data[2]}/{$file} to {$data[2]}/{$ci}.{$info['extension']}<br/>\n";
 							$info = pathinfo("{$data[2]}/{$file}");
 							rename($file, "{$data[2]}/{$ci}.{$info['extension']}");
 						}
@@ -495,7 +492,6 @@ class EditorData
 						$files = glob("{$data[2]}/tmp_{$ci}.*");
 						foreach ($files as $file)
 						{
-							echo "Renaming: {$file} to {$data[2]}/{$ct}.{$info['extension']}<br/>\n";
 							$info = pathinfo("{$data[2]}/{$file}");
 							rename($file, "{$data[2]}/{$ct}.{$info['extension']}");
 						}
