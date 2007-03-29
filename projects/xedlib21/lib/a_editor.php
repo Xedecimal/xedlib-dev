@@ -322,7 +322,7 @@ class EditorData
 	{
 		// Don't speak unless spoken to.
 		if (GetVar('editor') != $this->name) return;
-		
+
 		if ($this->sorting == ED_SORT_TABLE)
 			$this->sort = array(GetVar('sort', $this->ds->id) => GetVar('order', 'ASC'));
 
@@ -352,8 +352,8 @@ class EditorData
 						$insert[$data[0]] = $value['name'];
 
 						$finfo = pathinfo($value['name']);
-						move_uploaded_file($value['tmp_name'], $data[2].'/'.$value['name']);
-						chmod($data[2].'/'.$value['name'], 0777);
+						$moves[] = array($value, $data[2].'/'.$value['name']);
+
 					}
 					else if ($data[1] == 'selects')
 						$insert[$data[0]] = $value;
@@ -366,7 +366,7 @@ class EditorData
 			{
 				if (!$handler->Create($insert)) return;
 			}
-			
+
 			$parent = GetVar('parent');
 
 			if (isset($parent))
@@ -375,7 +375,16 @@ class EditorData
 				$insert[$child->child_key] = $parent;
 			}
 			$id = $context->ds->Add($insert);
-			
+
+			if (!empty($moves))
+			foreach ($moves as $move)
+			{
+				$info = pathinfo($move[0]['name']);
+				$target = "{$data[2]}/{$id}.{$info['extension']}";
+				move_uploaded_file($move[0]['tmp_name'], $target);
+				chmod($target, 0777);
+			}
+
 			foreach ($this->handlers as $handler)
 			{
 				$handler->Created($id, $insert);
@@ -455,6 +464,45 @@ class EditorData
 			{
 				if (!$handler->Swap($ci, $ct)) return;
 			}
+
+			if (!empty($context->ds->Fields))
+			foreach ($context->ds->Fields as $name => $data)
+			{
+				if (is_array($data))
+				{
+					if ($data[1] == 'file')
+					{
+						//Move Source to tmp_source
+						$files = glob("{$data[2]}/{$ci}.*");
+						foreach ($files as $file)
+						{
+							$info = pathinfo("{$data[2]}/{$file}");
+							//varinfo($info);
+							//echo "Renaming: {$file} to {$data[2]}/tmp_{$info['filename']}.{$info['extension']}<br/>\n";
+							rename($file, "{$data[2]}/tmp_{$info['filename']}.{$info['extension']}");
+						}
+
+						//Move Target to Source
+						$files = glob("{$data[2]}/{$ct}.*");
+						foreach ($files as $file)
+						{
+							echo "Renaming: {$data[2]}/{$file} to {$data[2]}/{$ci}.{$info['extension']}<br/>\n";
+							$info = pathinfo("{$data[2]}/{$file}");
+							rename($file, "{$data[2]}/{$ci}.{$info['extension']}");
+						}
+
+						//Move tmp_source to Target
+						$files = glob("{$data[2]}/tmp_{$ci}.*");
+						foreach ($files as $file)
+						{
+							echo "Renaming: {$file} to {$data[2]}/{$ct}.{$info['extension']}<br/>\n";
+							$info = pathinfo("{$data[2]}/{$file}");
+							rename($file, "{$data[2]}/{$ct}.{$info['extension']}");
+						}
+					}
+				}
+			}
+
 			$context->ds->Swap(array($context->ds->id => $ci), array($context->ds->id => $ct), $context->ds->id);
 		}
 		else if ($action == $this->name.'_delete')
@@ -472,8 +520,8 @@ class EditorData
 					if (!$handler->Delete($ci, $data)) return;
 				}
 			}
-			if (!empty($context->ds->fields))
-			foreach ($context->ds->fields as $name => $data)
+			if (!empty($context->ds->Fields))
+			foreach ($context->ds->Fields as $name => $data)
 			{
 				if (is_array($data))
 				{
