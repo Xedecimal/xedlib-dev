@@ -1070,9 +1070,8 @@ class FilterDefault
 	function GetOptions(&$fi, $default)
 	{
 		$more = array(
-			'Display Name for Current File or Folder' => array('title', 'text',
-			null, '* Notice, this will change the name of the file or folder
-			that you are currently in.')
+			new FormInput('Display Name for Current File or Folder', 'text', 'info[title]',
+			@$fi->info['title'], null)
 		);
 		if (!empty($default)) return array_merge($default, $more);
 		else return $more;

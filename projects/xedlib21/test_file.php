@@ -12,6 +12,9 @@ $ca = GetVar('ca');
 $dsUser = new DataSet($db, 'user');
 $lm = new LoginManager();
 $lm->AddDataset($dsUser, 'usr_pass', 'usr_name');
+$dsLogs = new DataSet($db, 'docmanlog');
+$logger = new LoggerAuth($dsLogs, $dsUser);
+
 if (!$user = $lm->Prepare($ca))
 {
 	die($lm->Get($me));
@@ -27,14 +30,12 @@ $fm_actions = array(
 	FM_ACTION_UPLOAD => 'Uploaded',
 );
 
-$dsLogs = new DataSet($db, 'docmanlog');
-$logger = new LoggerAuth($dsLogs, $dsUser, $fm_actions);
+if ($ca == 'login') $logger->Log($user['usr_id'], 'Logged in', '');
 
 function fm_watcher($action, $target)
 {
 	global $user, $logger, $fm_actions;
-
-	$logger->Log($user['usr_id'], $action, $target);
+	$logger->Log($user['usr_id'], $fm_actions[$action], $target);
 }
 
 $page_title = "File Administration Demo";
@@ -45,12 +46,13 @@ $ca = GetVar('ca');
 $fm = new FileManager('fman', 'test', array('Default', 'Gallery'));
 $fm->Behavior->Recycle = true;
 $fm->Behavior->ShowAllFiles = true;
-
 $fm->Behavior->Watcher = array('fm_watcher');
 
 $fm->Behavior->AllowAll();
 $fm->Prepare($ca);
-$page_body = $fm->Get($me, $ca);
+
+$page_body = "<p><a href=\"{$me}?ca=logout\">Log out</a></p>";
+$page_body .= $fm->Get($me, $ca);
 
 $logger->TrimByCount(5);
 $page_body .= $logger->Get(10);

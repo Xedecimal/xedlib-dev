@@ -8,9 +8,7 @@ class LoggerAuth
 	 * @var DataSet
 	 */
 	private $dsLog;
-	
 	private $dsUser;
-	
 	private $actions;
 
 	function LoggerAuth($dsLog, $dsUser, $actions = null)
@@ -34,9 +32,18 @@ class LoggerAuth
 			'log_target' => $target
 		));
 	}
-	
+
 	function TrimByCount($count)
 	{
+		$this->dsLog->GetCustom("DELETE FROM {$this->dsLog->table}
+			USING {$this->dsLog->table}
+			LEFT JOIN (
+				SELECT log_id FROM {$this->dsLog->table}
+				ORDER BY log_date DESC
+				LIMIT {$count}) AS dt
+			ON {$this->dsLog->table}.log_id = dt.log_id
+			WHERE dt.log_id IS NULL;");
+		//$this->dsLog->Remove(null, array('DATE' => 'DESC'), array(0, 5));
 	}
 
 	function Get($count)

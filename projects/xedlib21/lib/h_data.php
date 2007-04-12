@@ -866,7 +866,7 @@ class DataSet
 	function GetCustom($query, $silent = false, $args = GET_BOTH)
 	{
 		$rows = $this->database->Query($query, $silent, $this->ErrorHandler);
-		if ($rows == null) return null;
+		if (!is_resource($rows)) return $rows;
 		$ret = array();
 		while (($row = mysql_fetch_array($rows, $args)))
 		{

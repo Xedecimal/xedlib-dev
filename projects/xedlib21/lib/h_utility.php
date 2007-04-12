@@ -83,6 +83,7 @@ function Error($msg, $level = E_USER_ERROR) { trigger_error($msg, $level); }
 
 function ErrorHandler($errno, $errmsg, $filename, $linenum)
 {
+	if (error_reporting() == 0) return;
 	$errortype = array (
 		E_ERROR           => "Error",
 		E_WARNING         => "Warning",
