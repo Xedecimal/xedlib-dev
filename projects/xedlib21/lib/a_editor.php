@@ -352,8 +352,11 @@ class EditorData
 						$insert[$data[0]] = $value['name'];
 
 						$finfo = pathinfo($value['name']);
-						$moves[] = array($value, $data[2].'/'.$value['name']);
-
+						$moves[] = array(
+							$value['tmp_name'],
+							$data[2],
+							$finfo['extension']
+						);
 					}
 					else if ($data[1] == 'selects')
 						$insert[$data[0]] = $value;

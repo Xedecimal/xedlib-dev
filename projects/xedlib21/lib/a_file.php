@@ -90,6 +90,13 @@ class FileManager
 	private $mass_avail;
 
 	/**
+	* User id that can designate what files are available to the
+	* current user.
+	* @var int
+	*/
+	public $uid;
+
+	/**
 	 * Enter description here...
 	 *
 	 * @param string $name Name of this instance.
@@ -583,9 +590,18 @@ EOF;
 		}
 		$name = ($this->View->ShowTitle && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
-		if (is_file($file->path) && !$this->Behavior->UseInfo)
-			$url = $this->root.$this->cf.$file->filename.'" target="_new';
-		else $url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
+		if (is_file($file->path))
+		{
+			if (isset($this->Behavior->FileCallback))
+			{
+				$cb = $this->Behavior->FileCallback;
+				$url = $cb($file);
+			}
+			else if (!$this->Behavior->UseInfo)
+				$url = $this->root.$this->cf.$file->filename.'" target="_new';
+		}
+		else
+			$url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
 
 		$ret .= "\t<td>\n";
 		if ($this->mass_avail)
@@ -827,6 +843,11 @@ class FileManagerBehavior
 	public $Watchers = null;
 
 	/**
+	* A callback to modify the output of each file link.
+	* @var string
+	*/
+	public $FileCallback = null;
+	/**
 	 * Return true if options are available.
 	 *
 	 */
@@ -858,7 +879,9 @@ class FileManagerBehavior
 		$this->AllowRename =
 		$this->AllowSort =
 		$this->AllowUpload =
-		$this->AllowSetType = true;
+		$this->AllowSetType =
+		$this->ShowAllFiles =
+		true;
 	}
 }
 
@@ -963,7 +986,9 @@ class FileInfo
 		else $this->info = array();
 		$this->GetFilter($source, $DefaultFilter);
 		if (is_dir($source)) $this->type = 'folder';
-		if (!$this->Filter->GetInfo($this)) $this->show = false;
+
+		$s = $this->Filter->GetInfo($this);
+		if (!isset($s)) $this->show = false;
 	}
 
 	/**

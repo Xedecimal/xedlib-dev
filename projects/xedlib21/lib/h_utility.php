@@ -449,16 +449,19 @@ function Reformat($file)
  */
 function GetRelativePath($path)
 {
+	//Probably Apache situated
 	$dr = GetVar('DOCUMENT_ROOT');
 
-	if (empty($dr)) //Probably IIS
+	if (empty($dr)) //Probably IIS situated
 	{
 		//Get the document root from the translated path.
 		$pt = str_replace('\\\\', '/', GetVar('PATH_TRANSLATED'));
 		$dr = substr($pt, 0, -strlen(GetVar('SCRIPT_NAME')));
 	}
 
-	return substr(str_replace('\\', '/', $path), strlen($dr));
+	$dr = str_replace('\\\\', '/', $dr);
+
+	return substr(str_replace('\\', '/', str_replace('\\\\', '/', $path)), strlen($dr));
 }
 
 function GetButDel($url = null)
