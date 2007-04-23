@@ -110,7 +110,7 @@ class FileManager
 		$this->filters = $filters;
 		$this->DefaultFilter = $DefaultFilter;
 		$this->root = $root;
-		
+
 		$this->Behavior = new FileManagerBehavior();
 		$this->View = new FileManagerView();
 
@@ -119,7 +119,7 @@ class FileManager
 			Error("FileManager::FileManager(): Root ($root) directory does
 			not exist.");
 		if (substr($this->root, -1) != '/') $this->root .= '/';
-		$this->cf = preg_replace('/\./', '', GetVar('cf'));
+		$this->cf = preg_replace('/^\./', '', GetVar('cf'));
 		if (is_dir($this->root.$this->cf)
 		&& strlen($this->cf) > 0
 		&& substr($this->cf, -1) != '/')
@@ -268,7 +268,7 @@ class FileManager
 		$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 
 		$ret .= $this->GetHeader($target, $fi);
-		
+
 		if ($this->mass_avail = $this->Behavior->MassAvailable())
 		{
 			$ret .= '<p>Select the checkbox of the file(s) or folder(s) that
@@ -383,7 +383,7 @@ EOF;
 				$form->AddHidden('editor', $this->name);
 				$form->AddHidden('ca', 'update_info');
 				$form->AddHidden('cf', $this->cf);
-				
+
 				if (isset($this->DefaultOptionHandler))
 				{
 					$handler = $this->DefaultOptionHandler;
@@ -414,7 +414,7 @@ EOF;
 						$form->Get('method="post" action="'.$target.'"'), 'template_box.html');
 				}
 			}
-			
+
 			if ($this->Behavior->AllowRename)
 			{
 				$form = new Form('rename');
@@ -590,6 +590,7 @@ EOF;
 		}
 		$name = ($this->View->ShowTitle && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
+
 		if (is_file($file->path))
 		{
 			if (isset($this->Behavior->FileCallback))
@@ -599,6 +600,8 @@ EOF;
 			}
 			else if (!$this->Behavior->UseInfo)
 				$url = $this->root.$this->cf.$file->filename.'" target="_new';
+			else
+				$url = $target.'?editor='.$this->name.'&cf='.$this->cf.$file->filename;
 		}
 		else
 			$url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
@@ -701,7 +704,7 @@ EOF;
 		if (!isset($file->info['access']) &&
 			dirname($file->path) != dirname($this->root))
 			return $this->GetVisible(new FileInfo($file->dir));
-		
+
 		if (!empty($file->info['access']) &&
 			in_array($this->uid, $file->info['access'])) return true;
 
@@ -857,7 +860,7 @@ class FileManagerBehavior
 			$this->AllowUpload ||
 			$this->AllowEdit;
 	}
-	
+
 	/**
 	 * Return true if mass options are available.
 	 *
@@ -1133,7 +1136,7 @@ class FilterDefault
 	function Updated(&$fi)
 	{
 	}
-	
+
 	/**
 	* Delete a file or folder.
 	*
@@ -1189,8 +1192,8 @@ class FilterGallery extends FilterDefault
 	function GetOptions(&$fi, $default)
 	{
 		return array_merge(parent::GetOptions($fi, $default), array(
-			'Thumbnail Width' => array('thumb_width', 'text', 200),
-			'Thumbnail Height' => array('thumb_height', 'text', 200),
+			new FormInput('Thumbnail Width', 'thumb_width', 'text', 200),
+			new FormInput('Thumbnail Height', 'thumb_height', 'text', 200),
 		));
 	}
 
