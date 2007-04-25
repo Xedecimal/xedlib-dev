@@ -119,7 +119,7 @@ class FileManager
 			Error("FileManager::FileManager(): Root ($root) directory does
 			not exist.");
 		if (substr($this->root, -1) != '/') $this->root .= '/';
-		$this->cf = preg_replace('/^\./', '', GetVar('cf'));
+		$this->cf = preg_replace('/^[.]+/', '', GetVar('cf'));
 		if (is_dir($this->root.$this->cf)
 		&& strlen($this->cf) > 0
 		&& substr($this->cf, -1) != '/')
