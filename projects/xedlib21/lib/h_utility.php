@@ -531,4 +531,11 @@ function Plural($str)
 	return $str;
 }
 
+function SecurePath($path)
+{
+	$ret = preg_replace('#^\.#', '', $path);
+	$ret = preg_replace('#^/#', '', $ret);
+	return preg_replace('#\.\./#', '', $ret);
+}
+
 ?>

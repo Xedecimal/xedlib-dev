@@ -134,6 +134,8 @@ class HandlerFile extends EditorHandler
 
 	/**
 	 * Called when an item is created.
+	 * Example: array('usr_access' => array(1, 3, 5));
+	 * This will manage files for the user if the column usr_access is 1, 3 or 5.
 	 *
 	 * @param array $data row data
 	 * @return boolean True to allow the creation.
@@ -184,9 +186,9 @@ class HandlerFile extends EditorHandler
 	 */
 	function Delete($id, &$data)
 	{
-		if (strlen($data['user']) < 1) return true;
-		if (file_exists("{$this->target}/{$data['user']}"))
-			DelTree("{$this->target}/{$data['user']}");
+		if (strlen($data[$this->column]) < 1) return true;
+		if (file_exists("{$this->target}/{$data[$this->column]}"))
+			DelTree("{$this->target}/{$data[$this->column]}");
 		return true;
 	}
 }
