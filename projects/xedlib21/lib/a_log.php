@@ -43,7 +43,6 @@ class LoggerAuth
 				LIMIT {$count}) AS dt
 			ON {$this->dsLog->table}.log_id = dt.log_id
 			WHERE dt.log_id IS NULL;");
-		//$this->dsLog->Remove(null, array('DATE' => 'DESC'), array(0, 5));
 	}
 
 	function Get($count)
