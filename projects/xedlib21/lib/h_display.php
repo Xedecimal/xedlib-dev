@@ -358,9 +358,9 @@ class Form extends Table
 	* (also good for displaying errors in validation)
 	* @param $attributes string Any other attributes you wish to include.
 	*/
-//	function AddInput($text, $type, $name,
-//	$value = null, $attributes = null, $helptext = null)
-//	{
+	function AddInputOLD($text, $type, $name,
+	$value = null, $attributes = null, $helptext = null)
+	{
 //		if (isset($attributes)) $attributes = ' '.$attributes;
 //		if (isset($this->Validation))
 //		{
@@ -472,7 +472,7 @@ class Form extends Table
 //		}
 //		if ($helptext != null) $this->AddRow(array('<label for="'.$this->name.'_'.htmlspecialchars($name).'">'.$text.'</label>', $strout, $helptext));
 //		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"{$this->name}_$name\">$text</label>" : null, $strout, null));
-//	}
+	}
 
 
 	/**
@@ -662,29 +662,29 @@ class FormInput
 			$ret = "<select class=\"input_select\" name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\">";
 			if (!empty($this->valu))
-				foreach ($this->valu as $id => $opt)
-				{
-					$selected = $opt->selected ? ' selected="selected"' : null;
-					$ret .= "<option
-						value=\"{$id}\"$selected>".
-						htmlspecialchars($opt->text).
-						"</option>";
-				}
+			foreach ($this->valu as $id => $opt)
+			{
+				$selected = $opt->selected ? ' selected="selected"' : null;
+				$ret .= "<option
+					value=\"{$id}\"$selected>".
+					htmlspecialchars($opt->text).
+					"</option>";
+			}
 			return $ret.'</select>';
 		}
 		if ($this->type == 'checks')
 		{
 			$ret = null;
 			if (!empty($this->valu))
-				foreach ($this->valu as $id => $val)
-				{
-					$selected = $val->selected ? ' selected="selected"' : null;
-					$ret .= "<label><input
-						type=\"checkbox\"
-						name=\"{$this->name}[{$id}]\"
-						id=\"".CleanID($this->name.'_'.$id)."\"{$this->atrs}/>
-						{$val->text}</label><br />";
-				}
+			foreach ($this->valu as $id => $val)
+			{
+				$selected = $val->selected ? ' selected="selected"' : null;
+				$ret .= "<label><input
+					type=\"checkbox\"
+					name=\"{$this->name}[{$id}]\"
+					id=\"".CleanID($this->name.'_'.$id)."\"{$this->atrs}/>
+					{$val->text}</label><br />";
+			}
 			return $ret;
 		}
 		if ($this->type == 'selects')
@@ -714,6 +714,12 @@ class FormInput
 			$ret .= "</select>\n";
 			return $ret;
 		}
+		if ($this->type == 'date')
+			return GetInputDate($this->name, $this->valu);
+		if ($this->type == 'time')
+			return GetInputTime($this->name, $this->valu);
+		if ($this->type == 'datetime')
+			return GetInputDate($this->name, $this->valu, true);
 		if ($this->type == 'area')
 			return "<textarea
 				class=\"input_area\"
@@ -842,15 +848,17 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 		$timestamp = MyDateTimestamp($timestamp, $include_time);
 	}
 	if (!isset($timestamp)) $timestamp = time();
-	$strout = "";
-	if ($include_time)
-	{
-		$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("H", $timestamp) . "\" alt=\"Hour\">\n";
-		$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("i", $timestamp) . "\" alt=\"Minute\">\n";
-	}
+	$strout = $include_time ? GetInputTime($name.'[]', $timestamp) : null;
 	$strout .= GetMonthSelect("{$name}[]", gmdate("n", $timestamp));
 	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . gmdate("d", $timestamp) . "\" alt=\"Day\" />\n";
 	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . gmdate("Y", $timestamp) . "\" alt=\"Year\" />\n";
+	return $strout;
+}
+
+function GetInputTime($name, $timestamp)
+{
+	$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("H", $timestamp) . "\" alt=\"Hour\">\n";
+	$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("i", $timestamp) . "\" alt=\"Minute\">\n";
 	return $strout;
 }
 
