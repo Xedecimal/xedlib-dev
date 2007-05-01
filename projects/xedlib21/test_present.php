@@ -56,8 +56,8 @@ $contacts = array(
 );
 
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
 	<title>Presentation Tests</title>
@@ -104,7 +104,32 @@ $frm->AddInput(
 	new FormInput('Phone:',   'text', 'phone'),
 	new FormInput('Address:', 'text', 'address'));
 $frm->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Send'));
-echo GetBox('box_test', 'Form With Recursive Validation',
+echo GetBox('box_test2', 'Form With Recursive Validation',
+	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
+
+$sels = array(
+	new SelOption('Item 1'),
+	new SelOption('Item 2'),
+	new SelOption('Group 1', true),
+	new SelOption('Item 3'),
+	new SelOption('Item 4'),
+	new SelOption('Item 5'),
+	new SelOption('Group 2', true),
+	new SelOption('Item 6'),
+	new SelOption('Item 7')
+);
+
+$frm = new Form('frmItems');
+$frm->AddInput(new FormInput('Yes / No', 'yesno', 'yesno'));
+$frm->AddInput(new FormInput('Select', 'select', 'select', $sels));
+$frm->AddInput(new FormInput('Checks', 'checks', 'checks', $sels));
+$frm->AddInput(new FormInput('Selects', 'selects', 'selects', $sels));
+$frm->AddInput(new FormInput('Date', 'date', 'date'));
+$frm->AddInput(new FormInput('Time', 'time', 'time'));
+$frm->AddInput(new FormInput('DateTime', 'datetime', 'datetime'));
+$frm->AddInput(new FormInput('Area', 'area', 'area'));
+
+echo GetBox('box_test3', 'Testing widgets',
 	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
 ?>
 </body>

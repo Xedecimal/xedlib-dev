@@ -653,22 +653,28 @@ class FormInput
 		{
 			return GetInputYesNo($this->name, $this->valu);
 		}
-		if ($this->type == 'date')
-		{
-			return GetInputdate($this->name, $this->valu);
-		}
 		if ($this->type == 'select')
 		{
 			$ret = "<select class=\"input_select\" name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\">";
 			if (!empty($this->valu))
-			foreach ($this->valu as $id => $opt)
 			{
-				$selected = $opt->selected ? ' selected="selected"' : null;
-				$ret .= "<option
-					value=\"{$id}\"$selected>".
-					htmlspecialchars($opt->text).
-					"</option>";
+				$ogstarted = false;
+				foreach ($this->valu as $id => $opt)
+				{
+					if ($opt->group)
+					{
+						if ($ogstarted) $ret .= "</optgroup>";
+						$ret .= "<optgroup label=\"{$opt->text}\">";
+						$ogstarted = true;
+					}
+					$selected = $opt->selected ? ' selected="selected"' : null;
+					$ret .= "<option
+						value=\"{$id}\"$selected>".
+						htmlspecialchars($opt->text).
+						"</option>";
+				}
+				if ($ogstarted) $ret .= "</optgroup>";
 			}
 			return $ret.'</select>';
 		}
