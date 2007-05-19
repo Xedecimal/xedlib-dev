@@ -1,8 +1,33 @@
 <?php
 
+require_once('a_file.php');
+
 class Gallery
 {
 	public $InfoCaption = true;
+	
+	function GetPath($root, $path, $arg = 'cf', $sep = '/', $rootname = 'Home')
+	{
+		if ($path == $root) return null;
+		global $me;
+		
+		$items = explode('/', substr($path, strlen($root)));
+		$ret = null;
+		$cpath = '';
+
+		$ret .= "<a href=\"{$me}\">$rootname</a> $sep ";
+
+		for ($ix = 0; $ix < count($items); $ix++)
+		{
+			if (strlen($items[$ix]) < 1) continue;
+			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
+			$uri = URL($target, array('editor' => $this->name,
+				$arg => $root.'/'.$cpath));
+			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
+			if ($ix < count($items)-1) $ret .= " $sep \n";
+		}
+		return $ret;
+	}
 
 	function Get($path)
 	{
@@ -11,40 +36,43 @@ class Gallery
 		if (GetVar('ca') == "view")
 		{
 			$GLOBALS['page_section'] = 'View Image';
-			$body = "<a href=\"$me?cf=".dirname($path)."\">Return to Gallery</a><br/>";
+			$body = '<p><a href="'.$me.'">Return to Main Gallery</a> » '.
+				substr(strrchr($path, '/'), 1).'</p>';;
 			$body .= "<img src=\"$path\">\n";
 		}
 		else
 		{
 			$GLOBALS['page_section'] = "View Gallery";
+			
+			$fm = new FileManager('gallery', $path, array('Gallery'), 'Gallery');
+			$fm->Behavior->ShowAllFiles = true;
+			$files = $fm->GetDirectory();
+
+			$fi = new FileInfo($path);
 
 			if (is_file($path)) return;
 			$body = "<table class=\"gallery_table\" align=\"center\">\n";
-			$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a></td></tr>";
-			if (!file_exists("photos")) mkdir("photos");
-			$dp = opendir($path);
-			$ix = 0;
-			$body .= "<tr class=\"category_row\">";
-			while ($fp = readdir($dp))
+
+			if (!empty($files['dirs']))
 			{
-				if ($fp[0] == '.') continue;
-				if (!is_dir("$path/$fp")) continue;
-				$imgs = glob("$path/$fp/t_*.jpg");
-				$imgcount = is_array($imgs) ? count($imgs) : 0;
-				$body .= "<td class=\"category\"><a href=\"".URL($me, array('cf' => "$path/$fp"))."\">{$fp}</a></td>\n";
-				if ($ix++ % 3 == 2) $body .= "</tr><tr>\n";
+				$ix = 0;
+				$body .= "<tr class=\"category_row\">";
+				foreach ($files['dirs'] as $dir)
+				{
+					$imgs = glob("$path/$fp/t_*.jpg");
+					$imgcount = is_array($imgs) ? count($imgs) : 0;
+					$body .= "<td class=\"gallery_cat\">» <a href=\"".URL($me, array('galcf' => $dir->path))."\">{$dir->filename}</a></td>\n";
+					if ($ix++ % 3 == 2) $body .= "</tr><tr>\n";
+				}
 			}
-		
-			$files = glob("{$path}/*.jpg");
-			if (is_array($files))
+
+			if (!empty($files['files']))
 			{
 				$ix = 0;
 				$body .= "<tr class=\"image_row\">\n";
-				foreach ($files as $file)
+				foreach ($files['files'] as $file)
 				{
-					$filename = basename($file);
-					if (substr($filename, 0, 2) == "t_") continue;
-					if (file_exists("{$path}/t_$filename"))
+					if (file_exists($file->info['thumb']))
 					{
 						if ($this->InfoCaption)
 						{

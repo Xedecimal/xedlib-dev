@@ -81,7 +81,7 @@ class FileManager
 	 *
 	 * @var array
 	 */
-	private $files;
+	public $files;
 	/**
 	 * Whether or not mass options are available and should be output.
 	 *
@@ -114,10 +114,11 @@ class FileManager
 		$this->Behavior = new FileManagerBehavior();
 		$this->View = new FileManagerView();
 
-		//Append trailing slash.
 		if (!file_exists($root))
 			Error("FileManager::FileManager(): Root ($root) directory does
 			not exist.");
+
+		//Append trailing slash.
 		if (substr($this->root, -1) != '/') $this->root .= '/';
 		$this->cf = SecurePath(GetVar('cf'));
 		if (is_dir($this->root.$this->cf)
