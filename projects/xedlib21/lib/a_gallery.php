@@ -53,7 +53,6 @@ class Gallery
 			if (is_file($path)) return;
 			$body = "<table class=\"gallery_table\">\n";
 			$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » ".substr(strrchr($path, '/'), 1)."</td></tr>";
-			$body .= "<table class=\"gallery_table\" align=\"center\">\n";
 
 			if (!empty($files['dirs']))
 			{
