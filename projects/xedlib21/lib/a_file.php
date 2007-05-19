@@ -1232,31 +1232,30 @@ class FilterGallery extends FilterDefault
 	 */
 	function Upload($file, $target)
 	{
-		$filename = substr(basename($file['name']), 0, strpos(basename($file['name']), '.'));
+		$filename = substr(basename($file['name']), 0, strrpos(basename($file['name']), '.'));
+		$ext = strrchr($file['name'], '.');
+		$destthumb = "{$target->path}/t_{$filename}{$ext}";
 		switch ($file['type'])
 		{
 			case "image/jpeg":
 			case "image/pjpeg":
 				$img = imagecreatefromjpeg($file['tmp_name']);
-				$destthumb = "{$target->path}/t_{$filename}.jpg";
 				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
 				imagejpeg($img, $destthumb);
 			break;
 			case "image/x-png":
 			case "image/png":
 				$img = imagecreatefrompng($file['tmp_name']);
-				$destthumb = "{$target->path}/t_{$filename}.png";
 				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
 				imagepng($img, $destthumb);
 			break;
 			case "image/gif":
 				$img = imagecreatefromgif($file['tmp_name']);
-				$destthumb = "{$target->path}/t_{$filename}.gif";
 				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
 				imagegif($img, $destthumb);
 			break;
 		}
-		$destimage = "{$target->path}/{$filename}.jpg";
+		//$destimage = "{$target->path}/{$filename}.jpg";
 		parent::Upload($file, $target);
 	}
 

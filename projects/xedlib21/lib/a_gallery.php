@@ -73,7 +73,7 @@ class Gallery
 				$body .= "<tr class=\"image_row\">\n";
 				foreach ($files['files'] as $file)
 				{
-					if (file_exists($file->info['thumb']))
+					if (isset($file->info['thumb']) && file_exists($file->info['thumb']))
 					{
 						if ($this->InfoCaption)
 						{
