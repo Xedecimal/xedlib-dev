@@ -19,7 +19,7 @@ class Gallery
 			$GLOBALS['page_section'] = "View Gallery";
 
 			if (is_file($path)) return;
-			$body .= "<table class=\"gallery_table\" align=\"center\">\n";
+			$body = "<table class=\"gallery_table\" align=\"center\">\n";
 			$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a></td></tr>";
 			if (!file_exists("photos")) mkdir("photos");
 			$dp = opendir($path);
@@ -50,7 +50,7 @@ class Gallery
 						{
 							require_once('xedlib/a_file.php');
 							$fi = new FileInfo("{$path}/{$filename}");
-							$name = $fi->info['title'];
+							$name = @$fi->info['title'];
 						}
 						else $name = str_replace('_', ' ', substr(basename($filename), 0, strpos(basename($filename), '.')));
 						$body .= "<td class=\"image\"><a href=\"".URL($me, array('ca' => 'view', 'cf' => "$path/$filename"))."\"><img src=\"$path/t_$filename\" class=\"image\"></a><br/>$name</td>\n";
