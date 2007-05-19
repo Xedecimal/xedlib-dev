@@ -36,8 +36,8 @@ class Gallery
 		if (GetVar('ca') == "view")
 		{
 			$GLOBALS['page_section'] = 'View Image';
-			$body = '<p><a href="'.$me.'">Return to Main Gallery</a> » '.
-				substr(strrchr($path, '/'), 1).'</p>';;
+			$body = '<p><a href="'.$_SERVER['SCRIPT_NAME'].'">Return to Main Gallery</a> » '.
+				substr(strrchr($path, '/'), 1).'</p>';
 			$body .= "<img src=\"$path\">\n";
 		}
 		else
@@ -52,6 +52,8 @@ class Gallery
 
 			if (is_file($path)) return;
 			$body = "<table class=\"gallery_table\">\n";
+			$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » ".substr(strrchr($path, '/'), 1)."</td></tr>";
+			$body .= "<table class=\"gallery_table\" align=\"center\">\n";
 
 			if (!empty($files['dirs']))
 			{
@@ -59,7 +61,7 @@ class Gallery
 				$body .= "<tr class=\"category_row\">";
 				foreach ($files['dirs'] as $dir)
 				{
-					$imgs = glob("$path/$fp/t_*.jpg");
+					$imgs = glob("$path/{$dir->path}/t_*.jpg");
 					$imgcount = is_array($imgs) ? count($imgs) : 0;
 					$body .= "<td class=\"gallery_cat\">» <a href=\"".URL($me, array('galcf' => $dir->path))."\">{$dir->filename}</a></td>\n";
 					if ($ix++ % 3 == 2) $body .= "</tr><tr>\n";
