@@ -121,8 +121,8 @@ class FileManager
 		if (substr($this->root, -1) != '/') $this->root .= '/';
 		$this->cf = SecurePath(GetVar('cf'));
 		if (is_dir($this->root.$this->cf)
-		&& strlen($this->cf) > 0
-		&& substr($this->cf, -1) != '/')
+			&& strlen($this->cf) > 0
+			&& substr($this->cf, -1) != '/')
 			$this->cf .= '/';
 
 		$this->allow_upload = false;
@@ -609,8 +609,8 @@ EOF;
 		$ret .= "\t<td>\n";
 		if ($this->mass_avail)
 			$ret .= "\t\t<input type=\"checkbox\" id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\" onclick=\"toggleAny(['sel_files_', 'sel_dirs_'], '{$this->name}_mass_options');\" />\n";
-		$ret .= "\t\t<a href=\"$url\">{$name}</a></td><td> ".
-		($this->View->ShowDate ? gmdate("m/d/y h:i", filectime($file->path)) : null)."\n\t</td>\n";
+		$ret .= "\t\t<a href=\"$url\">{$name}</a> ".
+		($this->View->ShowDate ? '<br/>'.gmdate("m/d/y h:i", filectime($file->path)) : null)."\n\t</td>\n";
 
 		$common = array(
 			'cf' => $this->cf,
@@ -701,6 +701,8 @@ EOF;
 
 	function GetVisible($file)
 	{
+		if (!isset($this->uid)) return true;
+
 		if (!isset($file->info['access']) &&
 			dirname($file->path) != dirname($this->root))
 			return $this->GetVisible(new FileInfo($file->dir));
