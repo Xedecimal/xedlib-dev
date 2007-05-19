@@ -43,7 +43,7 @@ class Gallery
 		else
 		{
 			$GLOBALS['page_section'] = "View Gallery";
-			
+
 			$fm = new FileManager('gallery', $path, array('Gallery'), 'Gallery');
 			$fm->Behavior->ShowAllFiles = true;
 			$files = $fm->GetDirectory();
@@ -51,7 +51,7 @@ class Gallery
 			$fi = new FileInfo($path);
 
 			if (is_file($path)) return;
-			$body = "<table class=\"gallery_table\" align=\"center\">\n";
+			$body = "<table class=\"gallery_table\">\n";
 
 			if (!empty($files['dirs']))
 			{
@@ -77,11 +77,11 @@ class Gallery
 						if ($this->InfoCaption)
 						{
 							require_once('xedlib/a_file.php');
-							$fi = new FileInfo("{$path}/{$filename}");
-							$name = @$fi->info['title'];
+							//$fi = new FileInfo("{$path}/{$filename}");
+							$name = @$file->info['title'];
 						}
-						else $name = str_replace('_', ' ', substr(basename($filename), 0, strpos(basename($filename), '.')));
-						$body .= "<td class=\"image\"><a href=\"".URL($me, array('ca' => 'view', 'cf' => "$path/$filename"))."\"><img src=\"$path/t_$filename\" class=\"image\"></a><br/>$name</td>\n";
+						else $name = str_replace('_', ' ', substr(basename($file->filename), 0, strpos(basename($file->filename), '.')));
+						$body .= "<td class=\"gallery_cell\"><table class=\"gallery_shadow\"><tr><td><a href=\"".URL($me, array('ca' => 'view', 'cf' => "$path/$filename"))."\"><img src=\"$path/t_$file->filename\"></a></td><td class=\"gallery_shadow_right\"></td></tr><tr><td class=\"gallery_shadow_bottom\"></td><td class=\"gallery_shadow_bright\"></td></tr></table><p class=\"gallery_caption\">$name</p></td>\n";
 						if ($ix++ % 3 == 2) $body .= "</tr><tr class=\"image_row\">";
 					}
 				}
