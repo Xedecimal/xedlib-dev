@@ -9,12 +9,6 @@ require_once('lib/a_log.php');
 
 $ca = GetVar('ca');
 
-$fp = fopen ("./info.txt", "w+");
-fwrite($fp, print_r($_SESSION, true));
-fwrite($fp, print_r($_FILES, true));
-fwrite($fp, "\r\nAction: {$ca}\r\n");
-//fclose($fp);
-
 $dsUser = new DataSet($db, 'user');
 $lm = new LoginManager();
 $lm->AddDataset($dsUser, 'usr_pass', 'usr_name');
