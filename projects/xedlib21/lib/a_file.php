@@ -141,7 +141,17 @@ class FileManager
 		{
 			if (!$this->Behavior->AllowUpload) return;
 			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
-			$files = GetVar("cu");
+
+			$files = GetVar('cu');
+			//SWF Hack / Bandaid. Should be removed later. - Xed
+			$swfile = GetVar('Filedata');
+			if (!empty($swfile))
+			{
+				$files['name'][] = $swfile['name'];
+				$files['type'][] = $swfile['type'];
+				$files['tmp_name'][] = $swfile['tmp_name'];
+			}
+
 			foreach ($files['name'] as $ix => $file)
 			{
 				$newup = array(
@@ -342,6 +352,8 @@ class FileManager
 		}
 		if ($this->Behavior->Available())
 		{
+			global $me;
+
 			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">View Options for this File or Folder</a></p>\n";
 			$ret .= "<div id=\"{$this->name}_options\" style=\"display: none\">";
 
@@ -350,11 +362,25 @@ class FileManager
 				ini_set('max_execution_time', 0);
 				ini_set('max_input_time', 0);
 				$out = <<<EOF
-<form action="{$target}" method="post" enctype="multipart/form-data">
+	<form action="{$target}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="upload"/>
 	<input type="hidden" name="cf" value="{$this->cf}"/>
+	<div id="flashUpload"></div><br/>
+	<script type="text/javascript">
+	// <![CDATA[
+
+	var so = new SWFObject("lib/swf/fileUpload.swf", "fileUpload", "550", "100", "9");
+	so.addParam('allowScriptAccess', 'sameDomain');
+	so.addParam('movie', 'fileUpload.swf');
+	so.addParam("quality", "high");
+	so.addParam('wmode', 'transparent');
+	so.addParam('FlashVars', 'uploadPage={$me}&returns=ca,upload,PHPSESSID,{$_COOKIE['PHPSESSID']}');
+	so.write("flashUpload");
+
+	// ]]>
+	</script>
 	<input type="file" name="cu[]"/>
 	<input type="submit" value="Upload" />
 </form>
@@ -411,7 +437,7 @@ EOF;
 
 					$end = substr(strrchr(substr($this->cf, 0, -1), '/'), 1);
 					$start = substr($this->cf, 0, -strlen($end)-1);
-					$ret .= GetBox('box_settings', "Settings for {$this->root}{$start}<span style=\"text-decoration: underline;\">{$end}</span>",
+					$ret .= GetBox('box_settings', "Settings for {$this->root}{$start}".(!empty($end)?"<span style=\"text-decoration: underline;\">{$end}</span>":null),
 						$form->Get('method="post" action="'.$target.'"'), 'template_box.html');
 				}
 			}
