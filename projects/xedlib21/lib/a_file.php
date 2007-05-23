@@ -393,8 +393,8 @@ class FileManager
 	<div id="flashUpload"></div><br/>
 	<script type="text/javascript" src="{$swfobject}"></script>
 	<noscript>
-		<input type="file" name="cu[]"/>
-		<input type="submit" value="Upload" />
+	<input type="file" name="cu[]"/>
+	<input type="submit" value="Upload" />
 	</noscript>
 	<script type="text/javascript">
 	// <![CDATA[
@@ -404,7 +404,7 @@ class FileManager
 	so.addParam('movie', 'fileUpload.swf');
 	so.addParam("quality", "high");
 	so.addParam('wmode', 'transparent');
-	so.addParam('FlashVars', 'uploadPage={$me}&returns=ca,upload,cf,{$this->cf},PHPSESSID,{$_COOKIE['PHPSESSID']}&amp;ref=editor,{$this->name},cf,{$this->cf}');
+	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=ca,upload,cf,{$this->cf},PHPSESSID,{$_COOKIE['PHPSESSID']}&amp;ref=editor,{$this->name},cf,{$this->cf}');
 	so.write("flashUpload");
 
 	// ]]>
