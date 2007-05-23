@@ -377,6 +377,7 @@ class FileManager
 			{
 				ini_set('max_execution_time', 0);
 				ini_set('max_input_time', 0);
+				$swfobject = GetRelativePath(dirname(__FILE__)).'js/swfobject.js';
 				$out = <<<EOF
 	<form action="{$target}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
@@ -384,6 +385,7 @@ class FileManager
 	<input type="hidden" name="ca" value="upload"/>
 	<input type="hidden" name="cf" value="{$this->cf}"/>
 	<div id="flashUpload"></div><br/>
+	<script type="text/javascript" src="{$swfobject}"></script>
 	<noscript>
 		<input type="file" name="cu[]"/>
 		<input type="submit" value="Upload" />
