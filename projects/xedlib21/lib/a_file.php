@@ -33,6 +33,7 @@ class FileManager
 	 * @var FileManagerBehavior
 	 */
 	public $Behavior;
+
 	/**
 	 * Enter description here...
 	 *
@@ -46,24 +47,28 @@ class FileManager
 	 * @var array
 	 */
 	private $filters;
+
 	/**
 	 * People are not allowed above this folder.
 	 *
 	 * @var string
 	 */
 	public $root;
+
 	/**
 	 * Icons and their associated filetypes, overridden with FilterGallery.
 	 *
 	 * @var array
 	 */
 	public $icons;
+
 	/**
 	 * Current File
 	 *
 	 * @var string
 	 */
 	private $cf;
+
 	/**
 	 * Filter that new folders will begin with.
 	 *
@@ -377,7 +382,8 @@ class FileManager
 			{
 				ini_set('max_execution_time', 0);
 				ini_set('max_input_time', 0);
-				$swfobject = GetRelativePath(dirname(__FILE__)).'js/swfobject.js';
+				$swfobject = GetRelativePath(dirname(__FILE__)).'/js/swfobject.js';
+				$swf = GetRelativePath(dirname(__FILE__)).'/swf/fileUpload.swf';
 				$out = <<<EOF
 	<form action="{$target}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
@@ -393,7 +399,7 @@ class FileManager
 	<script type="text/javascript">
 	// <![CDATA[
 
-	var so = new SWFObject("lib/swf/fileUpload.swf", "fileUpload", "550", "100", "9");
+	var so = new SWFObject("{$swf}", "fileUpload", "550", "100", "9");
 	so.addParam('allowScriptAccess', 'sameDomain');
 	so.addParam('movie', 'fileUpload.swf');
 	so.addParam("quality", "high");

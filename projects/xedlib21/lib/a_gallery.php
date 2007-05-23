@@ -5,12 +5,12 @@ require_once('a_file.php');
 class Gallery
 {
 	public $InfoCaption = true;
-	
+
 	function GetPath($root, $path, $arg = 'cf', $sep = '/', $rootname = 'Home')
 	{
 		if ($path == $root) return null;
 		global $me;
-		
+
 		$items = explode('/', substr($path, strlen($root)));
 		$ret = null;
 		$cpath = '';
@@ -42,6 +42,9 @@ class Gallery
 		}
 		else
 		{
+			$body = "\n<!--[if lt IE 7.]>
+<script defer type=\"text/javascript\" src=\"pngfix.js\"></script>
+<![endif]-->\n";
 			$GLOBALS['page_section'] = "View Gallery";
 
 			$fm = new FileManager('gallery', $path, array('Gallery'), 'Gallery');
@@ -51,8 +54,9 @@ class Gallery
 			$fi = new FileInfo($path);
 
 			if (is_file($path)) return;
-			$body = "<table class=\"gallery_table\">\n";
-			$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » ".substr(strrchr($path, '/'), 1)."</td></tr>";
+			$body .= "<table class=\"gallery_table\">\n";
+			if (strpos($path, '/'))
+				$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » ".substr(strrchr($path, '/'), 1)."</td></tr>";
 
 			if (!empty($files['dirs']))
 			{
