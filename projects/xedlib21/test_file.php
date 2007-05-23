@@ -9,8 +9,6 @@ require_once('lib/a_log.php');
 
 $ca = GetVar('ca');
 
-$fp = fopen("file_debug.txt", "w+");
-
 if ($ca == 'upload')
 {
 	fwrite($fp, "Upload requested on session (".GetVar('PHPSESSID').") data: ".print_r($_SESSION,true)."\r\n");

@@ -122,10 +122,6 @@ class FileManager
 		if (substr($this->root, -1) != '/') $this->root .= '/';
 		$this->cf = SecurePath(GetVar('cf'));
 
-		$fp = fopen("file_debug.txt", "a+");
-		fwrite($fp, "CF: ".print_r($this->cf, true)."\r\n");
-		fclose($fp);
-
 		if (is_dir($this->root.$this->cf)
 			&& strlen($this->cf) > 0
 			&& substr($this->cf, -1) != '/')
@@ -141,8 +137,6 @@ class FileManager
 	 */
 	function Prepare($action)
 	{
-		fwrite($GLOBALS['fp'], "Preparing the file manager, action ({$action})\r\n");
-
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
@@ -160,9 +154,6 @@ class FileManager
 				$files['tmp_name'][] = $swfile['tmp_name'];
 			}
 			//End SWF hack. - Xed
-
-			fwrite($GLOBALS['fp'], "Files: ".print_r($files, true)."\r\n");
-			fwrite($GLOBALS['fp'], "Filter: ".print_r($fi->Filter, true)."\r\n");
 
 			foreach ($files['name'] as $ix => $file)
 			{
@@ -1160,7 +1151,6 @@ class FilterDefault
 	function Upload($file, $target)
 	{
 		$dest = "{$target->path}{$file['name']}";
-		fwrite($GLOBALS['fp'], "Uploading to {$dest}\r\n");
 		move_uploaded_file($file['tmp_name'], $dest);
 	}
 
