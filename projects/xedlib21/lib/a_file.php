@@ -175,8 +175,18 @@ class FileManager
 			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$info->Filter->Updated($info);
 			$newinfo = GetPost('info');
+
 			if (!empty($newinfo))
 			{
+				//Filter has been changed, we need to notify them.
+				if (isset($newinfo['type']) && $info->Filter->Name != $newinfo['type'])
+				{
+					$info->Filter->Cleanup($info->path);
+					$type = "Filter".$newinfo['type'];
+					$newfilter = new $type();
+					$newfilter->Install($info->path);
+				}
+
 				$info->info = array_merge($info->info, $newinfo);
 				$p = $info->dir.'/.'.$info->filename;
 				$fp = fopen($p, "w+");
@@ -363,7 +373,7 @@ class FileManager
 			$ret .= "<div id=\"{$this->name}_options\">";
 			$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->name}_options').style.display = 'none';</script>";
 
-			if ($this->Behavior->AllowUpload)
+			if ($this->Behavior->AllowUpload && is_dir($fi->path))
 			{
 				ini_set('max_execution_time', 0);
 				ini_set('max_input_time', 0);
@@ -396,7 +406,8 @@ EOF;
 				$ret .= GetBox('box_upload', 'Upload to Current Folder',
 					$out, 'template_box.html');
 			}
-			if ($this->Behavior->AllowCreateDir)
+
+			if ($this->Behavior->AllowCreateDir && is_dir($fi->path))
 			{
 				$out = <<<EOF
 <form action="{$target}" method="post">
@@ -426,7 +437,7 @@ EOF;
 				}
 				else $def = null;
 
-				if ($this->Behavior->AllowSetType && count($this->filters) > 1)
+				if ($this->Behavior->AllowSetType && count($this->filters) > 1 && is_dir($fi->path))
 				$form->AddInput(new FormInput('Change Type', 'select',
 					'info[type]',
 					ArrayToSelOptions($this->filters, $fi->Filter->Name,
@@ -616,7 +627,7 @@ EOF;
 			if (!$this->GetVisible($file)) return;
 		}
 		$types = $file->type ? 'dirs' : 'files';
-		if (isset($file->info['thumb'])) $ret .= "<td><img src=\"{$file->info['thumb']}\" /></td>\n";
+		if (isset($file->info['thumb'])) $ret .= "<td><img src=\"".URL($file->info['thumb'])."\" alt=\"Thumbnail\" /></td>\n";
 		else
 		{
 			if (isset($this->icons[$file->type])) $icon = $this->icons[$file->type];
@@ -1192,6 +1203,9 @@ class FilterDefault
 		else if (is_dir($fi->path)) DelTree($fi->path);
 		else unlink($fi->path);
 	}
+
+	function Install($path) {}
+	function Cleanup($path) {}
 }
 
 class FilterGallery extends FilterDefault
@@ -1228,10 +1242,13 @@ class FilterGallery extends FilterDefault
 	 */
 	function GetOptions(&$fi, $default)
 	{
-		return array_merge(parent::GetOptions($fi, $default), array(
-			new FormInput('Thumbnail Width', 'text', 'thumb_width', 200),
-			new FormInput('Thumbnail Height', 'text', 'thumb_height', 200),
-		));
+		$new = array();
+		if (is_dir($fi->path))
+		{
+			$new[] = new FormInput('Thumbnail Width', 'text', 'thumb_width', 200);
+			$new[] = new FormInput('Thumbnail Height', 'text', 'thumb_height', 200);
+		}
+		return array_merge(parent::GetOptions($fi, $default), $new);
 	}
 
 	/**
@@ -1290,6 +1307,43 @@ class FilterGallery extends FilterDefault
 		}
 		//$destimage = "{$target->path}/{$filename}.jpg";
 		parent::Upload($file, $target);
+	}
+
+	function Install($path)
+	{
+		$files = glob($path."*.*");
+		$fi = new FileInfo($path);
+		foreach ($files as $file)
+		{
+			if (substr($file, 0, 2) == 't_') continue;
+			$pinfo = pathinfo($file);
+			$destthumb = "{$pinfo['dirname']}/t_{$pinfo['basename']}";
+			switch ($pinfo['extension'])
+			{
+				case "jpg":
+				case "jpeg":
+					$img = imagecreatefromjpeg($file);
+					$img = $this->ResizeImg($img, $fi->info['thumb_width'], $fi->info['thumb_height']);
+					imagejpeg($img, $destthumb);
+				break;
+				case "png":
+					$img = imagecreatefrompng($file);
+					$img = $this->ResizeImg($img, $fi->info['thumb_width'], $fi->info['thumb_height']);
+					imagepng($img, $destthumb);
+				break;
+				case "gif":
+					$img = imagecreatefromgif($file);
+					$img = $this->ResizeImg($img, $fi->info['thumb_width'], $fi->info['thumb_height']);
+					imagegif($img, $destthumb);
+				break;
+			}
+		}
+	}
+
+	function Cleanup($path)
+	{
+		$files = glob($path."t_*.*");
+		foreach ($files as $file) unlink($file);
 	}
 
 	/**
