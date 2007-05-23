@@ -9,6 +9,13 @@ require_once('lib/a_log.php');
 
 $ca = GetVar('ca');
 
+$fp = fopen("file_debug.txt", "w+");
+
+if ($ca == 'upload')
+{
+	fwrite($fp, "Upload requested on session (".GetVar('PHPSESSID').") data: ".print_r($_SESSION,true)."\r\n");
+}
+
 $dsUser = new DataSet($db, 'user');
 $lm = new LoginManager();
 $lm->AddDataset($dsUser, 'usr_pass', 'usr_name');
@@ -22,12 +29,12 @@ if (!$user = $lm->Prepare($ca))
 
 $fm_actions = array(
 	FM_ACTION_UNKNOWN => 'Unknown',
-	FM_ACTION_CREATE => 'Created',
-	FM_ACTION_DELETE => 'Deleted',
+	FM_ACTION_CREATE  => 'Created',
+	FM_ACTION_DELETE  => 'Deleted',
 	FM_ACTION_REORDER => 'Reordered',
-	FM_ACTION_RENAME => 'Renamed',
-	FM_ACTION_UPDATE => 'Updated',
-	FM_ACTION_UPLOAD => 'Uploaded',
+	FM_ACTION_RENAME  => 'Renamed',
+	FM_ACTION_UPDATE  => 'Updated',
+	FM_ACTION_UPLOAD  => 'Uploaded',
 );
 
 if ($ca == 'login') $logger->Log($user['usr_id'], 'Logged in', '');

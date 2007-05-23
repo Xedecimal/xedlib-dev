@@ -121,6 +121,11 @@ class FileManager
 		//Append trailing slash.
 		if (substr($this->root, -1) != '/') $this->root .= '/';
 		$this->cf = SecurePath(GetVar('cf'));
+
+		$fp = fopen("file_debug.txt", "a+");
+		fwrite($fp, "CF: ".print_r($this->cf, true)."\r\n");
+		fclose($fp);
+
 		if (is_dir($this->root.$this->cf)
 			&& strlen($this->cf) > 0
 			&& substr($this->cf, -1) != '/')
@@ -136,6 +141,8 @@ class FileManager
 	 */
 	function Prepare($action)
 	{
+		fwrite($GLOBALS['fp'], "Preparing the file manager, action ({$action})\r\n");
+
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
@@ -143,7 +150,8 @@ class FileManager
 			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 
 			$files = GetVar('cu');
-			//SWF Hack / Bandaid. Should be removed later. - Xed
+
+			//SWF Hack / Bandaid. Should be removed later.
 			$swfile = GetVar('Filedata');
 			if (!empty($swfile))
 			{
@@ -151,6 +159,10 @@ class FileManager
 				$files['type'][] = $swfile['type'];
 				$files['tmp_name'][] = $swfile['tmp_name'];
 			}
+			//End SWF hack. - Xed
+
+			fwrite($GLOBALS['fp'], "Files: ".print_r($files, true)."\r\n");
+			fwrite($GLOBALS['fp'], "Filter: ".print_r($fi->Filter, true)."\r\n");
 
 			foreach ($files['name'] as $ix => $file)
 			{
@@ -343,7 +355,8 @@ class FileManager
 		$ret = null;
 		if ($this->Behavior->MassAvailable())
 		{
-			$ret .= "<div id=\"{$this->name}_mass_options\" style=\"display: none\">";
+			$ret .= "<div id=\"{$this->name}_mass_options\">";
+			$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->name}_mass_options').style.display = 'none';</script>";
 			$ret .= "<p>With selected files...</p>\n";
 			$ret .= '<input type="submit" name="ca" value="Move" /> to '.$this->GetDirectorySelect('ct')."<br/>\n";
 			$ret .= '<input type="submit" name="ca" value="Delete" onclick="return confirm(\'Are you sure you wish to delete'.
@@ -355,7 +368,8 @@ class FileManager
 			global $me;
 
 			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">View Options for this File or Folder</a></p>\n";
-			$ret .= "<div id=\"{$this->name}_options\" style=\"display: none\">";
+			$ret .= "<div id=\"{$this->name}_options\">";
+			$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->name}_options').style.display = 'none';</script>";
 
 			if ($this->Behavior->AllowUpload)
 			{
@@ -368,6 +382,10 @@ class FileManager
 	<input type="hidden" name="ca" value="upload"/>
 	<input type="hidden" name="cf" value="{$this->cf}"/>
 	<div id="flashUpload"></div><br/>
+	<noscript>
+		<input type="file" name="cu[]"/>
+		<input type="submit" value="Upload" />
+	</noscript>
 	<script type="text/javascript">
 	// <![CDATA[
 
@@ -376,14 +394,12 @@ class FileManager
 	so.addParam('movie', 'fileUpload.swf');
 	so.addParam("quality", "high");
 	so.addParam('wmode', 'transparent');
-	so.addParam('FlashVars', 'uploadPage={$me}&returns=ca,upload,PHPSESSID,{$_COOKIE['PHPSESSID']}');
+	so.addParam('FlashVars', 'uploadPage={$me}&returns=ca,upload,cf,{$this->cf},PHPSESSID,{$_COOKIE['PHPSESSID']}');
 	so.write("flashUpload");
 
 	// ]]>
 	</script>
-	<input type="file" name="cu[]"/>
-	<input type="submit" value="Upload" />
-</form>
+	</form>
 EOF;
 				$ret .= GetBox('box_upload', 'Upload to Current Folder',
 					$out, 'template_box.html');
@@ -628,7 +644,7 @@ EOF;
 			else if (!$this->Behavior->UseInfo)
 				$url = $this->root.$this->cf.$file->filename.'" target="_new';
 			else
-				$url = $target.'?editor='.$this->name.'&cf='.$this->cf.$file->filename;
+				$url = $target.'?editor='.$this->name.'&amp;cf='.urlencode($this->cf.$file->filename);
 		}
 		else
 			$url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
@@ -1143,6 +1159,7 @@ class FilterDefault
 	function Upload($file, $target)
 	{
 		$dest = "{$target->path}{$file['name']}";
+		fwrite($GLOBALS['fp'], "Uploading to {$dest}\r\n");
 		move_uploaded_file($file['tmp_name'], $dest);
 	}
 
@@ -1221,8 +1238,8 @@ class FilterGallery extends FilterDefault
 	function GetOptions(&$fi, $default)
 	{
 		return array_merge(parent::GetOptions($fi, $default), array(
-			new FormInput('Thumbnail Width', 'thumb_width', 'text', 200),
-			new FormInput('Thumbnail Height', 'thumb_height', 'text', 200),
+			new FormInput('Thumbnail Width', 'text', 'thumb_width', 200),
+			new FormInput('Thumbnail Height', 'text', 'thumb_height', 200),
 		));
 	}
 
@@ -1261,21 +1278,20 @@ class FilterGallery extends FilterDefault
 		$filename = substr(basename($file['name']), 0, strrpos(basename($file['name']), '.'));
 		$ext = strrchr($file['name'], '.');
 		$destthumb = "{$target->path}/t_{$filename}{$ext}";
-		switch ($file['type'])
+		switch ($ext)
 		{
-			case "image/jpeg":
-			case "image/pjpeg":
+			case ".jpg":
+			case ".jpeg":
 				$img = imagecreatefromjpeg($file['tmp_name']);
 				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
 				imagejpeg($img, $destthumb);
 			break;
-			case "image/x-png":
-			case "image/png":
+			case ".png":
 				$img = imagecreatefrompng($file['tmp_name']);
 				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
 				imagepng($img, $destthumb);
 			break;
-			case "image/gif":
+			case ".gif":
 				$img = imagecreatefromgif($file['tmp_name']);
 				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
 				imagegif($img, $destthumb);
