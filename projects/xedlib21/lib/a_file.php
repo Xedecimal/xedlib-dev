@@ -172,10 +172,11 @@ class FileManager
 					'tmp_name' => $files['tmp_name'][$ix]
 				);
 				$fi->Filter->Upload($newup, $fi);
+
+				if (!empty($this->Behavior->Watcher))
+					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
+					$this->root.$this->cf.$newup['name']);
 			}
-			if (!empty($this->Behavior->Watcher))
-				RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
-				$this->root.$this->cf.$file['name']);
 		}
 		else if ($action == "update_info")
 		{
@@ -394,7 +395,7 @@ class FileManager
 	so.addParam('movie', 'fileUpload.swf');
 	so.addParam("quality", "high");
 	so.addParam('wmode', 'transparent');
-	so.addParam('FlashVars', 'uploadPage={$me}&returns=ca,upload,cf,{$this->cf},PHPSESSID,{$_COOKIE['PHPSESSID']}');
+	so.addParam('FlashVars', 'uploadPage={$me}&returns=ca,upload,cf,{$this->cf},PHPSESSID,{$_COOKIE['PHPSESSID']}&amp;ref=editor,{$this->name},cf,{$this->cf}');
 	so.write("flashUpload");
 
 	// ]]>
