@@ -145,12 +145,10 @@ class FileManager
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
-			if (!$this->Behavior->AllowUpload) return;
 			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
-
 			$files = GetVar('cu');
 
-			//SWF Hack / Bandaid. Should be removed later.
+			//SWF Hack. Should be removed later.
 			$swfile = GetVar('Filedata');
 			if (!empty($swfile))
 			{
@@ -158,7 +156,12 @@ class FileManager
 				$files['type'][] = $swfile['type'];
 				$files['tmp_name'][] = $swfile['tmp_name'];
 			}
+			else fwrite($fp, "No SWF uploaded.\r\n");
 			//End SWF hack. - Xed
+
+			$fp = fopen('debug.txt', 'w+');
+			fwrite($fp, "Uploaded: ".print_r($files, true)."\r\nto\r\n".print_r($fi,true));
+			fclose($fp);
 
 			foreach ($files['name'] as $ix => $file)
 			{
@@ -167,6 +170,7 @@ class FileManager
 					'type' => $files['type'][$ix],
 					'tmp_name' => $files['tmp_name'][$ix]
 				);
+
 				$fi->Filter->Upload($newup, $fi);
 
 				if (!empty($this->Behavior->Watcher))
@@ -404,7 +408,7 @@ class FileManager
 	so.addParam('movie', 'fileUpload.swf');
 	so.addParam("quality", "high");
 	so.addParam('wmode', 'transparent');
-	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=ca,upload,cf,{$this->cf},PHPSESSID,{$_COOKIE['PHPSESSID']}&amp;ref=editor,{$this->name},cf,{$this->cf}');
+	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=editor,{$this->name},ca,upload,cf,{$this->cf},PHPSESSID,{$_COOKIE['PHPSESSID']}&amp;ref=editor,{$this->name},cf,{$this->cf}');
 	so.write("flashUpload");
 
 	// ]]>
@@ -662,9 +666,9 @@ EOF;
 
 		$ret .= "\t<td>\n";
 		if ($this->mass_avail)
-			$ret .= "\t\t<input type=\"checkbox\" id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\" onclick=\"toggleAny(['sel_files_', 'sel_dirs_'], '{$this->name}_mass_options');\" />\n";
+			$ret .= "\t\t<label><input type=\"checkbox\" id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\" onclick=\"toggleAny(['sel_files_', 'sel_dirs_'], '{$this->name}_mass_options');\" />\n";
 		$ret .= "\t\t<a href=\"$url\">{$name}</a> ".
-		($this->View->ShowDate ? '<br/>'.gmdate("m/d/y h:i", filectime($file->path)) : null)."\n\t</td>\n";
+		($this->View->ShowDate ? '<br/>'.gmdate("m/d/y h:i", filectime($file->path)) : null)."\n\t</label></td>\n";
 
 		$common = array(
 			'cf' => $this->cf,
