@@ -86,7 +86,9 @@ class Gallery
 							$name = @$file->info['title'];
 						}
 						else $name = str_replace('_', ' ', substr(basename($file->filename), 0, strpos(basename($file->filename), '.')));
-						$body .= "<div class=\"gallery_cell\"><table class=\"gallery_shadow\"><tr><td><a href=\"".URL($me, array('ca' => 'view', 'galcf' => "$path/$file->filename"))."\"><img src=\"$path/t_$file->filename\"></a></td><td class=\"gallery_shadow_right\"></td></tr><tr><td class=\"gallery_shadow_bottom\"></td><td class=\"gallery_shadow_bright\"></td></tr></table><p class=\"gallery_caption\">$name</p></div>\n";
+						$twidth = $fi->info['thumb_width']+16;
+						$theight = $fi->info['thumb_height']+16;
+						$body .= "<div class=\"gallery_cell\" style=\"width: {$twidth}px; height:{$theight}px\"><table class=\"gallery_shadow\"><tr><td><a href=\"".URL($me, array('ca' => 'view', 'galcf' => "$path/$file->filename"))."\"><img src=\"$path/t_$file->filename\"></a></td><td class=\"gallery_shadow_right\"></td></tr><tr><td class=\"gallery_shadow_bottom\"></td><td class=\"gallery_shadow_bright\"></td></tr></table><p class=\"gallery_caption\">$name</p></div>\n";
 						//if ($ix++ % 3 == 2) $body .= "</tr><tr class=\"image_row\">";
 					}
 				}

@@ -386,16 +386,18 @@ class FileManager
 			{
 				ini_set('max_execution_time', 0);
 				ini_set('max_input_time', 0);
-				$swfobject = GetRelativePath(dirname(__FILE__)).'/js/swfobject.js';
-				$swf = GetRelativePath(dirname(__FILE__)).'/swf/fileUpload.swf';
+				$pname = GetRelativePath(dirname(__FILE__));
 				$out = <<<EOF
+	<script type="text/javascript" src="{$pname}/js/swfobject.js"></script>
 	<form action="{$target}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="upload"/>
 	<input type="hidden" name="cf" value="{$this->cf}"/>
-	<div id="flashUpload"></div><br/>
-	<script type="text/javascript" src="{$swfobject}"></script>
+	<div id="flashUpload">
+	<p><strong>You need to upgrade your Flash Player</strong></p>
+	<p>Please visit <a href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash&promoid=BIOW">Adobe</a> to obtain this.
+	</div><br/>
 	<noscript>
 	<input type="file" name="cu[]"/>
 	<input type="submit" value="Upload" />
@@ -403,10 +405,10 @@ class FileManager
 	<script type="text/javascript">
 	// <![CDATA[
 
-	var so = new SWFObject("{$swf}", "fileUpload", "550", "100", "9");
+	var so = new SWFObject("{$pname}/swf/fileUpload.swf", "fileUpload", "550", "100", "9");
 	so.addParam('allowScriptAccess', 'sameDomain');
 	so.addParam('movie', 'fileUpload.swf');
-	so.addParam("quality", "high");
+	so.addParam('quality', 'high');
 	so.addParam('wmode', 'transparent');
 	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=editor,{$this->name},ca,upload,cf,{$this->cf},PHPSESSID,{$_COOKIE['PHPSESSID']}&amp;ref=editor,{$this->name},cf,{$this->cf}');
 	so.write("flashUpload");
@@ -1257,8 +1259,8 @@ class FilterGallery extends FilterDefault
 		$new = array();
 		if (is_dir($fi->path))
 		{
-			$new[] = new FormInput('Thumbnail Width', 'text', 'thumb_width', 200);
-			$new[] = new FormInput('Thumbnail Height', 'text', 'thumb_height', 200);
+			$new[] = new FormInput('Thumbnail Width', 'text', 'info[thumb_width]', $fi->info['thumb_width']);
+			$new[] = new FormInput('Thumbnail Height', 'text', 'info[thumb_height]', $fi->info['thumb_height']);
 		}
 		return array_merge(parent::GetOptions($fi, $default), $new);
 	}
