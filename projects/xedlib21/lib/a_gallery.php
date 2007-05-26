@@ -1,6 +1,6 @@
 <?php
 
-require_once('a_file.php');
+require_once(dirname(__FILE__).'/a_file.php');
 
 class Gallery
 {
@@ -56,7 +56,12 @@ class Gallery
 			if (is_file($path)) return;
 			$body .= "<table class=\"gallery_table\">\n";
 			if (strpos($path, '/'))
-				$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » ".substr(strrchr($path, '/'), 1)."</td></tr>";
+			{
+				if ($this->InfoCaption && isset($fi->info['title']))
+					$name = $fi->info['title'];
+				else $name = $fi->filename;
+				$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » {$name}</td></tr>";
+			}
 
 			if (!empty($files['dirs']))
 			{
@@ -66,7 +71,15 @@ class Gallery
 				{
 					$imgs = glob("$path/{$dir->path}/t_*.jpg");
 					$imgcount = is_array($imgs) ? count($imgs) : 0;
-					$body .= "<td class=\"gallery_cat\">» <a href=\"".URL($me, array('galcf' => $dir->path))."\">{$dir->filename}</a></td>\n";
+
+					if ($this->InfoCaption && isset($dir->info['title']))
+					{
+						//$fi = new FileInfo("{$path}/{$filename}");
+						$name = @$dir->info['title'];
+					}
+					else $name = $dir->filename;
+
+					$body .= "<td class=\"gallery_cat\">» <a href=\"".URL($me, array('galcf' => $dir->path))."\">{$name}</a></td>\n";
 					if ($ix++ % 3 == 2) $body .= "</tr><tr>\n";
 				}
 			}
@@ -81,13 +94,12 @@ class Gallery
 					{
 						if ($this->InfoCaption)
 						{
-							require_once('xedlib/a_file.php');
 							//$fi = new FileInfo("{$path}/{$filename}");
 							$name = @$file->info['title'];
 						}
 						else $name = str_replace('_', ' ', substr(basename($file->filename), 0, strpos(basename($file->filename), '.')));
-						$twidth = $fi->info['thumb_width']+16;
-						$theight = $fi->info['thumb_height']+16;
+						$twidth = $file->info['thumb_width']+16;
+						$theight = $file->info['thumb_height']+16;
 						$body .= "<div class=\"gallery_cell\" style=\"width: {$twidth}px; height:{$theight}px\"><table class=\"gallery_shadow\"><tr><td><a href=\"".URL($me, array('ca' => 'view', 'galcf' => "$path/$file->filename"))."\"><img src=\"$path/t_$file->filename\"></a></td><td class=\"gallery_shadow_right\"></td></tr><tr><td class=\"gallery_shadow_bottom\"></td><td class=\"gallery_shadow_bright\"></td></tr></table><p class=\"gallery_caption\">$name</p></div>\n";
 						//if ($ix++ % 3 == 2) $body .= "</tr><tr class=\"image_row\">";
 					}

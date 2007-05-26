@@ -131,8 +131,6 @@ class FileManager
 			&& strlen($this->cf) > 0
 			&& substr($this->cf, -1) != '/')
 			$this->cf .= '/';
-
-		$this->allow_upload = false;
 	}
 
 	/**
@@ -648,6 +646,7 @@ EOF;
 			if (isset($icon))
 				$ret .= '<td><img src="'.$icon.'" alt="'.$file->type.'" /></td> ';
 		}
+
 		$name = ($this->View->ShowTitle && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
 
@@ -1073,6 +1072,7 @@ class FileInfo
 			if (file_exists($dinfo))
 			{
 				$dinfo = unserialize(file_get_contents($dinfo));
+				unset($dinfo['title']); //Don't inherit captions.
 				if (is_array($dinfo))
 					$this->info = array_merge($dinfo, $this->info);
 			}
