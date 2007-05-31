@@ -1331,11 +1331,13 @@ function FormValidate($name, $arr, &$ret, $check)
 	foreach ($arr as $key => $val)
 	{
 		$rec = RecurseReq($key, $val, $checks);
+
 		if (!$val->Validate($name, $check, $ret))
 			$passed = false;
 		else
 			$ret['errors'][$val->field] = '<span class="error"
 			id="span_'.$name.'_'.$val->field.'"></span>';
+
 		$ret['js'] .= $val->GetJS($name);
 	}
 	else
