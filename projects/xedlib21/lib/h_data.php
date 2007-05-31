@@ -278,6 +278,12 @@ class Join
 	public $Type;
 
 	/**
+	 * Unique identifier for this join to associate all the columns.
+	 * @var string
+	 */
+	public $Shortcut;
+
+	/**
 	 * Creates a new Join object that will allow DataSet to identify the type
 	 * and context of where, when and how to use a join when it is needed. This
 	 * is used when you call DataSet.Get().
@@ -288,11 +294,12 @@ class Join
 	 * @return Join
 	 * @see DataSet.Get
 	 */
-	function Join($dataset, $condition, $type = 'JOIN')
+	function Join($dataset, $condition, $type = 'JOIN', $shortcut = null)
 	{
 		$this->DataSet = $dataset;
 		$this->Condition = $condition;
 		$this->Type = $type;
+		$this->Shortcut = $shortcut;
 	}
 }
 
@@ -432,10 +439,11 @@ class DataSet
 		{
 			$ret = '';
 			$ix = 0;
-			foreach ($cols as $col => $val)
+			foreach ($cols as $name => $val)
 			{
 				if ($ix++ > 0) $ret .= ",\n";
-				$ret .= ' '.$this->QuoteTable($col).' AS '.$this->QuoteTable($val);
+				$ret .= ' '.$this->QuoteTable($val);
+				if (!is_numeric($name)) $ret .= ' AS '.$this->QuoteTable($name);
 			}
 			return $ret;
 		}
@@ -514,7 +522,8 @@ class DataSet
 					if (is_object($on))
 					{
 						$ret .= "\n {$on->Type} `{$on->DataSet->table}`";
-						if (isset($on->DataSet->Shortcut)) $ret .= " {$on->DataSet->Shortcut}";
+						if (isset($on->Shortcut)) $ret .= " {$on->Shortcut}";
+						else if (isset($on->DataSet->Shortcut)) $ret .= " {$on->DataSet->Shortcut}";
 						$ret .= " ON ({$on->Condition})";
 					}
 					else
@@ -791,7 +800,9 @@ class DataSet
 	 */
 	function GetScalar($match, $col)
 	{
-		$query = "SELECT `$col` FROM `{$this->table}`".$this->WhereClause($match);
+		if (is_array($col) && $col[0] == 'destring') { $lq = $rq = ''; $col = $col[1]; }
+		else $lq = $rq = '`';
+		$query = "SELECT $lq$col$rq FROM `{$this->table}`".$this->WhereClause($match);
 		$cols = $this->database->Query($query);
 		$data = mysql_fetch_array($cols);
 		return $data[0];

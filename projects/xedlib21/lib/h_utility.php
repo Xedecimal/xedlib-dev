@@ -1,4 +1,5 @@
 <?php
+$__checked = true;
 
 $me = GetVar("SCRIPT_NAME");
 $__sid = MD5(GetVar('SERVER_NAME'));
@@ -506,8 +507,18 @@ function RunCallbacks()
 	$args = func_get_args();
 	$target = array_shift($args);
 	$ret = null;
+	if (!empty($target))
 	foreach ($target as $cb)
-		$ret .= call_user_func_array($cb, $args);
+	{
+		$item = call_user_func_array($cb, $args);
+		if (is_array($item))
+		{
+			if (!isset($ret)) $ret = array();
+			$ret = array_merge($ret, $item);
+		}
+		if (is_string($item))
+			$ret .= $item;
+	}
 	return $ret;
 }
 

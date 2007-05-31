@@ -79,8 +79,10 @@ class Box
 			return $t->get($temp);
 		}
 		$ret  = "<!-- Start Box: {$this->title} -->\n";
+		$ret .= "<div class=\"box\">\n";
 		$ret .= "<div class=\"box_title\">{$this->title}</div>\n";
 		$ret .= "<div class=\"box_body\">{$this->out}</div>\n";
+		$ret .= "</div>\n";
 		$ret .= "<!-- End Box {$this->title} -->\n";
 		return $ret;
 	}
