@@ -59,7 +59,7 @@ class Database
 	 * @var char
 	 */
 	public $rq;
-	
+
 	public $Handlers;
 
 	function CheckMyError($query, $handler)
@@ -70,7 +70,7 @@ class Database
 				if (call_user_func($handler, mysql_errno())) return;
 			if (isset($this->Handlers[mysql_errno()]))
 				if (call_user_func($this->Handlers[mysql_errno()])) return;
-			echo "MySQL Error [".mysql_errno().']: '.mysql_error();
+			echo "MySQL Error [".mysql_errno().']: '.mysql_error()."<br/>\nQuery:{$query}<br/>\n";
 		}
 	}
 
