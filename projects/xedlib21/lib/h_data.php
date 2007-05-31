@@ -868,7 +868,8 @@ class DataSet
 		$rows = $this->database->Query($query, $silent, $this->ErrorHandler);
 		if (!is_resource($rows)) return $rows;
 		$ret = array();
-		while (($row = mysql_fetch_array($rows, $args)))
+		$f = $this->func_fetch;
+		while (($row = $f($rows)))
 		{
 			$newrow = array();
 			foreach ($row as $key => $val)
