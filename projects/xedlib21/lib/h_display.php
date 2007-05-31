@@ -194,7 +194,7 @@ class Table
 				else $span = " {$this->rowattribs[$ix]}";
 				$x = 0;
 				$atrs = null;
-				
+
 				if (is_array($row))
 				{
 					foreach ($row as $val)
@@ -233,7 +233,7 @@ class SortTable extends Table
 	{
 		if (!is_array($cols)) Error("If you are not going to specify any
 			columns, you might as well just use Table.");
-		
+
 		$this->name = $name;
 
 		$sort = GetVar("sort");
@@ -245,7 +245,7 @@ class SortTable extends Table
 		$imgUp = '<img src="'.GetRelativePath(dirname(__FILE__)).
 		'/images/up.png" style="vertical-align: text-bottom;"
 		alt="Ascending" title="Ascending" />';
-		
+
 		$imgDown = '<img src="'.GetRelativePath(dirname(__FILE__)).
 		'/images/down.png" style="vertical-align: text-bottom;"
 		alt="Descending" title="Descending" align="middle"/>';
@@ -478,7 +478,7 @@ class Form extends Table
 
 	/**
 	 * Adds an input item to this form.
-	 * 
+	 *
 	 */
 	function AddInput()
 	{
@@ -492,7 +492,7 @@ class Form extends Table
 		}
 		$this->AddRow($row, ' valign="top"');
 	}
-	
+
 	function IterateInput($input)
 	{
 		if (is_array($input) && !empty($input))
@@ -503,7 +503,7 @@ class Form extends Table
 			{
 				$out .= $this->IterateInput($item);
 			}
-			
+
 			return $out;
 		}
 
@@ -515,7 +515,7 @@ class Form extends Table
 		{
 			$input->atrs .= " onclick=\"return {$this->name}_check(1);\"";
 		}
-		
+
 		$right = false;
 		if ($input->type == 'check') $right = true;
 
@@ -564,7 +564,7 @@ class Form extends Table
 				$ret .= " />\n";
 			}
 		}
-		//$ret .= parent::Get($tblAttribs);
+		$ret .= parent::Get($tblAttribs);
 		$ret .= $this->out;
 		$ret .= "</form>\n";
 		$ret .= "<!-- End Form: {$this->name} -->\n";
@@ -639,7 +639,7 @@ class FormInput
 	 * @param string $help
 	 * @return FormInput
 	 */
-	function FormInput($text, $type, $name, $valu = null, $atrs = null,
+	function __construct($text, $type, $name, $valu = null, $atrs = null,
 		$help = null)
 	{
 		$this->text = $text;
