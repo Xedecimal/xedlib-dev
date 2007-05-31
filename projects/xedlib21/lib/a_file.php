@@ -157,10 +157,6 @@ class FileManager
 			else fwrite($fp, "No SWF uploaded.\r\n");
 			//End SWF hack. - Xed
 
-			$fp = fopen('debug.txt', 'w+');
-			fwrite($fp, "Uploaded: ".print_r($files, true)."\r\nto\r\n".print_r($fi,true));
-			fclose($fp);
-
 			foreach ($files['name'] as $ix => $file)
 			{
 				$newup = array(

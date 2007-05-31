@@ -6,6 +6,13 @@ class Gallery
 {
 	public $InfoCaption = true;
 
+	private $root;
+
+	function Gallery($root)
+	{
+		$this->root = $root;
+	}
+
 	function GetPath($root, $path, $arg = 'cf', $sep = '/', $rootname = 'Home')
 	{
 		if ($path == $root) return null;
@@ -55,7 +62,8 @@ class Gallery
 
 			if (is_file($path)) return;
 			$body .= "<table class=\"gallery_table\">\n";
-			if (strpos($path, '/'))
+
+			if ($path != $this->root)
 			{
 				if ($this->InfoCaption && isset($fi->info['title']))
 					$name = $fi->info['title'];
@@ -72,7 +80,7 @@ class Gallery
 					$imgs = glob("$path/{$dir->path}/t_*.jpg");
 					$imgcount = is_array($imgs) ? count($imgs) : 0;
 
-					if ($this->InfoCaption && isset($dir->info['title']))
+					if ($this->InfoCaption && !empty($dir->info['title']))
 					{
 						//$fi = new FileInfo("{$path}/{$filename}");
 						$name = @$dir->info['title'];
