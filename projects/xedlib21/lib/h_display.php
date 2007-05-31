@@ -484,7 +484,9 @@ class Form extends Table
 	{
 		if (func_num_args() < 1) Error("Not enough arguments.");
 		$args = func_get_args();
-		foreach ($args as $item)
+		$skip = false;
+		$this->out .= '<div>';
+		foreach ($args as $ix => $item)
 		{
 			$row[] = $this->IterateInput($item);
 		}
@@ -562,7 +564,8 @@ class Form extends Table
 				$ret .= " />\n";
 			}
 		}
-		$ret .= parent::Get($tblAttribs);
+		//$ret .= parent::Get($tblAttribs);
+		$ret .= $this->out;
 		$ret .= "</form>\n";
 		$ret .= "<!-- End Form: {$this->name} -->\n";
 		return $ret;
@@ -662,7 +665,7 @@ class FormInput
 		if ($this->type == 'select')
 		{
 			$ret = "<select class=\"input_select\" name=\"{$this->name}\"
-				id=\"".CleanID($parent.'_'.$this->name)."\">";
+				id=\"".CleanID($parent.'_'.$this->name)."\" {$this->atrs}>";
 			if (!empty($this->valu))
 			{
 				$ogstarted = false;
@@ -859,9 +862,9 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	if (is_array($timestamp))
 	{
 		if (isset($timestamp[5]))
-			$timestamp = gmmktime($timestamp[3], $timestamp[4], $timestamp[5], $timestamp[0], $timestamp[1], $timestamp[2]);
+			$timestamp = mktime($timestamp[3], $timestamp[4], $timestamp[5], $timestamp[0], $timestamp[1], $timestamp[2]);
 		else
-			$timestamp = gmmktime(0, 0, 0, $timestamp[0], $timestamp[1], $timestamp[2]);
+			$timestamp = mktime(0, 0, 0, $timestamp[0], $timestamp[1], $timestamp[2]);
 	}
 	if (is_string($timestamp))
 	{
@@ -869,9 +872,9 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	}
 	if (!isset($timestamp)) $timestamp = time();
 	$strout = $include_time ? GetInputTime($name.'[]', $timestamp) : null;
-	$strout .= GetMonthSelect("{$name}[]", gmdate("n", $timestamp));
-	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . gmdate("d", $timestamp) . "\" alt=\"Day\" />\n";
-	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . gmdate("Y", $timestamp) . "\" alt=\"Year\" />\n";
+	$strout .= GetMonthSelect("{$name}[]", date("n", $timestamp));
+	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("d", $timestamp) . "\" alt=\"Day\" />\n";
+	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . date("Y", $timestamp) . "\" alt=\"Year\" />\n";
 	return $strout;
 }
 
@@ -1396,12 +1399,12 @@ function GetMonthSelect($name, $default, $attribs = null)
 	$ret = "<select name=\"$name\"";
 	if ($attribs != null) $ret .= " $attribs";
 	$ret .= ">";
-	for ($ix = 1; $ix < 13; $ix++)
+	for ($ix = 1; $ix <= 12; $ix++)
 	{
-		$ts = gmmktime(0, 0, 0, $ix);
+		$ts = mktime(0, 0, 0, $ix, 1);
 		if ($ix == $default) $sel = " selected=\"selected\"";
 		else $sel = "";
-		$ret .= "<option value=\"$ix\"$sel> " . gmdate("F", $ts) . "</option>\n";
+		$ret .= "<option value=\"$ix\"$sel> " . date("F", $ts) . "</option>\n";
 	}
 	$ret .= "</select>\n";
 	return $ret;
