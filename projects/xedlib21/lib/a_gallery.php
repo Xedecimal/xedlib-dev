@@ -5,11 +5,13 @@ require_once(dirname(__FILE__).'/a_file.php');
 class Gallery
 {
 	public $InfoCaption = true;
+	public $Display;
 
 	private $root;
 
-	function Gallery($root)
+	function __construct($root)
 	{
+		$this->Display = new GalleryDisplay();
 		$this->root = $root;
 	}
 
@@ -92,6 +94,8 @@ class Gallery
 				}
 			}
 
+			$vp = new VarParser();
+
 			if (!empty($files['files']))
 			{
 				$ix = 0;
@@ -100,16 +104,30 @@ class Gallery
 				{
 					if (isset($file->info['thumb']) && file_exists($file->info['thumb']))
 					{
-						if ($this->InfoCaption)
-						{
-							//$fi = new FileInfo("{$path}/{$filename}");
-							$name = @$file->info['title'];
-						}
+						if ($this->InfoCaption && !empty($file->info['title'])) $name = $file->info['title'];
 						else $name = str_replace('_', ' ', substr(basename($file->filename), 0, strpos(basename($file->filename), '.')));
 						$twidth = $file->info['thumb_width']+16;
-						$theight = $file->info['thumb_height']+16;
-						$body .= "<div class=\"gallery_cell\" style=\"width: {$twidth}px; height:{$theight}px\"><table class=\"gallery_shadow\"><tr><td><a href=\"".URL($me, array('ca' => 'view', 'galcf' => "$path/$file->filename"))."\"><img src=\"$path/t_$file->filename\"></a></td><td class=\"gallery_shadow_right\"></td></tr><tr><td class=\"gallery_shadow_bottom\"></td><td class=\"gallery_shadow_bright\"></td></tr></table><p class=\"gallery_caption\">$name</p></div>\n";
-						//if ($ix++ % 3 == 2) $body .= "</tr><tr class=\"image_row\">";
+						$theight = $file->info['thumb_height']+64;
+						$url = URL($me, array('ca' => 'view', 'galcf' => "$path/$file->filename"));
+
+						$d['image'] = $file->path;
+
+						$CapLeft = $vp->ParseVars($this->Display->CaptionLeft, $d);
+						$CapRight = $vp->ParseVars($this->Display->CaptionRight, $d);
+
+						$body .= <<<EOF
+<div class="gallery_cell" style="overflow: auto; width: {$twidth}px; height:{$theight}px">
+<table class="gallery_shadow">
+<tr><td>
+	<a href="{$url}">
+	<img src="{$path}/t_{$file->filename}" alt="thumb" /></a></td><td class="gallery_shadow_right">
+</td></tr>
+<tr>
+	<td class="gallery_shadow_bottom"></td>
+	<td class="gallery_shadow_bright"></td>
+</tr>
+</table><div class="gallery_caption">{$CapLeft}$name{$CapRight}</div></div>
+EOF;
 					}
 				}
 				$body .= '</td>';
@@ -119,6 +137,12 @@ class Gallery
 
 		return $body;
 	}
+}
+
+class GalleryDisplay
+{
+	public $CaptionLeft = '';
+	public $CaptionRight = '';
 }
 
 ?>
