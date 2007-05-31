@@ -504,7 +504,7 @@ EOF;
 	function GetDirectorySelect($name)
 	{
 		$ret = "<select name=\"{$name}\">";
-		$ret .= $this->GetDirectorySelectRecurse($this->root);
+		$ret .= $this->GetDirectorySelectRecurse($this->root, $this->Behavior->IgnoreRoot);
 		$ret .= '</select>';
 		return $ret;
 	}
@@ -516,15 +516,16 @@ EOF;
 	 * @param string $path
 	 * @return string
 	 */
-	function GetDirectorySelectRecurse($path)
+	function GetDirectorySelectRecurse($path, $ignore)
 	{
-		$ret = "<option value=\"{$path}\">{$path}</option>";
+		if (!$ignore) $ret = "<option value=\"{$path}\">{$path}</option>";
+		else $ret = '';
 		$dp = opendir($path);
 		while ($file = readdir($dp))
 		{
 			if ($file[0] == '.') continue;
 			if (!is_dir($path.$file)) continue;
-			$ret .= $this->GetDirectorySelectRecurse($path.$file.'/');
+			$ret .= $this->GetDirectorySelectRecurse($path.$file.'/', false);
 		}
 		closedir($dp);
 		return $ret;
@@ -903,6 +904,11 @@ class FileManagerBehavior
 	 * @var callback
 	 */
 	public $Watchers = null;
+	/**
+	* Whether or not to ignore the root folder when doing file operations.
+	* @var boolean
+	*/
+	public $IgnoreRoot = false;
 
 	/**
 	* A callback to modify the output of each file link.

@@ -505,6 +505,8 @@ class Form extends Table
 
 		$helptext = null;
 
+		if (!is_object($input)) Error("Form input is not an object.");
+
 		if ($input->type == 'submit' && isset($this->Validation))
 		{
 			$input->atrs .= " onclick=\"return {$this->name}_check(1);\"";
