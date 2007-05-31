@@ -474,7 +474,6 @@ class Form extends Table
 //		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"{$this->name}_$name\">$text</label>" : null, $strout, null));
 	}
 
-
 	/**
 	 * Adds an input item to this form.
 	 * 
@@ -510,10 +509,13 @@ class Form extends Table
 		{
 			$input->atrs .= " onclick=\"return {$this->name}_check(1);\"";
 		}
+		
+		$right = false;
+		if ($input->type == 'check') $right = true;
 
-		$out = isset($input->text) ? '<label for="'.CleanID($this->name.'_'.
+		$out = !empty($input->text) ? '<label for="'.CleanID($this->name.'_'.
 			$input->name).'">'.$input->text.
-			'</label> ' : '';
+			'</label> ' : null;
 
 		$helptext = $input->help;
 		if (isset($this->Validation))
@@ -522,7 +524,7 @@ class Form extends Table
 				$this->Errors[$input->name] :
 				null);
 		}
-		return $out.$input->Get($this->name)." {$helptext}";
+		return ($right?null:$out).$input->Get($this->name).($right?$out:null)." {$helptext}";
 	}
 
 	/**
@@ -685,11 +687,11 @@ class FormInput
 			foreach ($this->valu as $id => $val)
 			{
 				$selected = $val->selected ? ' selected="selected"' : null;
-				$ret .= "<label><input
+				$ret .= "<br/><label><input
 					type=\"checkbox\"
 					name=\"{$this->name}[{$id}]\"
 					id=\"".CleanID($this->name.'_'.$id)."\"{$this->atrs}/>
-					{$val->text}</label><br />";
+					{$val->text}</label>";
 			}
 			return $ret;
 		}
@@ -732,6 +734,14 @@ class FormInput
 				name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\"
 				{$this->atrs}>{$this->valu}</textarea>";
+		if ($this->type == 'check')
+		{
+			return "<input type=\"checkbox\"
+				name=\"{$this->name}\"
+				id=\"".CleanID($parent.'_'.$this->name)."\"
+				value=\"{$this->valu}\"
+				{$this->atrs} />";
+		}
 
 		return "<input type=\"{$this->type}\"
 			class=\"".($this->type == 'button' || $this->type == 'submit' ? 'input_button' : 'input_generic')."\"
@@ -863,8 +873,9 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 
 function GetInputTime($name, $timestamp)
 {
-	$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("H", $timestamp) . "\" alt=\"Hour\">\n";
+	$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("g", $timestamp) . "\" alt=\"Hour\">\n";
 	$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("i", $timestamp) . "\" alt=\"Minute\">\n";
+	$strout .= "<select name=\"{$name}[]\"><option value=\"0\">AM</option><option value=\"1\">PM</option></select>";
 	return $strout;
 }
 
@@ -1463,6 +1474,26 @@ function GetStateSelect($name, $state)
 	);
 
 	return MakeSelect($name, $options, null, $state);
+}
+
+/**
+ * Enter description here...
+ *
+ * @param FormInput $field
+ */
+function InputToString($field)
+{
+	$val = GetVar($field->name);
+
+	if ($field->type == 'time')
+		return "{$val[0]}:{$val[1]}".($val[2] == 0 ? ' AM' : ' PM');
+	else if ($field->type == 'checks')
+	{
+		$out = null;
+		foreach ($val as $ix => $val) $out .= ($ix > 0?', ':'').$field->valu[$ix]->text;
+		return $out;
+	}
+	else Error("Unknown field type.");
 }
 
 ?>

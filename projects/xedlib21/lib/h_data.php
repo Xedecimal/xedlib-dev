@@ -713,7 +713,7 @@ class DataSet
 			$newrow = array();
 			foreach ($row as $key => $val)
 			{
-				$newrow[$key] = stripslashes($val);
+				$newrow[$key] = $val;
 			}
 			$items[] = $newrow;
 		}
