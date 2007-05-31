@@ -955,9 +955,9 @@ class DataSet
 					SET {$child->child_key} = {$ditem[$child->parent_key]}
 					WHERE `__TEMP`.`{$child->ds->id}` = `{$child->ds->table}`.`{$child->parent_key}`";
 				$child->ds->database->query($query);
-
-				$child->ds->database->query("DROP DATABASE `__TEMP`");
 			}
+
+			$child->ds->database->query("DROP TABLE IF EXISTS `__TEMP`");
 		}
 
 		//Pop off the ids, so they don't get changed, never want to change

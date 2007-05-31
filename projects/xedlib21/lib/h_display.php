@@ -257,7 +257,7 @@ class SortTable extends Table
 				($order == "ASC") ? $order = "DESC" : $order = "ASC";
 			}
 
-			$uri_defaults = $PERSISTS;
+			$uri_defaults = !empty($PERSISTS) ? $PERSISTS : array();
 			$uri_defaults = array_merge($uri_defaults, array(
 				'sort' => $id,
 				'order' => $order
