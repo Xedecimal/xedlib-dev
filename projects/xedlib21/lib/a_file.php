@@ -143,6 +143,8 @@ class FileManager
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
+			@set_time_limit(0);
+			@ini_set('upload_max_filesize', '50M');
 			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$files = GetVar('cu');
 
