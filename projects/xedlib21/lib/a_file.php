@@ -156,7 +156,6 @@ class FileManager
 				$files['type'][] = $swfile['type'];
 				$files['tmp_name'][] = $swfile['tmp_name'];
 			}
-			else fwrite($fp, "No SWF uploaded.\r\n");
 			//End SWF hack. - Xed
 
 			foreach ($files['name'] as $ix => $file)
@@ -383,6 +382,7 @@ class FileManager
 				ini_set('max_execution_time', 0);
 				ini_set('max_input_time', 0);
 				$pname = GetRelativePath(dirname(__FILE__));
+				$sid = @$_COOKIE['PHPSESSID'];
 				$out = <<<EOF
 	<script type="text/javascript" src="{$pname}/js/swfobject.js"></script>
 	<form action="{$target}" method="post" enctype="multipart/form-data">
@@ -406,7 +406,7 @@ class FileManager
 	so.addParam('movie', 'fileUpload.swf');
 	so.addParam('quality', 'high');
 	so.addParam('wmode', 'transparent');
-	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=editor,{$this->name},ca,upload,cf,{$this->cf},PHPSESSID,{$_COOKIE['PHPSESSID']}&amp;ref=editor,{$this->name},cf,{$this->cf}');
+	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=editor,{$this->name},ca,upload,cf,{$this->cf},PHPSESSID,{$sid}&amp;ref=editor,{$this->name},cf,{$this->cf}');
 	so.write("flashUpload");
 
 	// ]]>

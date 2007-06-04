@@ -4,43 +4,17 @@ $__checked = true;
 $me = GetVar("SCRIPT_NAME");
 $__sid = MD5(GetVar('SERVER_NAME'));
 
-$__bypass = array(
-	'd603bfd6de7d894f5342ffa3ae23e992',
-	'24bc1846b0909dde190d6130d0c67f01',
-	'bde89811f59e28023f56db67372011a5',
-	'421aa90e079fa326b6494f812ad13e79'
-);
-
 global $__checked;
 
-if (!isset($__checked))
-foreach ($__bypass as $__check)
-{
-	if ($__sid == $__check)
-	{
-		$__checked = true;
-	}
-}
-
-if (!isset($__checked))
+if (!isset($__checked) && substr(phpversion(), 0, 1) != '5')
 {
 	echo "Library has not been synched, doing so now...<br/>\n";
-	if (substr(phpversion(), 0, 1) != '5')
+	$files = glob(dirname(__FILE__).'/*.php');
+	foreach ($files as $file)
 	{
-		$files = glob(dirname(__FILE__).'/*.php');
-		foreach ($files as $file)
-		{
-			echo "Reformatting: {$file}<br/>\n";
-			chmod($file, 0666);
-			Reformat($file);
-		}
-	}
-	else //PHP 5, leave as is.
-	{
-		$contents = file_get_contents(__FILE__);
-		$fp = fopen(__FILE__, 'w');
-		fwrite($fp, '<?php $__checked = true; ?>'."\n\n".$contents);
-		fclose($fp);
+		echo "Reformatting: {$file}<br/>\n";
+		chmod($file, 0666);
+		Reformat($file);
 	}
 }
 
