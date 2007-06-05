@@ -9,11 +9,6 @@ require_once('lib/a_log.php');
 
 $ca = GetVar('ca');
 
-if ($ca == 'upload')
-{
-	fwrite($fp, "Upload requested on session (".GetVar('PHPSESSID').") data: ".print_r($_SESSION,true)."\r\n");
-}
-
 $dsUser = new DataSet($db, 'user');
 $lm = new LoginManager();
 $lm->AddDataset($dsUser, 'usr_pass', 'usr_name');
@@ -43,7 +38,7 @@ function fm_watcher($action, $target)
 	$logger->Log($user['usr_id'], $fm_actions[$action], $target);
 }
 
-$page_title = "File Administration Demo";
+$page_title = 'File Administration Demo';
 $page_head = '<script type="text/javascript" src="lib/js/swfobject.js"></script>';
 
 $ca = GetVar('ca');

@@ -830,12 +830,14 @@ class FileManagerBehavior
 	 * @var bool
 	 */
 	public $AllowUpload = false;
+
 	/**
 	 * Whether or not users are allowed to create directories.
 	 *
 	 * @var bool
 	 */
 	public $AllowCreateDir = false;
+
 	/**
 	 * Whether users are allowed to delete files.
 	 * @see AllowAll
@@ -843,42 +845,49 @@ class FileManagerBehavior
 	 * @var bool
 	 */
 	public $AllowDelete = false;
+
 	/**
 	 * Whether users are allowed to manually sort files.
 	 *
 	 * @var bool
 	 */
 	public $AllowSort = false;
+
 	/**
 	 * Whether users are allowed to set filter types on folders.
 	 *
 	 * @var bool
 	 */
 	public $AllowRename = false;
+
 	/**
 	 * Whether users are allowed to rename or update file information.
 	 *
 	 * @var bool
 	 */
 	public $AllowEdit = false;
+
 	/**
 	 * Allow move.
 	 *
 	 * @var Allow moving files to another location.
 	 */
 	public $AllowMove = false;
+
 	/**
 	 * Whether users are allowed to change directory filters.
 	 *
 	 * @var bool
 	 */
 	public $AllowSetType = false;
+
 	/**
 	 * Whether file information is shown, or file is simply downloaded on click.
 	 *
 	 * @var bool
 	 */
 	public $UseInfo = true;
+
 	/**
 	 * If true, do not delete files, they are renamed to
 	 * .delete_filename
@@ -886,24 +895,28 @@ class FileManagerBehavior
 	 * @var boolean
 	 */
 	public $Recycle = false;
+
 	/**
 	 * Override file hiding.
 	 *
 	 * @var boolean
 	 */
 	public $ShowAllFiles = false;
+
 	/**
 	 * Allow searching files.
 	 *
 	 * @var boolean
 	 */
 	public $AllowSearch = false;
+
 	/**
 	 * Location of where to store logs.
 	 *
 	 * @var callback
 	 */
 	public $Watchers = null;
+
 	/**
 	* Whether or not to ignore the root folder when doing file operations.
 	* @var boolean
@@ -915,6 +928,7 @@ class FileManagerBehavior
 	* @var string
 	*/
 	public $FileCallback = null;
+
 	/**
 	 * Return true if options are available.
 	 *

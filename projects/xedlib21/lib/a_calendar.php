@@ -6,7 +6,7 @@
 
 /**
  * A simple to use calander display.
- * 
+ *
  * @example doc\examples\calendar.php
  * @access public
  */
@@ -39,7 +39,7 @@ class Calendar
 
 	/**
 	* Adds an item to the calendar to be displayed in a given period of time
-	* 
+	*
 	* @access public
 	* @param int $tsfrom Item beginning time.
 	* @param int $tsto Item end time.
@@ -103,7 +103,7 @@ class Calendar
 $ret = <<<EOF
 <form action="$me" method="post">
 <div><input type="hidden" name="cs" value="$cs" /></div>
-<table border="0" width="100%" cellspacing="0">
+<table class="CalendarTable">
 	<tr class="CalendarHead">
 		<td valign="top" colspan="7">
 EOF;
@@ -241,7 +241,7 @@ EOF;
 				else $ret .= "\t<tr>\n";
 				if ($dayx % 7 == 0 && $curday != -1) $ret .= "\t</tr><tr>\n";
 				$ret .= "\t\t<td class=\"CalendarDay\" valign=\"top\">\n";
-				$ret .= "\t\t\t<p class=\"CalendarDayTitle\">$day</p>\n";
+				$ret .= "\t\t\t<div class=\"CalendarDayTitle\">$day</div>\n";
 				$curday = $day;
 				$dayx++;
 			}

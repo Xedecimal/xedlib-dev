@@ -58,7 +58,7 @@ $contacts = array(
 
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
 	<title>Presentation Tests</title>
@@ -123,14 +123,14 @@ $sels = array(
 );
 
 $frm = new Form('frmItems');
-$frm->AddInput(new FormInput('Yes / No', 'yesno', 'yesno'));
-$frm->AddInput(new FormInput('Select', 'select', 'select', $sels));
+$frm->AddInput(new FormInput('Yes / No<br/>', 'yesno', 'yesno'));
+$frm->AddInput(new FormInput('Select<br/>', 'select', 'select', $sels));
 $frm->AddInput(new FormInput('Checks', 'checks', 'checks', $sels));
-$frm->AddInput(new FormInput('Selects', 'selects', 'selects', $sels));
-$frm->AddInput(new FormInput('Date', 'date', 'date'));
-$frm->AddInput(new FormInput('Time', 'time', 'time'));
-$frm->AddInput(new FormInput('DateTime', 'datetime', 'datetime'));
-$frm->AddInput(new FormInput('Area', 'area', 'area'));
+$frm->AddInput(new FormInput('Selects<br/>', 'selects', 'selects', $sels));
+$frm->AddInput(new FormInput('Date<br/>', 'date', 'date'));
+$frm->AddInput(new FormInput('Time<br/>', 'time', 'time'));
+$frm->AddInput(new FormInput('DateTime<br/>', 'datetime', 'datetime'));
+$frm->AddInput(new FormInput('Area<br/>', 'area', 'area'));
 
 echo GetBox('box_test3', 'Testing widgets',
 	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
@@ -147,7 +147,8 @@ $cal->AddItem($tsnow, $ts3ahead, '4 day span ahead of now.');
 $cal->AddItem($ts3behind, $tsnow, '4 day span behind now.');
 $cal->AddItem($ts3behind, $ts3ahead, '8 day span behind to ahead.');
 
-echo GetBox('box_test4', 'Calendar', $cal->Get(), 'templates/box.html');
+echo GetBox('box_test4', 'Calendar Horizontal', $cal->Get(), 'templates/box.html');
+echo GetBox('box_test4', 'Calendar Vertical', $cal->GetVert(), 'templates/box.html');
 
 ?>
 </body>

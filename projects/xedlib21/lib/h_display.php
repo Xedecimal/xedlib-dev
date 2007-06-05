@@ -560,7 +560,6 @@ class Form extends Table
 			}
 		}
 		$ret .= parent::Get($tblAttribs);
-		//$ret .= $this->out;
 		$ret .= "</form>\n";
 		$ret .= "<!-- End Form: {$this->name} -->\n";
 		return $ret;
