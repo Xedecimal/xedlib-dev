@@ -798,7 +798,7 @@ class EditorData
 					}
 				}
 			}
-			
+
 			//Changed during redball.. May be trouble, moved filter -> match
 			//Nick
 			$items = $this->ds->GetInternal($this->filter, $this->sort,
