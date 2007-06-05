@@ -485,7 +485,6 @@ class Form extends Table
 		if (func_num_args() < 1) Error("Not enough arguments.");
 		$args = func_get_args();
 		$skip = false;
-		$this->out .= '<div>';
 		foreach ($args as $ix => $item)
 		{
 			$row[] = $this->IterateInput($item);
@@ -519,9 +518,7 @@ class Form extends Table
 		$right = false;
 		if ($input->type == 'check') $right = true;
 
-		$out = !empty($input->text) ? '<label for="'.CleanID($this->name.'_'.
-			$input->name).'">'.$input->text.
-			'</label> ' : null;
+		$out = !empty($input->text)?$input->text:null;
 
 		$helptext = $input->help;
 		if (isset($this->Validation))
@@ -530,7 +527,7 @@ class Form extends Table
 				$this->Errors[$input->name] :
 				null);
 		}
-		return ($right?null:$out).$input->Get($this->name).($right?$out:null)." {$helptext}";
+		return '<label>'.($right?null:$out).$input->Get($this->name).($right?$out:null)."</label> {$helptext}";
 	}
 
 	/**
@@ -565,7 +562,7 @@ class Form extends Table
 			}
 		}
 		$ret .= parent::Get($tblAttribs);
-		$ret .= $this->out;
+		//$ret .= $this->out;
 		$ret .= "</form>\n";
 		$ret .= "<!-- End Form: {$this->name} -->\n";
 		return $ret;
@@ -880,8 +877,8 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 
 function GetInputTime($name, $timestamp)
 {
-	$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("g", $timestamp) . "\" alt=\"Hour\">\n";
-	$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("i", $timestamp) . "\" alt=\"Minute\">\n";
+	$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("g", $timestamp) . "\" alt=\"Hour\" />\n";
+	$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("i", $timestamp) . "\" alt=\"Minute\" />\n";
 	$strout .= "<select name=\"{$name}[]\"><option value=\"0\">AM</option><option value=\"1\">PM</option></select>";
 	return $strout;
 }
