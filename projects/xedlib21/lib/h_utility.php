@@ -1,5 +1,4 @@
 <?php
-$__checked = true;
 
 $me = GetVar("SCRIPT_NAME");
 $__sid = MD5(GetVar('SERVER_NAME'));
