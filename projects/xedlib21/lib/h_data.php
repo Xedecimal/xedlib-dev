@@ -397,7 +397,7 @@ class DataSet
 	 * @param $table string Specifies the name of the table in $db to bind to.
 	 * @param $id string Name of the column with the primary key on this table.
 	 */
-	function DataSet($db, $table, $id = 'id')
+	function __construct($db, $table, $id = 'id')
 	{
 		switch ($db->type)
 		{
