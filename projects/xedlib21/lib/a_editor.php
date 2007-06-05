@@ -40,7 +40,7 @@ class DisplayColumn
 	 * @param string $attribs
 	 * @return DisplayColumn
 	 */
-	function __construct($text, $column, $callback = null, $attribs = null)
+	function DisplayColumn($text, $column, $callback = null, $attribs = null)
 	{
 		$this->text = $text;
 		$this->column = $column;
@@ -285,7 +285,7 @@ class EditorData
 	 * @param $filter array Array to constrain editing to a given expression.
 	 * @return EditorData
 	 */
-	function __construct($name, $ds = null, $filter = null, $sort = null)
+	function EditorData($name, $ds = null, $filter = null, $sort = null)
 	{
 		require_once('h_utility.php');
 		$this->name = $name;

@@ -9,7 +9,7 @@ class Gallery
 
 	private $root;
 
-	function __construct($root)
+	function Gallery($root)
 	{
 		$this->Display = new GalleryDisplay();
 		$this->root = $root;

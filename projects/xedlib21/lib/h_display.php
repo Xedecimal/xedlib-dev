@@ -486,9 +486,7 @@ class Form extends Table
 		$args = func_get_args();
 		$skip = false;
 		foreach ($args as $ix => $item)
-		{
 			$row[] = $this->IterateInput($item);
-		}
 		$this->AddRow($row, ' valign="top"');
 	}
 
@@ -636,7 +634,7 @@ class FormInput
 	 * @param string $help
 	 * @return FormInput
 	 */
-	function __construct($text, $type, $name, $valu = null, $atrs = null,
+	function FormInput($text, $type, $name, $valu = null, $atrs = null,
 		$help = null)
 	{
 		$this->text = $text;
@@ -950,18 +948,21 @@ class LoginManager
 	 * @var array
 	 */
 	private $datasets;
+
 	/**
 	 * Type of this login manager. (CONTROL_SIMPLE or CONTROL_BOUND).
 	 *
 	 * @var int
 	 */
 	public $type;
+
 	/**
 	 * Static password for an unbound manager (must be MD5 prior to setting.).
 	 *
 	 * @var string
 	 */
 	public $pass;
+
 	/**
 	 * Access level of users that login with this manager. (ACCESS_GUEST or
 	 * ACCESS_ADMIN)
@@ -1040,7 +1041,9 @@ class LoginManager
 	function Get($target)
 	{
 		global $errors, $_GET;
-		foreach ($_GET as $key => $val) if ($key != 'ca' && $val != 'logout') Persist($key, $val);
+		foreach ($_GET as $key => $val)
+			if ($key != 'ca' && $val != 'logout')
+				Persist($key, $val);
 		$f = new Form('login', array(null, 'width="100%"'));
 		$f->AddHidden('ca', 'login');
 		if ($this->type != CONTROL_SIMPLE)
