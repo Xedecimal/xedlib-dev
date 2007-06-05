@@ -1,8 +1,42 @@
 <?php
 
+require_once(dirname(__FILE__).'/a_file.php');
+
 class Gallery
 {
 	public $InfoCaption = true;
+	public $Display;
+
+	private $root;
+
+	function __construct($root)
+	{
+		$this->Display = new GalleryDisplay();
+		$this->root = $root;
+	}
+
+	function GetPath($root, $path, $arg = 'cf', $sep = '/', $rootname = 'Home')
+	{
+		if ($path == $root) return null;
+		global $me;
+
+		$items = explode('/', substr($path, strlen($root)));
+		$ret = null;
+		$cpath = '';
+
+		$ret .= "<a href=\"{$me}\">$rootname</a> $sep ";
+
+		for ($ix = 0; $ix < count($items); $ix++)
+		{
+			if (strlen($items[$ix]) < 1) continue;
+			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
+			$uri = URL($target, array('editor' => $this->name,
+				$arg => $root.'/'.$cpath));
+			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
+			if ($ix < count($items)-1) $ret .= " $sep \n";
+		}
+		return $ret;
+	}
 
 	function Get($path)
 	{
@@ -11,58 +45,104 @@ class Gallery
 		if (GetVar('ca') == "view")
 		{
 			$GLOBALS['page_section'] = 'View Image';
-			$body = "<a href=\"$me?cf=".dirname($path)."\">Return to Gallery</a><br/>";
+			$body = '<p><a href="'.$_SERVER['SCRIPT_NAME'].'">Return to Main Gallery</a> » '.
+				substr(strrchr($path, '/'), 1).'</p>';
 			$body .= "<img src=\"$path\">\n";
 		}
 		else
 		{
+			$body = "\n<!--[if lt IE 7.]>
+<script defer type=\"text/javascript\" src=\"pngfix.js\"></script>
+<![endif]-->\n";
 			$GLOBALS['page_section'] = "View Gallery";
 
+			$fm = new FileManager('gallery', $path, array('Gallery'), 'Gallery');
+			$fm->Behavior->ShowAllFiles = true;
+			$files = $fm->GetDirectory();
+
+			$fi = new FileInfo($path);
+
 			if (is_file($path)) return;
-			$body .= "<table class=\"gallery_table\" align=\"center\">\n";
-			$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a></td></tr>";
-			if (!file_exists("photos")) mkdir("photos");
-			$dp = opendir($path);
-			$ix = 0;
-			$body .= "<tr class=\"category_row\">";
-			while ($fp = readdir($dp))
+			$body .= "<table class=\"gallery_table\">\n";
+
+			if ($path != $this->root)
 			{
-				if ($fp[0] == '.') continue;
-				if (!is_dir("$path/$fp")) continue;
-				$imgs = glob("$path/$fp/t_*.jpg");
-				$imgcount = is_array($imgs) ? count($imgs) : 0;
-				$body .= "<td class=\"category\"><a href=\"".URL($me, array('cf' => "$path/$fp"))."\">{$fp}</a></td>\n";
-				if ($ix++ % 3 == 2) $body .= "</tr><tr>\n";
+				if ($this->InfoCaption && isset($fi->info['title']))
+					$name = $fi->info['title'];
+				else $name = $fi->filename;
+				$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » {$name}</td></tr>";
 			}
-		
-			$files = glob("{$path}/*.jpg");
-			if (is_array($files))
+
+			if (!empty($files['dirs']))
 			{
 				$ix = 0;
-				$body .= "<tr class=\"image_row\">\n";
-				foreach ($files as $file)
+				$body .= "<tr class=\"category_row\">";
+				foreach ($files['dirs'] as $dir)
 				{
-					$filename = basename($file);
-					if (substr($filename, 0, 2) == "t_") continue;
-					if (file_exists("{$path}/t_$filename"))
+					$imgs = glob("$path/{$dir->path}/t_*.jpg");
+					$imgcount = is_array($imgs) ? count($imgs) : 0;
+
+					if ($this->InfoCaption && !empty($dir->info['title']))
 					{
-						if ($this->InfoCaption)
-						{
-							require_once('xedlib/a_file.php');
-							$fi = new FileInfo("{$path}/{$filename}");
-							$name = $fi->info['title'];
-						}
-						else $name = str_replace('_', ' ', substr(basename($filename), 0, strpos(basename($filename), '.')));
-						$body .= "<td class=\"image\"><a href=\"".URL($me, array('ca' => 'view', 'cf' => "$path/$filename"))."\"><img src=\"$path/t_$filename\" class=\"image\"></a><br/>$name</td>\n";
-						if ($ix++ % 3 == 2) $body .= "</tr><tr class=\"image_row\">";
+						//$fi = new FileInfo("{$path}/{$filename}");
+						$name = @$dir->info['title'];
+					}
+					else $name = $dir->filename;
+
+					$body .= "<td class=\"gallery_cat\">» <a href=\"".URL($me, array('galcf' => $dir->path))."\">{$name}</a></td>\n";
+					if ($ix++ % 3 == 2) $body .= "</tr><tr>\n";
+				}
+			}
+
+			$vp = new VarParser();
+
+			if (!empty($files['files']))
+			{
+				$ix = 0;
+				$body .= "<tr class=\"images\"><td>\n";
+				foreach ($files['files'] as $file)
+				{
+					if (isset($file->info['thumb']) && file_exists($file->info['thumb']))
+					{
+						if ($this->InfoCaption && !empty($file->info['title'])) $name = $file->info['title'];
+						else $name = str_replace('_', ' ', substr(basename($file->filename), 0, strpos(basename($file->filename), '.')));
+						$twidth = $file->info['thumb_width']+16;
+						$theight = $file->info['thumb_height']+64;
+						$url = URL($me, array('ca' => 'view', 'galcf' => "$path/$file->filename"));
+
+						$d['image'] = $file->path;
+
+						$CapLeft = $vp->ParseVars($this->Display->CaptionLeft, $d);
+						$CapRight = $vp->ParseVars($this->Display->CaptionRight, $d);
+
+						$body .= <<<EOF
+<div class="gallery_cell" style="overflow: auto; width: {$twidth}px; height:{$theight}px">
+<table class="gallery_shadow">
+<tr><td>
+	<a href="{$url}">
+	<img src="{$path}/t_{$file->filename}" alt="thumb" /></a></td><td class="gallery_shadow_right">
+</td></tr>
+<tr>
+	<td class="gallery_shadow_bottom"></td>
+	<td class="gallery_shadow_bright"></td>
+</tr>
+</table><div class="gallery_caption">{$CapLeft}$name{$CapRight}</div></div>
+EOF;
 					}
 				}
+				$body .= '</td>';
 			}
 			$body .= "</tr></table>\n";
 		}
 
 		return $body;
 	}
+}
+
+class GalleryDisplay
+{
+	public $CaptionLeft = '';
+	public $CaptionRight = '';
 }
 
 ?>

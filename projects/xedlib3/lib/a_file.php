@@ -33,6 +33,7 @@ class FileManager
 	 * @var FileManagerBehavior
 	 */
 	public $Behavior;
+
 	/**
 	 * Enter description here...
 	 *
@@ -46,24 +47,28 @@ class FileManager
 	 * @var array
 	 */
 	private $filters;
+
 	/**
 	 * People are not allowed above this folder.
 	 *
 	 * @var string
 	 */
 	public $root;
+
 	/**
 	 * Icons and their associated filetypes, overridden with FilterGallery.
 	 *
 	 * @var array
 	 */
 	public $icons;
+
 	/**
 	 * Current File
 	 *
 	 * @var string
 	 */
 	private $cf;
+
 	/**
 	 * Filter that new folders will begin with.
 	 *
@@ -81,7 +86,7 @@ class FileManager
 	 *
 	 * @var array
 	 */
-	private $files;
+	public $files;
 	/**
 	 * Whether or not mass options are available and should be output.
 	 *
@@ -114,18 +119,18 @@ class FileManager
 		$this->Behavior = new FileManagerBehavior();
 		$this->View = new FileManagerView();
 
-		//Append trailing slash.
 		if (!file_exists($root))
 			Error("FileManager::FileManager(): Root ($root) directory does
 			not exist.");
+
+		//Append trailing slash.
 		if (substr($this->root, -1) != '/') $this->root .= '/';
 		$this->cf = SecurePath(GetVar('cf'));
-		if (is_dir($this->root.$this->cf)
-		&& strlen($this->cf) > 0
-		&& substr($this->cf, -1) != '/')
-			$this->cf .= '/';
 
-		$this->allow_upload = false;
+		if (is_dir($this->root.$this->cf)
+			&& strlen($this->cf) > 0
+			&& substr($this->cf, -1) != '/')
+			$this->cf .= '/';
 	}
 
 	/**
@@ -138,9 +143,21 @@ class FileManager
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
-			if (!$this->Behavior->AllowUpload) return;
+			@set_time_limit(0);
+			@ini_set('upload_max_filesize', '50M');
 			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
-			$files = GetVar("cu");
+			$files = GetVar('cu');
+
+			//SWF Hack. Should be removed later.
+			$swfile = GetVar('Filedata');
+			if (!empty($swfile))
+			{
+				$files['name'][] = $swfile['name'];
+				$files['type'][] = $swfile['type'];
+				$files['tmp_name'][] = $swfile['tmp_name'];
+			}
+			//End SWF hack. - Xed
+
 			foreach ($files['name'] as $ix => $file)
 			{
 				$newup = array(
@@ -148,11 +165,13 @@ class FileManager
 					'type' => $files['type'][$ix],
 					'tmp_name' => $files['tmp_name'][$ix]
 				);
+
 				$fi->Filter->Upload($newup, $fi);
+
+				if (!empty($this->Behavior->Watcher))
+					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
+					$this->root.$this->cf.$newup['name']);
 			}
-			if (!empty($this->Behavior->Watcher))
-				RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
-				$this->root.$this->cf.$file['name']);
 		}
 		else if ($action == "update_info")
 		{
@@ -160,8 +179,18 @@ class FileManager
 			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$info->Filter->Updated($info);
 			$newinfo = GetPost('info');
+
 			if (!empty($newinfo))
 			{
+				//Filter has been changed, we need to notify them.
+				if (isset($newinfo['type']) && $info->Filter->Name != $newinfo['type'])
+				{
+					$info->Filter->Cleanup($info->path);
+					$type = "Filter".$newinfo['type'];
+					$newfilter = new $type();
+					$newfilter->Install($info->path);
+				}
+
 				$info->info = array_merge($info->info, $newinfo);
 				$p = $info->dir.'/.'.$info->filename;
 				$fp = fopen($p, "w+");
@@ -332,7 +361,8 @@ class FileManager
 		$ret = null;
 		if ($this->Behavior->MassAvailable())
 		{
-			$ret .= "<div id=\"{$this->name}_mass_options\" style=\"display: none\">";
+			$ret .= "<div id=\"{$this->name}_mass_options\">";
+			$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->name}_mass_options').style.display = 'none';</script>";
 			$ret .= "<p>With selected files...</p>\n";
 			$ret .= '<input type="submit" name="ca" value="Move" /> to '.$this->GetDirectorySelect('ct')."<br/>\n";
 			$ret .= '<input type="submit" name="ca" value="Delete" onclick="return confirm(\'Are you sure you wish to delete'.
@@ -341,27 +371,53 @@ class FileManager
 		}
 		if ($this->Behavior->Available())
 		{
-			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">View Options for this File or Folder</a></p>\n";
-			$ret .= "<div id=\"{$this->name}_options\" style=\"display: none\">";
+			global $me;
 
-			if ($this->Behavior->AllowUpload)
+			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">View Options for this File or Folder</a></p>\n";
+			$ret .= "<div id=\"{$this->name}_options\">";
+			$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->name}_options').style.display = 'none';</script>";
+
+			if ($this->Behavior->AllowUpload && is_dir($fi->path))
 			{
 				ini_set('max_execution_time', 0);
 				ini_set('max_input_time', 0);
+				$pname = GetRelativePath(dirname(__FILE__));
+				$sid = @$_COOKIE['PHPSESSID'];
 				$out = <<<EOF
-<form action="{$target}" method="post" enctype="multipart/form-data">
+	<script type="text/javascript" src="{$pname}/js/swfobject.js"></script>
+	<form action="{$target}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="upload"/>
 	<input type="hidden" name="cf" value="{$this->cf}"/>
+	<div id="flashUpload">
+	<p><strong>You need to upgrade your Flash Player</strong></p>
+	<p>Please visit <a href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash&promoid=BIOW">Adobe</a> to obtain this.
+	</div><br/>
+	<noscript>
 	<input type="file" name="cu[]"/>
 	<input type="submit" value="Upload" />
-</form>
+	</noscript>
+	<script type="text/javascript">
+	// <![CDATA[
+
+	var so = new SWFObject("{$pname}/swf/fileUpload.swf", "fileUpload", "550", "100", "9");
+	so.addParam('allowScriptAccess', 'sameDomain');
+	so.addParam('movie', 'fileUpload.swf');
+	so.addParam('quality', 'high');
+	so.addParam('wmode', 'transparent');
+	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=editor,{$this->name},ca,upload,cf,{$this->cf},PHPSESSID,{$sid}&amp;ref=editor,{$this->name},cf,{$this->cf}');
+	so.write("flashUpload");
+
+	// ]]>
+	</script>
+	</form>
 EOF;
 				$ret .= GetBox('box_upload', 'Upload to Current Folder',
 					$out, 'template_box.html');
 			}
-			if ($this->Behavior->AllowCreateDir)
+
+			if ($this->Behavior->AllowCreateDir && is_dir($fi->path))
 			{
 				$out = <<<EOF
 <form action="{$target}" method="post">
@@ -391,7 +447,7 @@ EOF;
 				}
 				else $def = null;
 
-				if ($this->Behavior->AllowSetType && count($this->filters) > 1)
+				if ($this->Behavior->AllowSetType && count($this->filters) > 1 && is_dir($fi->path))
 				$form->AddInput(new FormInput('Change Type', 'select',
 					'info[type]',
 					ArrayToSelOptions($this->filters, $fi->Filter->Name,
@@ -410,7 +466,7 @@ EOF;
 
 					$end = substr(strrchr(substr($this->cf, 0, -1), '/'), 1);
 					$start = substr($this->cf, 0, -strlen($end)-1);
-					$ret .= GetBox('box_settings', "Settings for {$this->root}{$start}<span style=\"text-decoration: underline;\">{$end}</span>",
+					$ret .= GetBox('box_settings', "Settings for {$this->root}{$start}".(!empty($end)?"<span style=\"text-decoration: underline;\">{$end}</span>":null),
 						$form->Get('method="post" action="'.$target.'"'), 'template_box.html');
 				}
 			}
@@ -448,7 +504,7 @@ EOF;
 	function GetDirectorySelect($name)
 	{
 		$ret = "<select name=\"{$name}\">";
-		$ret .= $this->GetDirectorySelectRecurse($this->root);
+		$ret .= $this->GetDirectorySelectRecurse($this->root, $this->Behavior->IgnoreRoot);
 		$ret .= '</select>';
 		return $ret;
 	}
@@ -460,15 +516,16 @@ EOF;
 	 * @param string $path
 	 * @return string
 	 */
-	function GetDirectorySelectRecurse($path)
+	function GetDirectorySelectRecurse($path, $ignore)
 	{
-		$ret = "<option value=\"{$path}\">{$path}</option>";
+		if (!$ignore) $ret = "<option value=\"{$path}\">{$path}</option>";
+		else $ret = '';
 		$dp = opendir($path);
 		while ($file = readdir($dp))
 		{
 			if ($file[0] == '.') continue;
 			if (!is_dir($path.$file)) continue;
-			$ret .= $this->GetDirectorySelectRecurse($path.$file.'/');
+			$ret .= $this->GetDirectorySelectRecurse($path.$file.'/', false);
 		}
 		closedir($dp);
 		return $ret;
@@ -581,13 +638,14 @@ EOF;
 			if (!$this->GetVisible($file)) return;
 		}
 		$types = $file->type ? 'dirs' : 'files';
-		if (isset($file->info['thumb'])) $ret .= "<td><img src=\"{$file->info['thumb']}\" /></td>\n";
+		if (isset($file->info['thumb'])) $ret .= "<td><img src=\"".URL($file->info['thumb'])."\" alt=\"Thumbnail\" /></td>\n";
 		else
 		{
 			if (isset($this->icons[$file->type])) $icon = $this->icons[$file->type];
 			if (isset($icon))
 				$ret .= '<td><img src="'.$icon.'" alt="'.$file->type.'" /></td> ';
 		}
+
 		$name = ($this->View->ShowTitle && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
 
@@ -601,16 +659,16 @@ EOF;
 			else if (!$this->Behavior->UseInfo)
 				$url = $this->root.$this->cf.$file->filename.'" target="_new';
 			else
-				$url = $target.'?editor='.$this->name.'&cf='.$this->cf.$file->filename;
+				$url = $target.'?editor='.$this->name.'&amp;cf='.urlencode($this->cf.$file->filename);
 		}
 		else
 			$url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
 
 		$ret .= "\t<td>\n";
 		if ($this->mass_avail)
-			$ret .= "\t\t<input type=\"checkbox\" id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\" onclick=\"toggleAny(['sel_files_', 'sel_dirs_'], '{$this->name}_mass_options');\" />\n";
-		$ret .= "\t\t<a href=\"$url\">{$name}</a></td><td> ".
-		($this->View->ShowDate ? gmdate("m/d/y h:i", filectime($file->path)) : null)."\n\t</td>\n";
+			$ret .= "\t\t<label><input type=\"checkbox\" id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\" onclick=\"toggleAny(['sel_files_', 'sel_dirs_'], '{$this->name}_mass_options');\" />\n";
+		$ret .= "\t\t<a href=\"$url\">{$name}</a> ".
+		($this->View->ShowDate ? '<br/>'.gmdate("m/d/y h:i", filectime($file->path)) : null)."\n\t</label></td>\n";
 
 		$common = array(
 			'cf' => $this->cf,
@@ -701,6 +759,8 @@ EOF;
 
 	function GetVisible($file)
 	{
+		if (!isset($this->uid)) return true;
+
 		if (!isset($file->info['access']) &&
 			dirname($file->path) != dirname($this->root))
 			return $this->GetVisible(new FileInfo($file->dir));
@@ -770,12 +830,14 @@ class FileManagerBehavior
 	 * @var bool
 	 */
 	public $AllowUpload = false;
+
 	/**
 	 * Whether or not users are allowed to create directories.
 	 *
 	 * @var bool
 	 */
 	public $AllowCreateDir = false;
+
 	/**
 	 * Whether users are allowed to delete files.
 	 * @see AllowAll
@@ -783,42 +845,49 @@ class FileManagerBehavior
 	 * @var bool
 	 */
 	public $AllowDelete = false;
+
 	/**
 	 * Whether users are allowed to manually sort files.
 	 *
 	 * @var bool
 	 */
 	public $AllowSort = false;
+
 	/**
 	 * Whether users are allowed to set filter types on folders.
 	 *
 	 * @var bool
 	 */
 	public $AllowRename = false;
+
 	/**
 	 * Whether users are allowed to rename or update file information.
 	 *
 	 * @var bool
 	 */
 	public $AllowEdit = false;
+
 	/**
 	 * Allow move.
 	 *
 	 * @var Allow moving files to another location.
 	 */
 	public $AllowMove = false;
+
 	/**
 	 * Whether users are allowed to change directory filters.
 	 *
 	 * @var bool
 	 */
 	public $AllowSetType = false;
+
 	/**
 	 * Whether file information is shown, or file is simply downloaded on click.
 	 *
 	 * @var bool
 	 */
 	public $UseInfo = true;
+
 	/**
 	 * If true, do not delete files, they are renamed to
 	 * .delete_filename
@@ -826,18 +895,21 @@ class FileManagerBehavior
 	 * @var boolean
 	 */
 	public $Recycle = false;
+
 	/**
 	 * Override file hiding.
 	 *
 	 * @var boolean
 	 */
 	public $ShowAllFiles = false;
+
 	/**
 	 * Allow searching files.
 	 *
 	 * @var boolean
 	 */
 	public $AllowSearch = false;
+
 	/**
 	 * Location of where to store logs.
 	 *
@@ -846,10 +918,17 @@ class FileManagerBehavior
 	public $Watchers = null;
 
 	/**
+	* Whether or not to ignore the root folder when doing file operations.
+	* @var boolean
+	*/
+	public $IgnoreRoot = false;
+
+	/**
 	* A callback to modify the output of each file link.
 	* @var string
 	*/
 	public $FileCallback = null;
+
 	/**
 	 * Return true if options are available.
 	 *
@@ -1011,6 +1090,7 @@ class FileInfo
 			if (file_exists($dinfo))
 			{
 				$dinfo = unserialize(file_get_contents($dinfo));
+				unset($dinfo['title']); //Don't inherit captions.
 				if (is_array($dinfo))
 					$this->info = array_merge($dinfo, $this->info);
 			}
@@ -1155,6 +1235,9 @@ class FilterDefault
 		else if (is_dir($fi->path)) DelTree($fi->path);
 		else unlink($fi->path);
 	}
+
+	function Install($path) {}
+	function Cleanup($path) {}
 }
 
 class FilterGallery extends FilterDefault
@@ -1191,10 +1274,13 @@ class FilterGallery extends FilterDefault
 	 */
 	function GetOptions(&$fi, $default)
 	{
-		return array_merge(parent::GetOptions($fi, $default), array(
-			new FormInput('Thumbnail Width', 'thumb_width', 'text', 200),
-			new FormInput('Thumbnail Height', 'thumb_height', 'text', 200),
-		));
+		$new = array();
+		if (is_dir($fi->path))
+		{
+			$new[] = new FormInput('Thumbnail Width', 'text', 'info[thumb_width]', $fi->info['thumb_width']);
+			$new[] = new FormInput('Thumbnail Height', 'text', 'info[thumb_height]', $fi->info['thumb_height']);
+		}
+		return array_merge(parent::GetOptions($fi, $default), $new);
 	}
 
 	/**
@@ -1229,32 +1315,67 @@ class FilterGallery extends FilterDefault
 	 */
 	function Upload($file, $target)
 	{
-		$filename = substr(basename($file['name']), 0, strpos(basename($file['name']), '.'));
-		switch ($file['type'])
+		$filename = substr(basename($file['name']), 0, strrpos(basename($file['name']), '.'));
+		$ext = strrchr($file['name'], '.');
+		$destthumb = "{$target->path}/t_{$filename}{$ext}";
+		switch ($ext)
 		{
-			case "image/jpeg":
-			case "image/pjpeg":
+			case ".jpg":
+			case ".jpeg":
 				$img = imagecreatefromjpeg($file['tmp_name']);
-				$destthumb = "{$target->path}/t_{$filename}.jpg";
 				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
 				imagejpeg($img, $destthumb);
 			break;
-			case "image/x-png":
-			case "image/png":
+			case ".png":
 				$img = imagecreatefrompng($file['tmp_name']);
-				$destthumb = "{$target->path}/t_{$filename}.png";
 				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
 				imagepng($img, $destthumb);
 			break;
-			case "image/gif":
+			case ".gif":
 				$img = imagecreatefromgif($file['tmp_name']);
-				$destthumb = "{$target->path}/t_{$filename}.gif";
 				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
 				imagegif($img, $destthumb);
 			break;
 		}
-		$destimage = "{$target->path}/{$filename}.jpg";
+		//$destimage = "{$target->path}/{$filename}.jpg";
 		parent::Upload($file, $target);
+	}
+
+	function Install($path)
+	{
+		$files = glob($path."*.*");
+		$fi = new FileInfo($path);
+		foreach ($files as $file)
+		{
+			if (substr($file, 0, 2) == 't_') continue;
+			$pinfo = pathinfo($file);
+			$destthumb = "{$pinfo['dirname']}/t_{$pinfo['basename']}";
+			switch ($pinfo['extension'])
+			{
+				case "jpg":
+				case "jpeg":
+					$img = imagecreatefromjpeg($file);
+					$img = $this->ResizeImg($img, $fi->info['thumb_width'], $fi->info['thumb_height']);
+					imagejpeg($img, $destthumb);
+				break;
+				case "png":
+					$img = imagecreatefrompng($file);
+					$img = $this->ResizeImg($img, $fi->info['thumb_width'], $fi->info['thumb_height']);
+					imagepng($img, $destthumb);
+				break;
+				case "gif":
+					$img = imagecreatefromgif($file);
+					$img = $this->ResizeImg($img, $fi->info['thumb_width'], $fi->info['thumb_height']);
+					imagegif($img, $destthumb);
+				break;
+			}
+		}
+	}
+
+	function Cleanup($path)
+	{
+		$files = glob($path."t_*.*");
+		foreach ($files as $file) unlink($file);
 	}
 
 	/**

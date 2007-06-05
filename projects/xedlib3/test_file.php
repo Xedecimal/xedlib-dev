@@ -22,12 +22,12 @@ if (!$user = $lm->Prepare($ca))
 
 $fm_actions = array(
 	FM_ACTION_UNKNOWN => 'Unknown',
-	FM_ACTION_CREATE => 'Created',
-	FM_ACTION_DELETE => 'Deleted',
+	FM_ACTION_CREATE  => 'Created',
+	FM_ACTION_DELETE  => 'Deleted',
 	FM_ACTION_REORDER => 'Reordered',
-	FM_ACTION_RENAME => 'Renamed',
-	FM_ACTION_UPDATE => 'Updated',
-	FM_ACTION_UPLOAD => 'Uploaded',
+	FM_ACTION_RENAME  => 'Renamed',
+	FM_ACTION_UPDATE  => 'Updated',
+	FM_ACTION_UPLOAD  => 'Uploaded',
 );
 
 if ($ca == 'login') $logger->Log($user['usr_id'], 'Logged in', '');
@@ -39,7 +39,7 @@ function fm_watcher($action, $target)
 }
 
 $page_title = 'File Administration Demo';
-$page_head = '';
+$page_head = '<script type="text/javascript" src="lib/js/swfobject.js"></script>';
 
 $ca = GetVar('ca');
 

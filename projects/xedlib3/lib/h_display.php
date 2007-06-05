@@ -79,8 +79,10 @@ class Box
 			return $t->get($temp);
 		}
 		$ret  = "<!-- Start Box: {$this->title} -->\n";
+		$ret .= "<div class=\"box\">\n";
 		$ret .= "<div class=\"box_title\">{$this->title}</div>\n";
 		$ret .= "<div class=\"box_body\">{$this->out}</div>\n";
+		$ret .= "</div>\n";
 		$ret .= "<!-- End Box {$this->title} -->\n";
 		return $ret;
 	}
@@ -192,7 +194,7 @@ class Table
 				else $span = " {$this->rowattribs[$ix]}";
 				$x = 0;
 				$atrs = null;
-				
+
 				if (is_array($row))
 				{
 					foreach ($row as $val)
@@ -231,7 +233,7 @@ class SortTable extends Table
 	{
 		if (!is_array($cols)) Error("If you are not going to specify any
 			columns, you might as well just use Table.");
-		
+
 		$this->name = $name;
 
 		$sort = GetVar("sort");
@@ -243,7 +245,7 @@ class SortTable extends Table
 		$imgUp = '<img src="'.GetRelativePath(dirname(__FILE__)).
 		'/images/up.png" style="vertical-align: text-bottom;"
 		alt="Ascending" title="Ascending" />';
-		
+
 		$imgDown = '<img src="'.GetRelativePath(dirname(__FILE__)).
 		'/images/down.png" style="vertical-align: text-bottom;"
 		alt="Descending" title="Descending" align="middle"/>';
@@ -257,7 +259,7 @@ class SortTable extends Table
 				($order == "ASC") ? $order = "DESC" : $order = "ASC";
 			}
 
-			$uri_defaults = $PERSISTS;
+			$uri_defaults = !empty($PERSISTS) ? $PERSISTS : array();
 			$uri_defaults = array_merge($uri_defaults, array(
 				'sort' => $id,
 				'order' => $order
@@ -358,9 +360,9 @@ class Form extends Table
 	* (also good for displaying errors in validation)
 	* @param $attributes string Any other attributes you wish to include.
 	*/
-//	function AddInput($text, $type, $name,
-//	$value = null, $attributes = null, $helptext = null)
-//	{
+	function AddInputOLD($text, $type, $name,
+	$value = null, $attributes = null, $helptext = null)
+	{
 //		if (isset($attributes)) $attributes = ' '.$attributes;
 //		if (isset($this->Validation))
 //		{
@@ -472,24 +474,24 @@ class Form extends Table
 //		}
 //		if ($helptext != null) $this->AddRow(array('<label for="'.$this->name.'_'.htmlspecialchars($name).'">'.$text.'</label>', $strout, $helptext));
 //		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"{$this->name}_$name\">$text</label>" : null, $strout, null));
-//	}
-
+	}
 
 	/**
 	 * Adds an input item to this form.
-	 * 
+	 *
 	 */
 	function AddInput()
 	{
 		if (func_num_args() < 1) Error("Not enough arguments.");
 		$args = func_get_args();
-		foreach ($args as $item)
+		$skip = false;
+		foreach ($args as $ix => $item)
 		{
 			$row[] = $this->IterateInput($item);
 		}
 		$this->AddRow($row, ' valign="top"');
 	}
-	
+
 	function IterateInput($input)
 	{
 		if (is_array($input) && !empty($input))
@@ -500,20 +502,23 @@ class Form extends Table
 			{
 				$out .= $this->IterateInput($item);
 			}
-			
+
 			return $out;
 		}
 
 		$helptext = null;
+
+		if (!is_object($input)) Error("Form input is not an object.");
 
 		if ($input->type == 'submit' && isset($this->Validation))
 		{
 			$input->atrs .= " onclick=\"return {$this->name}_check(1);\"";
 		}
 
-		$out = isset($input->text) ? '<label for="'.CleanID($this->name.'_'.
-			$input->name).'">'.$input->text.
-			'</label> ' : '';
+		$right = false;
+		if ($input->type == 'check') $right = true;
+
+		$out = !empty($input->text)?$input->text:null;
 
 		$helptext = $input->help;
 		if (isset($this->Validation))
@@ -522,7 +527,7 @@ class Form extends Table
 				$this->Errors[$input->name] :
 				null);
 		}
-		return $out.$input->Get($this->name)." {$helptext}";
+		return '<label>'.($right?null:$out).$input->Get($this->name).($right?$out:null)."</label> {$helptext}";
 	}
 
 	/**
@@ -630,7 +635,7 @@ class FormInput
 	 * @param string $help
 	 * @return FormInput
 	 */
-	function FormInput($text, $type, $name, $valu = null, $atrs = null,
+	function __construct($text, $type, $name, $valu = null, $atrs = null,
 		$help = null)
 	{
 		$this->text = $text;
@@ -653,38 +658,44 @@ class FormInput
 		{
 			return GetInputYesNo($this->name, $this->valu);
 		}
-		if ($this->type == 'date')
-		{
-			return GetInputdate($this->name, $this->valu);
-		}
 		if ($this->type == 'select')
 		{
 			$ret = "<select class=\"input_select\" name=\"{$this->name}\"
-				id=\"".CleanID($parent.'_'.$this->name)."\">";
+				id=\"".CleanID($parent.'_'.$this->name)."\" {$this->atrs}>";
 			if (!empty($this->valu))
+			{
+				$ogstarted = false;
 				foreach ($this->valu as $id => $opt)
 				{
+					if ($opt->group)
+					{
+						if ($ogstarted) $ret .= "</optgroup>";
+						$ret .= "<optgroup label=\"{$opt->text}\">";
+						$ogstarted = true;
+					}
 					$selected = $opt->selected ? ' selected="selected"' : null;
 					$ret .= "<option
 						value=\"{$id}\"$selected>".
 						htmlspecialchars($opt->text).
 						"</option>";
 				}
+				if ($ogstarted) $ret .= "</optgroup>";
+			}
 			return $ret.'</select>';
 		}
 		if ($this->type == 'checks')
 		{
 			$ret = null;
 			if (!empty($this->valu))
-				foreach ($this->valu as $id => $val)
-				{
-					$selected = $val->selected ? ' selected="selected"' : null;
-					$ret .= "<label><input
-						type=\"checkbox\"
-						name=\"{$this->name}[{$id}]\"
-						id=\"".CleanID($this->name.'_'.$id)."\"{$this->atrs}/>
-						{$val->text}</label><br />";
-				}
+			foreach ($this->valu as $id => $val)
+			{
+				$selected = $val->selected ? ' selected="selected"' : null;
+				$ret .= "<br/><label><input
+					type=\"checkbox\"
+					name=\"{$this->name}[{$id}]\"
+					id=\"".CleanID($this->name.'_'.$id)."\"{$this->atrs}/>
+					{$val->text}</label>";
+			}
 			return $ret;
 		}
 		if ($this->type == 'selects')
@@ -714,12 +725,26 @@ class FormInput
 			$ret .= "</select>\n";
 			return $ret;
 		}
+		if ($this->type == 'date')
+			return GetInputDate($this->name, $this->valu);
+		if ($this->type == 'time')
+			return GetInputTime($this->name, $this->valu);
+		if ($this->type == 'datetime')
+			return GetInputDate($this->name, $this->valu, true);
 		if ($this->type == 'area')
 			return "<textarea
 				class=\"input_area\"
 				name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\"
 				{$this->atrs}>{$this->valu}</textarea>";
+		if ($this->type == 'check')
+		{
+			return "<input type=\"checkbox\"
+				name=\"{$this->name}\"
+				id=\"".CleanID($parent.'_'.$this->name)."\"
+				value=\"{$this->valu}\"
+				{$this->atrs} />";
+		}
 
 		return "<input type=\"{$this->type}\"
 			class=\"".($this->type == 'button' || $this->type == 'submit' ? 'input_button' : 'input_generic')."\"
@@ -833,24 +858,27 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	if (is_array($timestamp))
 	{
 		if (isset($timestamp[5]))
-			$timestamp = gmmktime($timestamp[3], $timestamp[4], $timestamp[5], $timestamp[0], $timestamp[1], $timestamp[2]);
+			$timestamp = mktime($timestamp[3], $timestamp[4], $timestamp[5], $timestamp[0], $timestamp[1], $timestamp[2]);
 		else
-			$timestamp = gmmktime(0, 0, 0, $timestamp[0], $timestamp[1], $timestamp[2]);
+			$timestamp = mktime(0, 0, 0, $timestamp[0], $timestamp[1], $timestamp[2]);
 	}
 	if (is_string($timestamp))
 	{
 		$timestamp = MyDateTimestamp($timestamp, $include_time);
 	}
 	if (!isset($timestamp)) $timestamp = time();
-	$strout = "";
-	if ($include_time)
-	{
-		$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("H", $timestamp) . "\" alt=\"Hour\">\n";
-		$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("i", $timestamp) . "\" alt=\"Minute\">\n";
-	}
-	$strout .= GetMonthSelect("{$name}[]", gmdate("n", $timestamp));
-	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . gmdate("d", $timestamp) . "\" alt=\"Day\" />\n";
-	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . gmdate("Y", $timestamp) . "\" alt=\"Year\" />\n";
+	$strout = $include_time ? GetInputTime($name.'[]', $timestamp) : null;
+	$strout .= GetMonthSelect("{$name}[]", date("n", $timestamp));
+	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("d", $timestamp) . "\" alt=\"Day\" />\n";
+	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . date("Y", $timestamp) . "\" alt=\"Year\" />\n";
+	return $strout;
+}
+
+function GetInputTime($name, $timestamp)
+{
+	$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("g", $timestamp) . "\" alt=\"Hour\" />\n";
+	$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("i", $timestamp) . "\" alt=\"Minute\" />\n";
+	$strout .= "<select name=\"{$name}[]\"><option value=\"0\">AM</option><option value=\"1\">PM</option></select>";
 	return $strout;
 }
 
@@ -1317,11 +1345,13 @@ function FormValidate($name, $arr, &$ret, $check)
 	foreach ($arr as $key => $val)
 	{
 		$rec = RecurseReq($key, $val, $checks);
+
 		if (!$val->Validate($name, $check, $ret))
 			$passed = false;
 		else
 			$ret['errors'][$val->field] = '<span class="error"
 			id="span_'.$name.'_'.$val->field.'"></span>';
+
 		$ret['js'] .= $val->GetJS($name);
 	}
 	else
@@ -1365,12 +1395,12 @@ function GetMonthSelect($name, $default, $attribs = null)
 	$ret = "<select name=\"$name\"";
 	if ($attribs != null) $ret .= " $attribs";
 	$ret .= ">";
-	for ($ix = 1; $ix < 13; $ix++)
+	for ($ix = 1; $ix <= 12; $ix++)
 	{
-		$ts = gmmktime(0, 0, 0, $ix);
+		$ts = mktime(0, 0, 0, $ix, 1);
 		if ($ix == $default) $sel = " selected=\"selected\"";
 		else $sel = "";
-		$ret .= "<option value=\"$ix\"$sel> " . gmdate("F", $ts) . "</option>\n";
+		$ret .= "<option value=\"$ix\"$sel> " . date("F", $ts) . "</option>\n";
 	}
 	$ret .= "</select>\n";
 	return $ret;
@@ -1447,6 +1477,26 @@ function GetStateSelect($name, $state)
 	);
 
 	return MakeSelect($name, $options, null, $state);
+}
+
+/**
+ * Enter description here...
+ *
+ * @param FormInput $field
+ */
+function InputToString($field)
+{
+	$val = GetVar($field->name);
+
+	if ($field->type == 'time')
+		return "{$val[0]}:{$val[1]}".($val[2] == 0 ? ' AM' : ' PM');
+	else if ($field->type == 'checks')
+	{
+		$out = null;
+		foreach ($val as $ix => $val) $out .= ($ix > 0?', ':'').$field->valu[$ix]->text;
+		return $out;
+	}
+	else Error("Unknown field type.");
 }
 
 ?>

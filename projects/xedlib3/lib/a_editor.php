@@ -40,7 +40,7 @@ class DisplayColumn
 	 * @param string $attribs
 	 * @return DisplayColumn
 	 */
-	function DisplayColumn($text, $column, $callback = null, $attribs = null)
+	function __construct($text, $column, $callback = null, $attribs = null)
 	{
 		$this->text = $text;
 		$this->column = $column;
@@ -285,7 +285,7 @@ class EditorData
 	 * @param $filter array Array to constrain editing to a given expression.
 	 * @return EditorData
 	 */
-	function EditorData($name, $ds = null, $filter = null, $sort = null)
+	function __construct($name, $ds = null, $filter = null, $sort = null)
 	{
 		require_once('h_utility.php');
 		$this->name = $name;
@@ -351,14 +351,14 @@ class EditorData
 					}
 					else if ($data[1] == 'file' && $value != null)
 					{
-						$insert[$data[0]] = $value['name'];
+						$ext = substr(strrchr($value['name'], '.'), 1);
 
-						$finfo = pathinfo($value['name']);
 						$moves[] = array(
-							$value['tmp_name'],
-							$data[2],
-							$finfo['extension']
+							'tmp' => $value['tmp_name'], //Source
+							'dst' => $data[2], //Destination folder
+							'ext' => $ext
 						);
+						$insert[$data[0]] = $ext;
 					}
 					else if ($data[1] == 'selects')
 						$insert[$data[0]] = $value;
@@ -384,9 +384,8 @@ class EditorData
 			if (!empty($moves))
 			foreach ($moves as $move)
 			{
-				$info = pathinfo($move[0]['name']);
-				$target = "{$data[2]}/{$id}.{$info['extension']}";
-				move_uploaded_file($move[0]['tmp_name'], $target);
+				$target = "{$move['dst']}/{$id}_{$data[0]}.{$move['ext']}";
+				move_uploaded_file($move['tmp'], $target);
 				chmod($target, 0777);
 			}
 
@@ -431,13 +430,13 @@ class EditorData
 					{
 						if (strlen($value['tmp_name']) > 0)
 						{
-							$files = glob("{$data[2]}/{$ci}.*");
+							$files = glob("{$data[2]}/{$ci}_{$data[0]}.*");
 							foreach ($files as $file) unlink($file);
-							$finfo = pathinfo($value['name']);
-
+							$ext = substr(strrchr($value['name'], '.'), 1);
 							$src = $value['tmp_name'];
-							$dst = "{$data[2]}/{$ci}.{$finfo['extension']}";
+							$dst = "{$data[2]}/{$ci}_{$data[0]}.{$ext}";
 							move_uploaded_file($src, $dst);
+							$update[$data[0]] = $ext;
 						}
 					}
 					else if (is_string($name))
@@ -461,7 +460,7 @@ class EditorData
 		{
 			global $ci;
 			$ct = GetVar('ct');
-			
+
 			$child_id = GetVar('child');
 			$context = isset($child_id) ? $this->ds->children[$child_id] : $this;
 
@@ -528,7 +527,7 @@ class EditorData
 				{
 					if ($data[1] == 'file')
 					{
-						$files = glob("{$data[2]}/{$ci}.*");
+						$files = glob("{$data[2]}/{$ci}_{$data[0]}.*");
 						foreach ($files as $file) unlink($file);
 					}
 				}
@@ -713,7 +712,7 @@ class EditorData
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Fixes a tree of items so that foreign children appear on the top. Makes
 	 * it much more readable.
@@ -727,7 +726,7 @@ class EditorData
 		if (!empty($tree->children))
 		foreach ($tree->children as $cnode) $this->FixTree($cnode);
 	}
-	
+
 	/**
 	 * Simple callback to sort items by a child, used by FixTree
 	 *
@@ -762,13 +761,13 @@ class EditorData
 
 			//Build columns so nothing overlaps (eg. id of this and child table)
 
-			$cols[$this->ds->table.'.'.$this->ds->id] =
-				"{$this->ds->table}_{$this->ds->id}";
+			$cols["{$this->ds->table}_{$this->ds->id}"] =
+				$this->ds->table.'.'.$this->ds->id;
 			if (!empty($this->ds->Display))
 			foreach ($this->ds->Display as $ix => $disp)
 			{
-				$cols[$this->ds->table.'.'.$disp->column] =
-					"{$this->ds->table}_{$disp->column}";
+				$cols["{$this->ds->table}_{$disp->column}"] =
+					$this->ds->table.'.'.$disp->column;
 			}
 
 			$joins = null;
@@ -778,8 +777,8 @@ class EditorData
 				$joins = array();
 
 				//Parent column of the child...
-				$cols[$child->ds->table.'.'.$child->child_key] =
-					"{$child->ds->table}_{$child->child_key}";
+				$cols["{$child->ds->table}_{$child->child_key}"] =
+					$child->ds->table.'.'.$child->child_key;
 
 				//Coming from another table, we gotta join it in.
 				if ($child->ds->table != $this->ds->table)
@@ -787,15 +786,15 @@ class EditorData
 					$joins[$child->ds->table] = "{$child->ds->table}.
 						{$child->child_key} = {$this->ds->table}.
 						{$child->parent_key}";
-					
+
 					//We also need to get the column names that we'll need...
-					$cols[$child->ds->table.'.'.$child->ds->id] =
-						"{$child->ds->table}_{$child->ds->id}";
+					$cols["{$child->ds->table}_{$child->ds->id}"] =
+						$child->ds->table.'.'.$child->ds->id;
 					if (!empty($child->ds->Display))
 					foreach ($child->ds->Display as $ix => $disp)
 					{
-						$cols[$child->ds->table.'.'.$disp->column] =
-							"{$child->ds->table}_{$disp->column}";
+						$cols["{$child->ds->table}_{$disp->column}"] =
+							$child->ds->table.'.'.$disp->column;
 					}
 				}
 			}
@@ -888,7 +887,7 @@ class EditorData
 				if ($child->ds->table != $this->ds->table)
 					$total_cells += count($child->ds->Display);
 			$row = array_pad($row, $total_cells, '&nbsp;');
-			
+
 			//Move cursor (ix) to the first column we're displaying here.
 			if (isset($child_id))
 			{
@@ -927,7 +926,7 @@ class EditorData
 			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
 
 			$p = GetRelativePath(dirname(__FILE__));
-			
+
 			$url_edit = URL($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
 			$url_del = URL($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
 			$row[] = "<a href=\"$url_edit#{$this->name}_editor\"><img src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit Item\" /></a>";
@@ -971,7 +970,7 @@ class EditorData
 	function GetForm($target, $ci, $state, $curchild = null)
 	{
 		$context = isset($curchild) ? $this->ds->children[$curchild] : $this;
-		
+
 		$fullname = 'form_'.$state.'_'.$context->ds->table;
 
 		if ($state == CONTROL_BOUND)
@@ -1046,7 +1045,7 @@ class EditorData
 			}
 
 			foreach ($this->handlers as $handler) $handler->GetFields($frm, isset($sel) ? $sel : null);
-			
+
 			$frm->State = $state == STATE_EDIT ? 'Update' : 'Create';
 			$frm->Description = $context->ds->Description;
 			$frm->AddRow(array(

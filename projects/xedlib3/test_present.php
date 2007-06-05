@@ -3,6 +3,7 @@
 require_once('lib/h_template.php');
 require_once('lib/h_utility.php');
 require_once('lib/h_display.php');
+require_once('lib/a_calendar.php');
 
 //An image to display next to all errors.
 $imgError = '<img src="lib/images/error.png" style="vertical-align: text-bottom" alt="Error" />';
@@ -33,7 +34,7 @@ $cboxes = array(
 	'of these items'
 );
 
-$vChecks = new Validation('checks', array($cboxes, 2),
+$vChecks = new Validation('vchecks', array($cboxes, 2),
 	$imgError.'You must select at least 2.');
 
 $vContact->Add('email', $vEmail);
@@ -56,8 +57,8 @@ $contacts = array(
 );
 
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
 	<title>Presentation Tests</title>
@@ -83,7 +84,7 @@ $frm->AddInput(
 	new FormInput('Phone',   'text', 'phone'),
 	new FormInput('Address', 'text', 'address')
 );
-$frm->AddInput(new FormInput('Checkboxes:', 'checks', 'checks',
+$frm->AddInput(new FormInput('Checkboxes:', 'checks', 'vchecks',
 	ArrayToSelOptions($cboxes)));
 $frm->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Send'));
 echo GetBox('box_test', 'Form With Array Validation',
@@ -104,8 +105,50 @@ $frm->AddInput(
 	new FormInput('Phone:',   'text', 'phone'),
 	new FormInput('Address:', 'text', 'address'));
 $frm->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Send'));
-echo GetBox('box_test', 'Form With Recursive Validation',
+echo GetBox('box_test2', 'Form With Recursive Validation',
 	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
+
+//Widgets
+
+$sels = array(
+	new SelOption('Item 1'),
+	new SelOption('Item 2'),
+	new SelOption('Group 1', true),
+	new SelOption('Item 3'),
+	new SelOption('Item 4'),
+	new SelOption('Item 5'),
+	new SelOption('Group 2', true),
+	new SelOption('Item 6'),
+	new SelOption('Item 7')
+);
+
+$frm = new Form('frmItems');
+$frm->AddInput(new FormInput('Yes / No', 'yesno', 'yesno'));
+$frm->AddInput(new FormInput('Select', 'select', 'select', $sels));
+$frm->AddInput(new FormInput('Checks', 'checks', 'checks', $sels));
+$frm->AddInput(new FormInput('Selects', 'selects', 'selects', $sels));
+$frm->AddInput(new FormInput('Date', 'date', 'date'));
+$frm->AddInput(new FormInput('Time', 'time', 'time'));
+$frm->AddInput(new FormInput('DateTime', 'datetime', 'datetime'));
+$frm->AddInput(new FormInput('Area', 'area', 'area'));
+
+echo GetBox('box_test3', 'Testing widgets',
+	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
+
+//Calendar
+
+$cal = new Calendar();
+
+$tsnow = mktime(1, 1, 1, date('n'), date('j'), date('Y'));
+$ts3ahead = mktime(1, 1, 1, date('n'), date('j')+3, date('Y'));
+$ts3behind = mktime(1, 1, 1, date('n'), date('j')-3, date('Y'));
+
+$cal->AddItem($tsnow, $ts3ahead, '4 day span ahead of now.');
+$cal->AddItem($ts3behind, $tsnow, '4 day span behind now.');
+$cal->AddItem($ts3behind, $ts3ahead, '8 day span behind to ahead.');
+
+echo GetBox('box_test4', 'Calendar', $cal->Get(), 'templates/box.html');
+
 ?>
 </body>
 </html>

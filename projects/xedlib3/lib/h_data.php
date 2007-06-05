@@ -59,7 +59,7 @@ class Database
 	 * @var char
 	 */
 	public $rq;
-	
+
 	public $Handlers;
 
 	function CheckMyError($query, $handler)
@@ -70,7 +70,7 @@ class Database
 				if (call_user_func($handler, mysql_errno())) return;
 			if (isset($this->Handlers[mysql_errno()]))
 				if (call_user_func($this->Handlers[mysql_errno()])) return;
-			echo "MySQL Error [".mysql_errno().']: '.mysql_error();
+			echo "MySQL Error [".mysql_errno().']: '.mysql_error()."<br/>\nQuery:{$query}<br/>\n";
 		}
 	}
 
@@ -278,6 +278,12 @@ class Join
 	public $Type;
 
 	/**
+	 * Unique identifier for this join to associate all the columns.
+	 * @var string
+	 */
+	public $Shortcut;
+
+	/**
 	 * Creates a new Join object that will allow DataSet to identify the type
 	 * and context of where, when and how to use a join when it is needed. This
 	 * is used when you call DataSet.Get().
@@ -288,11 +294,12 @@ class Join
 	 * @return Join
 	 * @see DataSet.Get
 	 */
-	function Join($dataset, $condition, $type = 'JOIN')
+	function __construct($dataset, $condition, $type = 'JOIN', $shortcut = null)
 	{
 		$this->DataSet = $dataset;
 		$this->Condition = $condition;
 		$this->Type = $type;
+		$this->Shortcut = $shortcut;
 	}
 }
 
@@ -390,7 +397,7 @@ class DataSet
 	 * @param $table string Specifies the name of the table in $db to bind to.
 	 * @param $id string Name of the column with the primary key on this table.
 	 */
-	function DataSet($db, $table, $id = 'id')
+	function __construct($db, $table, $id = 'id')
 	{
 		switch ($db->type)
 		{
@@ -432,10 +439,11 @@ class DataSet
 		{
 			$ret = '';
 			$ix = 0;
-			foreach ($cols as $col => $val)
+			foreach ($cols as $name => $val)
 			{
 				if ($ix++ > 0) $ret .= ",\n";
-				$ret .= ' '.$this->QuoteTable($col).' AS '.$this->QuoteTable($val);
+				$ret .= ' '.$this->QuoteTable($val);
+				if (!is_numeric($name)) $ret .= ' AS '.$this->QuoteTable($name);
 			}
 			return $ret;
 		}
@@ -514,7 +522,8 @@ class DataSet
 					if (is_object($on))
 					{
 						$ret .= "\n {$on->Type} `{$on->DataSet->table}`";
-						if (isset($on->DataSet->Shortcut)) $ret .= " {$on->DataSet->Shortcut}";
+						if (isset($on->Shortcut)) $ret .= " {$on->Shortcut}";
+						else if (isset($on->DataSet->Shortcut)) $ret .= " {$on->DataSet->Shortcut}";
 						$ret .= " ON ({$on->Condition})";
 					}
 					else
@@ -713,7 +722,7 @@ class DataSet
 			$newrow = array();
 			foreach ($row as $key => $val)
 			{
-				$newrow[$key] = stripslashes($val);
+				$newrow[$key] = $val;
 			}
 			$items[] = $newrow;
 		}
@@ -791,7 +800,9 @@ class DataSet
 	 */
 	function GetScalar($match, $col)
 	{
-		$query = "SELECT `$col` FROM `{$this->table}`".$this->WhereClause($match);
+		if (is_array($col) && $col[0] == 'destring') { $lq = $rq = ''; $col = $col[1]; }
+		else $lq = $rq = '`';
+		$query = "SELECT $lq$col$rq FROM `{$this->table}`".$this->WhereClause($match);
 		$cols = $this->database->Query($query);
 		$data = mysql_fetch_array($cols);
 		return $data[0];
@@ -868,7 +879,8 @@ class DataSet
 		$rows = $this->database->Query($query, $silent, $this->ErrorHandler);
 		if (!is_resource($rows)) return $rows;
 		$ret = array();
-		while (($row = mysql_fetch_array($rows, $args)))
+		$f = $this->func_fetch;
+		while (($row = $f($rows)))
 		{
 			$newrow = array();
 			foreach ($row as $key => $val)
@@ -955,9 +967,9 @@ class DataSet
 					SET {$child->child_key} = {$ditem[$child->parent_key]}
 					WHERE `__TEMP`.`{$child->ds->id}` = `{$child->ds->table}`.`{$child->parent_key}`";
 				$child->ds->database->query($query);
-
-				$child->ds->database->query("DROP DATABASE `__TEMP`");
 			}
+
+			$child->ds->database->query("DROP TABLE IF EXISTS `__TEMP`");
 		}
 
 		//Pop off the ids, so they don't get changed, never want to change
