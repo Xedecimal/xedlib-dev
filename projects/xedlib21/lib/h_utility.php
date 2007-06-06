@@ -446,6 +446,14 @@ function GetButDel($url = null)
 	return $ret;
 }
 
+function GetButEdit($url = null)
+{
+	$ret = '<img src="'.GetRelativePath(dirname(__FILE__)).'/images/edit.png"
+		alt="edit" title="Edit Item" />';
+	if (strlen($url) > 0) $ret = '<a href="'.$url.'">'.$ret.'</a>';
+	return $ret;
+}
+
 /**
  * Resizes an image bicubicly and constrains proportions.
  *

@@ -167,7 +167,7 @@ EOF;
 		{
 			foreach ($this->dates as $key => $date)
 			{
-				if ($key < $curdate) echo "Date invalid? from ($curdate) to ($key)<br/>\n";
+				//if ($key < $curdate) echo "Date invalid? from ($curdate) to ($key)<br/>\n";
 				$curdate = $key;
 			}
 		}

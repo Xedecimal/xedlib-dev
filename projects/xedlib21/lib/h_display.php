@@ -525,7 +525,12 @@ class Form extends Table
 				$this->Errors[$input->name] :
 				null);
 		}
-		return '<label>'.($right?null:$out).$input->Get($this->name).($right?$out:null)."</label> {$helptext}";
+		return '<label>'.
+			($right?null:$out).
+			$input->Get($this->name).
+			($right?$out:null).
+			($input->EndLabel?null:'</label>').
+			$helptext;
 	}
 
 	/**
@@ -623,6 +628,11 @@ class FormInput
 	public $valu;
 
 	/**
+	 * Whether or not this input ends it's own label.
+	 */
+	public $EndLabel;
+
+	/**
 	 * Creates a new input object with many properties pre-set.
 	 *
 	 * @param string $text
@@ -642,6 +652,9 @@ class FormInput
 		$this->valu = $valu;
 		$this->atrs = $atrs;
 		$this->help = $help;
+		if ($type == 'date' || $type == 'time' || $type == 'datetime')
+			$this->EndLabel = true;
+		else $this->EndLabel = false;
 	}
 
 	/**
@@ -866,7 +879,7 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	}
 	if (!isset($timestamp)) $timestamp = time();
 	$strout = $include_time ? GetInputTime($name.'[]', $timestamp) : null;
-	$strout .= GetMonthSelect("{$name}[]", date("n", $timestamp));
+	$strout .= GetMonthSelect("{$name}[]", date("n", $timestamp)).'</label>';
 	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("d", $timestamp) . "\" alt=\"Day\" />\n";
 	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . date("Y", $timestamp) . "\" alt=\"Year\" />\n";
 	return $strout;

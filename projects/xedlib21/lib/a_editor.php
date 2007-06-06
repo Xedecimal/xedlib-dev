@@ -408,7 +408,7 @@ class EditorData
 					$value = GetVar($data[0]);
 					if ($data[1] == 'date')
 					{
-						$update[$name] = $value[2].'-'.$value[0].'-'.$value[1];
+						$insert[$data[0]] = $value[2].'-'.$value[0].'-'.$value[1];
 					}
 					else if ($data[1] == 'password')
 					{
@@ -584,7 +584,8 @@ class EditorData
 	function Get($target, $ci = null)
 	{
 		$ret['ds'] = $this->ds;
-		if (GetVar('ca') != $this->name.'_edit') $ret['table'] = $this->GetTable($target, $ci);
+		if (GetVar('ca') != $this->name.'_edit' && !empty($this->ds->Display))
+			$ret['table'] = $this->GetTable($target, $ci);
 		$ret['forms'] = $this->GetForms($target, $ci,
 			GetVar('editor') == $this->name ? GetVar('child') : null);
 		return $ret;
