@@ -294,7 +294,7 @@ class Join
 	 * @return Join
 	 * @see DataSet.Get
 	 */
-	function __construct($dataset, $condition, $type = 'JOIN', $shortcut = null)
+	function Join($dataset, $condition, $type = 'JOIN', $shortcut = null)
 	{
 		$this->DataSet = $dataset;
 		$this->Condition = $condition;

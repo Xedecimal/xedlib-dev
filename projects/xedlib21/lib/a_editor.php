@@ -125,7 +125,7 @@ class HandlerFile extends EditorHandler
 	 * @param array $conditions
 	 * @return HandlerFile
 	 */
-	function HandlerFile($target, $column, $conditions)
+	function HandlerFile($target, $column, $conditions = null)
 	{
 		$this->target = $target;
 		$this->column = $column;
@@ -143,16 +143,23 @@ class HandlerFile extends EditorHandler
 	function Create(&$data)
 	{
 		$target = "{$this->target}/{$data[$this->column]}";
-		if (!isset($this->conditions) && !file_exists($target)) mkdir($target);
-		foreach ($this->conditions as $col => $cond)
+		if (!isset($this->conditions) && !file_exists($target))
 		{
-			foreach ($cond as $val)
+			mkdir($target);
+			chmod($target, 0777);
+		}
+		else if (!empty($this->conditions))
+		{
+			foreach ($this->conditions as $col => $cond)
 			{
-				if ($data[$col] == $val && !file_exists($target))
+				foreach ($cond as $val)
 				{
-					mkdir($target);
-					chmod($target, 0777);
-					return true;
+					if ($data[$col] == $val && !file_exists($target))
+					{
+						mkdir($target);
+						chmod($target, 0777);
+						return true;
+					}
 				}
 			}
 		}
