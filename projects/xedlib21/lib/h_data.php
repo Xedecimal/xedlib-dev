@@ -359,14 +359,14 @@ class DataSet
 	 * @var array
 	 * @see EditorData
 	 */
-	public $Display;
+	public $DisplayColumns;
 	/**
 	 * Array of field information that this DataSet is associated with.
 	 *
 	 * @var array
 	 * @see EditorData
 	 */
-	public $Fields;
+	public $FieldInputs;
 	/**
 	 * A single or mutliple validations for the associated form.
 	 *

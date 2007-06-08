@@ -73,7 +73,7 @@ $page_body .= "Persisting a variable: \"".Persist('persisted', 'pervalue')."\"<b
 
 $page_body .= "<h3>Files</h3>\n";
 
-$page_body .= "Current script path: ".GetRelativePath(dirname(__FILE__)."<br />\n");
+$page_body .= "<p>Current relative path: ".GetRelativePath(dirname(__FILE__))."</p>\n";
 
 ////////////////////////////////////////////////////////////////////////////////
 //Callbacks
@@ -106,7 +106,7 @@ $callbacks = array(
 	array('SCallback', 'FunctionThree')
 );
 
-RunCallbacks($callbacks, 'heya', 'mang', 'tree');
+RunCallbacks($callbacks, 'heya', 'mang', 'three');
 
 echo $t->Get('template_test.html');
 

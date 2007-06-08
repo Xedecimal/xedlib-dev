@@ -12,18 +12,14 @@ class DisplayColumn
 	 * @var string
 	 */
 	public $text;
-	/**
-	 * Name of the associate dataset column.
-	 *
-	 * @var string
-	 */
-	public $column;
+
 	/**
 	 * Callback function for evaluating this cell for each row.
 	 *
 	 * @var mixed
 	 */
 	public $callback;
+
 	/**
 	 * HTML attributes for this column.
 	 *
@@ -40,10 +36,9 @@ class DisplayColumn
 	 * @param string $attribs
 	 * @return DisplayColumn
 	 */
-	function DisplayColumn($text, $column, $callback = null, $attribs = null)
+	function DisplayColumn($text, $callback = null, $attribs = null)
 	{
 		$this->text = $text;
-		$this->column = $column;
 		$this->callback = $callback;
 		$this->attribs = $attribs;
 	}
@@ -295,6 +290,7 @@ class EditorData
 	function EditorData($name, $ds = null, $filter = null, $sort = null)
 	{
 		require_once('h_utility.php');
+		require_once('h_display.php');
 		$this->name = $name;
 		$this->filter = $filter;
 		$this->handlers = array();
@@ -407,33 +403,27 @@ class EditorData
 			$child_id = GetVar('child');
 			$context = $child_id != null ? $this->ds->children[$child_id] : $this;
 			$update = array();
-			foreach ($context->ds->Fields as $name => $data)
+			foreach ($context->ds->FieldInputs as $col => $in)
 			{
-				if (is_array($data))
+				if (is_object($in))
 				{
-					if (!isset($data[0])) continue;
-					$value = GetVar($data[0]);
-					if ($data[1] == 'date')
+					$value = GetVar($col);
+					if ($in->type == 'date')
 					{
 						$insert[$data[0]] = $value[2].'-'.$value[0].'-'.$value[1];
 					}
-					else if ($data[1] == 'password')
+					else if ($in->type == 'password')
 					{
 						if (strlen($value) > 0)
 							$update[$data[0]] = md5($value);
 					}
-					else if ($data[1] == 'checkbox')
+					else if ($in->type == 'checkbox')
 						$update[$data[0]] = ($value == 1) ? $value : 0;
-					else if ($data[1] == 'selects')
+					else if ($in->type == 'selects')
 					{
-						//We don't want to stick with bitmasking selects
-						//because it could end up with gigantic numbers.
-						//$newval = 0;
-						//if (!empty($value))
-						//	foreach ($value as $val) $newval |= $val;
 						$update[$data[0]] = $value;
 					}
-					else if ($data[1] == 'file')
+					else if ($in->type == 'file')
 					{
 						if (strlen($value['tmp_name']) > 0)
 						{
@@ -446,8 +436,7 @@ class EditorData
 							$update[$data[0]] = $ext;
 						}
 					}
-					else if (is_string($name))
-						$update[$data[0]] = GetVar($data[0]);
+					$update[$col] = GetVar($col);
 				}
 			}
 
@@ -591,7 +580,7 @@ class EditorData
 	function Get($target, $ci = null)
 	{
 		$ret['ds'] = $this->ds;
-		if (GetVar('ca') != $this->name.'_edit' && !empty($this->ds->Display))
+		if (GetVar('ca') != $this->name.'_edit' && !empty($this->ds->DisplayColumns))
 			$ret['table'] = $this->GetTable($target, $ci);
 		$ret['forms'] = $this->GetForms($target, $ci,
 			GetVar('editor') == $this->name ? GetVar('child') : null);
@@ -633,10 +622,10 @@ class EditorData
 			//Children
 			//* Map child names to child index.
 			$cols[$this->ds->table] = array($this->ds->id => 1);
-			if (!empty($this->ds->Display))
-			foreach ($this->ds->Display as $disp)
+			if (!empty($this->ds->DisplayColumns))
+			foreach ($this->ds->DisplayColumns as $col => $disp)
 			{
-				$cols[$this->ds->table][$disp->column] = 0;
+				$cols[$this->ds->table][$col] = 0;
 			}
 
 			if (!empty($this->ds->children))
@@ -645,10 +634,10 @@ class EditorData
 				$children[$child->ds->table] = $ix;
 				$cols[$child->ds->table][$child->parent_key] = 1;
 				$cols[$child->ds->table][$child->child_key] = 0;
-				if (!empty($child->ds->Display))
-				foreach ($child->ds->Display as $disp)
+				if (!empty($child->ds->DisplayColumns))
+				foreach ($child->ds->DisplayColumns as $col => $disp)
 				{
-					$cols[$child->ds->table][$disp->column] = 0;
+					$cols[$child->ds->table][$col] = 0;
 				}
 			}
 
@@ -771,11 +760,12 @@ class EditorData
 
 			$cols["{$this->ds->table}_{$this->ds->id}"] =
 				$this->ds->table.'.'.$this->ds->id;
-			if (!empty($this->ds->Display))
-			foreach ($this->ds->Display as $ix => $disp)
+
+			if (!empty($this->ds->DisplayColumns))
+			foreach ($this->ds->DisplayColumns as $col => $disp)
 			{
-				$cols["{$this->ds->table}_{$disp->column}"] =
-					$this->ds->table.'.'.$disp->column;
+				$cols["{$this->ds->table}_{$col}"] =
+					$this->ds->table.'.'.$col;
 			}
 
 			$joins = null;
@@ -798,20 +788,18 @@ class EditorData
 					//We also need to get the column names that we'll need...
 					$cols["{$child->ds->table}_{$child->ds->id}"] =
 						$child->ds->table.'.'.$child->ds->id;
-					if (!empty($child->ds->Display))
-					foreach ($child->ds->Display as $ix => $disp)
+					if (!empty($child->ds->DisplayColumns))
+					foreach ($child->ds->DisplayColumns as $col => $disp)
 					{
-						$cols["{$child->ds->table}_{$disp->column}"] =
-							$child->ds->table.'.'.$disp->column;
+						$cols["{$child->ds->table}_{$col}"] =
+							$child->ds->table.'.'.$col;
 					}
 				}
 			}
 
-			//Changed during redball.. May be trouble, moved filter -> match
-			//Nick
 			$items = $this->ds->GetInternal($this->filter, $this->sort,
 				null, $joins, $cols);
-			//Build a whole tree out of the items and children.
+
 			$root = $this->BuildTree($items);
 		}
 		else { $sel = $ci; $this->state = STATE_EDIT; }
@@ -822,10 +810,10 @@ class EditorData
 			$atrs = array();
 
 			//Columns and column attributes.
-			if (!empty($this->ds->Display))
-			foreach ($this->ds->Display as $disp)
+			if (!empty($this->ds->DisplayColumns))
+			foreach ($this->ds->DisplayColumns as $col => $disp)
 			{
-				$cols[$disp->column] = "<b>{$disp->text}</b>";
+				$cols[$col] = "<b>{$disp->text}</b>";
 				$atrs[] = $disp->attribs;
 			}
 
@@ -834,10 +822,10 @@ class EditorData
 			foreach ($this->ds->children as $child)
 			{
 				if ($child->ds->table != $this->ds->table)
-				if (!empty($child->ds->Display))
-				foreach ($child->ds->Display as $disp)
+				if (!empty($child->ds->DisplayColumns))
+				foreach ($child->ds->DisplayColumns as $col => $disp)
 				{
-					$cols[$disp->column] = "<b>{$disp->text}</b>";
+					$cols[$col] = "<b>{$disp->text}</b>";
 					$atrs[] = $disp->attribs;
 				}
 			}
@@ -886,33 +874,33 @@ class EditorData
 			$context = isset($child_id) ? $this->ds->children[$child_id] : $this;
 
 			//Don't display children that don't have a display to show.
-			if (empty($context->ds->Display)) continue;
+			if (empty($context->ds->DisplayColumns)) continue;
 
 			//Pad all existing columns to ensure proper width.
-			$total_cells = count($this->ds->Display);
+			$total_cells = count($this->ds->DisplayColumns);
 			if (!empty($this->ds->children))
 			foreach ($this->ds->children as $child)
 				if ($child->ds->table != $this->ds->table)
-					$total_cells += count($child->ds->Display);
+					$total_cells += count($child->ds->DisplayColumns);
 			$row = array_pad($row, $total_cells, '&nbsp;');
 
 			//Move cursor (ix) to the first column we're displaying here.
 			if (isset($child_id))
 			{
 				if ($this->ds->children[$child_id]->ds->table != $this->ds->table)
-					$ix += count($this->ds->Display);
+					$ix += count($this->ds->DisplayColumns);
 				$i = 0;
 				while ($i++ < $child_id-1)
 				{
-					$ix += count($this->ds->children[$i]->ds->Display);
+					$ix += count($this->ds->children[$i]->ds->DisplayColumns);
 				}
 			}
 
 			//Show all displays for this context.
-			if (!empty($context->ds->Display))
-			foreach ($context->ds->Display as $did => $disp)
+			if (!empty($context->ds->DisplayColumns))
+			foreach ($context->ds->DisplayColumns as $col => $disp)
 			{
-				$disp_index = $context->ds->table.'_'.$disp->column;
+				$disp_index = $context->ds->table.'_'.$col;
 
 				//Callback mapped
 				if (isset($disp->callback))
@@ -989,7 +977,7 @@ class EditorData
 			$sel = $state == STATE_EDIT ? $context->ds->GetOne(array($context->ds->id => $ci)) : null;
 		}
 
-		if (!empty($context->ds->Fields))
+		if (!empty($context->ds->FieldInputs))
 		{
 			$frm = new Form($fullname);
 
@@ -1008,23 +996,23 @@ class EditorData
 				$frm->AddHidden('parent', $ci);
 				$frm->AddHidden('child', $curchild);
 			}
-			foreach ($context->ds->Fields as $text => $data)
+
+			foreach ($context->ds->FieldInputs as $col => $in)
 			{
-				if (is_array($data) && !empty($data))
+				if (is_object($in))
 				{
-					if ($data[1] == 'custom') //Callback
+					if ($in->type == 'custom') //Callback
 					{
 						$cb = $data[2];
 						call_user_func($cb, isset($sel) ? $sel : null, $frm);
 						continue;
 					}
-					else if ($data[1] == 'select')
+					else if ($in->type == 'select')
 					{
-						if (isset($sel) && strlen($data[0]) > 0)
-							$data[2][$sel[$data[0]]]->selected = true;
-						$value = $data[2];
+						if (isset($sel) && isset($sel[$col]) > 0)
+							$in->valu[$sel[$col]]->selected = true;
 					}
-					else if ($data[1] == 'selects')
+					else if ($in->type == 'selects')
 					{
 						if (isset($sel) && isset($sel[$data[0]]))
 						$value = $this->GetSelMask($data[2], isset($sel) &&
@@ -1033,23 +1021,25 @@ class EditorData
 					}
 					else
 					{
-						if ($data[1] == 'password') $value = '';
-						else if (isset($sel[$data[0]]))
+						if ($in->type == 'password') $in->valu = '';
+						else if (isset($sel[$col]))
 						{
-							if ($data[1] == 'date')
-								$value = MyDateTimestamp($sel[$data[0]]);
-							else $value = $sel[$data[0]];
+							if ($in->type == 'date')
+								$value = MyDateTimestamp($sel[$col]);
+							else $in->valu = $sel[$col];
 						}
 						else if (isset($data[2])) { $data[2]; }
 						else { $value = null; }
-						if (is_string($value)) $value = stripslashes($value);
 					}
 
-					$frm->AddInput(new FormInput($text, $data[1], $data[0],
+					$in->name = $col;
+
+					$frm->AddInput($in);
+					/*$frm->AddInput(new FormInput($text, $data[1], $data[0],
 							$value, isset($data[3]) ? $data[3] : null,
-							isset($data[4]) ? $data[4] : null));
+							isset($data[4]) ? $data[4] : null));*/
 				}
-				else $frm->AddRow(is_numeric($text) ? $data : '&nbsp;');
+				else $frm->AddRow(is_numeric($col) ? $data : '&nbsp;');
 			}
 
 			foreach ($this->handlers as $handler) $handler->GetFields($frm, isset($sel) ? $sel : null);
@@ -1098,13 +1088,13 @@ class EditorData
 		return $ret;
 	}
 
-	static function GetUI($target, $data, $form_atrs = null)
+	static function GetUI($target, $editor_return, $form_atrs = null)
 	{
 		$ret = null;
-		if (isset($data['table'])) $ret .= GetBox('box_items',
-			Plural($data['ds']->Description), $data['table']);
-		if (!empty($data['forms']))
-		foreach ($data['forms'] as $frm)
+		if (isset($editor_return['table'])) $ret .= GetBox('box_items',
+			Plural($editor_return['ds']->Description), $editor_return['table']);
+		if (!empty($editor_return['forms']))
+		foreach ($editor_return['forms'] as $frm)
 			$ret .= GetBox('box_user_form', "{$frm->State} {$frm->Description}",
 				$frm->Get('method="post" action="'.$target.'"'.(isset($form_atrs) ? ' '.$form_atrs : null), 'class="form"'));
 		return $ret;

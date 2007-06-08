@@ -643,7 +643,7 @@ class FormInput
 	 * @param string $help
 	 * @return FormInput
 	 */
-	function FormInput($text, $type, $name, $valu = null, $atrs = null,
+	function FormInput($text, $type, $name = null, $valu = null, $atrs = null,
 		$help = null)
 	{
 		$this->text = $text;
@@ -990,6 +990,7 @@ class LoginManager
 	 */
 	function LoginManager()
 	{
+		@session_start();
 		$this->type = CONTROL_SIMPLE;
 	}
 
@@ -1081,10 +1082,10 @@ class LoginManager
 	}
 
 	/**
-	 * Sets a static password on this manager. Must be made into MD5 prior to
-	 * setting.
+	 * Sets a static password on this manager. If not MD5, you will recieve
+	 * the proper md5 for this password to replace it with.
 	 *
-	 * @param string $pass MD5 password.
+	 * @param string $pass Password.
 	 */
 	function SetPass($pass = null)
 	{

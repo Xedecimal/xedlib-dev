@@ -47,5 +47,5 @@ th { text-align: left; }
 
 /* Calendar */
 
-.CalendarDay { border: 1px solid #000; }
+.CalendarDay { border: 1px solid #CCC; }
 .CalendarDayTitle { font-weight: bold; }

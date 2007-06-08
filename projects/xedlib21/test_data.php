@@ -33,11 +33,11 @@ $db->Open('mysql://root:ransal@localhost/test');
 
 $dsChild = new DataSet($db, 'child');
 $dsChild->Description = "Child";
-$dsChild->Display = array(
-	new DisplayColumn('Child', 'example')
+$dsChild->DisplayColumns = array(
+	'example' => new DisplayColumn('Child')
 );
-$dsChild->Fields = array(
-	'Example' => array('example', 'text')
+$dsChild->FieldInputs = array(
+	'example' => new FormInput('Example', 'text')
 );
 
 // dsBoth
@@ -45,13 +45,13 @@ $dsChild->Fields = array(
 $dsBoth = new DataSet($db, 'test');
 $dsBoth->Description = "Both Item";
 $dsBoth->AddChild(new Relation($dsBoth, 'id', 'parent'));
-$dsBoth->Display = array(
-	new DisplayColumn('Name', 'name'),
-	new DisplayColumn('Second', 'second')
+$dsBoth->DisplayColumns = array(
+	'name' => new DisplayColumn('Name'),
+	'second' => new DisplayColumn('Second Column')
 );
-$dsBoth->Fields = array(
-	'Name' => array('name', 'text'),
-	'Second' => array('second', 'text')
+$dsBoth->FieldInputs = array(
+	'name' => new FormInput('Name', 'text'),
+	'second' => new FormInput('Second Column', 'text')
 );
 $dsBoth->Validation = $v;
 $dsBoth->Errors = $ret['errors'];
@@ -62,13 +62,13 @@ $dsBoth->AddChild(new Relation($dsChild, 'id', 'parent'));
 
 $dsForeign = new DataSet($db, 'test');
 $dsForeign->Description = "Foreign Item";
-$dsForeign->Display = array(
-	new DisplayColumn('Name', 'name'),
-	new DisplayColumn('Second', 'second')
+$dsForeign->DisplayColumns = array(
+	'name' => new DisplayColumn('Name'),
+	'second' => new DisplayColumn('Second Column')
 );
-$dsForeign->Fields = array(
-	'Name' => array('name', 'text'),
-	'Second' => array('second', 'text')
+$dsForeign->FieldInputs = array(
+	'name' => new FormInput('Name', 'text'),
+	'second' => new FormInput('Second Column', 'text')
 );
 $dsForeign->AddChild(new Relation($dsChild, 'id', 'parent'));
 
@@ -76,13 +76,13 @@ $dsForeign->AddChild(new Relation($dsChild, 'id', 'parent'));
 
 $dsSelf = new DataSet($db, 'test');
 $dsSelf->Description = "Self Item";
-$dsSelf->Display = array(
-	new DisplayColumn('Name', 'name'),
-	new DisplayColumn('Second', 'second')
+$dsSelf->DisplayColumns = array(
+	'name' => new DisplayColumn('Name'),
+	'second' => new DisplayColumn('Second')
 );
-$dsSelf->Fields = array(
-	'Name' => array('name', 'text'),
-	'Second' => array('second', 'text')
+$dsSelf->FieldInputs = array(
+	'name' => new FormInput('Name', 'text'),
+	'second' => new FormInput('Second', 'text')
 );
 $dsSelf->AddChild(new Relation($dsSelf, 'id', 'parent'));
 
@@ -106,26 +106,26 @@ if ($editor == 'test_self') $edSelf->Prepare($ca);
 //Presentation
 
 $tbl = new Table('tblMain',
-	array('<h2>Self</h2><i>No Child</i>', '<h2>Foreign</h2><i>No Tree</i>', '<h2>Both</h2><i>Tree and child</i>'),
+	array('<h2>Self</h2><i>No Relation</i>', '<h2>Foreign</h2><i>No Tree</i>', '<h2>Both</h2><i>Tree and Relation</i>'),
 	array('valign="top"', 'valign="top"', 'valign="top"')
 );
 
 $ret = $edSelf->Get($me, $ci);
-$row[0] = $ret['table'];
+$row[0] = isset($ret['table']) ? $ret['table'] : null;
 foreach ($ret['forms'] as $frm)
 	$row[0] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
 		$frm->Get('action="'.$me.'" method="post"'),
 		'templates/box.html');
 
 $ret = $edForeign->Get($me, $ci);
-$row[1] = $ret['table'];
+$row[1] = isset($ret['table']) ? $ret['table'] : null;
 foreach ($ret['forms'] as $frm)
 	$row[1] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
 		$frm->Get('action="'.$me.'" method="post"'),
 		'templates/box.html');
-		
+
 $ret = $edBoth->Get($me, $ci);
-$row[2] = $ret['table'];
+$row[2] = isset($ret['table']) ? $ret['table'] : null;
 foreach ($ret['forms'] as $frm)
 	$row[2] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
 		$frm->Get('action="'.$me.'" method="post"'),
