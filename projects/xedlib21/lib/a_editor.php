@@ -59,6 +59,7 @@ class EditorHandler
 	 * cannot halt the item from being inserted at this point.
 	 *
 	 * @param int $id
+	 * @param array $inserted Data that has been inserted.
 	 * @return boolean true by default (meant to be overridden)
 	 */
 	function Created($id, $inserted) { return true; }
@@ -81,6 +82,10 @@ class EditorHandler
 	 * @return boolean true by default (meant to be overridden)
 	 */
 	function Delete($id, &$data) { return true; }
+	///
+	///Called to retrieve additional fields for the editor form object.
+	///@param object $form Form.
+	///@param array $data Data related to the action (update/insert).
 	function GetFields(&$form, $data) {}
 }
 

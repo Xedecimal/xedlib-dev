@@ -42,7 +42,7 @@ class Calendar
 	*
 	* @access public
 	* @param int $tsfrom Item beginning time.
-	* @param int $tsto Item end time.
+	* @param int $tsto Item end time. 2
 	* @param string $body Body of this cell.
 	*/
 	function AddItem($tsfrom, $tsto, $body)
@@ -305,7 +305,7 @@ class CalendarMonth
 	/**
 	 * Enter description here...
 	 *
-	 * @param $timestamp int Timestamp
+	 * @param int $timestamp Timestamp
 	 * @return CalendarMonth
 	 */
 	function CalendarMonth($timestamp)
@@ -367,7 +367,7 @@ class CalendarDay
 	/**
 	 * Enter description here...
 	 *
-	 * @param $timestamp int Timestamp of this day.
+	 * @param int $timestamp Timestamp of this day.
 	 * @return CalendarDay
 	 */
 	function CalendarDay($timestamp)

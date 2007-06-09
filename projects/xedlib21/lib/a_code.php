@@ -15,8 +15,17 @@ define('T_DEFINE', 900);
 class CodeReader
 {
 	private $file;
+	/**
+	 * Current line being parsed.
+	 */
 	private $line;
+	/**
+	 * Current data parsed from a doc comment for the coming object.
+	 */
 	private $curdoc;
+	/**
+	 * Type of item currently getting.
+	 */
 	private $getting;
 
 	/**
@@ -59,8 +68,6 @@ class CodeReader
 					switch ($tok)
 					{
 						case '{':
-							Trace(str_repeat("\t",
-								count($this->tree))."{$tok}\n");
 							array_push($this->tree, $this->current);
 
 							//We're done with function arguments.
@@ -70,8 +77,6 @@ class CodeReader
 							break;
 						case '}':
 							$this->current = array_pop($this->tree);
-							Trace(str_repeat("\t",
-								count($this->tree))."{$tok}\n");
 							break;
 					}
 				}
@@ -111,6 +116,10 @@ class CodeReader
 		else $this->line += substr_count($token, "\n");
 	}
 
+	/**
+	 * Processes a constant, mainly defines.
+	 * @param mixed $tok Token to be evaluated.
+	 */
 	function ProcConstant($tok)
 	{
 		if ($this->getting == CODE_GET_DEFINE_VALUE)
@@ -134,38 +143,46 @@ class CodeReader
 		}
 	}
 
-	function ProcessDocComment($data)
-	{
-	}
-
+	/**
+	 * Processes an opening curly brace.
+	 */
 	function ProcCurlyOpen()
 	{
-		Trace(str_repeat("\t", count($this->tree))."{\n");
 		array_push($this->tree, $this->current);
 	}
 
+	/**
+	 * Processes an evaluated function.
+	 * @param mixed $tok Token to be evaluated.
+	 */
 	function ProcFunction($tok)
 	{
-		Trace(str_repeat("\t", count($this->tree))."function ");
 		$this->current = new CodeObject($tok[0]);
 		$this->current->file = $this->file;
 		$this->current->line = $this->line;
 		$this->current->doc = $this->curdoc;
-		$this->curdoc = new stdClass();
+		$this->curdoc = null;
 		$this->getting = CODE_GET_NAME;
 	}
 
+	/**
+	 * Process an evaluated class.
+	 * @param mixed $tok Token to be evaluated.
+	 */
 	function ProcClass($tok)
 	{
-		Trace("class ");
 		$this->getting = CODE_GET_NAME;
 		$this->current = new CodeObject($tok[0]);
 		$this->current->file = $this->file;
 		$this->current->line = $this->line;
 		$this->current->doc = $this->curdoc;
-		$this->curdoc = new stdClass();
+		$this->curdoc = null;
 	}
 
+	/**
+	 * Process an evaluated string.
+	 * @param mixed $tok Token to be evaluated.
+	 */
 	function ProcString($tok)
 	{
 		if ($this->getting == CODE_GET_DEFINE_VALUE)
@@ -202,10 +219,13 @@ class CodeReader
 				$this->ret->members[$tok[1]] = $this->current;
 			}
 			$this->getting = CODE_GET_NONE;
-			Trace($tok[1]."\n");
 		}
 	}
 
+	/**
+	 * Process an evaluated document comment.
+	 * @param mixed $tok Token to be evaluated.
+	 */
 	function ProcDocComment($tok)
 	{
 		$this->curdoc = new stdClass();
@@ -228,12 +248,12 @@ class CodeReader
 						continue;
 					}
 					$data = highlight_file($match[1], true);
-					$this->current->doc->example = $data;
+					$this->curdoc->example = $data;
 				}
 				else if (preg_match('#param ([^ ]+) ([^ ]+)(.*)#', $tag, $match))
 				{
-					$this->curdoc->params[$match[2]] =
-						array($match[1], $match[3]);
+					$this->curdoc->params[$match[2]]['type'] = $match[1];
+					$this->curdoc->params[$match[2]]['desc'] = $match[3];
 				}
 				else if (preg_match('#return ([^ ]+)(.*)#', $line, $match))
 				{
@@ -253,6 +273,10 @@ class CodeReader
 
 	}
 
+	/**
+	 * Process an evaluated variable.
+	 * @param mixed $tok Token to be evaluated.
+	 */
 	function ProcVariable($tok)
 	{
 		$d = new CodeObject(T_VARIABLE);
@@ -260,11 +284,19 @@ class CodeReader
 		$d->line = $this->line;
 		$d->name = $tok[1];
 		$d->doc = $this->curdoc;
-		$this->curdoc = new stdClass();
+		$this->curdoc = null;
 
-		//Argument
+		//Function / Method Argument
 		if (isset($this->current) && $this->current->type == T_FUNCTION)
 		{
+			if (!isset($this->current->doc->params[$tok[1]]))
+			{
+				Trace("Function argument not documented: {$tok[1]}".
+					  " for ".GetTypeName($this->current->type).
+					  " {$this->current->name}".
+					  " in file {$this->file}".
+					  " on line {$this->line}\n");
+			}
 			$d->parent = $this->current;
 			$this->current->members[$tok[1]] = $d;
 		}
@@ -287,6 +319,10 @@ class CodeReader
 		}
 	}
 
+	/**
+	 * Process an evaluated number.
+	 * @param mixed $tok Token to be evaluated.
+	 */
 	function ProcNumber($tok)
 	{
 		if ($this->getting == CODE_GET_DEFINE_VALUE)
