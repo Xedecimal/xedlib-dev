@@ -631,7 +631,8 @@ EOF;
 	 */
 	function GetFile($target, $file, $type, $index)
 	{
-		$ret = "\n<tr>\n";
+		$class = $index % 2 ? 'even' : 'odd';
+		$ret = "\n<tr class=\"{$class}\">\n";
 		if (!$file->show) return;
 		if (!$this->Behavior->ShowAllFiles && !empty($file->info['access']))
 		{
