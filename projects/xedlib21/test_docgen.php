@@ -53,9 +53,9 @@ class DocGeneratorXML
 		else if (!empty($item->doc->params))
 		foreach ($item->doc->params as $name => $args)
 		{
-			$elTag = $doc->createElement('tag', $args[1]);
+			$elTag = $doc->createElement('tag');
 			$elTag->setAttribute('type', 'param');
-			$elTag->setAttribute('datatype', $args[0]);
+			$elTag->setAttribute('datatype', $args['type']);
 			$elTag->setAttribute('name', $name);
 			$elDoc->appendChild($elTag);
 		}
@@ -103,8 +103,8 @@ class DocGeneratorXML
 					.$path;
 					$t = $t->parent;
 				}
-				echo "Item not documented {$path}{$item->name}".
-					" ({$item->file}:{$item->line})\n";
+				Trace("Item not documented {$path}{$item->name}".
+					" ({$item->file}:{$item->line})\n");
 			}
 		}
 		if (!empty($item->members)) foreach ($item->members as $member)
@@ -188,7 +188,7 @@ class DocGeneratorXML
 	}
 }
 
-//$GLOBALS['debug'] = true;
+$GLOBALS['debug'] = true;
 
 echo '<pre>';
 $stime = microtime();
