@@ -94,7 +94,7 @@ class CodeReader
 				if ($tok[0] == T_EXTENDS) $this->getting = CODE_GET_EXTENDS;
 			}
 		}
-		
+
 		if (isset($this->ret)) $this->ret->file = $filename;
 		return $this->ret;
 	}
@@ -151,10 +151,10 @@ class CodeReader
 		$this->current->file = $this->file;
 		$this->current->line = $this->line;
 		$this->current->doc = $this->curdoc;
-		$doc = null;
+		$this->curdoc = new stdClass();
 		$this->getting = CODE_GET_NAME;
 	}
-	
+
 	function ProcClass($tok)
 	{
 		Trace("class ");
@@ -163,9 +163,9 @@ class CodeReader
 		$this->current->file = $this->file;
 		$this->current->line = $this->line;
 		$this->current->doc = $this->curdoc;
-		$this->doc = null;
+		$this->curdoc = new stdClass();
 	}
-	
+
 	function ProcString($tok)
 	{
 		if ($this->getting == CODE_GET_DEFINE_VALUE)
@@ -208,7 +208,7 @@ class CodeReader
 
 	function ProcDocComment($tok)
 	{
-		if (!isset($this->curdoc)) $this->curdoc = new stdClass();
+		$this->curdoc = new stdClass();
 
 		preg_match_all("#^[ \t*/]*(.*)[/]*$#m", $tok[1], $matches);
 		foreach ($matches[1] as $line)
@@ -250,7 +250,7 @@ class CodeReader
 				$this->curdoc->body .= $line;
 			}
 		}
-		$doc = $this->ProcessDocComment($tok[1]);
+
 	}
 
 	function ProcVariable($tok)
@@ -260,7 +260,7 @@ class CodeReader
 		$d->line = $this->line;
 		$d->name = $tok[1];
 		$d->doc = $this->curdoc;
-		$doc = null;
+		$this->curdoc = new stdClass();
 
 		//Argument
 		if (isset($this->current) && $this->current->type == T_FUNCTION)

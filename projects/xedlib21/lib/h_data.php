@@ -62,6 +62,10 @@ class Database
 
 	public $Handlers;
 
+	/**
+	 * Checks for a mysql error.
+	 * @return void Testing.
+	 */
 	function CheckMyError($query, $handler)
 	{
 		if (mysql_errno())

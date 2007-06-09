@@ -24,7 +24,6 @@ class DocGeneratorXML
 	function CreateDoc($type)
 	{
 		$doc = new DOMDocument();
-		$d = new DOMElement("Test");
 		$doc->appendChild($doc->createProcessingInstruction(
 			'xml-stylesheet', "href=\"../{$type}.xsl\" type=\"text/xsl\""));
 		return $doc;
@@ -51,28 +50,25 @@ class DocGeneratorXML
 			$elTag->setAttribute('type', 'example');
 			$elDoc->appendChild($elTag);
 		}
-		else if (isset($item->doc->params))
+		else if (!empty($item->doc->params))
+		foreach ($item->doc->params as $name => $args)
 		{
-			$elTag = $doc->createElement('tag', $match[3]);
+			$elTag = $doc->createElement('tag', $args[1]);
 			$elTag->setAttribute('type', 'param');
-			$elTag->setAttribute('datatype', $match[1]);
-			$elTag->setAttribute('name', $match[2]);
+			$elTag->setAttribute('datatype', $args[0]);
+			$elTag->setAttribute('name', $name);
 			$elDoc->appendChild($elTag);
 		}
 		else if (isset($item->doc->return))
 		{
-			$elTag = $doc->createElement('tag', isset($match[3]) ? $match[3] : null);
+			$elTag = $doc->createElement('tag', $item->doc->return[1]);
 			$elTag->setAttribute('type', 'return');
-			$elTag->setAttribute('datatype', $match[1]);
-			$elTag->setAttribute('text', $match[2]);
+			$elTag->setAttribute('datatype', $item->doc->return[0]);
+			$elTag->setAttribute('text', $item->doc->return[1]);
 			$elDoc->appendChild($elTag);
 		}
 
-		//$elTag = $doc->createElement('tag', isset($match[2]) ? $match[2] : null);
-		//$elTag->setAttribute('type');
-		//$elDoc->appendChild($elTag);
-
-		$elDoc->appendChild($doc->createCDATASection($item->doc->body));
+		if (isset($item->doc->body)) $elDoc->appendChild($doc->createCDATASection($item->doc->body));
 		return $elDoc;
 	}
 
@@ -87,7 +83,7 @@ class DocGeneratorXML
 	{
 		$e = $doc->createElement(GetTypeName($item->type));
 		$e->setAttribute('name', $item->name);
-		
+
 		if (isset($item->modifier))
 			$e->setAttribute('modifier', GetTypeName($item->modifier));
 		if (isset($item->doc))
@@ -119,20 +115,20 @@ class DocGeneratorXML
 	function OutputDetail($item, $target)
 	{
 		$type = GetTypeName($item->type);
-	
+
 		$doc = $this->CreateDoc($type);
-	
+
 		$root = $doc->createElement('root');
 		$root->setAttribute('name', $item->name);
 		if (isset($item->doc))
 			$root->appendChild($this->GetDocumentElement($doc, $item));
-	
+
 		//Arguments and methods
 		if (!empty($item->members))
 		foreach ($item->members as $member)
 			$this->OutputMember($doc, $root, $member);
 		$doc->appendChild($root);
-	
+
 		$doc->save("{$target}/{$type}_{$item->name}.xml");
 	}
 
@@ -174,9 +170,9 @@ class DocGeneratorXML
 				$data->file = $file;
 			}
 		}
-		
+
 		ksort($data->members);
-	
+
 		if (!empty($data))
 		{
 			if (!file_exists($target)) mkdir($target);
@@ -186,12 +182,13 @@ class DocGeneratorXML
 			foreach ($data->members as $item)
 				$this->OutputTOC($doc, $root, $item, $target);
 			$doc->appendChild($root);
+			varinfo($doc);
 			$doc->save($target.'/index.xml');
 		}
 	}
 }
 
-$GLOBALS['debug'] = true;
+//$GLOBALS['debug'] = true;
 
 echo '<pre>';
 $stime = microtime();

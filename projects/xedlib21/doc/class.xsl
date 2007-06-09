@@ -60,6 +60,9 @@
 			<td><xsl:value-of select="."/></td>
 			</tr>
 		</xsl:for-each>
+		<b><xsl:value-of select="doc/tag[@type='return']/@datatype" /></b>
+		<xsl:value-of select="doc/tag[@type='return']/@text" />
+		<xsl:text> </xsl:text>
 	</table>
 	</div>
 </xsl:for-each>
