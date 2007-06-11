@@ -300,6 +300,19 @@ class FileManager
 
 		if ($this->mass_avail = $this->Behavior->MassAvailable())
 		{
+			$ret .= <<<EOF
+<script type="text/javascript">
+var __sels;
+
+function docmanSelAll(type)
+{
+	if (__sels == undefined) __sels = {'files': false, 'dirs': false }
+	__sels[type] = !__sels[type];
+	sel_all(type, __sels[type]);
+	toggleAny(['sel_files_','sel_dirs_'],'{$this->name}_mass_options');
+}
+</script>
+EOF;
 			$ret .= '<p>Select the checkbox of the file(s) or folder(s) that
 				you would like to delete or move.</p>';
 			$ret .= "<form action=\"{$target}\" method=\"post\">";
@@ -392,8 +405,8 @@ class FileManager
 	<input type="hidden" name="cf" value="{$this->cf}"/>
 	<div id="flashUpload">
 	<p><strong>You need to upgrade your Flash Player</strong></p>
-	<p>Please visit <a href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash&promoid=BIOW">Adobe</a> to obtain this.
-	</div><br/>
+	<p>Please visit <a href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash&amp;promoid=BIOW">Adobe</a> to obtain this.
+	</p></div>
 	<noscript>
 	<input type="file" name="cu[]"/>
 	<input type="submit" value="Upload" />
@@ -615,10 +628,13 @@ EOF;
 		if (!empty($this->files[$type]))
 		{
 			$ret .= $title;
-			$ret .= '<table>';
+			$ret .= '<table class="tableFiles">';
 			foreach($this->files[$type] as $ix => $file)
 				$ret .= $this->GetFile($target, $file, $type, $ix);
 			$ret .= '</table>';
+			$ret .= "<input id=\"butSelAll{$type}\" type=\"button\"
+				onclick=\"docmanSelAll('{$type}');\"
+				value=\"Select all {$type}\" />";
 		}
 		return $ret;
 	}
@@ -928,7 +944,7 @@ class FileManagerBehavior
 	* A callback to modify the output of each file link.
 	* @var string
 	*/
-	public $FileCallback = null;
+	var $FileCallback = null;
 
 	/**
 	 * Return true if options are available.

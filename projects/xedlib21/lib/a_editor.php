@@ -343,21 +343,21 @@ class EditorData
 			$child_id = GetVar('child');
 			$context = isset($child_id) ? $this->ds->children[$child_id] : $this;
 
-			$fields = $context->ds->Fields;
-			foreach ($fields as $name => $data)
+			$fields = $context->ds->FieldInputs;
+			foreach ($fields as $col => $in)
 			{
-				if (is_array($data))
+				if (is_object($in))
 				{
-					$value = GetVar($data[0]);
-					if ($data[1] == 'date')
+					$value = GetVar($col);
+					if ($in->type == 'date')
 					{
 						$insert[$data[0]] = $value[2].'-'.$value[0].'-'.$value[1];
 					}
-					else if ($data[1] == 'password' && strlen($value) > 0)
+					else if ($in->type == 'password' && strlen($value) > 0)
 					{
-						$insert[$data[0]] = md5($value);
+						$insert[$col] = md5($value);
 					}
-					else if ($data[1] == 'file' && $value != null)
+					else if ($in->type == 'file' && $value != null)
 					{
 						$ext = substr(strrchr($value['name'], '.'), 1);
 
@@ -366,13 +366,13 @@ class EditorData
 							'dst' => $data[2], //Destination folder
 							'ext' => $ext
 						);
-						$insert[$data[0]] = $ext;
+						$insert[$col] = $ext;
 					}
-					else if ($data[1] == 'selects')
-						$insert[$data[0]] = $value;
-					else $insert[$data[0]] = $value;
+					else if ($in->type == 'selects')
+						$insert[$col] = $value;
+					else $insert[$col] = $value;
 				}
-				else if (is_string($name)) $insert[$name] = DeString($data);
+				else if (is_string($in)) $insert[$col] = DeString($in);
 			}
 
 			foreach ($this->handlers as $handler)

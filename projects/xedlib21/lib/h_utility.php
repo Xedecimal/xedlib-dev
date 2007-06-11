@@ -530,4 +530,17 @@ function SecurePath($path)
 	return preg_replace('#\.\./#', '', $ret);
 }
 
+function GetFlatPage($data, $page, $count)
+{
+	return array_splice($data, $count*$page, $count);
+}
+
+function GetPages($data, $count)
+{
+	for ($ix = 0; $ix < count($data); $ix += $count)
+	{
+		echo "Doing: {$ix}<br/>\n";
+	}
+}
+
 ?>

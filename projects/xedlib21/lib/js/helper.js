@@ -12,7 +12,7 @@ function toggleAny(ids, target)
 	{
 		id = ids[iy];
 		ix = 0;
-		while (obj = document.getElementById(id+(ix++)))
+		while ((obj = document.getElementById(id+(ix++))))
 		{
 			if (obj.checked)
 			{
@@ -24,4 +24,13 @@ function toggleAny(ids, target)
 	}
 	if (show) document.getElementById(target).style.display = '';
 	else document.getElementById(target).style.display = 'none';
+}
+
+function sel_all(type, checked)
+{
+	var ix = 0;
+	while ((cb = document.getElementById('sel_'+type+'_'+(ix++))))
+	{
+		cb.checked = checked;
+	}
 }
