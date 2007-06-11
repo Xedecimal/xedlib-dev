@@ -1335,7 +1335,7 @@ class FilterGallery extends FilterDefault
 		$filename = substr(basename($file['name']), 0, strrpos(basename($file['name']), '.'));
 		$ext = strrchr($file['name'], '.');
 		$destthumb = "{$target->path}/t_{$filename}{$ext}";
-		switch ($ext)
+		switch (strtolower($ext))
 		{
 			case ".jpg":
 			case ".jpeg":
