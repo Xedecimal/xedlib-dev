@@ -539,7 +539,9 @@ function GetPages($data, $count)
 {
 	for ($ix = 0; $ix < count($data); $ix += $count)
 	{
-		echo "Doing: {$ix}<br/>\n";
+		if ($ix > 0) echo ' - ';
+		$page = $ix / $count;
+		echo "<a href=\"{$me}?cp={$page}\">{$page}</a>";
 	}
 }
 

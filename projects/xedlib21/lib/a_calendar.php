@@ -42,7 +42,7 @@ class Calendar
 	*
 	* @access public
 	* @param int $tsfrom Item beginning time.
-	* @param int $tsto Item end time. 2
+	* @param int $tsto Item end time.
 	* @param string $body Body of this cell.
 	*/
 	function AddItem($tsfrom, $tsto, $body)
