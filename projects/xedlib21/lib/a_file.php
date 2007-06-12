@@ -107,6 +107,7 @@ class FileManager
 	 * @param string $name Name of this instance.
 	 * @param string $root Highlest folder level allowed.
 	 * @param array $filters Directory filters allowed.
+	 * @param string $DefaultFilter Default selected filter.
 	 * @return FileManager
 	 */
 	function FileManager($name, $root, $filters = array(), $DefaultFilter = 'Default')
@@ -137,6 +138,7 @@ class FileManager
 	 * This must be called before Get. This will prepare for presentation.
 	 *
 	 * @param string $action Use GetVar('ca') usually.
+	 * @return void
 	 */
 	function Prepare($action)
 	{
@@ -284,7 +286,8 @@ class FileManager
 	/**
 	* Return the display.
 	*
-	* @param string $cf Current folder.
+	* @param string $target Target script.
+	* @param string $action Current action, usually stored in GetVar('ca').
 	* @return string Output.
 	*/
 	function Get($target, $action)
@@ -526,7 +529,8 @@ EOF;
 	 * Recurses a single item in a directory.
 	 *
 	 * @access private
-	 * @param string $path
+	 * @param string $path Root path to recurse into.
+	 * @param bool $ignore Don't include this path.
 	 * @return string
 	 */
 	function GetDirectorySelectRecurse($path, $ignore)
@@ -642,8 +646,11 @@ EOF;
 	/**
 	 * Get a single file.
 	 *
-	 * @param string $target
-	 * @param FileInfo $file
+	 * @param string $target Target script to anchor to.
+	 * @param FileInfo $file File information on this object.
+	 * @param string $type files or dirs.
+	 * @param int $index Index of this item in the parent.
+	 * @return string Single row for the files table.
 	 */
 	function GetFile($target, $file, $type, $index)
 	{
@@ -768,12 +775,18 @@ EOF;
 	 *
 	 * @param FileInfo $f1
 	 * @param FileInfo $f2
+	 * @return Higher or lower in comparison.
 	 */
 	function cmp_file($f1, $f2)
 	{
 		return $f1->info['index'] < $f2->info['index'] ? -1 : 1;
 	}
 
+	/**
+	 * Whether or not $file is visible to the current user or not.
+	 * @param FileInfo $file FileInfo object to get access information out of.
+	 * @return bool Whether or not this object is visible.
+	 */
 	function GetVisible($file)
 	{
 		if (!isset($this->uid)) return true;
@@ -813,7 +826,7 @@ class FileManagerView
 	/**
 	 * Whether files or folders come first.
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	public $ShowFilesFirst = false;
 	/**
@@ -825,7 +838,7 @@ class FileManagerView
 	/**
 	 * Whether or not to show the date next to files.
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	public $ShowDate = true;
 	/**
@@ -834,6 +847,10 @@ class FileManagerView
 	 * @var bool
 	 */
 	public $FloatItems = false;
+	/**
+	 * Create folder text to be displayed.
+	 * @var string
+	 */
 	public $TextCreateFolder = 'Create New Folder';
 }
 
@@ -885,9 +902,9 @@ class FileManagerBehavior
 	public $AllowEdit = false;
 
 	/**
-	 * Allow move.
+	 * Allow moving files to another location.
 	 *
-	 * @var Allow moving files to another location.
+	 * @var bool
 	 */
 	public $AllowMove = false;
 
@@ -909,34 +926,34 @@ class FileManagerBehavior
 	 * If true, do not delete files, they are renamed to
 	 * .delete_filename
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	public $Recycle = false;
 
 	/**
 	 * Override file hiding.
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	public $ShowAllFiles = false;
 
 	/**
 	 * Allow searching files.
 	 *
-	 * @var boolean
+	 * @var bool
 	 */
 	public $AllowSearch = false;
 
 	/**
 	 * Location of where to store logs.
 	 *
-	 * @var callback
+	 * @var mixed
 	 */
 	public $Watchers = null;
 
 	/**
 	* Whether or not to ignore the root folder when doing file operations.
-	* @var boolean
+	* @var bool
 	*/
 	public $IgnoreRoot = false;
 
@@ -948,7 +965,7 @@ class FileManagerBehavior
 
 	/**
 	 * Return true if options are available.
-	 *
+	 * @return bool
 	 */
 	function Available()
 	{
@@ -959,7 +976,7 @@ class FileManagerBehavior
 
 	/**
 	 * Return true if mass options are available.
-	 *
+	 * @return bool
 	 */
 	function MassAvailable()
 	{
@@ -968,7 +985,6 @@ class FileManagerBehavior
 
 	/**
 	 * Turns on all allowances for administration usage.
-	 *
 	 */
 	function AllowAll()
 	{
@@ -1002,9 +1018,9 @@ class FileInfo
 	 */
 	public $dir;
 	/**
-	 * No idea, probably depricated.
+	 * Position of the current forward slash.
 	 *
-	 * @var unknown
+	 * @var int
 	 */
 	public $bitpos;
 	/**
@@ -1189,7 +1205,8 @@ class FilterDefault
 
 	/**
 	 * Returns an array of options that allow configuring this filter.
-	 *
+	 * @param FileInfo $fi Object to get information out of.
+	 * @param string $default Default option set.
 	 * @return array
 	 */
 	function GetOptions(&$fi, $default)
@@ -1230,6 +1247,10 @@ class FilterDefault
 		rename($fi->path, $ddir.'/'.$pinfo['basename']);
 	}
 
+	/**
+	 * When options are updated, this will be fired.
+	 * @param FileInfo $fi Associated file information.
+	 */
 	function Updated(&$fi)
 	{
 	}
@@ -1237,7 +1258,8 @@ class FilterDefault
 	/**
 	* Delete a file or folder.
 	*
-	* @param FileInfo $fi
+	* @param FileInfo $fi Associated file information.
+	* @param bool $save Whether or not to back up the file getting deleted.
 	*/
 	function Delete($fi, $save)
 	{
@@ -1253,7 +1275,16 @@ class FilterDefault
 		else unlink($fi->path);
 	}
 
+	/**
+	 * Called when a filter is set to this one.
+	 * @param string $path Source path.
+	 */
 	function Install($path) {}
+
+	/**
+	 * Called when a filter is no longer set to this one.
+	 * @param string $path Source path.
+	 */
 	function Cleanup($path) {}
 }
 
@@ -1286,7 +1317,8 @@ class FilterGallery extends FilterDefault
 
 	/**
 	 * Returns an array of options that allow configuring this filter.
-	 *
+	 * @param FileInfo $fi Associated file information.
+	 * @param array $default Default values.
 	 * @return array
 	 */
 	function GetOptions(&$fi, $default)
@@ -1315,8 +1347,11 @@ class FilterGallery extends FilterDefault
 	}
 
 	/**
-	* @param FileInfo $fi Target to be deleted.
-	*/
+	 * Called when an item is to be deleted.
+	 *
+	 * @param FileInfo $fi Target to be deleted.
+	 * @param bool $save Whether or not to back up the item to be deleted.
+	 */
 	function Delete($fi, $save)
 	{
 		parent::Delete($fi, $save);

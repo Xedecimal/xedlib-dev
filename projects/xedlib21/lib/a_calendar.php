@@ -18,22 +18,25 @@ class Calendar
 	 * @var array
 	 */
 	private $events;
+
 	/**
 	 * Array of dates in this calendar.
 	 *
 	 * @var array
 	 */
 	private $dates;
+
 	/**
 	 * Array indexed by day in this calendar.
 	 *
 	 * @var array
 	 */
 	private $datesbyday;
+
 	/**
-	 * Body of the current day?
+	 * Body of each day.
 	 *
-	 * @var unknown_type
+	 * @var string
 	 */
 	public $daybody;
 
@@ -77,6 +80,7 @@ class Calendar
 	* Gets an html rendered calander display relative to the given
 	* timestamp.
 	* @param int $timestamp Time to display the calendar relavant to.
+	* @return Rendered html calendar in normal form.
 	*/
 	function Get($timestamp = null)
 	{

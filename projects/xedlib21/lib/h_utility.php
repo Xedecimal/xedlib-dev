@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Global reference to self script.
+ * @var string
+ */
 $me = GetVar("SCRIPT_NAME");
 $__sid = MD5(GetVar('SERVER_NAME'));
 

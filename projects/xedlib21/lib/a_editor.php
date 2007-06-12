@@ -31,7 +31,6 @@ class DisplayColumn
 	 * Creates a new DisplayColumn.
 	 *
 	 * @param string $text
-	 * @param string $column
 	 * @param mixed $callback
 	 * @param string $attribs
 	 * @return DisplayColumn
@@ -48,12 +47,13 @@ class EditorHandler
 {
 	/**
 	 * Default handler for creating an item.
-	 * If you extend this object and reutrn false, it will not add the item.
+	 * If you extend this object and return false, it will not add the item.
 	 *
 	 * @param array $data Context
 	 * @return boolean true by default (meant to be overriden)
 	 */
 	function Create(&$data) { return true; }
+
 	/**
 	 * After an item is created, this contains the id of the new item. You
 	 * cannot halt the item from being inserted at this point.
@@ -63,6 +63,7 @@ class EditorHandler
 	 * @return boolean true by default (meant to be overridden)
 	 */
 	function Created($id, $inserted) { return true; }
+
 	/**
 	 * Before an item is updated, this function is called. If you extend this
 	 * object and return false, it will not be updated.
@@ -73,6 +74,7 @@ class EditorHandler
 	 * @return boolean true by default (meant to be overridden)
 	 */
 	function Update($id, &$data, &$update) { return true; }
+
 	/**
 	 * Called before and item is deleted. If you extend this object and return
 	 * false, it will not be deleted.
@@ -82,10 +84,12 @@ class EditorHandler
 	 * @return boolean true by default (meant to be overridden)
 	 */
 	function Delete($id, &$data) { return true; }
-	///
-	///Called to retrieve additional fields for the editor form object.
-	///@param object $form Form.
-	///@param array $data Data related to the action (update/insert).
+
+	/**
+	 * Called to retrieve additional fields for the editor form object.
+	 * @param object $form Contextual form suggested to add fields to.
+	 * @param array $data Data related to the action (update/insert).
+	 */
 	function GetFields(&$form, $data) {}
 }
 
@@ -256,7 +260,7 @@ class EditorData
 	/**
 	 * Calback function to be called when an item is updated.
 	 *
-	 * @var unknown_type
+	 * @var mixed
 	 * @deprecated  use AddHandler instead.
 	 */
 	public $onupdate;
@@ -285,11 +289,10 @@ class EditorData
 	/**
 	 * Default constructor.
 	 *
-	 * @param $name string Name of this editor
-	 * @param $ds DataSet Dataset for this editor to interact with.
-	 * @param $fields array Array of items to allow editing.
-	 * @param $display array Array of items to display in top table.
-	 * @param $filter array Array to constrain editing to a given expression.
+	 * @param string $name Name of this editor
+	 * @param DataSet $ds Dataset for this editor to interact with.
+	 * @param array $filter Array to constrain editing to a given expression.
+	 * @param array $sort Array of 'column' => 'desc/asc'.
 	 * @return EditorData
 	 */
 	function EditorData($name, $ds = null, $filter = null, $sort = null)
@@ -326,7 +329,8 @@ class EditorData
 	 * To be called before presentation, will process, verify and calculate any
 	 * data to be used in the Get function.
 	 *
-	 * @param $action string Current action, usually stored in POST['ca']
+	 * @param string $action Current action, usually stored in POST['ca']
+	 * @return void
 	 */
 	function Prepare($action)
 	{
@@ -595,10 +599,13 @@ class EditorData
 	/**
 	 * Gets an UP image, usually used for sorting.
 	 *
+	 * @param string $target Name of script to attach the anchor to.
+	 * @param string $img Name of the image, '/images' will already be included.
+	 * @param array $defaults Defaults to be passed to URL() function.
 	 * @return string
 	 * @access private
 	 */
-	function GetSwapButton($target, $defaults, $src, $dst, $up)
+	function GetButton($target, $img, $defaults = null)
 	{
 		$uri = $defaults;
 		$uri['ci'] = $src;
@@ -965,6 +972,7 @@ class EditorData
 	 *
 	 * @param string $target Filename of script that uses this editor.
 	 * @param mixed $ci Current Item (eg. GetVar('ci')).
+	 * @param int $state Current state of the editor.
 	 * @param int $curchild Current child by DataSet Relation.
 	 * @return string
 	 */
@@ -1093,6 +1101,13 @@ class EditorData
 		return $ret;
 	}
 
+	/**
+	 * Gets a standard user interface for a single editor's Get() method.
+	 * @param string $target Target script to post to.
+	 * @param array $editor_return Return value of EditorData::Get().
+	 * @param string $form_atrs Additional form attributes.
+	 * @return string Rendered html of associated objects.
+	 */
 	static function GetUI($target, $editor_return, $form_atrs = null)
 	{
 		$ret = null;
