@@ -58,11 +58,10 @@ class EditorHandler
 	 * After an item is created, this contains the id of the new item. You
 	 * cannot halt the item from being inserted at this point.
 	 *
-	 * @param int $id
-	 * @param array $inserted Data that has been inserted.
+	 * @param array $inserted Data that has been inserted (including the id).
 	 * @return boolean true by default (meant to be overridden)
 	 */
-	function Created($id, $inserted) { return true; }
+	function Created($inserted) { return true; }
 
 	/**
 	 * Before an item is updated, this function is called. If you extend this
@@ -73,7 +72,7 @@ class EditorHandler
 	 * @param array $update Columns suggested to get updated.
 	 * @return boolean true by default (meant to be overridden)
 	 */
-	function Update($id, &$data, &$update) { return true; }
+	function Update(&$data, &$update) { return true; }
 
 	/**
 	 * Called before and item is deleted. If you extend this object and return
@@ -124,9 +123,9 @@ class HandlerFile extends EditorHandler
 	/**
 	 * Creates a new file handler.
 	 *
-	 * @param string $target
-	 * @param string $column
-	 * @param array $conditions
+	 * @param string $target Target folder that will hold information.
+	 * @param string $column Data column to name new folders by.
+	 * @param array $conditions Conditions to consider managing folders.
 	 * @return HandlerFile
 	 */
 	function HandlerFile($target, $column, $conditions = null)
@@ -144,7 +143,7 @@ class HandlerFile extends EditorHandler
 	 * @param array $data row data
 	 * @return boolean True to allow the creation.
 	 */
-	function Create(&$data)
+	function Created($data)
 	{
 		$target = "{$this->target}/{$data[$this->column]}";
 		if (!isset($this->conditions) && !file_exists($target))
@@ -178,7 +177,7 @@ class HandlerFile extends EditorHandler
 	 * @param array $update
 	 * @return boolean
 	 */
-	function Update($id, &$data, &$update)
+	function Update(&$data, &$update)
 	{
 		$source = "{$this->target}/{$data[$this->column]}";
 		if (file_exists($source))
@@ -401,9 +400,11 @@ class EditorData
 				chmod($target, 0777);
 			}
 
+			$insert[$this->ds->id] = $id;
+
 			foreach ($this->handlers as $handler)
 			{
-				$handler->Created($id, $insert);
+				$handler->Created($insert);
 			}
 		}
 		else if ($action == $this->name.'_update')
@@ -423,11 +424,10 @@ class EditorData
 					}
 					else if ($in->type == 'password')
 					{
-						if (strlen($value) > 0)
-							$update[$data[0]] = md5($value);
+						if (strlen($value) > 0) $update[$col] = md5($value);
 					}
 					else if ($in->type == 'checkbox')
-						$update[$data[0]] = ($value == 1) ? $value : 0;
+						$update[$col] = ($value == 1) ? 1 : 0;
 					else if ($in->type == 'selects')
 					{
 						$update[$data[0]] = $value;
@@ -445,7 +445,7 @@ class EditorData
 							$update[$data[0]] = $ext;
 						}
 					}
-					$update[$col] = GetVar($col);
+					else $update[$col] = GetVar($col);
 				}
 			}
 
@@ -588,6 +588,7 @@ class EditorData
 	 */
 	function Get($target, $ci = null)
 	{
+		if (isset($ci)) $this->state = STATE_EDIT;
 		$ret['ds'] = $this->ds;
 		if (GetVar('ca') != $this->name.'_edit' && !empty($this->ds->DisplayColumns))
 			$ret['table'] = $this->GetTable($target, $ci);
@@ -605,17 +606,13 @@ class EditorData
 	 * @return string
 	 * @access private
 	 */
-	function GetButton($target, $img, $defaults = null)
+	function GetButton($target, $defaults = null, $img, $alt)
 	{
-		$uri = $defaults;
-		$uri['ci'] = $src;
-		$uri['ct'] = $dst;
-		$uri['ca'] = $this->name.'_swap';
 		$path = GetRelativePath(dirname(__FILE__));
-		return '<a href="'.URL($target, $uri).'">
-			<img src="'.$path.'/images/'. ($up ? 'up' : 'down').
-			'.png" alt="'.($up ? 'Up' : 'Down').'" title="'.
-			($up ? 'Up' : 'Down').'" /></a>';
+		return '<a href="'.URL($target, $defaults).'">'.
+			"<img src=\"{$path}/images/{$img}\"".
+			" alt=\"{$alt}\" title=\"{$alt}\"".
+			' /></a>';
 	}
 
 	/**
@@ -950,12 +947,24 @@ class EditorData
 					//This is a child of some sort, but it doesn't match the
 					//prior child, this would require a change of parents.
 					if ($node->children[$index-1]->data['_child'] == $cnode->data['_child'])
-					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index-1]->id, true);
+					{
+						$defs = array(
+							'ci' => $cnode->id,
+							'ct' => $node->children[$index-1]->id,
+							'ca' => $this->name.'_swap'
+						);
+						$row[] = $this->GetButton($target, $defs, 'up.png', 'Up');
+					}
 				}
 				else $row[] = '&nbsp;';
 				if ($index < count($node->children)-1 && $node->children[$index+1]->data['_child'] == $cnode->data['_child'])
 				{
-					$row[] = $this->GetSwapButton($target, $url_defaults, $cnode->id, $node->children[$index+1]->id, false);
+					$defs = array(
+						'ci' => $cnode->id,
+						'ct' => $node->children[$index+1]->id,
+						'ca' => $this->name.'_swap'
+					);
+					$row[] = $this->GetButton($target, $defs, 'down.png', 'Down');
 				}
 				else $row[] = '&nbsp;';
 			}
@@ -1035,6 +1044,7 @@ class EditorData
 					else
 					{
 						if ($in->type == 'password') $in->valu = '';
+						else if ($in->type == 'checkbox') $in->valu = 1;
 						else if (isset($sel[$col]))
 						{
 							if ($in->type == 'date')

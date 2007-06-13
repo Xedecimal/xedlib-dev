@@ -907,7 +907,7 @@ define('STATE_EDIT', 1);
 define('CONTROL_SIMPLE', 0);
 define('CONTROL_BOUND', 1);
 
-function BoolCallback($val) { return $val ? 'Yes' : 'No'; }
+function BoolCallback($val, $col) { return $val[$col] ? 'Yes' : 'No'; }
 
 /**
  * A node holds children.

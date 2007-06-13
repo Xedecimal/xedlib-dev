@@ -636,9 +636,10 @@ EOF;
 			foreach($this->files[$type] as $ix => $file)
 				$ret .= $this->GetFile($target, $file, $type, $ix);
 			$ret .= '</table>';
-			$ret .= "<input id=\"butSelAll{$type}\" type=\"button\"
-				onclick=\"docmanSelAll('{$type}');\"
-				value=\"Select all {$type}\" />";
+			if ($this->Behavior->MassAvailable())
+				$ret .= "<input id=\"butSelAll{$type}\" type=\"button\"
+					onclick=\"docmanSelAll('{$type}');\"
+					value=\"Select all {$type}\" />";
 		}
 		return $ret;
 	}

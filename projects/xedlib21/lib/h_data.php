@@ -617,7 +617,7 @@ class DataSet
 					if ($val[0] == "destring")
 						$ret .= $this->QuoteTable($key)." = {$val[1]}";
 				}
-				else $ret .= $this->QuoteTable($key)." = '".addslashes($val)."'";
+				else $ret .= $this->QuoteTable($key)." = '".paslash($val)."'";
 				if ($x++ < count($values)-1) $ret .= ", ";
 			}
 		}
@@ -652,7 +652,7 @@ class DataSet
 			{
 				if ($val[0] == "destring") $query .= $val[1];
 			}
-			else $query .= "'".addslashes($val)."'";
+			else $query .= "'".paslash($val)."'";
 			if ($ix < count($columns)-1) $query .= ", ";
 			$ix++;
 		}
@@ -726,7 +726,7 @@ class DataSet
 			$newrow = array();
 			foreach ($row as $key => $val)
 			{
-				$newrow[$key] = $val;
+				$newrow[$key] = psslash($val);
 			}
 			$items[] = $newrow;
 		}

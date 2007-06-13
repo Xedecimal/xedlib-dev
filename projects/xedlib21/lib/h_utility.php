@@ -549,4 +549,26 @@ function GetPages($data, $count)
 	}
 }
 
+/**
+ * Properly strip slashes from the given string depending on the configuration.
+ * @param string $str String to strip from.
+ * @return string Cleaned string.
+ */
+function psslash($str)
+{
+	if (ini_get('magic_quotes_gpc')) return $str;
+	else return stripslashes($str);
+}
+
+/**
+ * Properly add slashes to the given string depending on the configuration.
+ * @param string $str String to add slashes to.
+ * @return string Cleaned string.
+ */
+function paslash($str)
+{
+	if (ini_get('magic_quotes_gpc')) return $str;
+	else return addslashes($str);
+}
+
 ?>
