@@ -42,105 +42,113 @@ class Gallery
 	{
 		global $me;
 
-		if (GetVar('ca') == "view")
+		$body = <<<EOF
+<!--[if lt IE 7.]>
+<script defer type="text/javascript" src="js/pngfix.js"></script>
+<![endif]-->
+EOF;
+
+		$GLOBALS['page_section'] = "View Gallery";
+
+		$fm = new FileManager('gallery', $path, array('Gallery'), 'Gallery');
+		$fm->Behavior->ShowAllFiles = true;
+		$files = $fm->GetDirectory();
+
+		$fi = new FileInfo($path);
+
+		if (is_file($path)) return;
+		$body .= "<table class=\"gallery_table\">\n";
+
+		if ($path != $this->root)
 		{
-			$GLOBALS['page_section'] = 'View Image';
-			$body = '<p><a href="'.$_SERVER['SCRIPT_NAME'].'">Return to Main Gallery</a> » '.
-				substr(strrchr($path, '/'), 1).'</p>';
-			$body .= "<img src=\"$path\">\n";
+			if ($this->InfoCaption && isset($fi->info['title']))
+				$name = $fi->info['title'];
+			else $name = $fi->filename;
+			$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » {$name}</td></tr>";
 		}
-		else
+
+		if (!empty($files['dirs']))
 		{
-			$body = "\n<!--[if lt IE 7.]>
-<script defer type=\"text/javascript\" src=\"pngfix.js\"></script>
-<![endif]-->\n";
-			$GLOBALS['page_section'] = "View Gallery";
-
-			$fm = new FileManager('gallery', $path, array('Gallery'), 'Gallery');
-			$fm->Behavior->ShowAllFiles = true;
-			$files = $fm->GetDirectory();
-
-			$fi = new FileInfo($path);
-
-			if (is_file($path)) return;
-			$body .= "<table class=\"gallery_table\">\n";
-
-			if ($path != $this->root)
+			$ix = 0;
+			$body .= "<tr class=\"category_row\">";
+			foreach ($files['dirs'] as $dir)
 			{
-				if ($this->InfoCaption && isset($fi->info['title']))
-					$name = $fi->info['title'];
-				else $name = $fi->filename;
-				$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » {$name}</td></tr>";
-			}
+				$imgs = glob("$path/{$dir->path}/t_*.jpg");
+				$imgcount = is_array($imgs) ? count($imgs) : 0;
 
-			if (!empty($files['dirs']))
-			{
-				$ix = 0;
-				$body .= "<tr class=\"category_row\">";
-				foreach ($files['dirs'] as $dir)
+				if ($this->InfoCaption && !empty($dir->info['title']))
 				{
-					$imgs = glob("$path/{$dir->path}/t_*.jpg");
-					$imgcount = is_array($imgs) ? count($imgs) : 0;
-
-					if ($this->InfoCaption && !empty($dir->info['title']))
-					{
-						//$fi = new FileInfo("{$path}/{$filename}");
-						$name = @$dir->info['title'];
-					}
-					else $name = $dir->filename;
-
-					$body .= "<td class=\"gallery_cat\">» <a href=\"".URL($me, array('galcf' => $dir->path))."\">{$name}</a></td>\n";
-					if ($ix++ % 3 == 2) $body .= "</tr><tr>\n";
+					//$fi = new FileInfo("{$path}/{$filename}");
+					$name = @$dir->info['title'];
 				}
+				else $name = $dir->filename;
+
+				$body .= "<td class=\"gallery_cat\">» <a href=\"".URL($me, array('galcf' => $dir->path))."\">{$name}</a></td>\n";
+				if ($ix++ % 3 == 2) $body .= "</tr><tr>\n";
 			}
+		}
 
-			$vp = new VarParser();
-
-			if (!empty($files['files']))
+		if (!empty($files['files']))
+		{
+			$ix = 0;
+			$body .= "<tr class=\"images\"><td>\n";
+			foreach ($files['files'] as $file)
 			{
-				$ix = 0;
-				$body .= "<tr class=\"images\"><td>\n";
-				foreach ($files['files'] as $file)
+				if (isset($file->info['thumb']) && file_exists($file->info['thumb']))
 				{
-					if (isset($file->info['thumb']) && file_exists($file->info['thumb']))
-					{
-						if ($this->InfoCaption && !empty($file->info['title'])) $name = $file->info['title'];
-						else $name = str_replace('_', ' ', substr(basename($file->filename), 0, strpos(basename($file->filename), '.')));
-						$twidth = $file->info['thumb_width']+16;
-						$theight = $file->info['thumb_height']+64;
-						$url = URL($me, array('ca' => 'view', 'galcf' => "$path/$file->filename"));
+					$twidth = $file->info['thumb_width']+16;
+					$theight = $file->info['thumb_height']+32;
+					$url = URL($me, array('view' => $file->filename, 'galcf' => "$path"));
+					$caption = $this->GetCaption($file);
 
-						$d['image'] = $file->path;
-
-						$CapLeft = $vp->ParseVars($this->Display->CaptionLeft, $d);
-						$CapRight = $vp->ParseVars($this->Display->CaptionRight, $d);
-
-						$body .= <<<EOF
+					$body .= <<<EOF
 <div class="gallery_cell" style="overflow: auto; width: {$twidth}px; height:{$theight}px">
 <table class="gallery_shadow">
 <tr><td>
-	<a href="{$url}">
-	<img src="{$path}/t_{$file->filename}" alt="thumb" /></a></td><td class="gallery_shadow_right">
+<a href="{$url}#fullview">
+<img src="{$path}/t_{$file->filename}" alt="thumb" /></a></td><td class="gallery_shadow_right">
 </td></tr>
 <tr>
-	<td class="gallery_shadow_bottom"></td>
-	<td class="gallery_shadow_bright"></td>
+<td class="gallery_shadow_bottom"></td>
+<td class="gallery_shadow_bright"></td>
 </tr>
-</table><div class="gallery_caption">{$CapLeft}$name{$CapRight}</div></div>
+</table><div class="gallery_caption">$caption</div></div>
 EOF;
-					}
 				}
-				$body .= '</td>';
 			}
-			$body .= "</tr></table>\n";
+			$body .= '</td>';
+		}
+		$body .= "</tr></table>\n";
+
+		if ($view = GetVar('view'))
+		{
+			$GLOBALS['page_section'] = 'View Image';
+
+			$vname = substr(strrchr($path.'/'.$view, '/'), 1);
+			$body .= "<p><img id=\"fullview\" src=\"$path/$view\" alt=\"{$vname}\" /></p>\n";
 		}
 
 		return $body;
+	}
+
+	function GetCaption($file)
+	{
+		$vp = new VarParser();
+		$d['image'] = $file->path;
+		if ($this->InfoCaption
+			&& !empty($file->info['title'])
+			&& $this->Display->UseDisplayTitle)
+			$name = $file->info['title'];
+		else $name = $file->filename;
+		return $vp->ParseVars($this->Display->CaptionLeft, $d).
+			$name.
+			$vp->ParseVars($this->Display->CaptionRight, $d);
 	}
 }
 
 class GalleryDisplay
 {
+	public $UseDisplayTitle = true;
 	public $CaptionLeft = '';
 	public $CaptionRight = '';
 }
