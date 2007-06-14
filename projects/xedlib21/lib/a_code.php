@@ -326,7 +326,6 @@ class CodeReader
 				$this->curdoc->body .= $line;
 			}
 		}
-
 	}
 
 	/**

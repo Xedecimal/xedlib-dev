@@ -463,11 +463,12 @@ function GetButEdit($url = null)
  *
  * @param string $target Name of script to attach the anchor to.
  * @param string $img Name of the image, '/images' will already be included.
- * @param array $defaults Defaults to be passed to URL() function.
+ * @param string $alt Alternate text for missing image or tooltip.
+ * @param string $attribs Attributes to attach to the <img> tag.
  * @return string
  * @access private
  */
-function GetButton($target, $img, $alt, $attribs)
+function GetButton($target, $img, $alt, $attribs = null)
 {
 	$path = GetRelativePath(dirname(__FILE__));
 	return '<a href="'.$target.'">'.

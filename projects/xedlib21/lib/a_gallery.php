@@ -175,14 +175,14 @@ EOF;
 			$imgurl = $path.'/'.$files['files'][$view]->filename;
 			$vname = substr(strrchr($imgurl, '/'), 1);
 			$body .= '<p class="gallery_nav">';
-			if ($ix > 0)
+			if ($view > 0)
 				$body .= GetButton(URL($me, array(
 						'view' => $view-1,
 						'galcf' => $path,
 						'cp' => floor(($view-1)/$this->Behavior->PageCount)
 					)).'#fullview', 'back.png', 'Back', 'class="png"');
 			$body .= ' <b>Picture '.($view+1).' of '.count($files['files']).'</b> ';
-			if ($ix < count($files['files']))
+			if ($view < count($files['files']))
 				$body .= GetButton(URL($me, array(
 					'view' => $view+1,
 					'galcf' => $path,
@@ -198,7 +198,7 @@ EOF;
 </tr><tr>
 <td class="gallery_shadow_bottom"></td>
 <td class="gallery_shadow_bright"></td>
-</tr></table></div>';
+</tr></table></div>'.$this->GetCaption($files['files'][$view]);
 		}
 
 		return $body;

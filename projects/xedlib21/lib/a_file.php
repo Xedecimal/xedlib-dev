@@ -758,16 +758,10 @@ EOF;
 			if (is_dir($this->root.$this->cf.'/'.$file)) $ret['dirs'][] = $newfi;
 			else $ret['files'][] = $newfi;
 		}
-		if ($this->View->Sort == FM_SORT_MANUAL)
-		{
-			usort($ret['dirs'], array($this, 'cmp_file'));
-			usort($ret['files'], array($this, 'cmp_file'));
-		}
-		else
-		{
-			asort($ret['dirs']);
-			asort($ret['files']);
-		}
+
+		usort($ret['dirs'], array($this, 'cmp_file'));
+		usort($ret['files'], array($this, 'cmp_file'));
+
 		return $ret;
 	}
 
@@ -780,7 +774,10 @@ EOF;
 	 */
 	function cmp_file($f1, $f2)
 	{
-		return $f1->info['index'] < $f2->info['index'] ? -1 : 1;
+		if ($this->View->Sort == FM_SORT_MANUAL)
+			return $f1->info['index'] < $f2->info['index'] ? -1 : 1;
+		else
+			return strcmp($f1->filename, $f2->filename);
 	}
 
 	/**

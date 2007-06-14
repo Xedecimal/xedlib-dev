@@ -916,8 +916,8 @@ class EditorData
 
 			$url_edit = URL($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
 			$url_del = URL($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
-			$row[] = "<a href=\"$url_edit#{$this->name}_editor\"><img src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit Item\" /></a>";
-			$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\"><img src=\"{$p}/images/delete.png\" alt=\"Delete\" title=\"Delete Item\" /></a>";
+			$row[] = "<a href=\"$url_edit#{$this->name}_editor\"><img src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit Item\" class=\"png\" /></a>";
+			$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\"><img src=\"{$p}/images/delete.png\" alt=\"Delete\" title=\"Delete Item\" class=\"png\" /></a>";
 
 			$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
 
@@ -930,23 +930,23 @@ class EditorData
 					//prior child, this would require a change of parents.
 					if ($node->children[$index-1]->data['_child'] == $cnode->data['_child'])
 					{
-						$defs = array(
+						$url = URL($target, array(
 							'ci' => $cnode->id,
 							'ct' => $node->children[$index-1]->id,
 							'ca' => $this->name.'_swap'
-						);
-						$row[] = $this->GetButton($target, $defs, 'up.png', 'Up');
+						));
+						$row[] = GetButton($url, 'up.png', 'Up', 'class="png"');
 					}
 				}
 				else $row[] = '&nbsp;';
 				if ($index < count($node->children)-1 && $node->children[$index+1]->data['_child'] == $cnode->data['_child'])
 				{
-					$defs = array(
+					$url = URL($target, array(
 						'ci' => $cnode->id,
 						'ct' => $node->children[$index+1]->id,
 						'ca' => $this->name.'_swap'
-					);
-					$row[] = $this->GetButton($target, $defs, 'down.png', 'Down');
+					));
+					$row[] = GetButton($url, 'down.png', 'Down', 'class="png"');
 				}
 				else $row[] = '&nbsp;';
 			}
