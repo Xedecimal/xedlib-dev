@@ -539,14 +539,18 @@ function GetFlatPage($data, $page, $count)
 	return array_splice($data, $count*$page, $count);
 }
 
-function GetPages($data, $count)
+function GetPages($data, $count, $args)
 {
+	global $me;
+	$ret = null;
 	for ($ix = 0; $ix < count($data); $ix += $count)
 	{
-		if ($ix > 0) echo ' - ';
+		if ($ix > 0) $ret .= ' - ';
 		$page = $ix / $count;
-		echo "<a href=\"{$me}?cp={$page}\">{$page}</a>";
+		$url = URL($me, array_merge($args, array('cp' => $page)));
+		$ret .= "<a href=\"{$url}\">{$page}</a>";
 	}
+	return $ret;
 }
 
 /**

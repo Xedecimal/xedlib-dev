@@ -5,12 +5,14 @@ require_once(dirname(__FILE__).'/a_file.php');
 class Gallery
 {
 	public $InfoCaption = true;
+	public $Behavior;
 	public $Display;
 
 	private $root;
 
 	function Gallery($root)
 	{
+		$this->Behavior = new GalleryBehavior();
 		$this->Display = new GalleryDisplay();
 		$this->root = $root;
 	}
@@ -90,9 +92,16 @@ EOF;
 
 		if (!empty($files['files']))
 		{
+			if ($this->Behavior->PageCount != null)
+			{
+				$tot = GetFlatPage($files['files'], GetVar('cp'), $this->Behavior->PageCount);
+			}
+			else $tot = $files['files'];
+
 			$ix = 0;
 			$body .= "<tr class=\"images\"><td>\n";
-			foreach ($files['files'] as $file)
+
+			foreach ($tot as $file)
 			{
 				if (isset($file->info['thumb']) && file_exists($file->info['thumb']))
 				{
@@ -119,9 +128,47 @@ EOF;
 			$body .= '</td>';
 		}
 		$body .= "</tr></table>\n";
+		if ($this->Behavior->PageCount != null)
+		{
+			$args = array('galcf' => $path);
+			$body .= 'Page: '.GetPages($files['files'], $this->Behavior->PageCount, $args);
+		}
 
 		if ($view = GetVar('view'))
 		{
+			if ($this->Behavior->DisableSave)
+			$body .= <<<EOF
+<meta http-equiv="imagetoolbar" content="no">
+<script type="text/javascript">
+<!--
+var message = "Saving images is not allowed.";
+function click(e)
+{
+	if (document.all)
+	{
+		if (event.button == 2 || event.button == 3)
+		{
+			alert(message);
+			return false;
+		}
+	}
+	if (document.layers)
+	{
+		if (e.which == 3)
+		{
+			alert(message);
+			return false;
+		}
+	}
+}
+if (document.layers)
+{
+	document.captureEvents(Event.MOUSEDOWN);
+}
+document.onmousedown = click;
+// -->
+</SCRIPT>
+EOF;
 			$GLOBALS['page_section'] = 'View Image';
 
 			$vname = substr(strrchr($path.'/'.$view, '/'), 1);
@@ -151,6 +198,12 @@ class GalleryDisplay
 	public $UseDisplayTitle = true;
 	public $CaptionLeft = '';
 	public $CaptionRight = '';
+}
+
+class GalleryBehavior
+{
+	public $DisableSave = false;
+	public $PageCount = null;
 }
 
 ?>
