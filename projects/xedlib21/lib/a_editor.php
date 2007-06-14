@@ -598,24 +598,6 @@ class EditorData
 	}
 
 	/**
-	 * Gets an UP image, usually used for sorting.
-	 *
-	 * @param string $target Name of script to attach the anchor to.
-	 * @param string $img Name of the image, '/images' will already be included.
-	 * @param array $defaults Defaults to be passed to URL() function.
-	 * @return string
-	 * @access private
-	 */
-	function GetButton($target, $defaults = null, $img, $alt)
-	{
-		$path = GetRelativePath(dirname(__FILE__));
-		return '<a href="'.URL($target, $defaults).'">'.
-			"<img src=\"{$path}/images/{$img}\"".
-			" alt=\"{$alt}\" title=\"{$alt}\"".
-			' /></a>';
-	}
-
-	/**
 	 * Builds a recursive tree of editable items.
 	 *
 	 * @param array $items Items to be inserted into the tree.

@@ -64,7 +64,7 @@ EOF;
 		if ($path != $this->root)
 		{
 			if ($this->InfoCaption && isset($fi->info['title']))
-				$name = $fi->info['title'];
+				$name = htmlspecialchars($fi->info['title']);
 			else $name = $fi->filename;
 			$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » {$name}</td></tr>";
 		}
@@ -98,7 +98,7 @@ EOF;
 			}
 			else $tot = $files['files'];
 
-			$ix = 0;
+			$ix = GetVar('cp')*$this->Behavior->PageCount;
 			$body .= "<tr class=\"images\"><td>\n";
 
 			foreach ($tot as $file)
@@ -107,7 +107,7 @@ EOF;
 				{
 					$twidth = $file->info['thumb_width']+16;
 					$theight = $file->info['thumb_height']+32;
-					$url = URL($me, array('view' => $file->filename, 'galcf' => "$path"));
+					$url = URL($me, array('view' => $ix++, 'galcf' => "$path", 'cp' => GetVar('cp')));
 					$caption = $this->GetCaption($file);
 
 					$body .= <<<EOF
@@ -134,7 +134,8 @@ EOF;
 			$body .= 'Page: '.GetPages($files['files'], $this->Behavior->PageCount, $args);
 		}
 
-		if ($view = GetVar('view'))
+		$view = GetVar('view');
+		if (isset($view))
 		{
 			if ($this->Behavior->DisableSave)
 			$body .= <<<EOF
@@ -171,8 +172,33 @@ document.onmousedown = click;
 EOF;
 			$GLOBALS['page_section'] = 'View Image';
 
-			$vname = substr(strrchr($path.'/'.$view, '/'), 1);
-			$body .= "<p><img id=\"fullview\" src=\"$path/$view\" alt=\"{$vname}\" /></p>\n";
+			$imgurl = $path.'/'.$files['files'][$view]->filename;
+			$vname = substr(strrchr($imgurl, '/'), 1);
+			$body .= '<p class="gallery_nav">';
+			if ($ix > 0)
+				$body .= GetButton(URL($me, array(
+						'view' => $view-1,
+						'galcf' => $path,
+						'cp' => floor(($view-1)/$this->Behavior->PageCount)
+					)).'#fullview', 'back.png', 'Back', 'class="png"');
+			$body .= ' <b>Picture '.($view+1).' of '.count($files['files']).'</b> ';
+			if ($ix < count($files['files']))
+				$body .= GetButton(URL($me, array(
+					'view' => $view+1,
+					'galcf' => $path,
+					'cp' => floor(($view+1)/$this->Behavior->PageCount)
+					)).'#fullview', 'forward.png', 'Forward', 'class="png"');
+			$body .= '</p>';
+			$body .= '<div class="gallery_cell">
+<table class="gallery_shadow">
+<tr><td><img id="fullview"
+	src="'.$imgurl.'"
+	alt="'.$vname.'" /></td>
+<td class="gallery_shadow_right">&nbsp;&nbsp;</td>
+</tr><tr>
+<td class="gallery_shadow_bottom"></td>
+<td class="gallery_shadow_bright"></td>
+</tr></table></div>';
 		}
 
 		return $body;

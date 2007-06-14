@@ -459,6 +459,24 @@ function GetButEdit($url = null)
 }
 
 /**
+ * Gets an image button.
+ *
+ * @param string $target Name of script to attach the anchor to.
+ * @param string $img Name of the image, '/images' will already be included.
+ * @param array $defaults Defaults to be passed to URL() function.
+ * @return string
+ * @access private
+ */
+function GetButton($target, $img, $alt, $attribs)
+{
+	$path = GetRelativePath(dirname(__FILE__));
+	return '<a href="'.$target.'">'.
+		"<img src=\"{$path}/images/{$img}\"".
+		" alt=\"{$alt}\" title=\"{$alt}\"".
+		' '.$attribs.' /></a>';
+}
+
+/**
  * Resizes an image bicubicly and constrains proportions.
  *
  * @param resource $image Use imagecreate*
@@ -548,7 +566,7 @@ function GetPages($data, $count, $args)
 		if ($ix > 0) $ret .= ' - ';
 		$page = $ix / $count;
 		$url = URL($me, array_merge($args, array('cp' => $page)));
-		$ret .= "<a href=\"{$url}\">{$page}</a>";
+		$ret .= '<a href="'.$url.'">'.($page+1).'</a>';
 	}
 	return $ret;
 }
