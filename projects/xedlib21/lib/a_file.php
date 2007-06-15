@@ -204,6 +204,19 @@ class FileManager
 						$info->path);
 			}
 		}
+		else if ($action == 'Update') //Mass captions
+		{
+			if (!$this->Behavior->AllowEdit) return;
+			$caps = GetVar('captions');
+
+			if (!empty($caps))
+			foreach ($caps as $file => $cap)
+			{
+				$fi = new FileInfo($this->root.$this->cf.'/'.$file);
+				$fi->info['caption'] = $cap;
+				$fi->SaveInfo();
+			}
+		}
 		else if ($action == 'rename')
 		{
 			if (!$this->Behavior->AllowRename) return;
@@ -640,6 +653,10 @@ EOF;
 				$ret .= "<input id=\"butSelAll{$type}\" type=\"button\"
 					onclick=\"docmanSelAll('{$type}');\"
 					value=\"Select all {$type}\" />";
+			if ($this->Behavior->AllowEdit)
+			{
+				$ret .= '<input type="submit" name="ca" value="Update" />';
+			}
 		}
 		return $ret;
 	}
@@ -718,6 +735,8 @@ EOF;
 			'ci' => urlencode($file->filename)
 		)));
 
+		//Move Up
+
 		if ($this->Behavior->AllowSort && $index > 0)
 		{
 			$img = GetRelativePath(dirname(__FILE__)).'/images/up.png';
@@ -725,6 +744,8 @@ EOF;
 			"alt=\"Move Up\" title=\"Move Up\" /></a></td>";
 		}
 		else $ret .= "\t<td>&nbsp;</td>\n";
+
+		//Move Down
 
 		if ($this->Behavior->AllowSort &&
 			$index < count($this->files[$types])-1)
@@ -734,6 +755,17 @@ EOF;
 			"alt=\"Move Down\" title=\"Move Down\" /></a></td>";
 		}
 		else $ret .= "\t<td>&nbsp;</td>\n";
+
+
+		if ($this->Behavior->AllowEdit)
+		{
+			$id = $type.'_'.$index;
+			$ret .= '<td>'
+			.'<input type="text" name="captions['.$file->filename.']" value="'
+				.@stripslashes($file->info['caption']).'" />'
+			.'</td>';
+		}
+
 		$ret .= "</tr>\n";
 
 		return $ret;

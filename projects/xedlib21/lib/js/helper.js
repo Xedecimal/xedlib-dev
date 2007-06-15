@@ -1,3 +1,5 @@
+function gebi(id) { return document.getElementById(id); }
+
 function toggle(id)
 {
 	obj = document.getElementById(id);
