@@ -204,16 +204,18 @@ class FileManager
 						$info->path);
 			}
 		}
-		else if ($action == 'Update') //Mass captions
+		else if ($action == 'Update') //Mass Captions
 		{
 			if (!$this->Behavior->AllowEdit) return;
-			$caps = GetVar('captions');
+			$caps = GetVar('titles');
 
 			if (!empty($caps))
 			foreach ($caps as $file => $cap)
 			{
-				$fi = new FileInfo($this->root.$this->cf.'/'.$file);
-				$fi->info['caption'] = $cap;
+				if (strlen($cap) < 1) continue;
+				$fi = new FileInfo($this->root.$this->cf.'/'.$file, $this->DefaultFilter);
+				$fi->info['title'] = $cap;
+				$fi->Filter->Updated($fi);
 				$fi->SaveInfo();
 			}
 		}
@@ -335,6 +337,10 @@ EOF;
 			$ret .= "<input type=\"hidden\" name=\"editor\" value=\"{$this->name}\" />";
 			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$this->cf}\" />";
 		}
+		else if ($this->Behavior->AllowEdit)
+		{
+			$ret .= "<form action=\"{$target}\" method=\"post\">";
+		}
 		if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
 		$ret .= '<script type="text/javascript" src="'.
 			GetRelativePath(dirname(__FILE__)).'/js/helper.js"></script>';
@@ -371,6 +377,8 @@ EOF;
 			$ret .= "Size: $size bytes<br/>\n";
 			$ret .= "Last Modified: $time<br/>\n";
 		}
+
+		$ret .= "</form>";
 
 		$ret .= $this->GetOptions($fi, $target, $action);
 
@@ -429,7 +437,6 @@ EOF;
 	</noscript>
 	<script type="text/javascript">
 	// <![CDATA[
-
 	var so = new SWFObject("{$pname}/swf/fileUpload.swf", "fileUpload", "550", "100", "9");
 	so.addParam('allowScriptAccess', 'sameDomain');
 	so.addParam('movie', 'fileUpload.swf');
@@ -437,7 +444,6 @@ EOF;
 	so.addParam('wmode', 'transparent');
 	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=editor,{$this->name},ca,upload,cf,{$this->cf},PHPSESSID,{$sid}&amp;ref=editor,{$this->name},cf,{$this->cf}');
 	so.write("flashUpload");
-
 	// ]]>
 	</script>
 	</form>
@@ -655,7 +661,7 @@ EOF;
 					value=\"Select all {$type}\" />";
 			if ($this->Behavior->AllowEdit)
 			{
-				$ret .= '<input type="submit" name="ca" value="Update" />';
+				$ret .= '<input type="submit" name="ca" value="Update Captions" />';
 			}
 		}
 		return $ret;
@@ -710,7 +716,9 @@ EOF;
 		if ($this->mass_avail)
 			$ret .= "\t\t<label><input type=\"checkbox\" id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\" onclick=\"toggleAny(['sel_files_', 'sel_dirs_'], '{$this->name}_mass_options');\" />\n";
 		$ret .= "\t\t<a href=\"$url\">{$name}</a> ".
-		($this->View->ShowDate ? '<br/>'.gmdate("m/d/y h:i", filectime($file->path)) : null)."\n\t</label></td>\n";
+		($this->View->ShowDate ? '<br/>'.gmdate("m/d/y h:i", filectime($file->path)) : null)."\n";
+		if ($this->mass_avail) $ret .= '</label>';
+		$ret .= '</td>';
 
 		$common = array(
 			'cf' => $this->cf,
@@ -756,13 +764,12 @@ EOF;
 		}
 		else $ret .= "\t<td>&nbsp;</td>\n";
 
-
 		if ($this->Behavior->AllowEdit)
 		{
 			$id = $type.'_'.$index;
 			$ret .= '<td>'
-			.'<input type="text" name="captions['.$file->filename.']" value="'
-				.@stripslashes($file->info['caption']).'" />'
+			.'<input type="text" name="titles['.$file->filename.']" value="'
+				.@htmlspecialchars(stripslashes($file->info['title'])).'" />'
 			.'</td>';
 		}
 
@@ -809,7 +816,7 @@ EOF;
 		if ($this->View->Sort == FM_SORT_MANUAL)
 			return $f1->info['index'] < $f2->info['index'] ? -1 : 1;
 		else
-			return strcmp($f1->filename, $f2->filename);
+			return strcasecmp($f1->filename, $f2->filename);
 	}
 
 	/**
@@ -1127,7 +1134,10 @@ class FileInfo
 
 		$finfo = $this->dir.'/.'.$this->filename;
 		if (file_exists($finfo))
+		{
 			$this->info = unserialize(file_get_contents($finfo));
+			if (!$this->info) Error("Failed to unserialize: {$finfo}<br/>\n");
+		}
 		else $this->info = array();
 		$this->GetFilter($source, $DefaultFilter);
 		if (is_dir($source)) $this->type = 'folder';
@@ -1243,7 +1253,7 @@ class FilterDefault
 	{
 		$more = array(
 			new FormInput('Display Name for Current File or Folder', 'text', 'info[title]',
-			@$fi->info['title'], null)
+			stripslashes(@$fi->info['title']), null)
 		);
 		if (!empty($default)) return array_merge($default, $more);
 		else return $more;
@@ -1343,6 +1353,18 @@ class FilterGallery extends FilterDefault
 		if (file_exists($fi->dir."/t_".$fi->filename))
 			$fi->info['thumb'] = "{$fi->dir}/t_{$fi->filename}";
 		return $fi;
+	}
+
+	/**
+	 * @param FileInfo $fi Associated file information.
+	 */
+	function Updated(&$fi)
+	{
+		if (is_file($fi->path)) unset(
+			$fi->info['thumb_width'],
+			$fi->info['thumb_height'],
+			$fi->info['thumb']
+		);
 	}
 
 	/**

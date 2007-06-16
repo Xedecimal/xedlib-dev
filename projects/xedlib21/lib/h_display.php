@@ -761,7 +761,7 @@ class FormInput
 			class=\"".($this->type == 'button' || $this->type == 'submit' ? 'input_button' : 'input_generic')."\"
 			name=\"{$this->name}\"
 			id=\"".CleanID($parent.'_'.$this->name)."\"".
-			(isset($this->valu) ? " value=\"{$this->valu}\"" : null).
+			(isset($this->valu) ? ' value="'.htmlspecialchars($this->valu).'"' : null).
 			"{$this->atrs}/>";
 	}
 }
