@@ -378,8 +378,6 @@ EOF;
 			$ret .= "Last Modified: $time<br/>\n";
 		}
 
-		$ret .= "</form>";
-
 		$ret .= $this->GetOptions($fi, $target, $action);
 
 		return $ret;
@@ -652,6 +650,7 @@ EOF;
 		{
 			$ret .= $title;
 			$ret .= '<table class="tableFiles">';
+			$ret .= '<tr><th>File</th><th colspan="2">Action</th><th>Caption</th></tr>';
 			foreach($this->files[$type] as $ix => $file)
 				$ret .= $this->GetFile($target, $file, $type, $ix);
 			$ret .= '</table>';
@@ -768,8 +767,9 @@ EOF;
 		{
 			$id = $type.'_'.$index;
 			$ret .= '<td>'
-			.'<input type="text" name="titles['.$file->filename.']" value="'
-				.@htmlspecialchars(stripslashes($file->info['title'])).'" />'
+			.'<textarea name="titles['.$file->filename.']" rows="1" cols="15">'
+				.@htmlspecialchars(stripslashes($file->info['title'])).
+				'</textarea>'
 			.'</td>';
 		}
 
