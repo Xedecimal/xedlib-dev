@@ -463,6 +463,23 @@ EOF;
 					$out, 'template_box.html');
 			}
 
+			if ($this->Behavior->AllowRename)
+			{
+				$form = new Form('rename');
+				$form->AddHidden('editor', $this->name);
+				$form->AddHidden('ca', 'rename');
+				$form->AddHidden('ci', $fi->path);
+				$form->AddHidden('cf', $this->cf);
+				$form->AddInput(new FormInput('Current File/Folder Name', 'text', 'name', $fi->filename, null, ' - <span style="font-size: 8pt;">Don\'t forget to
+					include the correct file extension with the name (i.e. -
+					.jpg, .zip, .doc, etc.)</span>'));
+				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Rename'));
+				global $me;
+				$out = $form->Get('method="post" action="'.$me.'"');
+				$ret .= GetBox('box_rename', '<b>Rename File / Folder</b> - <i>This is not the same as the "Display Name" option above.', $out,
+					'template_box.html');
+			}
+
 			if ($this->Behavior->AllowEdit)
 			{
 				//Filter options.
@@ -496,31 +513,13 @@ EOF;
 					}
 					$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
-					$end = substr(strrchr(substr($this->cf, 0, -1), '/'), 1);
-					$start = substr($this->cf, 0, -strlen($end)-1);
-					$ret .= GetBox('box_settings', "Settings for... <i>{$this->root}{$start}</i>".
-						(!empty($end)?"<span style=\"text-decoration: underline;\">{$end}</span>":null),
+					//$end = substr(strrchr(substr($this->cf, 0, -1), '/'), 1);
+					//$start = substr($this->cf, 0, -strlen($end)-1);
+					$ret .= GetBox('box_settings', '<b>Additional Settings</b>',
 						$form->Get('method="post" action="'.$target.'"'), 'template_box.html');
 				}
 			}
-
-			if ($this->Behavior->AllowRename)
-			{
-				$form = new Form('rename');
-				$form->AddHidden('editor', $this->name);
-				$form->AddHidden('ca', 'rename');
-				$form->AddHidden('ci', $fi->path);
-				$form->AddHidden('cf', $this->cf);
-				$form->AddInput(new FormInput('Name', 'text', 'name', $fi->filename, null, ' - <span style="font-size: 8pt;">Don\'t forget to
-					include the correct file extension with the name (i.e. -
-					.jpg, .zip, .doc, etc.)</span>'));
-				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Rename'));
-				global $me;
-				$out = $form->Get('method="post" action="'.$me.'"');
-				$ret .= GetBox('box_rename', '<b>Rename File / Folder</b> - <i>This is not the same as the "Display Name" option above.', $out,
-					'template_box.html');
-			}
-			$ret .= "</div><br/><br/><br/><br/>";
+			$ret .= "</div>";
 		}
 		return $ret;
 	}
@@ -648,10 +647,13 @@ EOF;
 			$ret .= $title;
 			$ret .= '<table class="tableFiles">';
 			$ret .= '<tr><th>File</th>';
-			if (count($this->files[$type]) > 1)
+			if (count($this->files[$type]) > 1
+				&& $this->View->Sort == FM_SORT_MANUAL
+				&& $this->Behavior->AllowSort)
 				$ret .= '<th colspan="2">Action</th>';
 			else $ret .= '<th colspan="2">&nbsp;</th>';
-			$ret .= '<th>Caption</th></tr>';
+			if ($this->Behavior->QuickCaptions)
+				$ret .= '<th>Caption</th></tr>';
 			foreach($this->files[$type] as $ix => $file)
 				$ret .= $this->GetFile($target, $file, $type, $ix);
 			$ret .= '</table>';
@@ -745,7 +747,9 @@ EOF;
 
 		//Move Up
 
-		if ($this->Behavior->AllowSort && $index > 0)
+		if ($this->Behavior->AllowSort
+			&& $this->View->Sort == FM_SORT_MANUAL
+			&& $index > 0)
 		{
 			$img = GetRelativePath(dirname(__FILE__)).'/images/up.png';
 			$ret .= "\t<td><a href=\"$uriUp\"><img src=\"{$img}\" ".
@@ -755,8 +759,9 @@ EOF;
 
 		//Move Down
 
-		if ($this->Behavior->AllowSort &&
-			$index < count($this->files[$types])-1)
+		if ($this->Behavior->AllowSort
+			&& $this->View->Sort == FM_SORT_MANUAL
+			&& $index < count($this->files[$types])-1)
 		{
 			$img = GetRelativePath(dirname(__FILE__)).'/images/down.png';
 			$ret .= "\t<td><a href=\"$uriDown\"><img src=\"{$img}\" ".
@@ -764,7 +769,7 @@ EOF;
 		}
 		else $ret .= "\t<td>&nbsp;</td>\n";
 
-		if ($this->Behavior->AllowEdit)
+		if ($this->Behavior->QuickCaptions)
 		{
 			$id = $type.'_'.$index;
 			$ret .= '<td>'
@@ -872,7 +877,7 @@ class FileManagerView
 	 *
 	 * @var int
 	 */
-	public $Sort = FM_SORT_MANUAL;
+	public $Sort = FM_SORT_TABLE;
 	/**
 	 * Whether or not to show the date next to files.
 	 *
@@ -1003,6 +1008,8 @@ class FileManagerBehavior
 	var $FileCallback = null;
 
 	public $Access;
+
+	public $QuickCaptions = false;
 
 	/**
 	 * Return true if options are available.
@@ -1579,7 +1586,7 @@ class FileAccessHandler extends EditorHandler
 		//Set information on this item.
 		$fi = new FileInfo($root);
 
-		if (in_array($root, $accesses))
+		if (!empty($accesses) && in_array($root, $accesses))
 			$fi->info['access'][$id] = 1;
 		else
 			unset($fi->info['access'][$id]);
