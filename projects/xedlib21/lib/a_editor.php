@@ -1040,9 +1040,6 @@ class EditorData
 					$in->name = $col;
 
 					$frm->AddInput($in);
-					/*$frm->AddInput(new FormInput($text, $data[1], $data[0],
-							$value, isset($data[3]) ? $data[3] : null,
-							isset($data[4]) ? $data[4] : null));*/
 				}
 				else $frm->AddRow(is_numeric($col) ? $data : '&nbsp;');
 			}

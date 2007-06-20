@@ -35,7 +35,7 @@ class FileManager
 	public $Behavior;
 
 	/**
-	 * Enter description here...
+	 * Visibility properties.
 	 *
 	 * @var FileManagerView
 	 */
@@ -181,6 +181,7 @@ class FileManager
 			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$info->Filter->Updated($info);
 			$newinfo = GetPost('info');
+			$this->Behavior->Update($newinfo);
 
 			if (!empty($newinfo))
 			{
@@ -194,11 +195,8 @@ class FileManager
 				}
 
 				$info->info = array_merge($info->info, $newinfo);
-				$p = $info->dir.'/.'.$info->filename;
-				$fp = fopen($p, "w+");
-				fwrite($fp, serialize($info->info));
-				fclose($fp);
-				chmod($p, 0755);
+				$info->SaveInfo();
+
 				if (!empty($this->Behavior->Watcher))
 					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPDATE,
 						$info->path);
@@ -487,6 +485,7 @@ EOF;
 					false)));
 
 				$options = $fi->Filter->GetOptions($fi, $def);
+				$options = array_merge($options, $this->Behavior->GetOptions($fi));
 
 				if (!empty($options))
 				{
@@ -650,7 +649,11 @@ EOF;
 		{
 			$ret .= $title;
 			$ret .= '<table class="tableFiles">';
-			$ret .= '<tr><th>File</th><th colspan="2">Action</th><th>Caption</th></tr>';
+			$ret .= '<tr><th>File</th>';
+			if (count($this->files[$type]) > 1)
+				$ret .= '<th colspan="2">Action</th>';
+			else $ret .= '<th colspan="2">&nbsp;</th>';
+			$ret .= '<th>Caption</th></tr>';
 			foreach($this->files[$type] as $ix => $file)
 				$ret .= $this->GetFile($target, $file, $type, $ix);
 			$ret .= '</table>';
@@ -1000,6 +1003,8 @@ class FileManagerBehavior
 	*/
 	var $FileCallback = null;
 
+	public $Access;
+
 	/**
 	 * Return true if options are available.
 	 * @return bool
@@ -1034,6 +1039,28 @@ class FileManagerBehavior
 		$this->AllowSetType =
 		$this->ShowAllFiles =
 		true;
+	}
+
+	function GetOptions($fi)
+	{
+		if (!empty($fi->info['access']))
+		foreach ($fi->info['access'] as $id => $set)
+		{
+			if (isset($this->Access[$id]))
+				$this->Access[$id]->selected = true;
+		}
+		$ret = array();
+		if (isset($this->Access))
+			$ret[] = new FormInput('Access', 'selects', 'info[access]',
+				$this->Access);
+		return $ret;
+	}
+
+	function Update(&$info)
+	{
+		$na = array();
+		foreach ($info['access'] as $ix => $id) $na[$id] = 1;
+		$info['access'] = $na;
 	}
 }
 
@@ -1136,7 +1163,8 @@ class FileInfo
 		if (file_exists($finfo))
 		{
 			$this->info = unserialize(file_get_contents($finfo));
-			if (!$this->info) Error("Failed to unserialize: {$finfo}<br/>\n");
+			if (!isset($this->info))
+				Error("Failed to unserialize: {$finfo}<br/>\n");
 		}
 		else $this->info = array();
 		$this->GetFilter($source, $DefaultFilter);
@@ -1378,8 +1406,10 @@ class FilterGallery extends FilterDefault
 		$new = array();
 		if (is_dir($fi->path))
 		{
-			$new[] = new FormInput('Thumbnail Width', 'text', 'info[thumb_width]', $fi->info['thumb_width']);
-			$new[] = new FormInput('Thumbnail Height', 'text', 'info[thumb_height]', $fi->info['thumb_height']);
+			$new[] = new FormInput('Thumbnail Width', 'text',
+				'info[thumb_width]', $fi->info['thumb_width']);
+			$new[] = new FormInput('Thumbnail Height', 'text',
+				'info[thumb_height]', $fi->info['thumb_height']);
 		}
 		return array_merge(parent::GetOptions($fi, $default), $new);
 	}
@@ -1509,6 +1539,74 @@ class FilterGallery extends FilterDefault
 		$destImage = imagecreatetruecolor( $destWidth, $destHeight);
 		ImageCopyResampled($destImage, $image, 0, 0, 0, 0, $destWidth, $destHeight, $srcWidth, $srcHeight);
 		return $destImage;
+	}
+}
+
+class FileAccessHandler extends EditorHandler
+{
+	private $root;
+
+	function FileAccessHandler($root)
+	{
+		$this->root = $root;
+	}
+
+	function RecurseFolder($root, $level, $id)
+	{
+		$ret = array();
+
+		//Get information on this item.
+		$so = new SelOption($root);
+		$fi = new FileInfo($root);
+		if (!empty($fi->info['access']) && isset($fi->info['access'][$id]))
+			$so->selected = true;
+		$ret[$root] = $so;
+
+		//Recurse children.
+		$dp = opendir($root);
+		while ($file = readdir($dp))
+		{
+			if ($file[0] == '.') continue;
+			$fp = $root.'/'.$file;
+			if (is_dir($fp)) $ret = array_merge($ret,
+				$this->RecurseFolder($fp, $level+1, $id));
+		}
+
+		return $ret;
+	}
+
+	function RecurseSetPerm($root, $id, $accesses)
+	{
+		//Set information on this item.
+		$fi = new FileInfo($root);
+
+		if (in_array($root, $accesses))
+			$fi->info['access'][$id] = 1;
+		else
+			unset($fi->info['access'][$id]);
+		$fi->SaveInfo();
+
+		//Recurse children.
+		$dp = opendir($root);
+		while ($file = readdir($dp))
+		{
+			if ($file[0] == '.') continue;
+			$fp = $root.'/'.$file;
+			if (is_dir($fp)) $this->RecurseSetPerm($fp, $id, $accesses);
+		}
+	}
+
+	function Update(&$id, &$update)
+	{
+		$accesses = GetVar('accesses');
+		$this->RecurseSetPerm($this->root, $id, $accesses);
+		return true;
+	}
+
+	function GetFields(&$form, $data)
+	{
+		$form->AddInput(new FormInput('Accessable Folders', 'selects',
+			'accesses', $this->RecurseFolder($this->root, 0, $data['usr_id'])));
 	}
 }
 
