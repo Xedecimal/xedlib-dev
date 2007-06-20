@@ -444,7 +444,7 @@ EOF;
 	</script>
 	</form>
 EOF;
-				$ret .= GetBox('box_upload', 'Upload to Current Folder',
+				$ret .= GetBox('box_upload', $this->View->TitleUpload,
 					$out, 'template_box.html');
 			}
 
@@ -459,7 +459,7 @@ EOF;
 	<input type="submit" value="Create" />
 </form>
 EOF;
-				$ret .= GetBox('box_createdir', $this->View->TextCreateFolder,
+				$ret .= GetBox('box_createdir', $this->View->TitleCreateFolder,
 					$out, 'template_box.html');
 			}
 
@@ -498,7 +498,8 @@ EOF;
 
 					$end = substr(strrchr(substr($this->cf, 0, -1), '/'), 1);
 					$start = substr($this->cf, 0, -strlen($end)-1);
-					$ret .= GetBox('box_settings', "Settings for {$this->root}{$start}".(!empty($end)?"<span style=\"text-decoration: underline;\">{$end}</span>":null),
+					$ret .= GetBox('box_settings', "Settings for... <i>{$this->root}{$start}</i>".
+						(!empty($end)?"<span style=\"text-decoration: underline;\">{$end}</span>":null),
 						$form->Get('method="post" action="'.$target.'"'), 'template_box.html');
 				}
 			}
@@ -510,16 +511,13 @@ EOF;
 				$form->AddHidden('ca', 'rename');
 				$form->AddHidden('ci', $fi->path);
 				$form->AddHidden('cf', $this->cf);
-				$form->AddInput(new FormInput('Name', 'text', 'name', $fi->filename, null,
-					'<span style="color: #F00">* Caution, this will change the
-					name of the file or folder that you are viewing.</span>'));
+				$form->AddInput(new FormInput('Name', 'text', 'name', $fi->filename, null, ' - <span style="font-size: 8pt;">Don\'t forget to
+					include the correct file extension with the name (i.e. -
+					.jpg, .zip, .doc, etc.)</span>'));
 				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Rename'));
 				global $me;
-				$out = '<p><span style="font-size: 8pt;">Don\'t forget to
-					include the correct file extension with the name (i.e. -
-					.jpg, .zip, .doc, etc.)</span></p>'.
-					$form->Get('method="post" action="'.$me.'"');
-				$ret .= GetBox('box_rename', 'Rename File', $out,
+				$out = $form->Get('method="post" action="'.$me.'"');
+				$ret .= GetBox('box_rename', '<b>Rename File / Folder</b> - <i>This is not the same as the "Display Name" option above.', $out,
 					'template_box.html');
 			}
 			$ret .= "</div><br/><br/><br/><br/>";
@@ -891,7 +889,8 @@ class FileManagerView
 	 * Create folder text to be displayed.
 	 * @var string
 	 */
-	public $TextCreateFolder = 'Create New Folder';
+	public $TitleCreateFolder = '<b>Create New Folder</b> - <i>Type folder name then click "create"</i>';
+	public $TitleUpload = '<b>Upload Files to Current Folder</b> - <i>Browse hard drive then click "upload"</i>';
 }
 
 class FileManagerBehavior
@@ -1051,7 +1050,7 @@ class FileManagerBehavior
 		}
 		$ret = array();
 		if (isset($this->Access))
-			$ret[] = new FormInput('Access', 'selects', 'info[access]',
+			$ret[] = new FormInput('<b>File / Folder Access</b> - <i>Ctrl+ select the users who can access this file/folder.</i><br/>', 'selects', 'info[access]',
 				$this->Access);
 		return $ret;
 	}
@@ -1280,7 +1279,7 @@ class FilterDefault
 	function GetOptions(&$fi, $default)
 	{
 		$more = array(
-			new FormInput('Display Name for Current File or Folder', 'text', 'info[title]',
+			new FormInput('<b>Change Display Name</b> - <i>Type the name that you would like to be displayed with the current file / folder.</i><br/>', 'text', 'info[title]',
 			stripslashes(@$fi->info['title']), null)
 		);
 		if (!empty($default)) return array_merge($default, $more);
