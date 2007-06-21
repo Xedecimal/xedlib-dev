@@ -1,15 +1,35 @@
 <?php
 
-require_once(dirname(__FILE__).'/a_file.php');
+require_once('a_file.php');
 
 class Gallery
 {
+	/**
+	 * Whether or not to display the caption specified in the file manager.
+	 * @var bool
+	 */
 	public $InfoCaption = true;
+	/**
+	 * Behavioral properties.
+	 * @var GalleryBehavior
+	 */
 	public $Behavior;
+	/**
+	 * Display properties.
+	 * @var GalleryDisplay
+	 */
 	public $Display;
 
+	/**
+	 * Root location of the images for this gallery.
+	 * @var string
+	 */
 	private $root;
 
+	/**
+	 * Constructor, sets default properties, behavior and display.
+	 * @param string $root Root location of images for this gallery.
+	 */
 	function Gallery($root)
 	{
 		$this->Behavior = new GalleryBehavior();
@@ -17,6 +37,14 @@ class Gallery
 		$this->root = $root;
 	}
 
+	/**
+	 * Gets a breadcrumb like path.
+	 * @param string $root Root location of this path.
+	 * @param string $path Current path we are recursing.
+	 * @param string $arg Name of url argument to attach path to.
+	 * @param string $sep Separation of folders use this character.
+	 * @param string $rootname Name of the top level folder.
+	 */
 	function GetPath($root, $path, $arg = 'cf', $sep = '/', $rootname = 'Home')
 	{
 		if ($path == $root) return null;

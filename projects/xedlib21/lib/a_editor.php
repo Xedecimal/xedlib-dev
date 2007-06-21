@@ -67,7 +67,6 @@ class EditorHandler
 	 * Before an item is updated, this function is called. If you extend this
 	 * object and return false, it will not be updated.
 	 *
-	 * @param int $id id of item to update.
 	 * @param array $data Context
 	 * @param array $update Columns suggested to get updated.
 	 * @return boolean true by default (meant to be overridden)
@@ -172,7 +171,6 @@ class HandlerFile extends EditorHandler
 	/**
 	 * Called when an item is updated.
 	 *
-	 * @param mixed $id
 	 * @param array $data
 	 * @param array $update
 	 * @return boolean

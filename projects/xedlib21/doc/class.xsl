@@ -45,18 +45,18 @@
 	<p>
 		<xsl:value-of select="doc/tag[@type='access']"/><xsl:text> </xsl:text>
 		<b><xsl:value-of select="doc/tag[@type='return']/@datatype"/></b><xsl:text> </xsl:text>
-	<xsl:value-of select="@name" />(
-		<xsl:for-each select="variable/@name">
-			<b><xsl:value-of select="../../doc/tag[@name=current()]/@datatype" /></b><xsl:text> </xsl:text>
-			<xsl:value-of select="."/><xsl:text> </xsl:text>
-		</xsl:for-each>
-	)</p>
+	<xsl:value-of select="@name" />(<xsl:for-each select="variable/@name">
+			<xsl:value-of select="../../doc/tag[@name=current()]/@datatype" /><xsl:text> </xsl:text>
+			<b><xsl:value-of select="."/></b>
+			<xsl:if test="position() != last()"><xsl:text>, </xsl:text></xsl:if>
+		</xsl:for-each>)</p>
 	<p><xsl:value-of select="doc/text()" /></p>
 	<table>
 		<xsl:for-each select="doc/tag[@type='param']">
 			<tr>
-			<td><b><xsl:value-of select="@datatype"/></b></td>
-			<td><xsl:value-of select="@name"/></td>
+			<!-- <td><b><xsl:value-of select="@datatype"/></b></td> -->
+			<td><b><xsl:value-of select="@name"/></b></td>
+			<td><xsl:value-of select="@desc"/></td>
 			<td><xsl:value-of select="."/></td>
 			</tr>
 		</xsl:for-each>

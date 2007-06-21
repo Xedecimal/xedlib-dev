@@ -904,6 +904,10 @@ class FileManagerView
 	 * @var string
 	 */
 	public $TitleCreateFolder = '<b>Create New Folder</b> - <i>Type folder name then click "create"</i>';
+	/**
+	 * Title message for the upload box.
+	 * @var string
+	 */
 	public $TitleUpload = '<b>Upload Files to Current Folder</b> - <i>Browse hard drive then click "upload"</i>';
 }
 
@@ -1005,19 +1009,27 @@ class FileManagerBehavior
 	public $Watchers = null;
 
 	/**
-	* Whether or not to ignore the root folder when doing file operations.
-	* @var bool
-	*/
+	 * Whether or not to ignore the root folder when doing file operations.
+	 * @var bool
+	 */
 	public $IgnoreRoot = false;
 
 	/**
-	* A callback to modify the output of each file link.
-	* @var string
-	*/
+	 * A callback to modify the output of each file link.
+	 * @var string
+	 */
 	var $FileCallback = null;
 
+	/**
+	 * Array of possible accessors.
+	 * @var array
+	 */
 	public $Access;
 
+	/**
+	 * Whether or not quick captions are available.
+	 * @var bool
+	 */
 	public $QuickCaptions = false;
 
 	/**
@@ -1056,6 +1068,11 @@ class FileManagerBehavior
 		true;
 	}
 
+	/**
+	 * Get behavior / security related options.
+	 * @param FileInfo $fi Associated file information.
+	 * @return array Array of FormInput objects to append to the parent form.
+	 */
 	function GetOptions($fi)
 	{
 		if (!empty($fi->info['access']))
@@ -1071,6 +1088,10 @@ class FileManagerBehavior
 		return $ret;
 	}
 
+	/**
+	 * Called when an item gets updated as a handler.
+	 * @param array $info Related file information.
+	 */
 	function Update(&$info)
 	{
 		$na = array();
@@ -1490,6 +1511,10 @@ class FilterGallery extends FilterDefault
 		parent::Upload($file, $target);
 	}
 
+	/**
+	 * Regenerates the associated thumbnails for a given folder.
+	 * @param string $path Destination path.
+	 */
 	function Install($path)
 	{
 		$files = glob($path."*.*");
@@ -1521,6 +1546,10 @@ class FilterGallery extends FilterDefault
 		}
 	}
 
+	/**
+	 * Cleans up all the generated thumbnail files for the given path.
+	 * @param string $path Target path.
+	 */
 	function Cleanup($path)
 	{
 		$files = glob($path."t_*.*");
@@ -1559,13 +1588,28 @@ class FilterGallery extends FilterDefault
 
 class FileAccessHandler extends EditorHandler
 {
+	/**
+	 * Top level directory to allow access.
+	 * @var string
+	 */
 	private $root;
 
+	/**
+	 * Constructor for this object, sets required properties.
+	 * @param string $root Top level directory to allow access.
+	 */
 	function FileAccessHandler($root)
 	{
 		$this->root = $root;
 	}
 
+	/**
+	 * Recurses a single folder to collect access information out of it.
+	 * @param string $root Source folder to recurse into.
+	 * @param int $level Amount of levels deep for tree construction.
+	 * @param int $id Identifier of the object we are looking for access to.
+	 * @return array Array of SelOption objects.
+	 */
 	function RecurseFolder($root, $level, $id)
 	{
 		$ret = array();
@@ -1590,6 +1634,12 @@ class FileAccessHandler extends EditorHandler
 		return $ret;
 	}
 
+	/**
+	 * Recurses a single folder to set access information in it.
+	 * @param string $root Source folder to recurse into.
+	 * @param int $id Identifier of the object we are looking for access to.
+	 * @param array $accesses Series of access items that will eventually get set.
+	 */
 	function RecurseSetPerm($root, $id, $accesses)
 	{
 		//Set information on this item.
@@ -1611,6 +1661,12 @@ class FileAccessHandler extends EditorHandler
 		}
 	}
 
+	/**
+	 * Called when a file or folder gets updated.
+	 * @param int $id Identifier for accessor.
+	 * @param array $update Target file information.
+	 * @return bool Whether or not the update will succeed.
+	 */
 	function Update(&$id, &$update)
 	{
 		$accesses = GetVar('accesses');
@@ -1618,6 +1674,12 @@ class FileAccessHandler extends EditorHandler
 		return true;
 	}
 
+	/**
+	 * Adds a series of options to the form associated with the given file.
+	 * @param Form $form Associated form.
+	 * @param array $data Associated data.
+	 * @todo Rename to AddFields
+	 */
 	function GetFields(&$form, $data)
 	{
 		$form->AddInput(new FormInput('Accessable Folders', 'selects',

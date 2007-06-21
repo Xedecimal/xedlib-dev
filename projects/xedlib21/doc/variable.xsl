@@ -4,30 +4,15 @@
 <html>
 <head>
 	<title> Documentation! </title>
+	<link href="../screen.css" type="text/css" rel="stylesheet" />
 </head>
 <body>
-<p><b>Functions</b></p>
-<p>
-<xsl:for-each select="root/function">
-	<a>
-		<xsl:attribute name="href">
-			<xsl:value-of select="name"/>.xml
-		</xsl:attribute>
-		<xsl:value-of select="name" />
-	</a><br />
-</xsl:for-each>
+<div class="blue">
+<p class="blue head">Variable <xsl:value-of select="root/@name" /></p>
+<p class="blue body item">
+<xsl:value-of select="root/doc" />
 </p>
-<p><b>Classes</b></p>
-<p>
-<xsl:for-each select="root/class">
-	<a>
-		<xsl:attribute name="href">
-			<xsl:value-of select="name"/>.xml
-		</xsl:attribute>
-		<xsl:value-of select="name" /><br />
-	</a>
-</xsl:for-each>
-</p>
+</div>
 </body>
 </html>
 </xsl:template>

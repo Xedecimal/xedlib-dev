@@ -309,11 +309,11 @@ class CodeReader
 				else if (preg_match('#param ([^ ]+) ([^ ]+)(.*)#', $tag, $match))
 				{
 					$this->curdoc->params[$match[2]]['type'] = $match[1];
-					$this->curdoc->params[$match[2]]['desc'] = $match[3];
+					$this->curdoc->params[$match[2]]['desc'] = substr($match[3], 1);
 				}
 				else if (preg_match('#return ([^ ]+)(.*)#', $line, $match))
 					$this->curdoc->return = array($match[1], $match[2]);
-				else if (preg_match('#var (.+)#', $line, $match))
+				else if (preg_match('#var ([^ ]+)#', $line, $match))
 					$this->curdoc->type = $match[1];
 				else
 				{

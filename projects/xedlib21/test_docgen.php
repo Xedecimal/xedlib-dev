@@ -56,6 +56,7 @@ class DocGeneratorXML
 			$elTag = $doc->createElement('tag');
 			$elTag->setAttribute('type', 'param');
 			$elTag->setAttribute('datatype', $args['type']);
+			$elTag->setAttribute('desc', $args['desc']);
 			$elTag->setAttribute('name', $name);
 			$elDoc->appendChild($elTag);
 		}
@@ -86,6 +87,8 @@ class DocGeneratorXML
 
 		if (isset($item->modifier))
 			$e->setAttribute('modifier', GetTypeName($item->modifier));
+		if (isset($item->doc->type))
+			$e->setAttribute('type', $item->doc->type);
 		if (isset($item->doc))
 		{
 			$e->appendChild($this->GetDocumentElement($doc, $item));
@@ -182,7 +185,6 @@ class DocGeneratorXML
 			foreach ($data->members as $item)
 				$this->OutputTOC($doc, $root, $item, $target);
 			$doc->appendChild($root);
-			varinfo($doc);
 			$doc->save($target.'/index.xml');
 		}
 	}
