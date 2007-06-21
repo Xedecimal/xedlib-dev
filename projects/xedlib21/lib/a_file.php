@@ -146,8 +146,8 @@ class FileManager
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
-			@set_time_limit(0);
-			@ini_set('upload_max_filesize', '50M');
+			ini_set('upload_max_filesize', ini_get('post_max_size'));
+
 			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 			$files = GetVar('cu');
 
@@ -413,14 +413,21 @@ EOF;
 
 			if ($this->Behavior->AllowUpload && is_dir($fi->path))
 			{
-				ini_set('max_execution_time', 0);
 				ini_set('max_input_time', 0);
+
+				if (!ini_get('file_uploads')) Error("File uploads are not
+					enabled on this server, you should disable this ability in
+					the FileManager::Behavior properties.");
+
+				$maxsize = GetSizeString(min(GetStringSize(ini_get('post_max_size')),
+							   GetStringSize(ini_get('upload_max_filesize'))));
+
 				$pname = GetRelativePath(dirname(__FILE__));
 				$sid = @$_COOKIE['PHPSESSID'];
 				$out = <<<EOF
+	Maximum allowable combined file size: {$maxsize}<br/>
 	<script type="text/javascript" src="{$pname}/js/swfobject.js"></script>
 	<form action="{$target}" method="post" enctype="multipart/form-data">
-	<input type="hidden" name="MAX_FILE_SIZE" value="50000000" />
 	<input type="hidden" name="editor" value="{$this->name}" />
 	<input type="hidden" name="ca" value="upload"/>
 	<input type="hidden" name="cf" value="{$this->cf}"/>

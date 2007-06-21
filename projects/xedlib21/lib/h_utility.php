@@ -595,4 +595,28 @@ function paslash($str)
 	else return addslashes($str);
 }
 
+function GetStringSize($str)
+{
+	$num = (int)substr($str, 0, -1);
+	switch (strtoupper(substr($str, -1)))
+	{
+		case 'Y': $num *= 1024;
+		case 'Z': $num *= 1024;
+		case 'E': $num *= 1024;
+		case 'P': $num *= 1024;
+		case 'T': $num *= 1024;
+		case 'G': $num *= 1024;
+		case 'M': $num *= 1024;
+		case 'K': $num *= 1024;
+	}
+	return $num;
+}
+
+function GetSizeString($size)
+{
+	$units = explode(' ','B KB MB GB TB');
+	for ($i = 0; $size > 1024; $i++) { $size /= 1024; }
+	return round($size, 2).' '.$units[$i];
+}
+
 ?>
