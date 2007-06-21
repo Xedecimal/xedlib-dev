@@ -514,7 +514,7 @@ class Form extends Table
 		}
 
 		$right = false;
-		if ($input->type == 'check') $right = true;
+		if ($input->type == 'checkbox') $right = true;
 
 		$out = !empty($input->text)?$input->text:null;
 
@@ -525,7 +525,7 @@ class Form extends Table
 				$this->Errors[$input->name] :
 				null);
 		}
-		return '<label>'.
+		return ($input->type == 'checks' ? null : '<label>').
 			($right?null:$out).
 			$input->Get($this->name).
 			($right?$out:null).
@@ -700,13 +700,14 @@ class FormInput
 			if (!empty($this->valu))
 			foreach ($this->valu as $id => $val)
 			{
-				$selected = $val->selected ? ' selected="selected"' : null;
+				$selected = $val->selected ? ' checked="checked"' : null;
 				$ret .= "<br/><label><input
 					type=\"checkbox\"
 					name=\"{$this->name}[{$id}]\"
-					id=\"".CleanID($this->name.'_'.$id)."\"{$this->atrs}/>
+					id=\"".CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
 					{$val->text}</label>";
 			}
+			$this->EndLabel = true;
 			return $ret;
 		}
 		if ($this->type == 'selects')
@@ -748,13 +749,13 @@ class FormInput
 				name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\"
 				{$this->atrs}>{$this->valu}</textarea>";
-		if ($this->type == 'check')
+		if ($this->type == 'checkbox')
 		{
 			return "<input type=\"checkbox\"
 				name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\"
-				value=\"{$this->valu}\"
-				{$this->atrs} />";
+				value=\"1\" ".($this->valu ? 'checked="checked" ' : null).
+				$this->atrs." />";
 		}
 
 		return "<input type=\"{$this->type}\"

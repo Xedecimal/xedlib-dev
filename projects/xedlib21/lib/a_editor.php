@@ -474,8 +474,8 @@ class EditorData
 				if (!$handler->Swap($ci, $ct)) return;
 			}
 
-			if (!empty($context->ds->Fields))
-			foreach ($context->ds->Fields as $name => $data)
+			if (!empty($context->ds->FieldInputs))
+			foreach ($context->ds->FieldInputs as $name => $data)
 			{
 				if (is_array($data))
 				{
@@ -525,8 +525,8 @@ class EditorData
 					if (!$handler->Delete($ci, $data)) return;
 				}
 			}
-			if (!empty($context->ds->Fields))
-			foreach ($context->ds->Fields as $name => $data)
+			if (!empty($context->ds->FieldInputs))
+			foreach ($context->ds->FieldInputs as $name => $data)
 			{
 				if (is_array($data))
 				{
@@ -588,9 +588,11 @@ class EditorData
 	 */
 	function Get($target, $ci = null)
 	{
-		if (isset($ci)) $this->state = STATE_EDIT;
+		$ca = GetVar('ca');
+
+		if (isset($ci) && $ca == $this->name.'_edit') $this->state = STATE_EDIT;
 		$ret['ds'] = $this->ds;
-		if (GetVar('ca') != $this->name.'_edit' && !empty($this->ds->DisplayColumns))
+		if ($ca != $this->name.'_edit' && !empty($this->ds->DisplayColumns))
 			$ret['table'] = $this->GetTable($target, $ci);
 		$ret['forms'] = $this->GetForms($target, $ci,
 			GetVar('editor') == $this->name ? GetVar('child') : null);
@@ -903,7 +905,7 @@ class EditorData
 				else
 				{
 					if (isset($cnode->data[$disp_index]))
-						$row[$ix++] = stripslashes($cnode->data[$disp_index]);
+						$row[$ix++] = htmlspecialchars(stripslashes($cnode->data[$disp_index]));
 				}
 			}
 
@@ -978,7 +980,16 @@ class EditorData
 			if (!isset($this->ds)) Error("<br />What: Dataset is not set.
 				<br />Where: EditorData({$this->name})::GetForm.
 				<br />Why: This editor was not created with a proper dataset.");
-			$sel = $state == STATE_EDIT ? $context->ds->GetOne(array($context->ds->id => $ci)) : null;
+
+			$joins = array();
+			foreach ($this->handlers as $handler)
+			{
+				$join = $handler->GetJoins();
+				if (!empty($join)) $joins = array_merge($joins, $join);
+			}
+
+			$sel = $state == STATE_EDIT ? $context->ds->Get(
+				array($context->ds->id => $ci), null, null, $joins) : null;
 		}
 
 		if (!empty($context->ds->FieldInputs))
@@ -1013,35 +1024,34 @@ class EditorData
 					}
 					else if ($in->type == 'select')
 					{
-						if (isset($sel) && isset($sel[$col]) > 0)
-							$in->valu[$sel[$col]]->selected = true;
+						if (isset($sel) && isset($sel[0][$col]) > 0)
+							$in->valu[$sel[0][$col]]->selected = true;
 					}
 					else if ($in->type == 'selects')
 					{
-						if (isset($sel) && isset($sel[$data[0]]))
+						if (isset($sel) && isset($sel[0][$data[0]]))
 						$value = $this->GetSelMask($data[2], isset($sel) &&
-							strlen($data[0]) > 0 ? $sel[$data[0]] : null);
+							strlen($data[0]) > 0 ? $sel[0][$data[0]] : null);
 						else $value = $data[2];
 					}
 					else
 					{
 						if ($in->type == 'password') $in->valu = '';
-						else if ($in->type == 'checkbox') $in->valu = 1;
-						else if (isset($sel[$col]))
+						else if (isset($sel[0][$col]))
 						{
 							if ($in->type == 'date')
-								$value = MyDateTimestamp($sel[$col]);
-							else $in->valu = $sel[$col];
+								$in->valu = MyDateTimestamp($sel[0][$col]);
+							else $in->valu = $sel[0][$col];
 						}
-						else if (isset($data[2])) { $data[2]; }
-						else { $value = null; }
+						else if (isset($data[2])) { $in->valu = $data[2]; }
+						else { $in->valu = null; }
 					}
 
 					$in->name = $col;
 
 					$frm->AddInput($in);
 				}
-				else $frm->AddRow(is_numeric($col) ? $data : '&nbsp;');
+				else if (is_numeric($col)) $frm->AddRow('&nbsp;');
 			}
 
 			foreach ($this->handlers as $handler) $handler->GetFields($frm, isset($sel) ? $sel : null);
@@ -1081,7 +1091,7 @@ class EditorData
 			if (!empty($context->ds->children))
 			foreach ($context->ds->children as $ix => $child)
 			{
-				if (isset($child->ds->Fields))
+				if (isset($child->ds->FieldInputs))
 				{
 					$ret[] = $this->GetForm($target, $ci, STATE_CREATE, $ix);
 				}

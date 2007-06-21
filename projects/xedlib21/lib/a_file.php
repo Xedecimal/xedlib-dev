@@ -2,6 +2,7 @@
 
 require_once('h_utility.php');
 require_once('h_display.php');
+require_once('a_editor.php');
 
 define('FM_SORT_MANUAL', -1);
 define('FM_SORT_TABLE', -2);
@@ -476,7 +477,7 @@ EOF;
 				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Rename'));
 				global $me;
 				$out = $form->Get('method="post" action="'.$me.'"');
-				$ret .= GetBox('box_rename', '<b>Rename File / Folder</b> - <i>This is not the same as the "Display Name" option above.', $out,
+				$ret .= GetBox('box_rename', '<b>Rename File / Folder</b> - <i>This is not the same as the "Display Name" option above.</i>', $out,
 					'template_box.html');
 			}
 
@@ -653,7 +654,8 @@ EOF;
 				$ret .= '<th colspan="2">Action</th>';
 			else $ret .= '<th colspan="2">&nbsp;</th>';
 			if ($this->Behavior->QuickCaptions)
-				$ret .= '<th>Caption</th></tr>';
+				$ret .= '<th>Caption</th>';
+			$ret .= '</tr>';
 			foreach($this->files[$type] as $ix => $file)
 				$ret .= $this->GetFile($target, $file, $type, $ix);
 			$ret .= '</table>';
@@ -661,7 +663,7 @@ EOF;
 				$ret .= "<input id=\"butSelAll{$type}\" type=\"button\"
 					onclick=\"docmanSelAll('{$type}');\"
 					value=\"Select all {$type}\" />";
-			if ($this->Behavior->AllowEdit)
+			if ($this->Behavior->AllowEdit && $this->Behavior->QuickCaptions)
 			{
 				$ret .= '<input type="submit" name="ca" value="Update Captions" />';
 			}

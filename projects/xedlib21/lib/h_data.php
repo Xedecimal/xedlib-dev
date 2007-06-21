@@ -61,6 +61,7 @@ class Database
 	public $rq;
 
 	public $Handlers;
+	public $ErrorHandler;
 
 	/**
 	 * Checks for a mysql error.
@@ -98,6 +99,8 @@ class Database
 			case 'mysql':
 				$this->ErrorHandler = array($this, 'CheckMyError');
 				$this->link = mysql_connect($m[4], $m[2], $m[3]);
+				if (!$this->link)
+					Error("Unable to connect to mysql at {$m[4]}.<br/>\n");
 				mysql_select_db($m[5], $this->link);
 				$this->type = DB_MY;
 				$this->lq = $this->rq = '`';
@@ -128,6 +131,7 @@ class Database
 	 */
 	function Query($query, $silent = false, $handler = null)
 	{
+		if (!isset($this->type)) Error("Database has not been opened.");
 		if ($GLOBALS['debug']) varinfo($query);
 		switch ($this->type)
 		{
@@ -788,9 +792,9 @@ class DataSet
 	 * @param int $args Arguments passed to fetch_array.
 	 * @return array A single serialized row matching $match or null if not found.
 	 */
-	function GetOne($match, $args = GET_BOTH)
+	function GetOne($match, $joins = null, $args = GET_BOTH)
 	{
-		$data = $this->Get($match, null, null, null, null, null, $args);
+		$data = $this->Get($match, null, null, $joins, null, null, $args);
 		if (isset($data)) return $data[0];
 		return $data;
 	}

@@ -222,7 +222,8 @@ function URL($url, $uri = null)
 		{
 			if (isset($val))
 			{
-				$ret .= ($start ? '&amp;' : '?')."{$key}={$val}";
+				$nval = str_replace(' ', '%20', $val);
+				$ret .= ($start ? '&amp;' : '?')."{$key}={$nval}";
 				$start = true;
 			}
 		}
