@@ -84,6 +84,7 @@ EOF;
 
 		$fm = new FileManager('gallery', $path, array('Gallery'), 'Gallery');
 		$fm->Behavior->ShowAllFiles = true;
+		$fm->View->Sort = $this->Display->Sort;
 		$files = $fm->GetDirectory();
 
 		$fi = new FileInfo($path);
@@ -228,7 +229,8 @@ EOF;
 </tr><tr>
 <td class="gallery_shadow_bottom"></td>
 <td class="gallery_shadow_bright"></td>
-</tr></table></div>'.$this->GetCaption($files['files'][$view]);
+</tr></table></div><div class="gallery_caption">'.
+$this->GetCaption($files['files'][$view]).'</div>';
 		}
 
 		return $body;
@@ -254,6 +256,7 @@ class GalleryDisplay
 	public $UseDisplayTitle = true;
 	public $CaptionLeft = '';
 	public $CaptionRight = '';
+	public $Sort;
 }
 
 class GalleryBehavior
