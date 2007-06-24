@@ -9,11 +9,13 @@ class Gallery
 	 * @var bool
 	 */
 	public $InfoCaption = true;
+
 	/**
 	 * Behavioral properties.
 	 * @var GalleryBehavior
 	 */
 	public $Behavior;
+
 	/**
 	 * Display properties.
 	 * @var GalleryDisplay

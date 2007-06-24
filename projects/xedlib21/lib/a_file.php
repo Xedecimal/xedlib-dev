@@ -782,7 +782,7 @@ EOF;
 		{
 			$id = $type.'_'.$index;
 			$ret .= '<td>'
-			.'<textarea name="titles['.$file->filename.']" rows="1" cols="15">'
+			.'<textarea name="titles['.$file->filename.']" rows="2" cols="30">'
 				.@htmlspecialchars(stripslashes($file->info['title'])).
 				'</textarea>'
 			.'</td>';
