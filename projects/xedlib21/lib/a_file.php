@@ -1674,16 +1674,22 @@ class FileAccessHandler extends EditorHandler
 		return true;
 	}
 
+	function Created($id, $inserted)
+	{
+		$accesses = GetVar('accesses');
+		$this->RecurseSetPerm($this->root, $id, $accesses);
+	}
+
 	/**
 	 * Adds a series of options to the form associated with the given file.
 	 * @param Form $form Associated form.
 	 * @param array $data Associated data.
 	 * @todo Rename to AddFields
 	 */
-	function GetFields(&$form, $data)
+	function GetFields(&$form, $id, $data)
 	{
 		$form->AddInput(new FormInput('Accessable Folders', 'selects',
-			'accesses', $this->RecurseFolder($this->root, 0, $data['usr_id'])));
+			'accesses', $this->RecurseFolder($this->root, 0, $id)));
 	}
 }
 

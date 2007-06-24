@@ -61,7 +61,7 @@ class EditorHandler
 	 * @param array $inserted Data that has been inserted (including the id).
 	 * @return boolean true by default (meant to be overridden)
 	 */
-	function Created($inserted) { return true; }
+	function Created($id, $inserted) { return true; }
 
 	/**
 	 * Before an item is updated, this function is called. If you extend this
@@ -89,7 +89,9 @@ class EditorHandler
 	 * @param object $form Contextual form suggested to add fields to.
 	 * @param array $data Data related to the action (update/insert).
 	 */
-	function GetFields(&$form, $data) {}
+	function GetFields(&$form, $id, $data) {}
+
+	function GetJoins() { return array(); }
 }
 
 /**
@@ -143,7 +145,7 @@ class HandlerFile extends EditorHandler
 	 * @param array $data row data
 	 * @return boolean True to allow the creation.
 	 */
-	function Created($data)
+	function Created($id, $data)
 	{
 		$target = "{$this->target}/{$data[$this->column]}";
 		if (!isset($this->conditions) && !file_exists($target))
@@ -399,12 +401,8 @@ class EditorData
 				chmod($target, 0777);
 			}
 
-			$insert[$this->ds->id] = $id;
-
 			foreach ($this->handlers as $handler)
-			{
-				$handler->Created($insert);
-			}
+				$handler->Created($id, $insert);
 		}
 		else if ($action == $this->name.'_update')
 		{
@@ -1053,7 +1051,12 @@ class EditorData
 				else if (is_numeric($col)) $frm->AddRow('&nbsp;');
 			}
 
-			foreach ($this->handlers as $handler) $handler->GetFields($frm, isset($sel) ? $sel : null);
+			foreach ($this->handlers as $handler)
+			{
+				$handler->GetFields($frm,
+				isset($sel[0]) ? $sel[0][$this->ds->id] : null,
+				isset($sel[0]) ? $sel[0] : null);
+			}
 
 			$frm->State = $state == STATE_EDIT ? 'Update' : 'Create';
 			$frm->Description = $context->ds->Description;
