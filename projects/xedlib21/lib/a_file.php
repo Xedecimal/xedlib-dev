@@ -1018,7 +1018,7 @@ class FileManagerBehavior
 	 * A callback to modify the output of each file link.
 	 * @var string
 	 */
-	var $FileCallback = null;
+	public $FileCallback = null;
 
 	/**
 	 * Array of possible accessors.
@@ -1667,7 +1667,7 @@ class FileAccessHandler extends EditorHandler
 	 * @param array $update Target file information.
 	 * @return bool Whether or not the update will succeed.
 	 */
-	function Update(&$id, &$update)
+	function Update($id, &$data, &$update)
 	{
 		$accesses = GetVar('accesses');
 		$this->RecurseSetPerm($this->root, $id, $accesses);

@@ -68,10 +68,11 @@ class EditorHandler
 	 * object and return false, it will not be updated.
 	 *
 	 * @param array $data Context
+	 * @param array $original Original data before update.
 	 * @param array $update Columns suggested to get updated.
 	 * @return boolean true by default (meant to be overridden)
 	 */
-	function Update(&$data, &$update) { return true; }
+	function Update($id, &$original, &$update) { return true; }
 
 	/**
 	 * Called before and item is deleted. If you extend this object and return
@@ -175,7 +176,7 @@ class HandlerFile extends EditorHandler
 	 * @param array $update
 	 * @return boolean
 	 */
-	function Update(&$data, &$update)
+	function Update($id, &$data, &$update)
 	{
 		$source = "{$this->target}/{$data[$this->column]}";
 		if (file_exists($source))
