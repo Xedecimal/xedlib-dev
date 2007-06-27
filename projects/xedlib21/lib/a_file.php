@@ -425,7 +425,7 @@ EOF;
 				$pname = GetRelativePath(dirname(__FILE__));
 				$sid = @$_COOKIE['PHPSESSID'];
 				$out = <<<EOF
-	Maximum allowable combined file size: {$maxsize}<br/>
+	Maximum allowable individual file size: {$maxsize}<br/>
 	<script type="text/javascript" src="{$pname}/js/swfobject.js"></script>
 	<form action="{$target}" method="post" enctype="multipart/form-data">
 	<input type="hidden" name="editor" value="{$this->name}" />

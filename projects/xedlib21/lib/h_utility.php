@@ -562,14 +562,30 @@ function GetFlatPage($data, $page, $count)
 function GetPages($data, $count, $args)
 {
 	global $me;
+	$cp = GetVar('cp');
 	$ret = null;
+	$page = 0;
+
+	if ($cp > 1)
+		$ret .= Getbutton(URL($me, array_merge($args, array('cp' => 0))), 'start.png', 'Start')
+		.' &bull; ';
+	if ($cp > 0)
+		$ret .= GetButton(URL($me, array_merge($args, array('cp' => $cp-1))), 'prev.png', 'Previous').
+		' &bull; ';
 	for ($ix = 0; $ix < count($data); $ix += $count)
 	{
-		if ($ix > 0) $ret .= ' - ';
+		if ($ix > 0) $ret .= ' &bull; ';
 		$page = $ix / $count;
 		$url = URL($me, array_merge($args, array('cp' => $page)));
-		$ret .= '<a href="'.$url.'">'.($page+1).'</a>';
+		if ($page == $cp) $ret .= '<b>'.($page+1).'</b>';
+		else $ret .= '<b><a href="'.$url.'">'.($page+1).'</a></b>';
 	}
+	if ($cp < $page)
+		$ret .= ' &bull; '.
+		GetButton(URL($me, array_merge($args, array('cp' => $cp+1))), 'next.png', 'Next');
+	if ($cp < max(0, $page-1))
+		$ret .= ' &bull; '.
+		GetButton(URL($me, array_merge($args, array('cp' => $page))), 'end.png', 'End');
 	return $ret;
 }
 

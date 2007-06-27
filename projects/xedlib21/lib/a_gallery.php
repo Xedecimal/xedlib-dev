@@ -162,7 +162,7 @@ EOF;
 		if ($this->Behavior->PageCount != null)
 		{
 			$args = array('galcf' => $path);
-			$body .= 'Page: '.GetPages($files['files'], $this->Behavior->PageCount, $args);
+			$body .= GetPages($files['files'], $this->Behavior->PageCount, $args);
 		}
 
 		$view = GetVar('view');
