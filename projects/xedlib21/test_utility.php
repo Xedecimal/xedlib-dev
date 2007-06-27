@@ -40,9 +40,9 @@ HandleErrors();
 
 $page_body .= "Passing 2 errors...<br/>";
 
-$e = new ErrorClass();
-$error = MakeError('This is a notice.', E_USER_WARNING);
+$error = MakeError('This is a notice.', E_USER_NOTICE);
 $page_body .= $error;
+$e = new ErrorClass();
 $error = $e->MakeError('This is a warning in a class.', E_USER_WARNING);
 $page_body .= $error;
 
