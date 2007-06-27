@@ -678,14 +678,14 @@ class FormInput
 				$ogstarted = false;
 				foreach ($this->valu as $id => $opt)
 				{
+					$selected = $opt->selected ? ' selected="selected"' : null;
 					if ($opt->group)
 					{
 						if ($ogstarted) $ret .= "</optgroup>";
 						$ret .= "<optgroup label=\"{$opt->text}\">";
 						$ogstarted = true;
 					}
-					$selected = $opt->selected ? ' selected="selected"' : null;
-					$ret .= "<option
+					else $ret .= "<option
 						value=\"{$id}\"$selected>".
 						htmlspecialchars($opt->text).
 						"</option>";
