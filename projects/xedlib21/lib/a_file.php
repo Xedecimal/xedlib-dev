@@ -848,7 +848,7 @@ EOF;
 			return $this->GetVisible(new FileInfo($file->dir));
 
 		if (!empty($file->info['access']) &&
-			in_array($this->uid, $file->info['access'])) return true;
+			isset($file->info['access'][$this->uid])) return true;
 
 		return false;
 	}
@@ -1064,7 +1064,6 @@ class FileManagerBehavior
 		$this->AllowSort =
 		$this->AllowUpload =
 		$this->AllowSetType =
-		$this->ShowAllFiles =
 		true;
 	}
 
