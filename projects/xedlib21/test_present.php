@@ -103,7 +103,8 @@ $frm->AddInput(new FormInput('Contact method', 'select', 'contact',
 $frm->AddInput(
 	new FormInput('Email:', 'text', 'email'),
 	new FormInput('Phone:',   'text', 'phone'),
-	new FormInput('Address:', 'text', 'address'));
+	new FormInput('Address:', 'text', 'address'),
+	new FormInput('Magical Spam Blocker:', 'spamblock'));
 $frm->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Send'));
 echo GetBox('box_test2', 'Form With Recursive Validation',
 	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
