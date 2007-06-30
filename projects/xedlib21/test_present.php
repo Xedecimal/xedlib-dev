@@ -151,5 +151,10 @@ echo GetBox('box_test4', 'Calendar Horizontal', $cal->Get(), 'templates/box.html
 echo GetBox('box_test4', 'Calendar Vertical', $cal->GetVert(), 'templates/box.html');
 
 ?>
+
+<h3> Source for the above. </h3>
+
+<? highlight_file(__FILE__); ?>
+
 </body>
 </html>

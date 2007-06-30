@@ -110,4 +110,6 @@ RunCallbacks($callbacks, 'heya', 'mang', 'three');
 
 echo $t->Get('template_test.html');
 
+echo highlight_file(__FILE__);
+
 ?>
