@@ -278,7 +278,7 @@ class SortTable extends Table
  * A web page form, with functions for easy field creation and layout.
  * @todo Create sub classes for each input type.
  */
-class Form extends Table
+class Form
 {
 	/**
 	 * Unique name of this form (used in html / js / identifying).
@@ -324,6 +324,15 @@ class Form extends Table
 	 */
 	public $Errors;
 
+	public $LabelStart;
+	public $LabelEnd;
+	public $FieldStart;
+	public $FieldEnd;
+
+	public $words = array(
+		'test', 'test2', 'test3'
+	);
+
 	/**
 	* Instantiates this form with a unique name.
 	* @param $name string Unique name only used in Html comments for identification.
@@ -331,7 +340,6 @@ class Form extends Table
 	*/
 	function Form($name, $colAttribs = null)
 	{
-		$this->Table($name, null, $colAttribs);
 		$this->name = $name;
 		$this->attribs = array();
 		$this->Persist = true;
@@ -351,132 +359,6 @@ class Form extends Table
 	}
 
 	/**
-	* An input tag wrapper with some extensibility.
-	* @param $text string Text displayed left of the input field.
-	* @param $type string Type attribute of the input.
-	* @param $name string Name attribute of the input field.
-	* @param $value mixed Default value of the input field.
-	* @param $helptext string Displayed on the right side of the attribute
-	* (also good for displaying errors in validation)
-	* @param $attributes string Any other attributes you wish to include.
-	*/
-	function AddInputOLD($text, $type, $name,
-	$value = null, $attributes = null, $helptext = null)
-	{
-//		if (isset($attributes)) $attributes = ' '.$attributes;
-//		if (isset($this->Validation))
-//		{
-//			if (is_array($this->Validation))
-//			{
-//				foreach ($this->Validation as $val)
-//				{
-//					if ($val->field == $name)
-//					{
-//						$helptext = $this->Errors[$name].$helptext;
-//						break;
-//					}
-//				}
-//			}
-//			else $helptext =
-//				(isset($this->Errors[$name]) ? $this->Errors[$name] : null).
-//				$helptext;
-//		}
-//		switch ($type)
-//		{
-//			case "area":
-//				$strout = "<textarea name=\"".htmlspecialchars($name)."\"$attributes>";
-//				if ($value) $strout .= $value;
-//				$strout .= "</textarea>";
-//				break;
-//			case "select":
-//				$strout = '<select id="'.$this->CleanID($this->name.'_'.$name).'" name="'.$name."\"{$attributes}>\n";
-//				if (is_array($value))
-//				{
-//					$ogstarted = false;
-//					foreach ($value as $id => $opt)
-//					{
-//						$selected = $opt->selected ? ' selected="selected"' : "";
-//						if ($opt->group)
-//						{
-//							if ($ogstarted) $strout .= "</optgroup>";
-//							$strout .= "<optgroup label=\"{$opt->text}\">";
-//							$ogstarted = true;
-//						}
-//						else $strout .= "<option value=\"{$id}\"$selected>".htmlspecialchars($opt->text)."</option>\n";
-//					}
-//					if ($ogstarted) $strout .= "</optgroup>";
-//				}
-//				$strout .= "</select>\n";
-//				break;
-//			case 'selects':
-//				$strout = '<select id="'.$this->CleanID($this->name.'_'.$name).'" name="'.$name."[]\" multiple=\"multiple\"$attributes>\n";
-//				if (is_array($value))
-//				{
-//					$ogstarted = false;
-//					foreach ($value as $id => $opt)
-//					{
-//						$selected = $opt->selected ? ' selected="selected"' : "";
-//						if ($opt->group)
-//						{
-//							if ($ogstarted) $strout .= "</optgroup>";
-//							$strout .= "<optgroup label=\"{$opt->text}\">";
-//							$ogstarted = true;
-//						}
-//						else $strout .= "<option value=\"{$id}\"$selected>".htmlspecialchars($opt->text)."</option>\n";
-//					}
-//					if ($ogstarted) $strout .= "</optgroup>";
-//				}
-//				$strout .= "</select>\n";
-//				break;
-//			case 'checkboxes':
-//				$strout = null;
-//				if (is_array($value))
-//				{
-//					$vals = GetVar($name);
-//					foreach ($value as $id => $opt)
-//					{
-//						$selected = $opt->selected ? ' checked="checked"' : null;
-//						if (isset($vals[$id])) $selected = ' checked="checked"';
-//						if ($opt->group) $strout .= "{$opt->text}<br/>\n";
-//						else $strout .= "<input type=\"checkbox\" id=\"{$name}_{$id}\" name=\"{$name}[{$id}]\" value=\"1\"$selected /><label for=\"{$name}_{$id}\">".htmlspecialchars($opt->text)."</label><br/>\n";
-//					}
-//				}
-//				break;
-//			case "yesno":
-//				$strout =  "<input type=\"radio\" name=\"$name\" value=\"{$value[0]}\" $attributes> Yes\n";
-//				$strout .= "<input type=\"radio\" name=\"$name\" value=\"{$value[1]}\" checked=\"checked\" $attributes> No\n";
-//				break;
-//			case "date":
-//				$strout = GetInputDate($name, $value, false);
-//				break;
-//			case "datetime":
-//				$strout = GetInputDate($name, $value, true);
-//				break;
-//			case "image_upload":
-//				$strout = "<img src=\"$value\"/><br/>\n";
-//				$strout .= "Upload Image: <input type=\"file\" name=\"{$name}\"/>\n";
-//				break;
-//			case 'checkbox':
-//				$attributes .= ' value="1"';
-//				if ($value) $attributes .= ' checked="checked"';
-//				$strout = "<input id=\"{$this->name}_$name\" type=\"$type\" name=\"$name\"$attributes />";
-//				break;
-//			case 'submit':
-//				if (isset($this->Validation))
-//					$attributes .= " onclick=\"return {$this->name}_check(1);\"";
-//			default:
-//				if (isset($value)) $val = ' value="'.htmlspecialchars($value).'"';
-//				else if (isset($this->Errors)) $val = ' value="'.htmlspecialchars(GetVar($name)).'"';
-//				else $val = null;
-//				$strout = "<input id=\"".$this->CleanID("{$this->name}_$name").
-//					"\" type=\"$type\" name=\"$name\"$attributes$val />";
-//				break;
-//		}
-//		if ($helptext != null) $this->AddRow(array('<label for="'.$this->name.'_'.htmlspecialchars($name).'">'.$text.'</label>', $strout, $helptext));
-//		else $this->AddRow(array(strlen($text) > 0 ? "<label for=\"{$this->name}_$name\">$text</label>" : null, $strout, null));
-	}
-
-	/**
 	 * Adds an input item to this form.
 	 *
 	 */
@@ -486,8 +368,11 @@ class Form extends Table
 		$args = func_get_args();
 		$skip = false;
 		foreach ($args as $ix => $item)
-			$row[] = $this->IterateInput($item);
-		$this->AddRow($row, ' valign="top"');
+		{
+			if (is_string($item)) $this->out .= $item;
+			else $this->out .= $this->IterateInput($item);
+		}
+		//$this->AddRow($row, ' valign="top"');
 	}
 
 	function IterateInput($input)
@@ -515,22 +400,35 @@ class Form extends Table
 
 		$right = false;
 		if ($input->type == 'checkbox') $right = true;
+		if ($input->type == 'spamblock')
+		{
+			//This form has been submitted.
+			$b = GetVar('block_'.$input->name);
+			if (isset($b))
+			{
+				if (GetVar($input->name) != $b)
+				{
+					$this->Errors[$input->name] = "Invalid phrase.";
+				}
+			}
+			$input->valu = $this->words[rand(0, count($this->words)-1)];
+			$this->AddHidden('block_'.$input->name, rand(0, count($this->words)-1));
+		}
 
 		$out = !empty($input->text)?$input->text:null;
 
 		$helptext = $input->help;
-		if (isset($this->Validation))
+		if (isset($this->Errors[$input->name]))
 		{
-			$helptext .= (isset($this->Errors[$input->name]) ?
-				$this->Errors[$input->name] :
-				null);
+			$helptext .= $this->Errors[$input->name];
 		}
-		return ($input->type == 'checks' ? null : '<label>').
-			($right?null:$out).
-			$input->Get($this->name).
+		return ($input->type == 'checks' ? $this->LabelStart :
+			$this->LabelStart.'<label for="'.CleanID($this->name.'_'.$input->name).'">').
+			($right?null:$out).'</label>'.$this->LabelEnd.
+			$this->FieldStart.$input->Get($this->name).
 			($right?$out:null).
-			($input->EndLabel?null:'</label>').
-			$helptext;
+			//($input->EndLabel?).
+			$helptext.$this->FieldEnd;
 	}
 
 	/**
@@ -559,12 +457,15 @@ class Form extends Table
 			foreach ($this->hiddens as $hidden)
 			{
 				$fname = $hidden[3] ? $hidden[0] : $this->name.'_'.$hidden[0];
-				$ret .= "<input type=\"hidden\" id=\"{$this->name}_{$fname}\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
+				$ret .= "<input type=\"hidden\" id=\"".CleanID($fname)."\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
 				if (isset($hidden[2])) $ret .= ' '.$hidden[2];
 				$ret .= " />\n";
 			}
 		}
-		$ret .= parent::Get($tblAttribs);
+		$ret .= $this->FormStart;
+		$ret .= $this->out;
+		//$ret .= parent::Get($tblAttribs);
+		$ret .= $this->FormEnd;
 		$ret .= "</form>\n";
 		$ret .= "<!-- End Form: {$this->name} -->\n";
 		return $ret;
@@ -665,9 +566,18 @@ class FormInput
 	 */
 	function Get($parent = null)
 	{
+		if ($this->type == 'spamblock')
+		{
+			return 'Type '.$this->valu.' here: '.
+			'<input type="'.$this->type.'"
+			class="input_generic"
+			name="'.$this->name.'"
+			id="'.CleanID($parent.'_'.$this->name).'"'.
+			$this->atrs.'/>';
+		}
 		if ($this->type == 'yesno')
 		{
-			return GetInputYesNo($this->name, $this->valu);
+			return GetInputYesNo($parent, $this->name, $this->valu);
 		}
 		if ($this->type == 'select')
 		{
@@ -894,9 +804,9 @@ function GetInputTime($name, $timestamp)
 	return $strout;
 }
 
-function GetInputYesNo($name, $value)
+function GetInputYesNo($parent, $name, $value)
 {
-	return '<input type="radio" name="'.$name.'" value="0"'.
+	return '<input type="radio" id="'.CleanID($parent.'_'.$name).'" name="'.$name.'" value="0"'.
 	($value ? null : ' checked="checked"').' /> No ' .
 	'<input type="radio" name="'.$name.'" value="1"'.
 	($value ? ' checked="checked"' : null).' /> Yes ';
@@ -1514,6 +1424,7 @@ function InputToString($field)
 		foreach ($val as $ix => $val) $out .= ($ix > 0?', ':'').$field->valu[$ix]->text;
 		return $out;
 	}
+	else if ($field->type == 'yesno') return $val == 1 ? 'yes' : 'no';
 	else Error("Unknown field type.");
 }
 

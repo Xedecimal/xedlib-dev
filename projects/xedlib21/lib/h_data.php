@@ -516,7 +516,6 @@ class DataSet
 	 *
 	 * @param array $joining
 	 * @return string
-	 * @todo Allow specifying LEFT, INNER or JOIN formats.
 	 */
 	function JoinClause($joining)
 	{
@@ -665,6 +664,30 @@ class DataSet
 		{
 			$query .= " ON DUPLICATE KEY UPDATE ".$this->GetSetString($columns);
 		}
+		$this->database->Query($query);
+		return $this->database->GetLastInsertID();
+	}
+
+	function AddSeries($columns, $update_existing = false)
+	{
+		$lq = $this->database->lq;
+		$rq = $this->database->rq;
+
+		$query = "INSERT INTO {$lq}{$this->table}{$rq} VALUES(";
+		$ix = 0;
+		foreach ($columns as $key => $val)
+		{
+			//destring('value') for functions and such.
+			if (is_array($val))
+			{
+				if ($val[0] == "destring") $query .= $val[1];
+			}
+			else if (empty($val)) $query .= 'NULL';
+			else $query .= "'".paslash($val)."'";
+			if ($ix < count($columns)-1) $query .= ", ";
+			$ix++;
+		}
+		$query .= ")";
 		$this->database->Query($query);
 		return $this->database->GetLastInsertID();
 	}
