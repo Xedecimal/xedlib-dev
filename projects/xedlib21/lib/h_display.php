@@ -407,7 +407,8 @@ class Form
 			//This form has been submitted.
 			$b = GetVar('block_'.$input->name);
 			if (isset($b) && GetVar($input->name) != $this->words[$b])
-				$this->Errors[$input->name] = "Invalid phrase.";
+				$this->Errors[$input->name] = ' '.GetImg('error.png', 'Error',
+					'style="vertical-align: text-bottom"')." Invalid phrase.";
 			$rand = rand(0, count($this->words)-1);
 			$input->valu = $this->words[$rand];
 			$this->AddHidden('block_'.$input->name, $rand);

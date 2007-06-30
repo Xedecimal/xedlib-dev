@@ -443,20 +443,10 @@ function GetRelativePath($path)
 	return substr(str_replace('\\', '/', str_replace('\\\\', '/', $path)), strlen($dr));
 }
 
-function GetButDel($url = null)
+function GetImg($img, $title = 'unnamed', $attribs = null)
 {
-	$ret = '<img src="'.GetRelativePath(dirname(__FILE__)).'/images/delete.png"
-		alt="delete" title="Delete Item" />';
-	if (strlen($url) > 0) $ret = '<a href="'.$url.'">'.$ret.'</a>';
-	return $ret;
-}
-
-function GetButEdit($url = null)
-{
-	$ret = '<img src="'.GetRelativePath(dirname(__FILE__)).'/images/edit.png"
-		alt="edit" title="Edit Item" />';
-	if (strlen($url) > 0) $ret = '<a href="'.$url.'">'.$ret.'</a>';
-	return $ret;
+	$p = GetRelativePath(dirname(__FILE__));
+	return "<img src=\"{$p}/images/{$img}\" alt=\"{$title}\" {$attribs}/>";
 }
 
 /**
