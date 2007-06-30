@@ -324,13 +324,15 @@ class Form
 	 */
 	public $Errors;
 
-	public $LabelStart;
-	public $LabelEnd;
-	public $FieldStart;
-	public $FieldEnd;
+	public $FormStart = '<table>';
+	public $FormEnd = '</table>';
+	public $LabelStart = "\n<tr>\n\t<td align=\"right\">";
+	public $LabelEnd = "</td>";
+	public $FieldStart = "\n\t<td>";
+	public $FieldEnd = "\n\t</td>\n</tr>";
 
 	public $words = array(
-		'test', 'test2', 'test3'
+		'test0', 'test1', 'test2'
 	);
 
 	/**
@@ -404,15 +406,11 @@ class Form
 		{
 			//This form has been submitted.
 			$b = GetVar('block_'.$input->name);
-			if (isset($b))
-			{
-				if (GetVar($input->name) != $b)
-				{
-					$this->Errors[$input->name] = "Invalid phrase.";
-				}
-			}
-			$input->valu = $this->words[rand(0, count($this->words)-1)];
-			$this->AddHidden('block_'.$input->name, rand(0, count($this->words)-1));
+			if (isset($b) && GetVar($input->name) != $this->words[$b])
+				$this->Errors[$input->name] = "Invalid phrase.";
+			$rand = rand(0, count($this->words)-1);
+			$input->valu = $this->words[$rand];
+			$this->AddHidden('block_'.$input->name, $rand);
 		}
 
 		$out = !empty($input->text)?$input->text:null;
@@ -422,11 +420,15 @@ class Form
 		{
 			$helptext .= $this->Errors[$input->name];
 		}
-		return ($input->type == 'checks' ? $this->LabelStart :
-			$this->LabelStart.'<label for="'.CleanID($this->name.'_'.$input->name).'">').
-			($right?null:$out).'</label>'.$this->LabelEnd.
+		return ($input->labl ?
+			$this->LabelStart.'<label for="'.CleanID($this->name.'_'.$input->name).'">' :
+			$this->LabelStart).
+
+			($right ? null : $out).
+
+			($input->labl ? '</label>' : null).$this->LabelEnd.
 			$this->FieldStart.$input->Get($this->name).
-			($right?$out:null).
+			($right ? $out : null).
 			//($input->EndLabel?).
 			$helptext.$this->FieldEnd;
 	}
@@ -527,6 +529,11 @@ class FormInput
 	 * @var string
 	 */
 	public $valu;
+	/**
+	 * Whether or not to attach a label to this field.
+	 * @var bool
+	 */
+	public $labl;
 
 	/**
 	 * Whether or not this input ends it's own label.
@@ -568,12 +575,13 @@ class FormInput
 	{
 		if ($this->type == 'spamblock')
 		{
-			return 'Type '.$this->valu.' here: '.
-			'<input type="'.$this->type.'"
+			$this->labl = false;
+			return '<label>Type <u>'.$this->valu.'</u> here: '.
+			'<input type="text"
 			class="input_generic"
 			name="'.$this->name.'"
 			id="'.CleanID($parent.'_'.$this->name).'"'.
-			$this->atrs.'/>';
+			$this->atrs.'/></label>';
 		}
 		if ($this->type == 'yesno')
 		{
@@ -606,16 +614,18 @@ class FormInput
 		}
 		if ($this->type == 'checks')
 		{
+			$this->labl = false;
+
 			$ret = null;
 			if (!empty($this->valu))
 			foreach ($this->valu as $id => $val)
 			{
 				$selected = $val->selected ? ' checked="checked"' : null;
-				$ret .= "<br/><label><input
+				$ret .= "<label><input
 					type=\"checkbox\"
 					name=\"{$this->name}[{$id}]\"
 					id=\"".CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
-					{$val->text}</label>";
+					{$val->text}</label><br/>";
 			}
 			$this->EndLabel = true;
 			return $ret;
@@ -672,7 +682,7 @@ class FormInput
 			class=\"".($this->type == 'button' || $this->type == 'submit' ? 'input_button' : 'input_generic')."\"
 			name=\"{$this->name}\"
 			id=\"".CleanID($parent.'_'.$this->name)."\"".
-			(isset($this->valu) ? ' value="'.htmlspecialchars($this->valu).'"' : null).
+			(!empty($this->valu) ? ' value="'.htmlspecialchars($this->valu).'"' : null).
 			"{$this->atrs}/>";
 	}
 }
