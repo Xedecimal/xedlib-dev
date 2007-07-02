@@ -146,7 +146,7 @@ EOF;
 				{
 					$event = $this->events[$eventid];
 					$ret .= "\t\t\t<p class=\"CalendarDayBody\">\n";
-					$ret .= "\t\t\t{$event[2]}\n";
+					$ret .= "\t\t\t{$event[2]}</p>\n";
 				}
 			}
 			$ret .= "\t\t</td>\n";
@@ -196,7 +196,7 @@ EOF;
 				//Pad in the rest of the week.
 				if ($curday != -1)
 				{
-					if ($dayx < 7) $ret .= str_repeat("\t\t\t<td>&nbsp;</td>\n", 7-$dayx);
+					if ($dayx < 7) $ret .= str_repeat("\n\t\t\t<td>&nbsp;</td>\n", 7-$dayx);
 					$dayx = 0;
 				}
 			}
@@ -241,7 +241,7 @@ EOF;
 
 			if ($day != $curday)
 			{
-				if ($curday != -1) $ret .= "\t\t</td>\n";
+				if ($curday != -1) $ret .= "\n\t\t</td>\n";
 				else $ret .= "\t<tr>\n";
 				if ($dayx % 7 == 0 && $curday != -1) $ret .= "\t</tr><tr>\n";
 				$ret .= "\t\t<td class=\"CalendarDay\" valign=\"top\">\n";
@@ -256,7 +256,7 @@ EOF;
 
 				//Calendar day content.
 				$ret .= "\t\t\t<p class=\"CalendarDayBody\">\n";
-				$ret .= stripslashes($event[2]);
+				$ret .= stripslashes($event[2]).'</p>';
 			}
 		}
 

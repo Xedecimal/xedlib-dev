@@ -659,11 +659,20 @@ class FormInput
 			return $ret;
 		}
 		if ($this->type == 'date')
+		{
+			$this->labl = false;
 			return GetInputDate($this->name, $this->valu);
+		}
 		if ($this->type == 'time')
+		{
+			$this->labl = false;
 			return GetInputTime($this->name, $this->valu);
+		}
 		if ($this->type == 'datetime')
+		{
+			$this->labl = false;
 			return GetInputDate($this->name, $this->valu, true);
+		}
 		if ($this->type == 'area')
 			return "<textarea
 				class=\"input_area\"
@@ -801,7 +810,7 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	}
 	if (!isset($timestamp)) $timestamp = time();
 	$strout = $include_time ? GetInputTime($name.'[]', $timestamp) : null;
-	$strout .= GetMonthSelect("{$name}[]", date("n", $timestamp)).'</label>';
+	$strout .= '<label>'.GetMonthSelect("{$name}[]", date("n", $timestamp)).'</label>';
 	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("d", $timestamp) . "\" alt=\"Day\" />\n";
 	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . date("Y", $timestamp) . "\" alt=\"Year\" />\n";
 	return $strout;

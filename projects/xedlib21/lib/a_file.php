@@ -1187,7 +1187,10 @@ class FileInfo
 		global $user_root;
 		if (!file_exists($source))
 			Error("FileInfo: File/Directory does not exist. ({$source})<br/>\n");
-		$this->owned = strlen(strstr($source, $user_root)) > 0;
+
+		if (strlen($user_root) > 0)
+			$this->owned = strlen(strstr($source, $user_root)) > 0;
+
 		$this->bitpos = 0;
 		$this->path = $source;
 		$this->dir = dirname($source);
