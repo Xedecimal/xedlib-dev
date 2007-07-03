@@ -332,7 +332,7 @@ class Form
 	public $FieldEnd = "\n\t</td>\n</tr>";
 
 	public $words = array(
-		'test0', 'test1', 'test2'
+		'complete', 'finish', 'end', 'information'
 	);
 
 	/**
@@ -577,12 +577,13 @@ class FormInput
 		if ($this->type == 'spamblock')
 		{
 			$this->labl = false;
-			return '<label>Type <u>'.$this->valu.'</u> here: '.
-			'<input type="text"
-			class="input_generic"
-			name="'.$this->name.'"
-			id="'.CleanID($parent.'_'.$this->name).'"'.
-			$this->atrs.'/></label>';
+			return '<label>To verify your request, please type the word <u>'.
+				$this->valu.'</u>: '.
+				'<input type="text"
+				class="input_generic"
+				name="'.$this->name.'"
+				id="'.CleanID($parent.'_'.$this->name).'"'.
+				$this->atrs.'/></label>';
 		}
 		if ($this->type == 'yesno')
 		{
