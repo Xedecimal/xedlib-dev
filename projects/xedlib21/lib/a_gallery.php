@@ -244,7 +244,7 @@ $this->GetCaption($files['files'][$view]).'</div>';
 			&& !empty($file->info['title'])
 			&& $this->Display->UseDisplayTitle)
 			$name = $file->info['title'];
-		else $name = $file->filename;
+		else $name = substr($file->filename, 0, strrpos($file->filename, '.'));
 		return $vp->ParseVars($this->Display->CaptionLeft, $d).
 			$name.
 			$vp->ParseVars($this->Display->CaptionRight, $d);

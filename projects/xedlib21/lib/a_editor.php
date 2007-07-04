@@ -1060,12 +1060,10 @@ class EditorData
 
 			$frm->State = $state == STATE_EDIT ? 'Update' : 'Create';
 			$frm->Description = $context->ds->Description;
-			$frm->AddRow(array(
-				null,
+			$frm->AddInput(
 				$frm->GetSubmitButton('butSubmit', $frm->State).
-				($state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null),
-				null
-			));
+				($state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null)
+			);
 
 			return $frm;
 		}
