@@ -434,7 +434,7 @@ function GetRelativePath($path)
 	if (empty($dr)) //Probably IIS situated
 	{
 		//Get the document root from the translated path.
-		$pt = str_replace('\\\\', '/', GetVar('PATH_TRANSLATED'));
+		$pt = str_replace('\\\\', '/', GetVar('PATH_TRANSLATED', GetVar('ORIG_PATH_TRANSLATED')));
 		$dr = substr($pt, 0, -strlen(GetVar('SCRIPT_NAME')));
 	}
 
