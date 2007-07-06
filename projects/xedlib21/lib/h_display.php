@@ -371,10 +371,10 @@ class Form
 		$skip = false;
 		foreach ($args as $ix => $item)
 		{
-			if (is_string($item)) $this->out .= $item;
+			if (is_string($item))
+				$this->out .= $this->LabelStart.$item.$this->FieldEnd;
 			else $this->out .= $this->IterateInput($item);
 		}
-		//$this->AddRow($row, ' valign="top"');
 	}
 
 	function IterateInput($input)
@@ -467,7 +467,6 @@ class Form
 		}
 		$ret .= $this->FormStart;
 		$ret .= $this->out;
-		//$ret .= parent::Get($tblAttribs);
 		$ret .= $this->FormEnd;
 		$ret .= "</form>\n";
 		$ret .= "<!-- End Form: {$this->name} -->\n";
