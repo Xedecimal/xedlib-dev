@@ -995,7 +995,7 @@ class EditorData
 
 		if (!empty($context->ds->FieldInputs))
 		{
-			$frm = new Form($fullname);
+			$frm = new Form($fullname, null, false);
 
 			if (isset($context->ds->Validation))
 			{
