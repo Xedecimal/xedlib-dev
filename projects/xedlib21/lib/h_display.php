@@ -577,19 +577,22 @@ class FormInput
 		{
 			$this->labl = false;
 			return '<label>To verify your request, please type the word <u>'.
-				$this->valu.'</u>: '.
+				$this->valu.'</u>:<br/>'.
 				'<input type="text"
 				class="input_generic"
 				name="'.$this->name.'"
+				value="'.GetVar($this->name).'"
 				id="'.CleanID($parent.'_'.$this->name).'"'.
 				$this->atrs.'/></label>';
 		}
 		if ($this->type == 'yesno')
 		{
-			return GetInputYesNo($parent, $this->name, $this->valu);
+			return GetInputYesNo($parent, $this->name,
+				!isset($this->valu) ? GetVar($this->name) : $this->valu);
 		}
 		if ($this->type == 'select')
 		{
+			$svalu = GetVar($this->name);
 			$ret = "<select class=\"input_select\" name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\" {$this->atrs}>";
 			if (!empty($this->valu))
@@ -597,7 +600,10 @@ class FormInput
 				$ogstarted = false;
 				foreach ($this->valu as $id => $opt)
 				{
-					$selected = $opt->selected ? ' selected="selected"' : null;
+					if (isset($svalu))
+						$selected = $svalu == $id ? ' selected="selected"' : null;
+					else
+						$selected = $opt->selected ? ' selected="selected"' : null;
 					if ($opt->group)
 					{
 						if ($ogstarted) $ret .= "</optgroup>";
@@ -617,22 +623,33 @@ class FormInput
 		{
 			$this->labl = false;
 
+			$svalus = GetVar($this->name);
+
 			$ret = null;
 			if (!empty($this->valu))
 			foreach ($this->valu as $id => $val)
 			{
-				$selected = $val->selected ? ' checked="checked"' : null;
-				$ret .= "<label><input
-					type=\"checkbox\"
-					name=\"{$this->name}[{$id}]\"
-					id=\"".CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
-					{$val->text}</label><br/>";
+				if (isset($svalus))
+					$selected = isset($svalus[$id]) ? ' checked="checked"' : null;
+				else
+					$selected = $val->selected ? ' checked="checked"' : null;
+				if ($val->group)
+					$ret .= "<b><i>{$val->text}</i></b><br/>\n";
+				else
+					$ret .= "<label><input
+						type=\"checkbox\"
+						name=\"{$this->name}[{$id}]\"
+						id=\"".CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
+						{$val->text}</label><br/>";
 			}
 			$this->EndLabel = true;
 			return $ret;
 		}
 		if ($this->type == 'selects')
 		{
+			$svalus = GetVar($this->name);
+			$cursel = 0;
+
 			$ret = '<select
 				id="'.CleanID($parent.'_'.$this->name).'"
 				name="'.$this->name."[]\"
@@ -642,7 +659,15 @@ class FormInput
 				$ogstarted = false;
 				foreach ($this->valu as $id => $opt)
 				{
-					$selected = $opt->selected ? ' selected="selected"' : null;
+					if (isset($svalus))
+						if ($svalus[$cursel] == $id)
+						{
+							$selected = ' selected="selected"';
+							$cursel++;
+						}
+					else
+						$selected = $opt->selected ? ' selected="selected"' : null;
+
 					if ($opt->group)
 					{
 						if ($ogstarted) $ret .= "</optgroup>";
@@ -674,11 +699,16 @@ class FormInput
 			return GetInputDate($this->name, $this->valu, true);
 		}
 		if ($this->type == 'area')
+		{
+			$valu = GetVar($this->name);
+			$valu = !empty($valu) ? $valu : $this->valu;
+
 			return "<textarea
 				class=\"input_area\"
 				name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\"
-				{$this->atrs}>{$this->valu}</textarea>";
+				{$this->atrs}>{$valu}</textarea>";
+		}
 		if ($this->type == 'checkbox')
 		{
 			return "<input type=\"checkbox\"
@@ -688,11 +718,12 @@ class FormInput
 				$this->atrs." />";
 		}
 
+		$valu = $this->type == 'password' ? null : GetVar($this->name, $this->valu);
 		return "<input type=\"{$this->type}\"
 			class=\"".($this->type == 'button' || $this->type == 'submit' ? 'input_button' : 'input_generic')."\"
 			name=\"{$this->name}\"
 			id=\"".CleanID($parent.'_'.$this->name)."\"".
-			(!empty($this->valu) ? ' value="'.htmlspecialchars($this->valu).'"' : null).
+			' value="'.htmlspecialchars($valu).'"'.
 			"{$this->atrs}/>";
 	}
 }
@@ -826,10 +857,10 @@ function GetInputTime($name, $timestamp)
 
 function GetInputYesNo($parent, $name, $value)
 {
-	return '<input type="radio" id="'.CleanID($parent.'_'.$name).'" name="'.$name.'" value="0"'.
-	($value ? null : ' checked="checked"').' /> No ' .
-	'<input type="radio" name="'.$name.'" value="1"'.
-	($value ? ' checked="checked"' : null).' /> Yes ';
+	return '<label><input type="radio" id="'.CleanID($parent.'_'.$name).'" name="'.$name.'" value="0"'.
+	($value ? null : ' checked="checked"').' /> No</label> ' .
+	'<label><input type="radio" name="'.$name.'" value="1"'.
+	($value ? ' checked="checked"' : null).' /> Yes</label>';
 }
 
 define('STATE_CREATE', 0);
