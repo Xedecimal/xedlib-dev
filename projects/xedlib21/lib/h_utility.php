@@ -465,7 +465,7 @@ function GetButton($target, $img, $alt, $attribs = null)
 	return '<a href="'.$target.'">'.
 		"<img src=\"{$path}/images/{$img}\"".
 		" alt=\"{$alt}\" title=\"{$alt}\"".
-		' '.$attribs.' /></a>';
+		' '.$attribs.' style="vertical-align: text-bottom" /></a>';
 }
 
 /**
@@ -627,6 +627,7 @@ function GetSizeString($size)
 
 function array_clone($arr)
 {
+	if (substr(phpversion(), 0, 1) != '5') return $copy = $arr;
 	$ret = array();
 
 	foreach ($arr as $id => $val)
