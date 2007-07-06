@@ -103,8 +103,7 @@ $frm->AddInput(new FormInput('Contact method', 'select', 'contact',
 $frm->AddInput(
 	new FormInput('Email:', 'text', 'email'),
 	new FormInput('Phone:',   'text', 'phone'),
-	new FormInput('Address:', 'text', 'address'),
-	new FormInput('Magical Spam Blocker:', 'spamblock'));
+	new FormInput('Address:', 'text', 'address'));
 $frm->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Send'));
 echo GetBox('box_test2', 'Form With Recursive Validation',
 	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
@@ -124,14 +123,21 @@ $sels = array(
 );
 
 $frm = new Form('frmItems');
+$frm->AddInput(new FormInput('Array Based1', 'text', 'textinput[0]'));
+$frm->AddInput(new FormInput('Array Based2', 'text', 'textinput[1]'));
+$frm->AddInput(new FormInput('Password', 'password', 'pass'));
+$frm->AddInput(new FormInput('File', 'file', 'file'));
 $frm->AddInput(new FormInput('Yes / No<br/>', 'yesno', 'yesno'));
-$frm->AddInput(new FormInput('Select<br/>', 'select', 'select', $sels));
+$frm->AddInput(new FormInput('Select', 'select', 'select', $sels));
+$frm->AddInput(new FormInput('Check', 'checkbox', 'check'));
 $frm->AddInput(new FormInput('Checks', 'checks', 'checks', $sels));
-$frm->AddInput(new FormInput('Selects<br/>', 'selects', 'selects', $sels));
-$frm->AddInput(new FormInput('Date<br/>', 'date', 'date'));
-$frm->AddInput(new FormInput('Time<br/>', 'time', 'time'));
-$frm->AddInput(new FormInput('DateTime<br/>', 'datetime', 'datetime'));
-$frm->AddInput(new FormInput('Area<br/>', 'area', 'area'));
+$frm->AddInput(new FormInput('Selects', 'selects', 'selects', $sels));
+$frm->AddInput(new FormInput('Date', 'date', 'date'));
+$frm->AddInput(new FormInput('Time', 'time', 'time'));
+$frm->AddInput(new FormInput('DateTime', 'datetime', 'datetime'));
+$frm->AddInput(new FormInput('Area', 'area', 'area'));
+$frm->AddInput(new FormInput('Spam Blocker', 'spamblock', 'blocker'));
+$frm->AddInput(new FormInput('Submit', 'submit', 'submit', 'Submit'));
 
 echo GetBox('box_test3', 'Testing widgets',
 	$frm->Get('action="'.$me.'" method="post"'), 'templates/box.html');
