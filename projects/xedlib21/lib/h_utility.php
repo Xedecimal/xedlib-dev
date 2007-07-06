@@ -552,6 +552,9 @@ function GetFlatPage($data, $page, $count)
 function GetPages($data, $count, $args)
 {
 	global $me;
+
+	if (count($data) <= $count) return;
+
 	$cp = GetVar('cp');
 	$ret = null;
 	$page = 0;

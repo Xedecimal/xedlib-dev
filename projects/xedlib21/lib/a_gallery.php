@@ -2,6 +2,10 @@
 
 require_once('a_file.php');
 
+define('CAPTION_NONE',  0);
+define('CAPTION_TITLE', 1);
+define('CAPTION_FILE',  2);
+
 class Gallery
 {
 	/**
@@ -242,9 +246,10 @@ $this->GetCaption($files['files'][$view]).'</div>';
 		$d['image'] = $file->path;
 		if ($this->InfoCaption
 			&& !empty($file->info['title'])
-			&& $this->Display->UseDisplayTitle)
+			&& $this->Display->Caption == CAPTION_TITLE)
 			$name = $file->info['title'];
-		else $name = substr($file->filename, 0, strrpos($file->filename, '.'));
+		else if ($this->Display->Caption == CAPTION_FILE)
+			$name = substr($file->filename, 0, strrpos($file->filename, '.'));
 		return $vp->ParseVars($this->Display->CaptionLeft, $d).
 			$name.
 			$vp->ParseVars($this->Display->CaptionRight, $d);
@@ -253,7 +258,7 @@ $this->GetCaption($files['files'][$view]).'</div>';
 
 class GalleryDisplay
 {
-	public $UseDisplayTitle = true;
+	public $Captions = CAPTION_TITLE;
 	public $CaptionLeft = '';
 	public $CaptionRight = '';
 	public $Sort;

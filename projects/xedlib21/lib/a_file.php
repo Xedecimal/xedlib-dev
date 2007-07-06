@@ -1093,9 +1093,12 @@ class FileManagerBehavior
 	 */
 	function Update(&$info)
 	{
-		$na = array();
-		foreach ($info['access'] as $ix => $id) $na[$id] = 1;
-		$info['access'] = $na;
+		if (!empty($info['access']))
+		{
+			$na = array();
+			foreach ($info['access'] as $ix => $id) $na[$id] = 1;
+			$info['access'] = $na;
+		}
 	}
 }
 
@@ -1414,8 +1417,8 @@ class FilterGallery extends FilterDefault
 	{
 		parent::GetInfo($fi);
 		if (substr($fi->filename, 0, 2) == 't_') return null;
-		if (!isset($fi->info['thumb_width'])) $fi->info['thumb_width'] = 200;
-		if (!isset($fi->info['thumb_height'])) $fi->info['thumb_height'] = 200;
+		if (empty($fi->info['thumb_width'])) $fi->info['thumb_width'] = 200;
+		if (empty($fi->info['thumb_height'])) $fi->info['thumb_height'] = 200;
 		if (file_exists($fi->dir."/t_".$fi->filename))
 			$fi->info['thumb'] = "{$fi->dir}/t_{$fi->filename}";
 		return $fi;
@@ -1521,6 +1524,7 @@ class FilterGallery extends FilterDefault
 	{
 		$files = glob($path."*.*");
 		$fi = new FileInfo($path);
+		$fi->info['thumb_width'] = $fi->info['thumb_height'] = 200;
 		foreach ($files as $file)
 		{
 			if (substr($file, 0, 2) == 't_') continue;
@@ -1561,30 +1565,30 @@ class FilterGallery extends FilterDefault
 	/**
 	 * Resizes an image bicubicly with GD keeping aspect ratio.
 	 *
-	 * @param resource $image
-	 * @param int $newWidth
-	 * @param int $newHeight
+	 * @param resource $img
+	 * @param int $nx
+	 * @param int $ny
 	 * @return resource
 	 */
-	function ResizeImg($image, $newWidth, $newHeight)
+	function ResizeImg($img, $nx, $ny)
 	{
-		$srcWidth  = ImageSX( $image );
-		$srcHeight = ImageSY( $image );
-		if ($srcWidth < $newWidth && $srcHeight < $newHeight) return $image;
+		$sx  = ImageSX($img);
+		$sy = ImageSY($img);
+		if ($sx < $nx && $sy < $ny) return $img;
 
-		if ($srcWidth < $srcHeight)
+		if ($sx < $sy)
 		{
-			$destWidth  = $newWidth * $srcWidth/$srcHeight;
-			$destHeight = $newHeight;
+			$dx = $nx * $sx / $sy;
+			$dy = $ny;
 		}
 		else
 		{
-			$destWidth  = $newWidth;
-			$destHeight = $newHeight * $srcHeight/$srcWidth;
+			$dx = $nx;
+			$dy = $ny * $sy / $sx;
 		}
-		$destImage = imagecreatetruecolor( $destWidth, $destHeight);
-		ImageCopyResampled($destImage, $image, 0, 0, 0, 0, $destWidth, $destHeight, $srcWidth, $srcHeight);
-		return $destImage;
+		$dimg = imagecreatetruecolor($dx, $dy);
+		ImageCopyResampled($dimg, $img, 0, 0, 0, 0, $dx, $dy, $sx, $sy);
+		return $dimg;
 	}
 }
 
