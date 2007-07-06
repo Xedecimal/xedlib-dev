@@ -929,22 +929,26 @@ class EditorData
 					//prior child, this would require a change of parents.
 					if ($node->children[$index-1]->data['_child'] == $cnode->data['_child'])
 					{
-						$url = URL($target, array_merge($PERSISTS, array(
+						$args = array(
 							'ci' => $cnode->id,
 							'ct' => $node->children[$index-1]->id,
 							'ca' => $this->name.'_swap'
-						)));
+						);
+						if (isset($PERSISTS)) $args = array_merge($PERSISTS, $args);
+						$url = URL($target, $args);
 						$row[] = GetButton($url, 'up.png', 'Up', 'class="png"');
 					}
 				}
 				else $row[] = '&nbsp;';
 				if ($index < count($node->children)-1 && $node->children[$index+1]->data['_child'] == $cnode->data['_child'])
 				{
-					$url = URL($target, array_merge($PERSISTS, array(
+					$args = array(
 						'ci' => $cnode->id,
 						'ct' => $node->children[$index+1]->id,
 						'ca' => $this->name.'_swap'
-					)));
+					);
+					if (isset($PERSISTS)) $args = array_merge($PERSISTS, $args);
+					$url = URL($target, $args);
 					$row[] = GetButton($url, 'down.png', 'Down', 'class="png"');
 				}
 				else $row[] = '&nbsp;';
