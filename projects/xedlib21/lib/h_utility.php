@@ -625,4 +625,18 @@ function GetSizeString($size)
 	return round($size, 2).' '.$units[$i];
 }
 
+function array_clone($arr)
+{
+	$ret = array();
+
+	foreach ($arr as $id => $val)
+	{
+		if (is_array($val)) $ret[$id] = array_clone($val);
+		else if (is_object($val)) $ret[$id] = clone($val);
+		else $ret[$id] = $val;
+	}
+
+	return $ret;
+}
+
 ?>

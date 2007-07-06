@@ -581,7 +581,7 @@ class FormInput
 				'<input type="text"
 				class="input_generic"
 				name="'.$this->name.'"
-				value="'.GetVar($this->name).'"
+				value="'.$this->GetValue().'"
 				id="'.CleanID($parent.'_'.$this->name).'"'.
 				$this->atrs.'/></label>';
 		}
@@ -592,13 +592,13 @@ class FormInput
 		}
 		if ($this->type == 'select')
 		{
-			$svalu = GetVar($this->name);
 			$ret = "<select class=\"input_select\" name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\" {$this->atrs}>";
 			if (!empty($this->valu))
 			{
+				$newsels = $this->GetValue();
 				$ogstarted = false;
-				foreach ($this->valu as $id => $opt)
+				foreach ($newsels as $id => $opt)
 				{
 					if (isset($svalu))
 						$selected = $svalu == $id ? ' selected="selected"' : null;
@@ -623,50 +623,40 @@ class FormInput
 		{
 			$this->labl = false;
 
-			$svalus = GetVar($this->name);
-
 			$ret = null;
 			if (!empty($this->valu))
-			foreach ($this->valu as $id => $val)
 			{
-				if (isset($svalus))
-					$selected = isset($svalus[$id]) ? ' checked="checked"' : null;
-				else
-					$selected = $val->selected ? ' checked="checked"' : null;
-				if ($val->group)
-					$ret .= "<b><i>{$val->text}</i></b><br/>\n";
-				else
-					$ret .= "<label><input
-						type=\"checkbox\"
-						name=\"{$this->name}[{$id}]\"
-						id=\"".CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
-						{$val->text}</label><br/>";
+				$newsels = $this->GetValue();
+				foreach ($newsels as $id => $val)
+				{
+					$selected = $val->selected ? 'checked="checked"' : null;
+					if ($val->group)
+						$ret .= "<b><i>{$val->text}</i></b><br/>\n";
+					else
+						$ret .= "<label><input
+							type=\"checkbox\"
+							name=\"{$this->name}[{$id}]\"
+							id=\"".CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
+							{$val->text}</label><br/>";
+				}
 			}
 			$this->EndLabel = true;
 			return $ret;
 		}
 		if ($this->type == 'selects')
 		{
-			$svalus = GetVar($this->name);
-			$cursel = 0;
-
 			$ret = '<select
 				id="'.CleanID($parent.'_'.$this->name).'"
 				name="'.$this->name."[]\"
 				multiple=\"multiple\"$this->atrs>\n";
+
 			if (!empty($this->valu))
 			{
+				$newsels = $this->GetValue();
 				$ogstarted = false;
-				foreach ($this->valu as $id => $opt)
+				foreach ($newsels as $id => $opt)
 				{
-					if (isset($svalus))
-						if ($svalus[$cursel] == $id)
-						{
-							$selected = ' selected="selected"';
-							$cursel++;
-						}
-					else
-						$selected = $opt->selected ? ' selected="selected"' : null;
+					$selected = $newsels[$id]->selected ? ' selected="selected"' : null;
 
 					if ($opt->group)
 					{
@@ -700,31 +690,67 @@ class FormInput
 		}
 		if ($this->type == 'area')
 		{
-			$valu = GetVar($this->name);
-			$valu = !empty($valu) ? $valu : $this->valu;
-
 			return "<textarea
 				class=\"input_area\"
 				name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\"
-				{$this->atrs}>{$valu}</textarea>";
+				{$this->atrs}>".$this->GetValue().'</textarea>';
 		}
 		if ($this->type == 'checkbox')
 		{
 			return "<input type=\"checkbox\"
 				name=\"{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\"
-				value=\"1\" ".($this->valu ? 'checked="checked" ' : null).
+				value=\"1\" ".$this->GetValue().
 				$this->atrs." />";
 		}
 
-		$valu = $this->type == 'password' ? null : GetVar($this->name, $this->valu);
 		return "<input type=\"{$this->type}\"
-			class=\"".($this->type == 'button' || $this->type == 'submit' ? 'input_button' : 'input_generic')."\"
+			class=\"".($this->type == 'button' || $this->type == 'submit' ?
+				'input_button' : 'input_generic')."\"
 			name=\"{$this->name}\"
 			id=\"".CleanID($parent.'_'.$this->name)."\"".
-			' value="'.htmlspecialchars($valu).'"'.
+			' value="'.$this->GetValue().'"'.
 			"{$this->atrs}/>";
+	}
+
+	function GetValue()
+	{
+		if ($this->type == 'password') return null;
+		else if ($this->type == 'file') return null;
+		else if ($this->type == 'spamblock') return null;
+		else if ($this->type == 'select')
+		{
+			$newsels = array_clone($this->valu);
+			$newsels[GetVar($this->name, 0)]->selected = true;
+			return $newsels;
+		}
+		else if ($this->type == 'selects')
+		{
+			$newsels = array_clone($this->valu);
+			$svalus = GetVar($this->name);
+			foreach ($svalus as $val) $newsels[$val]->selected = true;
+			return $newsels;
+		}
+		else if ($this->type == 'checks')
+		{
+			$newsels = array_clone($this->valu);
+			$svalus = GetVar($this->name, array());
+			foreach ($svalus as $id => $val) $newsels[$id]->selected = true;
+			return $newsels;
+		}
+		else if ($this->type == 'checkbox')
+			return GetVar($this->name) ? ' checked="checked"' : null;
+		else
+		{
+			if (strpos($this->name, '['))
+			{
+				$match = preg_match('#([^\[]+)\[([^\]]+)\]#', $this->name, $matches);
+				$vals = GetVar($matches[1]);
+				return htmlspecialchars($vals[$matches[2]]);
+			}
+			return htmlspecialchars(GetVar($this->name, $this->valu));
+		}
 	}
 }
 
