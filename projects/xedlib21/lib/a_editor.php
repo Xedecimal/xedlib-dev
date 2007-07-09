@@ -339,7 +339,7 @@ class EditorData
 
 		if ($this->sorting == ED_SORT_TABLE)
 			$this->sort = array(GetVar('sort', $this->ds->id) => GetVar('order', 'ASC'));
-
+	
 		$this->state = $action == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
 		if ($action == $this->name.'_create')
 		{

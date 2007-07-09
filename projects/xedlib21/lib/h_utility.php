@@ -462,7 +462,11 @@ function GetImg($img, $title = 'unnamed', $attribs = null)
 function GetButton($target, $img, $alt, $attribs = null)
 {
 	$path = GetRelativePath(dirname(__FILE__));
-	return '<a href="'.$target.'">'.
+	//I added this
+	$current_editor = GetVar('editor');
+	//modified this line slightly-------------|
+	//                                        V
+	return '<a href="'.$target.'&amp;editor='.$current_editor.'">'.
 		"<img src=\"{$path}/images/{$img}\"".
 		" alt=\"{$alt}\" title=\"{$alt}\"".
 		' '.$attribs.' style="vertical-align: text-bottom" /></a>';
