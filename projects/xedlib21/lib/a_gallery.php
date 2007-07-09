@@ -115,7 +115,6 @@ EOF;
 
 				if ($this->InfoCaption && !empty($dir->info['title']))
 				{
-					//$fi = new FileInfo("{$path}/{$filename}");
 					$name = @$dir->info['title'];
 				}
 				else $name = $dir->filename;
