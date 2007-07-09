@@ -589,8 +589,8 @@ function GetPages($data, $count, $args)
  */
 function psslash($str)
 {
-	if (ini_get('magic_quotes_gpc')) return $str;
-	else return stripslashes($str);
+	if (ini_get('magic_quotes_gpc')) return stripslashes($str);
+	else return $str;
 }
 
 /**

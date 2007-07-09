@@ -1019,7 +1019,7 @@ class EditorData
 				{
 					if ($in->type == 'custom') //Callback
 					{
-						$cb = $data[2];
+						$cb = $in->valu;
 						call_user_func($cb, isset($sel) ? $sel : null, $frm);
 						continue;
 					}

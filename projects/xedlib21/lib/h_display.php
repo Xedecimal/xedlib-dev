@@ -723,7 +723,10 @@ class FormInput
 		{
 			$newsels = array_clone($this->valu);
 			if ($persist)
-				$newsels[GetVar($this->name, 0)]->selected = true;
+			{
+				$sel = GetVar($this->name);
+				if ($sel) $newsels[$sel]->selected = true;
+			}
 			return $newsels;
 		}
 		else if ($this->type == 'selects')
