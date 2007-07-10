@@ -101,7 +101,7 @@ EOF;
 			if ($this->InfoCaption && isset($fi->info['title']))
 				$name = htmlspecialchars($fi->info['title']);
 			else $name = $fi->filename;
-			$body .= "<tr><td colspan=\"3\"><a href=\"{$me}\">View Main Gallery</a> » {$name}</td></tr>";
+			$body .= '<tr><td colspan="3"><a href="'.URL($me).'">View Main Gallery</a> » '.$name.'</td></tr>';
 		}
 
 		if (!empty($files['dirs']))
@@ -141,7 +141,11 @@ EOF;
 				{
 					$twidth = $file->info['thumb_width']+16;
 					$theight = $file->info['thumb_height']+32;
-					$url = URL($me, array('view' => $ix++, 'galcf' => "$path", 'cp' => GetVar('cp')));
+					$url = URL($me, array(
+							'view' => $ix++,
+							'galcf' => "$path",
+							'cp' => GetVar('cp')
+					));
 					$caption = $this->GetCaption($file);
 
 					$body .= <<<EOF
@@ -247,7 +251,7 @@ $this->GetCaption($files['files'][$view]).'</div>';
 		if ($this->InfoCaption
 			&& !empty($file->info['title'])
 			&& $this->Display->Captions == CAPTION_TITLE)
-			$name = $file->info['title'];
+			$name = psslash($file->info['title']);
 		else if ($this->Display->Captions == CAPTION_FILE)
 			$name = substr($file->filename, 0, strrpos($file->filename, '.'));
 		else $name = null;

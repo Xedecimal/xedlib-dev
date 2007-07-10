@@ -215,10 +215,15 @@ function URL($url, $uri = null)
 {
 	$ret = str_replace(' ', '%20', $url);
 
-	if (is_array($uri))
+	global $PERSISTS;
+	$nuri = array();
+	if (!empty($uri)) $nuri = $uri;
+	if (!empty($PERSISTS)) $nuri = array_merge($PERSISTS, $nuri);
+
+	if (!empty($nuri))
 	{
 		$start = (strpos($ret, "?") > 0);
-		foreach ($uri as $key => $val)
+		foreach ($nuri as $key => $val)
 		{
 			if (isset($val))
 			{
