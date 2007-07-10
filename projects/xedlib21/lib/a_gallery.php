@@ -243,12 +243,15 @@ $this->GetCaption($files['files'][$view]).'</div>';
 	{
 		$vp = new VarParser();
 		$d['image'] = $file->path;
+
 		if ($this->InfoCaption
 			&& !empty($file->info['title'])
-			&& $this->Display->Caption == CAPTION_TITLE)
+			&& $this->Display->Captions == CAPTION_TITLE)
 			$name = $file->info['title'];
-		else if ($this->Display->Caption == CAPTION_FILE)
+		else if ($this->Display->Captions == CAPTION_FILE)
 			$name = substr($file->filename, 0, strrpos($file->filename, '.'));
+		else $name = null;
+
 		return $vp->ParseVars($this->Display->CaptionLeft, $d).
 			$name.
 			$vp->ParseVars($this->Display->CaptionRight, $d);
