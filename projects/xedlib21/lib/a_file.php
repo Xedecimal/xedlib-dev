@@ -203,7 +203,7 @@ class FileManager
 						$info->path);
 			}
 		}
-		else if ($action == 'Update') //Mass Captions
+		else if ($action == 'Update Captions') //Mass Captions
 		{
 			if (!$this->Behavior->AllowEdit) return;
 			$caps = GetVar('titles');
