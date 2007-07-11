@@ -126,11 +126,8 @@ $ret .= <<<EOF
 		<td>Friday</td>
 		<td>Saturday</td>
 	</tr>
-	<tr>
-		<td class="CalendarPadding" colspan="{$month->Pad}">&nbsp;</td>
-
 EOF;
-
+		if ($month->Pad > 0) $ret .= "<td class=\"CalendarPadding\" colspan=\"{$month->Pad}\">&nbsp;</td>\n";
 		foreach ($month->Days as $day)
 		{
 			$dayts = $day->TimeStamp;
@@ -150,7 +147,7 @@ EOF;
 				}
 			}
 			$ret .= "\t\t</td>\n";
-			if ($day->LastDay) $ret .= "\t\t<td class=\"CalendarPadding\" colspan=\"".(6 - $day->WeekDay)."\">&nbsp;</td>\n";
+			if ($day->LastDay) $ret .= "\t\t<td class=\"CalendarPadding\" colspan=\"".(6 - $day->WeekDay)."\">&nbsp;</td></tr>\n";
 			if ($day->EndWeek) $ret .= "\t</tr>\n";
 		}
 		$ret .= "</table></form>\n";

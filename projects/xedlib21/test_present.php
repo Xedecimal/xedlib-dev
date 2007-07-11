@@ -64,8 +64,10 @@ $contacts = array(
 	<title>Presentation Tests</title>
 	<link href="main.css" type="text/css" rel="stylesheet" />
 	<script type="text/javascript">
+//<![CDATA[
 <?=$ArrayV['js']?>
 <?=$RecurseV['js']?>
+//]]>
 	</script>
 </head>
 <body>
@@ -135,7 +137,7 @@ $frm->AddInput(new FormInput('Selects', 'selects', 'selects', $sels));
 $frm->AddInput(new FormInput('Date', 'date', 'date'));
 $frm->AddInput(new FormInput('Time', 'time', 'time'));
 $frm->AddInput(new FormInput('DateTime', 'datetime', 'datetime'));
-$frm->AddInput(new FormInput('Area', 'area', 'area'));
+$frm->AddInput(new FormInput('Area', 'area', 'area', null, 'rows="5" cols="30"'));
 $frm->AddInput(new FormInput('Spam Blocker', 'spamblock', 'blocker'));
 $frm->AddInput(new FormInput('Submit', 'submit', 'submit', 'Submit'));
 
