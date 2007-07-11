@@ -392,7 +392,7 @@ class FileManager
 	<input type="hidden" name="cf" value="{$this->cf}"/>
 	<div id="flashUpload">
 	<p><strong>You need to upgrade your Flash Player</strong></p>
-	<p>Please visit <a href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash&promoid=BIOW">Adobe</a> to obtain this.
+	<p>Please visit <a href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash&amp;promoid=BIOW">Adobe</a> to obtain this.</p>
 	</div><br/>
 	<noscript>
 	<input type="file" name="cu[]"/>
@@ -631,7 +631,7 @@ EOF;
 	 */
 	function GetFile($target, $file, $type, $index)
 	{
-		$ret = "\n<tr>\n";
+		$ret = "<tr id=\"{$type}_{$index}\">\n";
 		if (!$file->show) return;
 		if (!$this->Behavior->ShowAllFiles && !empty($file->info['access']))
 		{
@@ -693,10 +693,14 @@ EOF;
 			'ci' => urlencode($file->filename)
 		)));
 
+		//After moving, the links need to be lined up.
+		//After moving, the buttons need to be re-calculated.
+		//The ids match up afterwards but that is all.
+
 		if ($this->Behavior->AllowSort && $index > 0)
 		{
 			$img = GetRelativePath(dirname(__FILE__)).'/images/up.png';
-			$ret .= "\t<td><a href=\"$uriUp\"><img src=\"{$img}\" ".
+			$ret .= "\t<td><a href=\"$uriUp\" onclick=\"return MoveFile('{$type}_{$index}', 'up', '{$uriUp}')\"><img src=\"{$img}\" ".
 			"alt=\"Move Up\" title=\"Move Up\" /></a></td>";
 		}
 		else $ret .= "\t<td>&nbsp;</td>\n";
@@ -709,7 +713,7 @@ EOF;
 			"alt=\"Move Down\" title=\"Move Down\" /></a></td>";
 		}
 		else $ret .= "\t<td>&nbsp;</td>\n";
-		$ret .= "</tr>\n";
+		$ret .= "</tr>";
 
 		return $ret;
 	}

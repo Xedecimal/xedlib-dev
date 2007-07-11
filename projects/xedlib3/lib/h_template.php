@@ -161,10 +161,10 @@ class Template
 			if (isset($attribs['TYPE']))
 			{
 				if ($attribs['TYPE'] == 'strict')
-					$output = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+					$output = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
 				if ($attribs['TYPE'] == 'trans')
-					$output = '<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+					$output = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
 			}
 		}
