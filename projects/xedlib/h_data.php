@@ -4,7 +4,16 @@
  * @package Data
  */
 
+/**
+ * Associative get, returns arrays as $item['column'] instead of $item[index].
+ * @todo Don't use defines, defines aren't redeclareable.
+ */
 define("GET_ASSOC", MYSQL_ASSOC);
+/**
+ * Both get, returns arrays as $item['column'] as well as $item[index] instead
+ * of $item[index].
+ * @todo Don't use defines, defines aren't redeclareable.
+ */
 define("GET_BOTH", MYSQL_BOTH);
 
 /**
@@ -79,6 +88,10 @@ class Database
 		if (mysql_error()) echo "Drop(): " . mysql_error() . "<br>\n";
 	}
 
+	/**
+	 * Ensure this database exists, according to it's specified schema.
+	 *
+	 */
 	function CheckInstall()
 	{
 		mysql_select_db($this->name, $this->link);
@@ -97,10 +110,31 @@ class Database
 function DeString($data) { return array("destring", $data); }
 function DBNow() { return array("now"); }
 
+/**
+ * Enter description here...
+ *
+ */
 class Relation
 {
+	/**
+	 * Associated dataset.
+	 *
+	 * @var DataSet
+	 */
 	public $ds;
+	/**
+	 * Name of the column that is the primary key for the parent of this
+	 * relation.
+	 *
+	 * @var string
+	 */
 	public $parent_key;
+	/**
+	 * Name of the column that is the primary key for the child of this
+	 * relation.
+	 *
+	 * @var string
+	 */
 	public $child_key;
 
 	/**
@@ -108,7 +142,7 @@ class Relation
 	 *
 	 * @param DataSet $ds DataSet for this child.
 	 * @param string $primary_key Column name of the primary key of $ds.
-	 * @example ../examples/relation.php
+	 * @example doc\examples\dataset.php
 	 * @return Relation
 	 */
 	function Relation($ds, $parent_key, $child_key)
@@ -126,6 +160,8 @@ class Relation
  * general guidelines, for one it must have an auto_increment
  * primary key for it's first field named 'id' so it can
  * easily locate fields.
+ * 
+ * @example doc\examples\dataset.php
  */
 class DataSet
 {
@@ -137,20 +173,33 @@ class DataSet
 	public $database;
 
 	/**
-	 * Associated table.
+	 * Name of the table that this DataSet is associated with.
 	 *
-	 * @var DataTable
+	 * @var string
 	 */
 	public $table;
+	/**
+	 * Array of Relation objects that make up associated children of the table
+	 * this DataSet is associated with.
+	 *
+	 * @var array
+	 */
 	public $children;
 	public $display;
 	public $fields;
+	/**
+	 * Name of the column that holds the primary key of the table that this
+	 * DataSet is associated with.
+	 *
+	 * @var string
+	 */
 	public $id;
 
 	/**
 	 * Initialize a new CDataSet binded to $table in $db.
 	 * @param $db Database A Database object to bind to.
 	 * @param $table string Specifies the name of the table in $db to bind to.
+	 * @param $id string Name of the column with the primary key on this table.
 	 */
 	function DataSet($db, $table, $id = 'id')
 	{
@@ -160,16 +209,26 @@ class DataSet
 	}
 
 	/**
+	 * Adds a child relation to this DataSet for recursion.
+	 *
 	 * @param Relation $relation Child to add.
+	 * @see EditorData
 	 */
 	function AddChild($relation)
 	{
 		$this->children[] = $relation;
 	}
 
+	/**
+	 * Gets associated SQL text for a clause naming specific columns.
+	 *
+	 * @param array $cols
+	 * @return string
+	 * @access private
+	 */
 	function ColsClause($cols)
 	{
-		if (is_array($cols))
+		if (!empty($cols))
 		{
 			$ret = '';
 			$ix = 0;
@@ -180,15 +239,28 @@ class DataSet
 			}
 			return $ret;
 		}
-		return null;
+		return ' *';
 	}
 
+	/**
+	 * Quotes a table properly depending on the data source.
+	 *
+	 * @param string $name
+	 * @return string Quoted name.
+	 * @todo Rename this to QuoteName
+	 */
 	function QuoteTable($name)
 	{
 		if (strpos($name, '.') > -1) return str_replace('.', '`.`', "`$name`");
 		return "`$name`";
 	}
 
+	/**
+	 * Gets a WHERE clause in SQL format.
+	 *
+	 * @param array $match
+	 * @return string
+	 */
 	function WhereClause($match)
 	{
 		if (isset($match))
@@ -211,6 +283,13 @@ class DataSet
 		return null;
 	}
 
+	/**
+	 * Gets a JOIN clause in SQL format.
+	 *
+	 * @param array $joining
+	 * @return string
+	 * @todo Allow specifying LEFT, INNER or JOIN formats.
+	 */
 	function JoinClause($joining)
 	{
 		if (isset($joining))
@@ -228,6 +307,12 @@ class DataSet
 		return null;
 	}
 
+	/**
+	 * Gets an ORDER BY clause in SQL format depending on the datasource.
+	 *
+	 * @param array $sorting
+	 * @return string
+	 */
 	function OrderClause($sorting)
 	{
 		if (isset($sorting))
@@ -248,6 +333,12 @@ class DataSet
 		return null;
 	}
 
+	/**
+	 * Gets a LIMIT clause in SQL format depending on data source.
+	 *
+	 * @param array $amount
+	 * @return string
+	 */
 	function AmountClause($amount)
 	{
 		if (isset($amount))
@@ -260,6 +351,13 @@ class DataSet
 		return null;
 	}
 
+	/**
+	 * Returns a series of name to value pairs in SQL format depending on the
+	 * data source.
+	 *
+	 * @param unknown_type $values
+	 * @return unknown
+	 */
 	function GetSetString($values)
 	{
 		$ret = null;
@@ -281,6 +379,7 @@ class DataSet
 
 	/**
 	 * Inserts a row into the associated table with the passed array.
+	 * @access public
 	 * @param $columns array An array of columns. If you wish to use functions
 	 * @param $update_existing bool Whether to update the existing values
 	 * by unique keys, or just to add ignoring keys otherwise.
@@ -360,9 +459,9 @@ class DataSet
 
 	/**
 	 * Return a single item from this dataset
-	 * @param $match array Passed on to WhereClause.
-	 * @param $args Arguments passed to fetch_array.
-	 * @return A single serialized row matching $match or null if not found.
+	 * @param array $match Passed on to WhereClause.
+	 * @param int $args Arguments passed to fetch_array.
+	 * @return array A single serialized row matching $match or null if not found.
 	 */
 	function GetOne($match, $args = GET_BOTH)
 	{
@@ -371,6 +470,13 @@ class DataSet
 		return $data;
 	}
 
+	/**
+	 * Returns the specified column from the first result of the specified query.
+	 *
+	 * @param array $match
+	 * @param string $col
+	 * @return mixed
+	 */
 	function GetScalar($match, $col)
 	{
 		$query = "SELECT `$col` FROM `{$this->table}`".$this->WhereClause($match);
@@ -416,6 +522,14 @@ class DataSet
 		return $this->items;
 	}
 
+	/**
+	 * Returns all rows that match $columns LIKE $phrase
+	 *
+	 * @param array $columns
+	 * @param string $phrase
+	 * @param int $args
+	 * @return array
+	 */
 	function GetSearch($columns, $phrase, $args = GET_BOTH)
 	{
 		$newphrase = str_replace("'", '%', stripslashes($phrase));
@@ -480,12 +594,24 @@ class DataSet
 		$this->database->Query($query.$this->WhereClause($match));
 	}
 
+	/**
+	 * Swaps two items in the database.
+	 *
+	 * @param array $smatch
+	 * @param array $dmatch
+	 * @param mixed $pkey
+	 */
 	function Swap($smatch, $dmatch, $pkey)
 	{
+		//Grab all the source items that are going to be swapped.
 		$sitems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($smatch));
 		$sitem = mysql_fetch_array($sitems, GET_ASSOC);
+		
+		//Grab all the destination items that are going to be swapped.
 		$ditems = $this->database->query("SELECT * FROM `{$this->table}`".$this->WhereClause($dmatch));
 		$ditem = mysql_fetch_array($ditems, GET_ASSOC);
+
+		//If we have children relations, it suddenly gets complicated.
 		if (!empty($this->children))
 		{
 			foreach ($this->children as $child)
@@ -504,7 +630,12 @@ class DataSet
 				$child['ds']->database->query("TRUNCATE `{$child['temp']}`");
 			}
 		}
+
+		//Pop off the ids, so they don't get changed, never want to change
+		//these for some reason according to mysql people.
 		unset($sitem['id'], $ditem['id']);
+
+		//Update source with dest and vice versa.
 		$this->Update($smatch, $ditem);
 		$this->Update($dmatch, $sitem);
 	}
@@ -522,7 +653,8 @@ class DataSet
 		$this->database->Query($query);
 
 		//Prune off all children...
-		if (!empty($this->children)) foreach ($this->children as $ix => $child)
+		if (!empty($this->children))
+		foreach ($this->children as $ix => $child)
 		{
 			$query = "DELETE c FROM {$child->ds->table} c LEFT JOIN {$this->table} p ON(c.{$child->child_key} = p.{$child->parent_key}) WHERE c.{$child->child_key} != 0 AND p.{$child->parent_key} IS NULL";
 			$this->database->Query($query);

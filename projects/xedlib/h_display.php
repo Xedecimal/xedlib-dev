@@ -9,10 +9,11 @@ require_once("h_utility.php");
 
 /**
  * Quick macro to retreive a generated box.
- * @param $name string Name of the box (good for javascript calls to getElementById()).
- * @param $title string Title of the returned box.
- * @param $body string Raw text contents of the returned box.
- * @param $template string Template file to use for the returned box.
+ * @param string $name Name of the box (good for javascript calls to getElementById()).
+ * @param string $title Title of the returned box.
+ * @param string $body Raw text contents of the returned box.
+ * @param string $template Template file to use for the returned box.
+ * @example test_present.php
  */
 function GetBox($name, $title, $body, $template = null)
 {
@@ -28,10 +29,30 @@ function GetBox($name, $title, $body, $template = null)
  */
 class Box
 {
-	public $name; //!< For unique identifier.
-	public $title; //!< Title to be displayed in this box, placement depends on the theme.
-	public $out; //!< Standard text to be output inside this box.
-	public $template; //!< Template to use with this box.
+	/**
+	 * For unique identifier.
+	 *
+	 * @var String
+	 */
+	public $name;
+	/**
+	 * Title to be displayed in this box, placement depends on the theme.
+	 *
+	 * @var String
+	 */
+	public $title;
+	/**
+	 * Standard text to be output inside this box.
+	 *
+	 * @var String
+	 */
+	public $out;
+	/**
+	 * Template filename to use with this box.
+	 *
+	 * @var String
+	 */
+	public $template;
 
 	/**
 	* Constructs a new box object with empty title and body.
@@ -46,6 +67,7 @@ class Box
 
 	/**
 	* Returns the rendered html output of this Box.
+	* @param String $template Filename of template to use for display.
 	*/
 	function Get($template = null)
 	{
@@ -81,10 +103,35 @@ class Box
  */
 class Table
 {
-	public $name; //!< Name of this table (only used as identifer in html comments).
-	public $cols; //!< Column headers for this table (displayed at the top of the rows).
-	public $rows; //!< Each row array that makes up the bulk of this table.
-	public $atrs; //!< Array of attributes on a per-column basis.
+	/**
+	 * Name of this table (only used as identifer in html comments).
+	 *
+	 * @var string
+	 */
+	public $name;
+	/**
+	 * Column headers for this table (displayed at the top of the rows).
+	 *
+	 * @var array
+	 */
+	public $cols;
+	/**
+	 * Each row array that makes up the bulk of this table.
+	 *
+	 * @var array
+	 */
+	public $rows;
+	/**
+	 * Array of attributes on a per-column basis.
+	 *
+	 * @var array
+	 */
+	public $atrs;
+	/**
+	 * Array of attributes on a per-row basis.
+	 *
+	 * @var array
+	 */
 	public $rowattribs;
 
 	/**
@@ -216,11 +263,36 @@ class SortTable extends Table
  */
 class Form extends Table
 {
-	public $name; //!< Unique name of this form (used in Html comments).
-	public $hiddens; //!< Array of hidden fields stored from AddHidden()
-	public $attribs; //!< Form tag attributes, "name" => "value" pairs.
-	public $out; //!< Actual output.
-	public $Persist; //Whether to use persistant vars or not.
+	/**
+	 * Unique name of this form (used in html / js / identifying).
+	 *
+	 * @var string
+	 */
+	public $name;
+	/**
+	 * Hidden fields stored from AddHidden()
+	 *
+	 * @var array
+	 */
+	public $hiddens;
+	/**
+	 * Form tag attributes, "name" => "value" pairs.
+	 *
+	 * @var array
+	 */
+	public $attribs;
+	/**
+	 * Actual output.
+	 *
+	 * @var string
+	 */
+	public $out;
+	/**
+	 * Whether to use persistant vars or not.
+	 *
+	 * @var bool
+	 */
+	public $Persist;
 
 	/**
 	* Instantiates this form with a unique name.
@@ -330,7 +402,7 @@ class Form extends Table
 				break;
 			default:
 				if (isset($value)) $val = ' value="'.htmlspecialchars($value).'"';
-				else $val = "";
+				else $val = null;
 				$strout = "<input id=\"$name\" type=\"$type\" name=\"$name\"$attributes$val />";
 				break;
 		}
@@ -378,10 +450,33 @@ class Form extends Table
 
 class SelOption
 {
+	/**
+	 * The text of this option.
+	 *
+	 * @var string
+	 */
 	public $text;
+	/**
+	 * Whether this is a group header.
+	 *
+	 * @var bool
+	 */
 	public $group;
+	/**
+	 * Whether this option is selected by default.
+	 *
+	 * @var bool
+	 */
 	public $selected;
 
+	/**
+	 * Create a new select option.
+	 *
+	 * @param string $text The text of this option.
+	 * @param unknown_type $group
+	 * @param unknown_type $selected
+	 * @return SelOption
+	 */
 	function SelOption($text, $group = false, $selected = false)
 	{
 		$this->text = $text;
@@ -423,6 +518,7 @@ function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 {
 	$ret = null;
 	if (isset($none)) $ret[0] = new SelOption($none, false, $default == 0);
+	if (!empty($result))
 	foreach ($result as $res)
 	{
 		$ret[$res[$col_id]] = new SelOption($res[$col_disp], false, $default == $res[$col_id]);
@@ -911,11 +1007,37 @@ define('ACCESS_ADMIN', 1);
 
 class LoginManager
 {
+	/**
+	 * Datasets that are associated with this LoginManager.
+	 *
+	 * @var array
+	 */
 	public $datasets;
+	/**
+	 * Type of this login manager. (CONTROL_SIMPLE or CONTROL_BOUND).
+	 *
+	 * @var int
+	 */
 	public $type;
+	/**
+	 * Static password for an unbound manager (must be MD5 prior to setting.).
+	 *
+	 * @var string
+	 */
 	public $pass;
+	/**
+	 * Access level of users that login with this manager. (ACCESS_GUEST or
+	 * ACCESS_ADMIN)
+	 *
+	 * @var int
+	 */
 	public $access;
 
+	/**
+	 * Creates a new LoginManager.
+	 *
+	 * @return LoginManager
+	 */
 	function LoginManager()
 	{
 		$this->type = CONTROL_SIMPLE;
@@ -967,6 +1089,12 @@ class LoginManager
 		return false;
 	}
 
+	/**
+	 * Returns HTML rendered login form.
+	 *
+	 * @param string $target Target script using this manager.
+	 * @return string
+	 */
 	function Get($target)
 	{
 		global $errors, $_GET;
@@ -979,12 +1107,27 @@ class LoginManager
 		return $f->Get('action="'.$target.'" method="post"');
 	}
 
+	/**
+	 * Associates a dataset with this login manager, this will immediately
+	 * turn it into a CONTROL_BOUND and render the associated static password
+	 * unused.
+	 *
+	 * @param DataSet $ds DataSet to associate.
+	 * @param string $passcol Column holding the password in $ds.
+	 * @param string $usercol Column holding the username in $ds.
+	 */
 	function AddDataset($ds = null, $passcol = 'pass', $usercol = 'user')
 	{
 		$this->type = CONTROL_BOUND;
 		$this->datasets[] = array($ds, $passcol, $usercol);
 	}
 
+	/**
+	 * Sets a static password on this manager. Must be made into MD5 prior to
+	 * setting.
+	 *
+	 * @param string $pass MD5 password.
+	 */
 	function SetPass($pass = null)
 	{
 		if (strlen($pass) != 32) die('Plaintext password! Use '.md5($pass)." instead.<br/>\n");

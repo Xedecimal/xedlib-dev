@@ -63,6 +63,10 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 	echo $err;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//Session
+//
+
 function SetVar($name, $value)
 {
 	global $HTTP_SESSION_VARS;
@@ -72,9 +76,9 @@ function SetVar($name, $value)
 }
 
 /**
- * @return mixed
  * @param name string
  * @param default = NULL mixed
+ * @return mixed
  */
 function GetVar($name, $default = null)
 {
@@ -388,7 +392,15 @@ function GetMask($array)
 	return $ret;
 }
 
-function filext($name) { return substr(strrchr($name, '.'), 1); }
+////////////////////////////////////////////////////////////////////////////////
+//File
+//
+
+function filext($name)
+{
+	return substr(strrchr($name, '.'), 1);
+}
+
 function filenoext($name)
 {
 	$v = strrchr($name, '.');
@@ -400,6 +412,10 @@ function GetXedlibPath()
 {
 	return 'xedlib';
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//Array
+//
 
 function DataToArray($rows, $idcol)
 {

@@ -5,14 +5,54 @@
  */
 class Template
 {
-	public $vars; //!< Variables that have been set with set().
-	public $out; //!< Raw output to be rendered.
-	public $objs; //!< Set of objects to output to.
-	public $use_getvar; //!< Whether or not to use GetVar() for {{vars}}
+	/**
+	 * Variables that have been set with set().
+	 *
+	 * @var array
+	 */
+	public $vars;
+	/**
+	 * Raw output to be rendered.
+	 *
+	 * @var string
+	 */
+	public $out;
+	/**
+	 * Set of objects to output to.
+	 *
+	 * @var array
+	 */
+	public $objs;
+	/**
+	 * Whether or not to use GetVar() for {{vars}}
+	 *
+	 * @var bool
+	 */
+	public $use_getvar;
+	/**
+	 * Handlers for specific features.
+	 *
+	 * @var array
+	 */
 	public $handlers;
+	/**
+	 * Current data.
+	 *
+	 * @var mixed
+	 */
 	public $data;
+	/**
+	 * Files that will be included.
+	 *
+	 * @var array
+	 */
 	public $includes;
 
+	/**
+	 * Creates a new template parser.
+	 *
+	 * @return Template
+	 */
 	function Template()
 	{
 		$this->out = "";
@@ -217,6 +257,13 @@ class Template
 		$obj->out .= $text;
 	}
 
+	/**
+	 * Evaluates code (Eg. <?php echo "Hello"; ?>) in a template.
+	 *
+	 * @param $parser object Parser object
+	 * @param $text string Unknown.
+	 * @param $data string Code in question.
+	 */
 	function Process($parser, $text, $data)
 	{
 		ob_start();
@@ -317,14 +364,32 @@ class Template
 
 class VarParser
 {
+	/**
+	 * Vars specified here override all else.
+	 *
+	 * @var array
+	 */
 	public $vars;
 
+	/**
+	 * Enter description here...
+	 *
+	 * @param $data string Data to search for variables.
+	 * @param $vars array Override existing names with these.
+	 * @return string Reformatted text with variables replaced.
+	 */
 	function ParseVars($data, $vars)
 	{
 		$this->vars = $vars;
 		return preg_replace_callback("/\{{([^}]+)\}}/", array($this, 'var_parser'), $data);
 	}
 
+	/**
+	 * Callback for each regex match, not for external use.
+	 *
+	 * @param $match array
+	 * @return string
+	 */
 	function var_parser($match)
 	{
 		$tvar = $match[1];
