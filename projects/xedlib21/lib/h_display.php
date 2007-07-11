@@ -735,6 +735,7 @@ class FormInput
 			if ($persist)
 			{
 				$svalus = GetVar($this->name);
+				if (!empty($svalus))
 				foreach ($svalus as $val) $newsels[$val]->selected = true;
 			}
 			return $newsels;
