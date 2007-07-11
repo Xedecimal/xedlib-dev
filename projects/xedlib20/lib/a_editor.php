@@ -454,12 +454,12 @@ class EditorData
 
 			//Build columns so nothing overlaps (eg. id of this and child table)
 
-			$cols[$this->ds->table.'.'.$this->ds->id] =
+			$cols[$this->ds->table.'`.`'.$this->ds->id] =
 				"{$this->ds->table}_{$this->ds->id}";
 			if (!empty($this->ds->Display))
 			foreach ($this->ds->Display as $ix => $disp)
 			{
-				$cols[$this->ds->table.'.'.$disp->column] =
+				$cols[$this->ds->table.'`.`'.$disp->column] =
 					"{$this->ds->table}_{$disp->column}";
 			}
 
@@ -470,18 +470,18 @@ class EditorData
 				$joins = array();
 
 				//Parent column of the child...
-				$cols[$child->ds->table.'.'.$child->child_key] = "{$child->ds->table}_{$child->child_key}";
+				$cols[$child->ds->table.'`.`'.$child->child_key] = "{$child->ds->table}_{$child->child_key}";
 
 				//Coming from another table, we gotta join it in.
 				if ($child->ds->table != $this->ds->table)
 				{
 					$joins[$child->ds->table] = "{$child->ds->table}.{$child->child_key} = {$this->ds->table}.{$child->parent_key}";
 					//We also need to get the column names that we'll need...
-					$cols[$child->ds->table.'.'.$child->ds->id] = "{$child->ds->table}_{$child->ds->id}";
+					$cols[$child->ds->table.'`.`'.$child->ds->id] = "{$child->ds->table}_{$child->ds->id}";
 					if (!empty($child->ds->Display))
 					foreach ($child->ds->Display as $ix => $disp)
 					{
-						$cols[$child->ds->table.'.'.$disp->column] = "{$child->ds->table}_{$disp->column}";
+						$cols[$child->ds->table.'`.`'.$disp->column] = "{$child->ds->table}_{$disp->column}";
 					}
 				}
 			}
