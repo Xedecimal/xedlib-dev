@@ -54,7 +54,10 @@ $edTest->Prepare($ca);
 
 //Presentation
 
-$page_body = $edTest->Get($me, $ci);
+$ed = $edTest->Get($me, $ci);
+
+$page_body = $ed['table'];
+$page_body .= $ed['forms'];
 
 echo $t->Get('template_test.html');
 
