@@ -1,8 +1,6 @@
 <?php
 
 /**
- * @package Data
- *
  * on our way to the storage phase! We shall support the following!
  *
  * sqlite: client data stored in filesystem
@@ -12,6 +10,8 @@
  * postgresql: database engine storage
  *
  * odbc: proxy for many of the above
+ *
+ * @package Data
  */
 
 /**
@@ -36,36 +36,53 @@ define('ER_NO_SUCH_TABLE', 1146);
  */
 class Database
 {
-	/** A link returned from mysql_connect(), don't worry about it. */
+	/**
+	 * A link returned from mysql_connect(), don't worry about it.
+	 * @var resource
+	 */
 	public $link;
-	/** Name of this database, set from constructor. */
+
+	/**
+	 * Name of this database, set from constructor.
+	 * @var string
+	 */
 	public $name;
+
 	/**
 	 * Type of database this is attached to.
-	 *
 	 * @var int
 	 */
 	public $type;
 
 	/**
 	 * Left quote compatible with whatever database we're sitting on.
-	 *
 	 * @var char
 	 */
 	public $lq;
+
 	/**
 	 * Right quote compatible with whatever server we are sitting on.
-	 *
 	 * @var char
 	 */
 	public $rq;
 
+	/**
+	 * A series of handlers that will be called on when specific actions
+	 * take place.
+	 * @var array
+	 */
 	public $Handlers;
+
+	/**
+	 * The error handler for when something goes wrong.
+	 * @var callback
+	 */
 	public $ErrorHandler;
 
 	/**
 	 * Checks for a mysql error.
-	 * @return void Testing.
+	 * @param string $query Query that was attempted.
+	 * @param callback $handler Handler to take care of this problem.
 	 */
 	function CheckMyError($query, $handler)
 	{
@@ -80,16 +97,16 @@ class Database
 	}
 
 	/**
-	 * Instantiates a new xlDatabase object with the database name, hostname, user name and password.
-	 * @param $database string Name of the database this will attach to.
-	 * @param $host string Hostname to connect to, either specified or gathered from the defined constant XL_DBHOST.
-	 * @param $user string Username to connect with, either specified or gathered from the defined constant XL_DBUSER.
-	 * @param $pass string Password to connect with, either specified or gathered from the defined constant XL_DBPASS.
+	 * Instantiates a new Database object.
 	 */
 	function Database()
 	{
 	}
 
+	/**
+	 * Opens a connection to a database.
+	 * @param string $url Example: mysql://user:pass@host/database
+	 */
 	function Open($url)
 	{
 		if (preg_match('#([^:]+)://([^:]*):(.*)@([^/]*)/(.*)#', $url, $m) < 1)
@@ -125,9 +142,10 @@ class Database
 	 * Perform a manual query on the associated database, try to use this sparingly because
 	 * we will be moving to abstract database support so it'll be a load parsing the sql-like
 	 * query and translating.
-	 * @param $query string The actual SQL formatted query.
-	 * @param $silent bool Should we return an error?
-	 * @return object Query result object.
+	 * @param string $query The actual SQL formatted query.
+	 * @param bool $silent Should we return an error?
+	 * @param callback $handler Handler in case something goes wrong.
+	 * @return resource Query result object.
 	 */
 	function Query($query, $silent = false, $handler = null)
 	{
@@ -159,7 +177,7 @@ class Database
 
 	/**
 	* Drop a child table.
-	* @param $name The name of the table to make a boo boo to.
+	* @param string $name The name of the table to make a boo boo to.
 	*/
 	function DropTable($name)
 	{
@@ -205,8 +223,14 @@ class Database
 /**
  * Removes quoting from a database field to perform functions and
  * such.
+ * @param string $data Information that will not be quited.
+ * @return array specifying that this string shouldn't be quoted.
  */
 function DeString($data) { return array("destring", $data); }
+/**
+ * Returns the proper format for DataSet to generate the current time.
+ * @return array This column will get translated into the current time.
+ */
 function DBNow() { return array("now"); }
 
 /**
@@ -217,21 +241,19 @@ class Relation
 {
 	/**
 	 * Associated dataset.
-	 *
 	 * @var DataSet
 	 */
 	public $ds;
+
 	/**
 	 * Name of the column that is the primary key for the parent of this
 	 * relation.
-	 *
 	 * @var string
 	 */
 	public $parent_key;
 	/**
 	 * Name of the column that is the primary key for the child of this
 	 * relation.
-	 *
 	 * @var string
 	 */
 	public $child_key;
@@ -240,9 +262,9 @@ class Relation
 	 * Prepares a relation for database association.
 	 *
 	 * @param DataSet $ds DataSet for this child.
-	 * @param string $primary_key Column name of the primary key of $ds.
+	 * @param string $parent_key Column name of the parent key of $ds.
+	 * @param string $child_key Column that references the parent.
 	 * @example doc\examples\dataset.php
-	 * @return Relation
 	 */
 	function Relation($ds, $parent_key, $child_key)
 	{
@@ -299,7 +321,7 @@ class Join
 	 * @param DataSet $dataset Target DataSet to join.
 	 * @param string $condition Context of the join.
 	 * @param string $type Type of join, 'JOIN', 'LEFT JOIN' or 'INNER JOIN'.
-	 * @return Join
+	 * @param string $shortcut Specify an easier name for this joining table.
 	 * @see DataSet.Get
 	 */
 	function Join($dataset, $condition, $type = 'JOIN', $shortcut = null)
@@ -389,6 +411,9 @@ class DataSet
 	 */
 	public $Description;
 
+	/**
+	 * Handler for errors in case something goes wrong.
+	 * @var callback
 	public $ErrorHandler;
 
 	/**
@@ -401,9 +426,9 @@ class DataSet
 
 	/**
 	 * Initialize a new CDataSet binded to $table in $db.
-	 * @param $db Database A Database object to bind to.
-	 * @param $table string Specifies the name of the table in $db to bind to.
-	 * @param $id string Name of the column with the primary key on this table.
+	 * @param Database $db Database A Database object to bind to.
+	 * @param string $table Specifies the name of the table in $db to bind to.
+	 * @param string $id Name of the column with the primary key on this table.
 	 */
 	function DataSet($db, $table, $id = 'id')
 	{
@@ -604,8 +629,8 @@ class DataSet
 	 * Returns a series of name to value pairs in SQL format depending on the
 	 * data source.
 	 *
-	 * @param unknown_type $values
-	 * @return unknown
+	 * @param array $values eg: array('col1' => 'val1')
+	 * @return string Proper set.
 	 */
 	function GetSetString($values)
 	{
@@ -629,9 +654,8 @@ class DataSet
 
 	/**
 	 * Inserts a row into the associated table with the passed array.
-	 * @access public
-	 * @param $columns array An array of columns. If you wish to use functions
-	 * @param $update_existing bool Whether to update the existing values
+	 * @param array $columns An array of columns. If you wish to use functions
+	 * @param bool $update_existing Whether to update the existing values
 	 * by unique keys, or just to add ignoring keys otherwise.
 	 * @return int ID of added row.
 	 */
@@ -668,6 +692,15 @@ class DataSet
 		return $this->database->GetLastInsertID();
 	}
 
+	/**
+	 * Quick way to add a series of values without associating or knowing the
+	 * column names.
+	 * @param array $columns Values to insert, eg. array(null, DBNow(),
+	 * 'Hello');
+	 * @param bool $update_existing Whether or not to update if duplicate
+	 * keys exist.
+	 * @return mixed Identifier of the last inserted item.
+	 */
 	function AddSeries($columns, $update_existing = false)
 	{
 		$lq = $this->database->lq;
@@ -694,11 +727,13 @@ class DataSet
 
 	/**
 	 * Get a set of data given the specific arguments.
-	 * @param $match array Column to Value to match for in a WHERE statement.
-	 * @param $sort array Column to Direction array.
-	 * @param $filter array Column to Value array.
-	 * @param $joins array Table to ON Expression values.
-	 * @param $args int passed to mysql_fetch_array.
+	 * @param array $match Column to Value to match for in a WHERE statement.
+	 * @param array $sort Column to Direction array.
+	 * @param array $filter Column to Value array.
+	 * @param array $joins Table to ON Expression values.
+	 * @param array $columns Specific columns to return: array('col1', 'col2' => 'c2');
+	 * @param string $group Grouping, eg: 'product'.
+	 * @param int $args passed to mysql_fetch_array.
 	 * @return array Array of items selected.
 	 */
 	function Get(
@@ -762,11 +797,13 @@ class DataSet
 
 	/**
 	 * Get a set of data given the specific arguments.
-	 * @param $match array Column to Value to match for in a WHERE statement.
-	 * @param $sort array Column to Direction array.
-	 * @param $filter array Column to Value array.
-	 * @param $joins array Table to ON Expression values.
-	 * @param $args int passed to mysql_fetch_array.
+	 * @param array $match Column to Value to match for in a WHERE statement.
+	 * @param array $sort Column to Direction array.
+	 * @param array $filter Column to Value array.
+	 * @param array $joins Table to ON Expression values.
+	 * @param array $columns Specific columns to return: array('col1', 'col2' => 'c2');
+	 * @param string $group Grouping, eg: 'product'.
+	 * @param int $args passed to mysql_fetch_array.
 	 * @return array Array of items selected.
 	 */
 	function GetInternal(
@@ -812,6 +849,7 @@ class DataSet
 	/**
 	 * Return a single item from this dataset
 	 * @param array $match Passed on to WhereClause.
+	 * @param array $joins Passed on to JoinClause.
 	 * @param int $args Arguments passed to fetch_array.
 	 * @return array A single serialized row matching $match or null if not found.
 	 */
@@ -841,8 +879,8 @@ class DataSet
 
 	/**
 	 * Returns every row unless limit is specified without a specific sort column or order
-	 * @param $limit int Maximum amount of rows to return.
-	 * @param $args int Arguments to be passed to mysql_fetch_array (defaults to MYSQL_NUM)
+	 * @param int $limit Maximum amount of rows to return.
+	 * @param int $args Arguments to be passed to mysql_fetch_array (defaults to MYSQL_NUM)
 	 * @return array An array of results from the query specified.
 	 */
 	function GetAll($limit = NULL, $args = GET_BOTH)
@@ -852,10 +890,10 @@ class DataSet
 
 	/**
 	 * Returns every database  row from the database sorting by the given column
-	 * @param $column Name of the table column to sort by.
-	 * @param $order A string either "ASC" or "DESC" I believe.
-	 * @param $start Result index to being at.
-	 * @param $amount Result count to return.
+	 * @param string $column Name of the table column to sort by.
+	 * @param string $order Either "ASC" or "DESC" I believe.
+	 * @param int $start Result index to being at.
+	 * @param int $amount Result count to return.
 	 * @return array An array of results from the query specified or null if none.
 	 */
 	function GetAllSort($column, $order = "ASC", $start = NULL,
@@ -901,8 +939,9 @@ class DataSet
 	/**
 	 * Query the database manually, not suggested to be used as it will be
 	 * very cpu intensive when it evaluates the query itself.
-	 * @param $query string The query to perform, including the table name and everything.
-	 * @param $silent bool Should we output an error?
+	 * @param string $query The query to perform, including the table name and everything.
+	 * @param bool $silent Should we output an error?
+	 * @param int $args Arguments to pass to the fetch.
 	 * @return array The serialized database rows.
 	 */
 	function GetCustom($query, $silent = false, $args = GET_BOTH)
@@ -925,8 +964,8 @@ class DataSet
 
 	/**
 	 * Return the total amount of rows in this associated table.
-	 * @param $match array Passed off to WhereClause.
-	 * @param $silent boolean Good for checking an installation.
+	 * @param array $match Passed off to WhereClause.
+	 * @param bool $silent Good for checking an installation.
 	 * @return int The actual numeric count.
 	 */
 	function GetCount($match = null, $silent = false)
@@ -939,8 +978,8 @@ class DataSet
 
 	/**
 	 * Updates the column in the associated table with the given id.
-	 * @param $match array Passed on to WhereClause.
-	 * @param $values array Data to be updated.
+	 * @param array $match Passed on to WhereClause.
+	 * @param array $values Data to be updated.
 	 * values to update using array("column1" => "value", "column2"
 	 * => "value2").
 	 */
@@ -1015,7 +1054,7 @@ class DataSet
 	/**
 	* Removes all items that match the specified value in the specified column in the
 	* associated table.
-	* @param $match array Passed on to WhereClause to decide deleted data.
+	* @param array $match Passed on to WhereClause to decide deleted data.
 	*/
 	function Remove($match)
 	{

@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @package File Management
+ */
+
 require_once('h_utility.php');
 require_once('h_display.php');
 require_once('a_editor.php');
@@ -109,9 +113,8 @@ class FileManager
 	 * @param string $root Highlest folder level allowed.
 	 * @param array $filters Directory filters allowed.
 	 * @param string $DefaultFilter Default selected filter.
-	 * @return FileManager
 	 */
-	function FileManager($name, $root, $filters = array(), $DefaultFilter = 'Default')
+	function FileManager($name, $root, $filters = null, $DefaultFilter = 'Default')
 	{
 		$this->name = $name;
 		$this->filters = $filters;
@@ -139,7 +142,6 @@ class FileManager
 	 * This must be called before Get. This will prepare for presentation.
 	 *
 	 * @param string $action Use GetVar('ca') usually.
-	 * @return void
 	 */
 	function Prepare($action)
 	{
@@ -824,7 +826,7 @@ EOF;
 	 *
 	 * @param FileInfo $f1
 	 * @param FileInfo $f2
-	 * @return Higher or lower in comparison.
+	 * @return int Higher or lower in comparison.
 	 */
 	function cmp_file($f1, $f2)
 	{
@@ -1183,7 +1185,6 @@ class FileInfo
 	 *
 	 * @param string $source Filename to gather information on.
 	 * @param string $DefaultFilter Associated directory filter.
-	 * @return FileInfo
 	 */
 	function FileInfo($source, $DefaultFilter = 'Default')
 	{
@@ -1221,7 +1222,7 @@ class FileInfo
 	 *
 	 * @param string $path Path to file to get filter of.
 	 * @param string $default Default filter to fall back on.
-	 * @return DirFilter
+	 * @return FilterDefault Or a derivitive.
 	 */
 	function GetFilter($path, $default = 'Default')
 	{
@@ -1669,11 +1670,8 @@ class FileAccessHandler extends EditorHandler
 
 	/**
 	 * Called when a file or folder gets updated.
-	 * @param int $id Identifier for accessor.
-	 * @param array $update Target file information.
-	 * @return bool Whether or not the update will succeed.
 	 */
-	function Update($id, &$data, &$update)
+	function Update($id, &$original, &$update)
 	{
 		$accesses = GetVar('accesses');
 		$this->RecurseSetPerm($this->root, $id, $accesses);
@@ -1688,8 +1686,6 @@ class FileAccessHandler extends EditorHandler
 
 	/**
 	 * Adds a series of options to the form associated with the given file.
-	 * @param Form $form Associated form.
-	 * @param array $data Associated data.
 	 * @todo Rename to AddFields
 	 */
 	function GetFields(&$form, $id, $data)

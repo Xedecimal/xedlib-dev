@@ -7,32 +7,44 @@
 	<link href="../screen.css" type="text/css" rel="stylesheet" />
 </head>
 <body>
-<p class="green head">
-<a href="index.xml">Index</a> :: 
-<xsl:value-of select="doc/tag[@type='access']"/><xsl:text> </xsl:text>
-	<b><xsl:value-of select="doc/tag[@type='return']"/></b><xsl:text> </xsl:text>
-<xsl:value-of select="root/@name" />(
-	<xsl:for-each select="root/variable/@name">
-		<b><xsl:value-of select="../../doc/tag[@name=current()]/@datatype" /></b><xsl:text> </xsl:text>
-		<xsl:value-of select="."/><xsl:text> </xsl:text>
-	</xsl:for-each>
-)
-</p>
-<p class="green body">
-<p class="green item">
+
+<p><b>
+	<a href="index.xml">Index</a>
+	:: <xsl:value-of select="root/doc/tag[@type='package']/@desc" />
+</b></p>
+
+<div class="blue">
+
+<div class="head">
+	<xsl:value-of select="root/doc/tag[@type='return']/@datatype" />
+	<xsl:text> </xsl:text>
+	<xsl:value-of select="root/@name" />
+	(<xsl:for-each select="root/variable/@name">
+		<xsl:value-of select="../../doc/tag[@name=current()]/@datatype" />
+		<xsl:text> </xsl:text><b><xsl:value-of select="."/></b>
+		<xsl:if test="position() != last()"><xsl:text>, </xsl:text></xsl:if>
+	</xsl:for-each>)
+</div>
+
+<div class="body"><div class="item">
+
+	<p><xsl:value-of select="root/doc/text()" /></p>
 	<xsl:for-each select="root/doc/tag[@type='param']">
-		<b><xsl:value-of select="@datatype"/></b>&#160;
-		<xsl:value-of select="@name"/>&#160;
-		<xsl:value-of select="."/><br/>
+		<b><xsl:value-of select="@datatype"/></b>
+		<xsl:text> </xsl:text><xsl:value-of select="@name"/>
+		<xsl:text> </xsl:text><xsl:value-of select="."/><br/>
 	</xsl:for-each>
-</p>
-<p class="green item"><xsl:value-of select="root/doc/text()" /></p>
-<xsl:for-each select="root/doc/tag[@type='example']">
-	<pre class="yellow item">
-	<xsl:value-of select="text()" disable-output-escaping="yes" />
-	</pre>
-</xsl:for-each>
-</p>
+
+	<xsl:for-each select="root/doc/tag[@type='example']">
+		<pre class="yellow item">
+			<xsl:value-of select="text()" disable-output-escaping="yes" />
+		</pre>
+	</xsl:for-each>
+
+</div></div>
+
+</div>
+
 </body>
 </html>
 </xsl:template>

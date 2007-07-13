@@ -11,6 +11,7 @@
  * @param string $body Raw text contents of the returned box.
  * @param string $template Template file to use for the returned box.
  * @example test_present.php
+ * @return string Rendered box.
  */
 function GetBox($name, $title, $body, $template = null)
 {
@@ -29,25 +30,25 @@ class Box
 	/**
 	 * For unique identifier.
 	 *
-	 * @var String
+	 * @var string
 	 */
 	public $name;
 	/**
 	 * Title to be displayed in this box, placement depends on the theme.
 	 *
-	 * @var String
+	 * @var string
 	 */
 	public $title;
 	/**
 	 * Standard text to be output inside this box.
 	 *
-	 * @var String
+	 * @var string
 	 */
 	public $out;
 	/**
 	 * Template filename to use with this box.
 	 *
-	 * @var String
+	 * @var string
 	 */
 	public $template;
 
@@ -64,7 +65,8 @@ class Box
 
 	/**
 	* Returns the rendered html output of this Box.
-	* @param String $template Filename of template to use for display.
+	* @param string $template Filename of template to use for display.
+	* @return string Rendered box
 	*/
 	function Get($template = null)
 	{
@@ -126,9 +128,9 @@ class Table
 
 	/**
 	 * Instantiates this table with the specified attributes.
-	 * @param $name string Unique name only used in Html comments for identification.
-	 * @param $cols array Default columns headers to display ( eg. array("Column1", "Column2") ).
-	 * @param $attributes array An array of attributes for each column ( eg. array('width="100%"', 'valign="top"') ).
+	 * @param string $name Unique name only used in Html comments for identification.
+	 * @param array $cols Default columns headers to display ( eg. array("Column1", "Column2") ).
+	 * @param array $attributes An array of attributes for each column ( eg. array('width="100%"', 'valign="top"') ).
 	 */
 	function Table($name, $cols, $attributes = NULL)
 	{
@@ -140,8 +142,8 @@ class Table
 	/**
 	 * Adds a single row to this table, the widest row is how spanned
 	 * out the complete table will be when calling GetTable().
-	 * @param $row array A string array of columns.
-	 * @param $attribs array Attributes to be applied to each column.
+	 * @param array $row A string array of columns.
+	 * @param array $attribs Attributes to be applied to each column.
 	 */
 	function AddRow($row, $attribs = null)
 	{
@@ -151,8 +153,8 @@ class Table
 
 	/**
 	 * Returns the complete html rendered table for output purposes.
-	 * @param $attributes string A set of html attributes to apply to the entire table. (eg. 'class="mytableclass"')
-	 * @returns The complete html rendered table.
+	 * @param string $attributes A set of html attributes to apply to the entire table. (eg. 'class="mytableclass"')
+	 * @return string The complete html rendered table.
 	 */
 	function Get($attributes = null)
 	{
@@ -225,9 +227,9 @@ class SortTable extends Table
 	/**
 	* Instantiate this table with columns that can use
 	* sort values.
-	* @param $name Unique name only used in Html comments for identification.
-	* @param $cols Default columns headers to display ( eg. array("Column1", "Column2") ).
-	* @param $attributes An array of attributes for each column ( eg. array('width="100%"', 'valign="top"') ).
+	* @param string $name Unique name only used in Html comments for identification.
+	* @param array $cols Default columns headers to display ( eg. array("Column1", "Column2") ).
+	* @param array $attributes An array of attributes for each column ( eg. array('width="100%"', 'valign="top"') ).
 	*/
 	function SortTable($name, $cols, $attributes = NULL)
 	{
@@ -286,30 +288,35 @@ class Form
 	 * @var string
 	 */
 	public $name;
+
 	/**
 	 * Hidden fields stored from AddHidden()
 	 *
 	 * @var array
 	 */
 	private $hiddens;
+
 	/**
 	 * Form tag attributes, "name" => "value" pairs.
 	 *
 	 * @var array
 	 */
 	public $attribs;
+
 	/**
 	 * Actual output.
 	 *
 	 * @var string
 	 */
 	public $out;
+
 	/**
 	 * Whether to use persistant vars or not.
 	 *
 	 * @var bool
 	 */
 	public $Persist;
+
 	/**
 	 * Associated validator. Make sure you set this BEFORE you use AddInput or
 	 * they will not be prepared for validation. You can also specify an array
@@ -317,6 +324,7 @@ class Form
 	 * @var Validation
 	 */
 	public $Validation;
+
 	/**
 	 * Associated errors that are previously gotten with FormValidate().
 	 *
@@ -324,21 +332,48 @@ class Form
 	 */
 	public $Errors;
 
+	/**
+	 * @var string
+	 */
 	public $FormStart = '<table>';
+
+	/**
+	 * @var string
+	 */
 	public $FormEnd = '</table>';
+
+	/**
+	 * @var string
+	 */
 	public $LabelStart = "\n<tr>\n\t<td align=\"right\">";
+
+	/**
+	 * @var string
+	 */
 	public $LabelEnd = "</td>";
+
+	/**
+	 * @var string
+	 */
 	public $FieldStart = "\n\t<td>";
+
+	/**
+	 * @var string
+	 */
 	public $FieldEnd = "\n\t</td>\n</tr>";
 
+	/**
+	 * @var array
+	 */
 	public $words = array(
 		'complete', 'finish', 'end', 'information'
 	);
 
 	/**
 	* Instantiates this form with a unique name.
-	* @param $name string Unique name only used in Html comments for identification.
-	* @param $colAttribs array Array of table's column attributes.
+	* @param string $name Unique name only used in Html comments for identification.
+	* @param array $colAttribs Array of table's column attributes.
+	* @param bool $persist Whether or not to persist the values in this form.
 	*/
 	function Form($name, $colAttribs = null, $persist = true)
 	{
@@ -349,10 +384,10 @@ class Form
 
 	/**
 	* Adds a hidden field to this form.
-	* @param $name string The name attribute of the html field.
-	* @param $value mixed The value attribute of the html field.
-	* @param $attribs string Attributes to append on this field.
-	* @param $general bool Whether this is a general name. It will not
+	* @param string $name The name attribute of the html field.
+	* @param mixed $value The value attribute of the html field.
+	* @param string $attribs Attributes to append on this field.
+	* @param bool $general Whether this is a general name. It will not
 	* have the form name prefixed on it.
 	*/
 	function AddHidden($name, $value, $attribs = null, $general = false)
@@ -362,7 +397,6 @@ class Form
 
 	/**
 	 * Adds an input item to this form.
-	 *
 	 */
 	function AddInput()
 	{
@@ -377,6 +411,10 @@ class Form
 		}
 	}
 
+	/**
+	 * @param mixed $input FormInput, multiple FormInputs, arrays, whatever.
+	 * @return string Rendered input field.
+	 */
 	function IterateInput($input)
 	{
 		if (is_array($input) && !empty($input))
@@ -436,9 +474,9 @@ class Form
 
 	/**
 	* Returns the complete html rendered form for output purposes.
-	* @param $formAttribs string Additional form attributes (method, class, action, etc)
-	* @param $tblAttribs string To be passed to Table::GetTable()
-	* @returns The complete html rendered form.
+	* @param string $formAttribs Additional form attributes (method, class, action, etc)
+	* @param string $tblAttribs To be passed to Table::GetTable()
+	* @return string The complete html rendered form.
 	*/
 	function Get($formAttribs = null, $tblAttribs = null)
 	{
@@ -537,6 +575,7 @@ class FormInput
 
 	/**
 	 * Whether or not this input ends it's own label.
+	 * @var bool
 	 */
 	public $EndLabel;
 
@@ -549,7 +588,6 @@ class FormInput
 	 * @param string $valu
 	 * @param string $atrs
 	 * @param string $help
-	 * @return FormInput
 	 */
 	function FormInput($text, $type, $name = null, $valu = null, $atrs = null,
 		$help = null)
@@ -569,6 +607,7 @@ class FormInput
 	 * Returns this input object rendered in html.
 	 *
 	 * @param string $parent name of the parent.
+	 * @param bool $persist Whether or not to persist the value in this field.
 	 * @return string
 	 */
 	function Get($parent = null, $persist = true)
@@ -714,6 +753,10 @@ class FormInput
 			"{$this->atrs}/>";
 	}
 
+	/**
+	 * @param bool $persist Whether or not to persist the data in this field.
+	 * @return mixed Value of this field.
+	 */
 	function GetValue($persist = true)
 	{
 		if ($this->type == 'password') return null;
@@ -795,9 +838,8 @@ class SelOption
 	 * Create a new select option.
 	 *
 	 * @param string $text The text of this option.
-	 * @param unknown_type $group
-	 * @param unknown_type $selected
-	 * @return SelOption
+	 * @param bool $group
+	 * @param bool $selected
 	 */
 	function SelOption($text, $group = false, $selected = false)
 	{
@@ -807,6 +849,14 @@ class SelOption
 	}
 }
 
+/**
+ * Returns a rendered <select> form input.
+ * @param string $name Name of this input.
+ * @param array $value eg: array('id' => new SelOption(etc))
+ * @param string $attributes eg: 'size="5" multiple="multiple"'
+ * @param mixed $selvalue default selected seloption id.
+ * @return string rendered select form input.
+ */
 function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 {
 	$strout = "<select name=\"$name\" $attributes>\n";
@@ -836,6 +886,15 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 	return $strout;
 }
 
+/**
+ * Converts data retrieved from a DataSet into manageable SelOption objects.
+ * @param array $result Rows retrieved from Get()
+ * @param string $col_disp Column used for display.
+ * @param string $col_id Column used for identification.
+ * @param mixed $default Default selection.
+ * @param string $none Text for unselected item (id of 0)
+ * @return array SelOption array.
+ */
 function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 {
 	$ret = null;
@@ -847,6 +906,13 @@ function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 	return $ret;
 }
 
+/**
+ * Converts array('id' => 'text') items into SelOption objects.
+ * @param array $array Array of items to convert.
+ * @param mixed $default Default selected item id.
+ * @param bool $use_keys Whether to use array keys or indices.
+ * @return array Array of SelOption objects.
+ */
 function ArrayToSelOptions($array, $default = null, $use_keys = true)
 {
 	$opts = array();
@@ -860,10 +926,10 @@ function ArrayToSelOptions($array, $default = null, $use_keys = true)
 
 /**
  * Returns a DateTime picker
- * @param $name string Name of this field.
- * @param $timestamp int Date to initially display.
- * @param $include_time bool Whether or not to add time to the date.
- * @todo Get rid of this, use AddInput("", "date" / "datetime") instead.
+ * @param string $name Name of this field.
+ * @param int $timestamp Date to initially display.
+ * @param bool $include_time Whether or not to add time to the date.
+ * @return string Rendered date input.
  */
 function GetInputDate($name = "", $timestamp = null, $include_time = false)
 {
@@ -886,6 +952,12 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	return $strout;
 }
 
+/**
+ * Returns a series of 3 text boxes for a given timestamp.
+ * @param string $name Name of these inputs are converted into name[] array.
+ * @param int $timestamp Epoch timestamp for default value.
+ * @return string Rendered form inputs.
+ */
 function GetInputTime($name, $timestamp)
 {
 	$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("g", $timestamp) . "\" alt=\"Hour\" />\n";
@@ -894,6 +966,13 @@ function GetInputTime($name, $timestamp)
 	return $strout;
 }
 
+/**
+ * Returns two radio buttons for selecting yes or no (1 or 0).
+ * @param string $parent Name of the parent form if one is available.
+ * @param string $name Name of this field.
+ * @param bool $value Whether we default to yes or no.
+ * @return string Rendered time input.
+ */
 function GetInputYesNo($parent, $name, $value)
 {
 	return '<label><input type="radio" id="'.CleanID($parent.'_'.$name).'" name="'.$name.'" value="0"'.
@@ -908,6 +987,12 @@ define('STATE_EDIT', 1);
 define('CONTROL_SIMPLE', 0);
 define('CONTROL_BOUND', 1);
 
+/**
+ * Simply returns yes or no depending on the positivity of the value.
+ * @param array $val Value array, usually a row from a dataset.
+ * @param mixed $col Index of $val to test for yes or no.
+ * @return string 'Yes' or 'No'.
+ */
 function BoolCallback($val, $col) { return $val[$col] ? 'Yes' : 'No'; }
 
 /**
@@ -918,27 +1003,26 @@ class TreeNode
 	/**
 	 * ID of this node (usually for database association)
 	 *
-	 * @var unknown_type
+	 * @var mixed
 	 */
 	public $id;
 	/**
 	 * Data associated with this node.
 	 *
-	 * @var unknown_type
+	 * @var mixed
 	 */
 	public $data;
 	/**
 	 * Child nodes of this node.
 	 *
-	 * @var unknown_type
+	 * @var array
 	 */
 	public $children;
 
 	/**
 	 * Create a new TreeNode object.
 	 *
-	 * @param $data mixed Data to associate with this node.
-	 * @return TreeNode
+	 * @param mixed $data Data to associate with this node.
 	 */
 	function TreeNode($data = null)
 	{
@@ -986,8 +1070,6 @@ class LoginManager
 
 	/**
 	 * Creates a new LoginManager.
-	 *
-	 * @return LoginManager
 	 */
 	function LoginManager()
 	{
@@ -998,9 +1080,9 @@ class LoginManager
 	/**
 	 * Processes the current login.
 	 *
-	 * @param $ca string Current persistant action.
-	 * @param $passvar string Name of password session variable to manage.
-	 * @param $uservar string Name of username session variable to manage.
+	 * @param string $ca Current persistant action.
+	 * @param string $passvar Name of password session variable to manage.
+	 * @param string $uservar Name of username session variable to manage.
 	 * @return mixed Array of user data or null if bound or true or false if not bound.
 	 */
 	function Prepare($ca, $passvar = 'sespass', $uservar = null)
@@ -1103,10 +1185,11 @@ class Tabs
 {
 	/**
 	* Get the tab output.
-	* @param $tabs Array of tabs to be displayed.
-	* @param $body Body of currently selected tab.
-	* @param $advars Additional URI variables.
-	* @param $right Text to be displayed on the right side of the tabs.
+	* @param array $tabs Array of tabs to be displayed.
+	* @param string $body Body of currently selected tab.
+	* @param string $advars Additional URI variables.
+	* @param string $right Text to be displayed on the right side of the tabs.
+	* @return string Rendered tabs.
 	*/
 	function GetTabs($tabs, $body, $advars = "", $right = "")
 	{
@@ -1146,13 +1229,13 @@ class DisplayObject
 	/**
 	 * Creates a new display object.
 	 *
-	 * @return DisplayObject
 	 */
 	function DisplayObject() { }
 
 	/**
 	 * Gets name of this page.
-	 * @returns The name of this page for the browser's titlebar.
+	 * @param array $data Context data.
+	 * @return string The name of this page for the browser's titlebar.
 	 */
 	function Get(&$data)
 	{
@@ -1161,8 +1244,7 @@ class DisplayObject
 
 	/**
 	 * Prepare this object for output.
-	 *
-	 * @param $data string
+	 * @param array $data Context data.
 	 */
 	function Prepare(&$data) { }
 }
@@ -1210,10 +1292,9 @@ class Validation
 	/**
 	 * Creates a new Validation object.
 	 *
-	 * @param $field string Name of form field, see $field
-	 * @param $regex string Regular expression to test whether this is valid.
-	 * @param $error string Error message to display if test fails.
-	 * @return Validation
+	 * @param string $field Name of form field, see $field
+	 * @param string $check Regular expression to test whether this is valid.
+	 * @param string $error Error message to display if test fails.
 	 */
 	function Validation($field, $check, $error)
 	{
@@ -1227,9 +1308,9 @@ class Validation
 	 * Adds a child validation to this validation, child validations will only
 	 * be tested if this validation succeeds.
 	 *
-	 * @param $value string Only if this field contains the value that is
+	 * @param string $value Only if this field contains the value that is
 	 * specified by $value will the child be checked.
-	 * @param $child Validation Child validation object.
+	 * @param Validation $child Child validation object.
 	 */
 	function Add($value, $child)
 	{
@@ -1239,7 +1320,7 @@ class Validation
 	/**
 	 * Gets the javascript associated with this validation.
 	 *
-	 * @access private
+	 * @param string $id ID of associated input.
 	 * @return string
 	 */
 	function GetJS($id = null)
@@ -1300,9 +1381,10 @@ class Validation
 	 * Requests that this validator checks for valdiation. You must send
 	 * true in $check if you wish it to actually test, otherwise it will
 	 * just set this object up.
-	 *
+	 * @param string $form Name of parent form.
 	 * @param bool $check Actually test the validation.
 	 * @param array $ret Array of errors for anything that did not pass.
+	 * @return bool Whether this object passed or not.
 	 */
 	function Validate($form, $check, &$ret)
 	{
@@ -1350,8 +1432,8 @@ class Validation
  * @param string $name Name of the form.
  * @param mixed $arr Validation(s) to check for fields of $name form.
  * @param array $ret Resulting information
- * @param boolean $check Whether to actually validate the form or prepare to.
- * @return Whether the form failed or succeeded validation (if $check is false
+ * @param bool $check Whether to actually validate the form or prepare to.
+ * @return bool Whether the form failed or succeeded validation (if $check is false
  * it will always pass.)
  */
 function FormValidate($name, $arr, &$ret, $check)
@@ -1389,6 +1471,12 @@ function FormValidate($name, $arr, &$ret, $check)
 	return $passed;
 }
 
+/**
+ * Recurses requirements in order to generate proper javascript.
+ * @param string $key Id of the form field to validate.
+ * @param mixed $val Either a series of Validation or a single Validation.
+ * @param string $checks The actual rendered javascript checks.
+ */
 function RecurseReq($key, $val, &$checks)
 {
 	if (is_array($val))
@@ -1408,6 +1496,13 @@ function RecurseReq($key, $val, &$checks)
 	}
 }
 
+/**
+ * Returns a rendered <select> for a series of months.
+ * @param string $name Name of the input.
+ * @param int $default Default month.
+ * @param string $attribs Additional attributes for the <select> field.
+ * @return string Rendered month selection.
+ */
 function GetMonthSelect($name, $default, $attribs = null)
 {
 	$ret = "<select name=\"$name\"";
@@ -1424,6 +1519,12 @@ function GetMonthSelect($name, $default, $attribs = null)
 	return $ret;
 }
 
+/**
+ * Returns a rendered selection for picking years.
+ * @param string $name Name of this inputs.
+ * @param int $year Default selection.
+ * @return string Rendered year selection.
+ */
 function GetYearSelect($name, $year)
 {
 	$ret = "<select name=\"$name\">";
@@ -1439,6 +1540,11 @@ function GetYearSelect($name, $year)
 	return $ret;
 }
 
+/**
+ * @param string $name Name of this input.
+ * @param int $state Default state number.
+ * @return string Rendered <select> box.
+ */
 function GetStateSelect($name, $state)
 {
 	$options = array(
@@ -1498,9 +1604,11 @@ function GetStateSelect($name, $state)
 }
 
 /**
- * Enter description here...
+ * Converts any type of FormInput into a usable string, for example in text
+ * only emails and suchs.
  *
  * @param FormInput $field
+ * @return string Converted field.
  */
 function InputToString($field)
 {

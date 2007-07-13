@@ -28,6 +28,7 @@
 <xsl:for-each select="root/variable">
 	<p>
 		<b><xsl:value-of select="@modifier"/></b><xsl:text> </xsl:text>
+		<xsl:value-of select="@type"/><xsl:text> </xsl:text>
 		<b><xsl:value-of select="./doc/tag[@type='var']" /></b><xsl:text> </xsl:text>
 		<xsl:value-of select="@name" />
 	</p>
@@ -55,7 +56,7 @@
 		<xsl:for-each select="doc/tag[@type='param']">
 			<tr>
 			<!-- <td><b><xsl:value-of select="@datatype"/></b></td> -->
-			<td><b><xsl:value-of select="@name"/></b></td>
+			<td align="right"><b><xsl:value-of select="@name"/></b>:</td>
 			<td><xsl:value-of select="@desc"/></td>
 			<td><xsl:value-of select="."/></td>
 			</tr>

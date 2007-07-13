@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @package Gallery
+ */
+
 require_once('a_file.php');
 
 define('CAPTION_NONE',  0);
@@ -50,6 +54,7 @@ class Gallery
 	 * @param string $arg Name of url argument to attach path to.
 	 * @param string $sep Separation of folders use this character.
 	 * @param string $rootname Name of the top level folder.
+	 * @return string Rendered breadcrumb trail.
 	 */
 	function GetPath($root, $path, $arg = 'cf', $sep = '/', $rootname = 'Home')
 	{
@@ -74,6 +79,11 @@ class Gallery
 		return $ret;
 	}
 
+	/**
+	 * Returns the rendered gallery.
+	 * @param string $path Current location, usually GetVar('galcf')
+	 * @return string Rendered gallery.
+	 */
 	function Get($path)
 	{
 		global $me;
@@ -243,6 +253,12 @@ $this->GetCaption($files['files'][$view]).'</div>';
 		return $body;
 	}
 
+	/**
+	 * Returns the caption of a given thumbnail depending on caption display
+	 * configuration.
+	 * @param FileInfo $file File to gather information from.
+	 * @return string Actual caption.
+	 */
 	function GetCaption($file)
 	{
 		$vp = new VarParser();
@@ -264,15 +280,45 @@ $this->GetCaption($files['files'][$view]).'</div>';
 
 class GalleryDisplay
 {
+	/**
+	 * How to display captions, can be CAPTION_NONE, CAPTION_TITLE and
+	 * CAPTION_FILE.
+	 * @var int
+	 */
 	public $Captions = CAPTION_TITLE;
+
+	/**
+	 * String to append on the left side of the caption, this also handles
+	 * variables like templates: {{variable}}.
+	 * @var string
+	 */
 	public $CaptionLeft = '';
+	/**
+	 * String to append on the right side of the caption. This also handles
+	 * variables like templates: {{variable}}.
+	 * @var string
+	 */
 	public $CaptionRight = '';
+	/**
+	 * Method of sorting this gallery, can be SORT_MANUAL or SORT_NONE.
+	 * @var int
+	 */
 	public $Sort;
 }
 
 class GalleryBehavior
 {
+	/**
+	 * When true, generates a bit of javascript to block right clicking
+	 * on images. Easily bypassable but easily implemented as well.
+	 * @var bool
+	 */
 	public $DisableSave = false;
+	/**
+	 * The amount of images to display per-page, everything else will be
+	 * calculated.
+	 * @var int Numeric amount of images per page.
+	 */
 	public $PageCount = null;
 }
 

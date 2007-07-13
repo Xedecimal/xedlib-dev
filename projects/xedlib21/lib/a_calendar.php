@@ -80,7 +80,7 @@ class Calendar
 	* Gets an html rendered calander display relative to the given
 	* timestamp.
 	* @param int $timestamp Time to display the calendar relavant to.
-	* @return Rendered html calendar in normal form.
+	* @return string Rendered html calendar in normal form.
 	*/
 	function Get($timestamp = null)
 	{
@@ -307,7 +307,6 @@ class CalendarMonth
 	 * Enter description here...
 	 *
 	 * @param int $timestamp Timestamp
-	 * @return CalendarMonth
 	 */
 	function CalendarMonth($timestamp)
 	{
@@ -369,7 +368,6 @@ class CalendarDay
 	 * Enter description here...
 	 *
 	 * @param int $timestamp Timestamp of this day.
-	 * @return CalendarDay
 	 */
 	function CalendarDay($timestamp)
 	{

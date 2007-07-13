@@ -1,8 +1,14 @@
 <?php
 
+/**
+ * @package Editor
+ */
+
 define('ED_SORT_NONE',   0);
 define('ED_SORT_MANUAL', 1);
 define('ED_SORT_TABLE',  2);
+
+require_once('h_data.php');
 
 class DisplayColumn
 {
@@ -33,7 +39,6 @@ class DisplayColumn
 	 * @param string $text
 	 * @param mixed $callback
 	 * @param string $attribs
-	 * @return DisplayColumn
 	 */
 	function DisplayColumn($text, $callback = null, $attribs = null)
 	{
@@ -50,7 +55,7 @@ class EditorHandler
 	 * If you extend this object and return false, it will not add the item.
 	 *
 	 * @param array $data Context
-	 * @return boolean true by default (meant to be overriden)
+	 * @return bool true by default
 	 */
 	function Create(&$data) { return true; }
 
@@ -58,8 +63,9 @@ class EditorHandler
 	 * After an item is created, this contains the id of the new item. You
 	 * cannot halt the item from being inserted at this point.
 	 *
+	 * @param mixed $id Unique id of this row.
 	 * @param array $inserted Data that has been inserted (including the id).
-	 * @return boolean true by default (meant to be overridden)
+	 * @return bool true by default
 	 */
 	function Created($id, $inserted) { return true; }
 
@@ -67,10 +73,10 @@ class EditorHandler
 	 * Before an item is updated, this function is called. If you extend this
 	 * object and return false, it will not be updated.
 	 *
-	 * @param array $data Context
+	 * @param mixed $id Unique id of this row.
 	 * @param array $original Original data before update.
 	 * @param array $update Columns suggested to get updated.
-	 * @return boolean true by default (meant to be overridden)
+	 * @return bool true by default (meant to be overridden)
 	 */
 	function Update($id, &$original, &$update) { return true; }
 
@@ -80,17 +86,23 @@ class EditorHandler
 	 *
 	 * @param int $id ID of deleted items
 	 * @param array $data Context
-	 * @return boolean true by default (meant to be overridden)
+	 * @return bool true by default (meant to be overridden)
 	 */
 	function Delete($id, &$data) { return true; }
 
 	/**
 	 * Called to retrieve additional fields for the editor form object.
-	 * @param object $form Contextual form suggested to add fields to.
+	 * @param Form $form Contextual form suggested to add fields to.
+	 * @param mixed $id Unique id of this row.
 	 * @param array $data Data related to the action (update/insert).
 	 */
 	function GetFields(&$form, $id, $data) {}
 
+	/**
+	 * Returns an array of joins to be passed as an argument to DataSet->Get()
+	 * @return array Join array.
+	 * @see DataSet
+	 */
 	function GetJoins() { return array(); }
 }
 
@@ -128,7 +140,6 @@ class HandlerFile extends EditorHandler
 	 * @param string $target Target folder that will hold information.
 	 * @param string $column Data column to name new folders by.
 	 * @param array $conditions Conditions to consider managing folders.
-	 * @return HandlerFile
 	 */
 	function HandlerFile($target, $column, $conditions = null)
 	{
@@ -141,11 +152,8 @@ class HandlerFile extends EditorHandler
 	 * Called when an item is created.
 	 * Example: array('usr_access' => array(1, 3, 5));
 	 * This will manage files for the user if the column usr_access is 1, 3 or 5.
-	 *
-	 * @param array $data row data
-	 * @return boolean True to allow the creation.
 	 */
-	function Created($id, $data)
+	function Created($id, $inserted)
 	{
 		$target = "{$this->target}/{$data[$this->column]}";
 		if (!isset($this->conditions) && !file_exists($target))
@@ -171,14 +179,7 @@ class HandlerFile extends EditorHandler
 		return true;
 	}
 
-	/**
-	 * Called when an item is updated.
-	 *
-	 * @param array $data
-	 * @param array $update
-	 * @return boolean
-	 */
-	function Update($id, &$data, &$update)
+	function Update($id, &$original, &$update)
 	{
 		$source = "{$this->target}/{$data[$this->column]}";
 		if (file_exists($source))
@@ -193,7 +194,7 @@ class HandlerFile extends EditorHandler
 	 *
 	 * @param mixed $id
 	 * @param array $data
-	 * @return boolean
+	 * @return bool
 	 */
 	function Delete($id, &$data)
 	{
@@ -293,7 +294,6 @@ class EditorData
 	 * @param DataSet $ds Dataset for this editor to interact with.
 	 * @param array $filter Array to constrain editing to a given expression.
 	 * @param array $sort Array of 'column' => 'desc/asc'.
-	 * @return EditorData
 	 */
 	function EditorData($name, $ds = null, $filter = null, $sort = null)
 	{
@@ -317,7 +317,7 @@ class EditorData
 	 * Adds a handler to extend the functionality of actions performed in this
 	 * editor.
 	 *
-	 * @param Handler $handler
+	 * @param callback $handler
 	 * @see HandlerFile
 	 */
 	function AddHandler(&$handler)
@@ -330,7 +330,7 @@ class EditorData
 	 * data to be used in the Get function.
 	 *
 	 * @param string $action Current action, usually stored in POST['ca']
-	 * @return void
+	 * @return null
 	 */
 	function Prepare($action)
 	{

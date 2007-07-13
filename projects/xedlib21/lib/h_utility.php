@@ -1,12 +1,20 @@
 <?php
 
 /**
+ * @package Utility
+ *
+ */
+
+/**
  * Global reference to self script.
  * @var string
  */
 $me = GetVar("SCRIPT_NAME");
-$__sid = MD5(GetVar('SERVER_NAME'));
 
+/**
+ * Whether the files should be checked for reformatting.
+ * @var bool
+ */
 global $__checked;
 
 if (!isset($__checked) && substr(phpversion(), 0, 1) != '5')
@@ -20,11 +28,6 @@ if (!isset($__checked) && substr(phpversion(), 0, 1) != '5')
 		Reformat($file);
 	}
 }
-
-/**
- * @package Utility
- *
- */
 
 /**
  * Enter description here...
@@ -57,8 +60,18 @@ function Trace($msg)
 	if ($debug) echo $msg;
 }
 
+/**
+ * @param string $msg Message to the user.
+ * @param int $level How critical this error is.
+ */
 function Error($msg, $level = E_USER_ERROR) { trigger_error($msg, $level); }
 
+/**
+ * @param int $errno Error number.
+ * @param string $errmsg Error message.
+ * @param string $filename Source filename of the problem.
+ * @param int $linenum Source line of the problem.
+ */
 function ErrorHandler($errno, $errmsg, $filename, $linenum)
 {
 	if (error_reporting() == 0) return;
@@ -89,6 +102,11 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 	echo $err;
 }
 
+/**
+ * @param string $file Source of caller.
+ * @param int $line Line of caller.
+ * @return string Rendered callstack.
+ */
 function GetCallstack($file, $line)
 {
 	$err = "<table><tr><td>File</td><td>#</td><td>Function</td>\n";
@@ -118,6 +136,11 @@ function GetCallstack($file, $line)
 //Session
 //
 
+/**
+ * @param string $name Name of the value to set.
+ * @param string $value Value to set.
+ * @return mixed Passed $value
+ */
 function SetVar($name, $value)
 {
 	global $HTTP_SESSION_VARS;
@@ -128,8 +151,8 @@ function SetVar($name, $value)
 }
 
 /**
- * @param name string
- * @param default = NULL mixed
+ * @param string $name Name of the value to get.
+ * @param mixed $default Default value to return if not available.
  * @return mixed
  */
 function GetVar($name, $default = null)
@@ -160,6 +183,11 @@ function GetVar($name, $default = null)
 	return $default;
 }
 
+/**
+ * @param string $name Name to retrieve.
+ * @param mixed $default Default value if not available.
+ * @return mixed Value of $name post variable.
+ */
 function GetPost($name, $default = null)
 {
 	global $HTTP_POST_VARS;
@@ -172,6 +200,9 @@ function GetPost($name, $default = null)
 	return $default;
 }
 
+/**
+ * @param string $name Name of variable to get rid of.
+ */
 function UnsetVar($name)
 {
 	global $HTTP_SESSION_VARS;
@@ -186,6 +217,9 @@ function UnsetVar($name)
 	if (isset($HTTP_SESSION_VARS)) unset($HTTP_SESSION_VARS[$name]);
 }
 
+/**
+ * @param mixed $var Variable to return information on.
+ */
 function VarInfo($var)
 {
 	echo "<pre>\n";
@@ -197,6 +231,11 @@ function VarInfo($var)
 	echo "</pre>\n";
 }
 
+/**
+ * @param string $name Name of value to persist.
+ * @param mixed $value Value to be persisted.
+ * @return mixed The passed $value.
+ */
 function Persist($name, $value)
 {
 	global $PERSISTS;
@@ -207,8 +246,8 @@ function Persist($name, $value)
 /**
  * Returns a clean URI.
  *
- * @param $url string URL to clean.
- * @param $uri array URI appended on URL and cleaned.
+ * @param string $url URL to clean.
+ * @param array $uri URI appended on URL and cleaned.
  * @return string Cleaned URI+URL
  */
 function URL($url, $uri = null)
@@ -239,8 +278,8 @@ function URL($url, $uri = null)
 /**
  * Redirect the browser with a cleanly built URI.
  *
- * @param $url string Relative path to script
- * @param $getvars array Array of get variables.
+ * @param string $url Relative path to script
+ * @param array $getvars Array of get variables.
  */
 function Redirect($url, $getvars = NULL)
 {
@@ -277,11 +316,19 @@ function ChompString($text, $length)
 //Date
 //
 
+/**
+ * @param int $ts Epoch timestamp.
+ * @return string MySql formatted date.
+ */
 function TimestampToMySql($ts)
 {
 	return gmdate("y-m-d h:i:s", $ts);
 }
 
+/**
+ * @param string $ts MySql time stamp.
+ * @return int Timestamp.
+ */
 function TimestampToMsSql($ts)
 {
 	return gmdate("m/d/y h:i:s A", $ts);
@@ -290,8 +337,8 @@ function TimestampToMsSql($ts)
 /**
  * Converts a mysql date to a timestamp.
  *
- * @param $date string MySql Date/DateTime
- * @param $include_time Whether hours, minutes and seconds are included.
+ * @param string $date MySql Date/DateTime
+ * @param bool $include_time Whether hours, minutes and seconds are included.
  * @return int Timestamp
  */
 function MyDateTimestamp($date, $include_time = false)
@@ -318,6 +365,10 @@ function MyDateTimestamp($date, $include_time = false)
 	}
 }
 
+/**
+ * @param int $ts Timestamp.
+ * @return string English offset.
+ */
 function GetDateOffset($ts)
 {
 	$ss = time()-$ts;
@@ -340,6 +391,10 @@ function GetDateOffset($ts)
 	return $ret.' ago';
 }
 
+/**
+ * @param array $array Array to bitmask.
+ * @return int Bitwise combined values.
+ */
 function GetMask($array)
 {
 	$ret = 0;
@@ -351,11 +406,19 @@ function GetMask($array)
 //File
 //
 
+/**
+ * @param string $name Name of the file to return the extension from.
+ * @return string File extension.
+ */
 function filext($name)
 {
 	return substr(strrchr($name, '.'), 1);
 }
 
+/**
+ * @param string $name Name to strip the extension off.
+ * @return string Stripped filename.
+ */
 function filenoext($name)
 {
 	$v = strrchr($name, '.');
@@ -365,6 +428,7 @@ function filenoext($name)
 
 /**
  * Careful with this sucker.
+ * @param string $dir Directory to obliterate.
  */
 function DelTree($dir)
 {
@@ -401,11 +465,18 @@ function DataToArray($rows, $idcol)
 	return $ret;
 }
 
+/**
+ * @param array $array Array to grab the last item off from.
+ * @return mixed Last item on the array.
+ */
 function array_get($array)
 {
 	return $array[count($array)-1];
 }
 
+/**
+ * @param string $file Filename to reformat.
+ */
 function Reformat($file)
 {
 	$c = file_get_contents($file);
@@ -448,6 +519,12 @@ function GetRelativePath($path)
 	return substr(str_replace('\\', '/', str_replace('\\\\', '/', $path)), strlen($dr));
 }
 
+/**
+ * @param string $img Image filename.
+ * @param string $title For the alt/title/alttitle attributes.
+ * @param string $attribs Additional attributes.
+ * @return string
+ */
 function GetImg($img, $title = 'unnamed', $attribs = null)
 {
 	$p = GetRelativePath(dirname(__FILE__));
@@ -462,7 +539,6 @@ function GetImg($img, $title = 'unnamed', $attribs = null)
  * @param string $alt Alternate text for missing image or tooltip.
  * @param string $attribs Attributes to attach to the <img> tag.
  * @return string
- * @access private
  */
 function GetButton($target, $img, $alt, $attribs = null)
 {
@@ -506,6 +582,9 @@ function ResizeImage($image, $newWidth, $newHeight)
 	return $destImage;
 }
 
+/**
+ * @return mixed Returns whatever the callbacks do.
+ */
 function RunCallbacks()
 {
 	$args = func_get_args();
@@ -538,6 +617,10 @@ function CleanID($id)
 	return str_replace('[', '_', str_replace(']', '', $id));
 }
 
+/**
+ * @param string $str String to pluralize.
+ * @return string Properly pluralized string.
+ */
 function Plural($str)
 {
 	if (strlen($str) < 1) return null;
@@ -546,6 +629,10 @@ function Plural($str)
 	return $str;
 }
 
+/**
+ * @param string $path Path to secure from url hacks.
+ * @return string Properly secured path.
+ */
 function SecurePath($path)
 {
 	$ret = preg_replace('#^\.#', '', $path);
@@ -553,11 +640,23 @@ function SecurePath($path)
 	return preg_replace('#\.\./#', '', $ret);
 }
 
+/**
+ * @param array $data Data to trim.
+ * @param int $page Page number we are currently on.
+ * @param int $count Count of items per page.
+ * @return array Poperly sliced array.
+ */
 function GetFlatPage($data, $page, $count)
 {
 	return array_splice($data, $count*$page, $count);
 }
 
+/**
+ * @param array $data Data to use for the pages.
+ * @param int $count Number of items per page.
+ * @param array $args Additional uri args.
+ * @return string Rendered html page display.
+ */
 function GetPages($data, $count, $args)
 {
 	global $me;
@@ -613,6 +712,10 @@ function paslash($str)
 	else return addslashes($str);
 }
 
+/**
+ * @param string $str String to convert into proper size.
+ * @return int String converted to proper size.
+ */
 function GetStringSize($str)
 {
 	$num = (int)substr($str, 0, -1);
@@ -630,6 +733,10 @@ function GetStringSize($str)
 	return $num;
 }
 
+/**
+ * @param int $size Size to convert into proper string.
+ * @return string Size converted to a string.
+ */
 function GetSizeString($size)
 {
 	$units = explode(' ','B KB MB GB TB');
@@ -637,6 +744,10 @@ function GetSizeString($size)
 	return round($size, 2).' '.$units[$i];
 }
 
+/**
+ * @param mixed $arr Item to properly clone in php5 without references.
+ * @return mixed Cloned copy of whatever you throw at it.
+ */
 function array_clone($arr)
 {
 	if (substr(phpversion(), 0, 1) != '5') return $copy = $arr;

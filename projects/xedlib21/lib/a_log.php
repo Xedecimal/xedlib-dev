@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @package Logging
+ */
+
 class LoggerAuth
 {
 	/**
@@ -8,9 +12,25 @@ class LoggerAuth
 	 * @var DataSet
 	 */
 	private $dsLog;
+
+	/**
+	 * User DataSet to identify actions to identities.
+	 * @var DataSet
+	 */
 	private $dsUser;
+
+	/**
+	 * A series of possible actions that can be referenced later.
+	 * @var array
+	 */
 	private $actions;
 
+	/**
+	 * Creates a new Logger.
+	 * @param DataSet $dsLog DataSet that holds log information.
+	 * @param DataSet $dsUser DataSet that holds identity information.
+	 * @param array $actions A series of possible actions to log.
+	 */
 	function LoggerAuth($dsLog, $dsUser, $actions = null)
 	{
 		if (!$dsLog instanceof DataSet) Error("LoggerAuth: Constructor requires
@@ -23,6 +43,12 @@ class LoggerAuth
 		$this->actions = $actions;
 	}
 
+	/**
+	 * Method to log a single action.
+	 * @param mixed $user Unique identifier of the source of the action.
+	 * @param mixed $action Unique identifier of the action performed.
+	 * @param string $target Target of the action.
+	 */
 	function Log($user, $action, $target)
 	{
 		$this->dsLog->Add(array(
@@ -33,6 +59,10 @@ class LoggerAuth
 		));
 	}
 
+	/**
+	 * Trims the existing log information by date to the amount specified.
+	 * @param int $count Amount of items to remain.
+	 */
 	function TrimByCount($count)
 	{
 		$this->dsLog->GetCustom("DELETE FROM {$this->dsLog->table}
@@ -45,6 +75,11 @@ class LoggerAuth
 			WHERE dt.log_id IS NULL;");
 	}
 
+	/**
+	 * Return a table of actions that have been recorded.
+	 * @param int $count Amount of items to display per page.
+	 * @return string Rendered table of actions.
+	 */
 	function Get($count)
 	{
 		$items = $this->dsLog->Get(null, array('log_date' => 'DESC'),

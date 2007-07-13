@@ -4,6 +4,12 @@
  * @package Presentation
  */
 
+/**
+ * Returns a callstack style template stack, showing the path that
+ * processing has gone.
+ * @param array $data Context information.
+ * @return string Debug template stack.
+ */
 function GetTemplateStack(&$data)
 {
 	$ret = null;
@@ -20,6 +26,12 @@ function GetTemplateStack(&$data)
 	return $ret;
 }
 
+/**
+ * @param array $data Context information.
+ * @param string $file Filename to require.
+ * @param string $class Class to prepare.
+ * @return mixed Module
+ */
 function RequireModule(&$data, $file, $class)
 {
 	if (isset($data['includes'][$class]))
@@ -110,8 +122,6 @@ class Template
 
 	/**
 	 * Creates a new template parser.
-	 *
-	 * @return Template
 	 */
 	function Template()
 	{
@@ -126,9 +136,9 @@ class Template
 
 	/**
 	 * Begin a template tag.
-	 * @param $parser Xml parser for current document.
-	 * @param $tag Tag we are beginning.
-	 * @param $attribs Attributes in the tag.
+	 * @param resource $parser Xml parser for current document.
+	 * @param string $tag Tag we are beginning.
+	 * @param array $attribs Attributes in the tag.
 	 */
 	function Start_Tag($parser, $tag, $attribs)
 	{
@@ -258,8 +268,8 @@ class Template
 	 * to dump the output of the top level object down
 	 * to the next object, if that object doesn't exist
 	 * we should throw something.
-	 * @param $parser Xml parser for current document.
-	 * @param $tag Tag that is being terminated.
+	 * @param resource $parser Xml parser for current document.
+	 * @param string $tag Tag that is being terminated.
 	 */
 	function End_Tag($parser, $tag)
 	{
@@ -306,8 +316,8 @@ class Template
 
 	/**
 	 * Parse Character Data for an xml parser.
-	 * @param $parser Xml parser for current document.
-	 * @param $text Actual Character Data.
+	 * @param resource $parser Xml parser for current document.
+	 * @param string $text Actual Character Data.
 	 */
 	function CData($parser, $text)
 	{
@@ -318,9 +328,9 @@ class Template
 	/**
 	 * Evaluates code (Eg. <?php echo "Hello"; ?>) in a template.
 	 *
-	 * @param $parser object Parser object
-	 * @param $text string Unknown.
-	 * @param $data string Code in question.
+	 * @param resource $parser Parser object
+	 * @param string $text Unknown.
+	 * @param string $data Code in question.
 	 */
 	function Process($parser, $text, $data)
 	{
@@ -333,6 +343,7 @@ class Template
 
 	/**
 	 * Gets the object before the last object on the stack.
+	 * @return DisplayObject Destination for the last item.
 	 */
 	function &GetDestinationObject()
 	{
@@ -342,6 +353,7 @@ class Template
 
 	/**
 	 * Gets the last object on the stack
+	 * @return DisplayObject Current display object.
 	 */
 	function &GetCurrentObject()
 	{
@@ -351,8 +363,8 @@ class Template
 
 	/**
 	 * Set a variable for use on this page.
-	 * @param $var Name of the variable.
-	 * @param $val Value of the variable.
+	 * @param string $var Name of the variable.
+	 * @param mixed $val Value of the variable.
 	 */
 	function Set($var, $val = null)
 	{
@@ -373,7 +385,8 @@ class Template
 
 	/**
 	 * Get a rendered template.
-	 * @param $template string The template file.
+	 * @param string $template The template file.
+	 * @return string Rendered template.
 	 */
 	function Get($template)
 	{
@@ -410,7 +423,8 @@ class Template
 	/**
 	 * Parse variables that have been set using set() to replace
 	 * them in this template.
-	 * @param $match A regexp match.
+	 * @param array $match A regexp match.
+	 * @return mixed Value of named var.
 	 */
 	function parse_vars($match)
 	{
@@ -440,8 +454,8 @@ class VarParser
 	/**
 	 * Enter description here...
 	 *
-	 * @param $data string Data to search for variables.
-	 * @param $vars array Override existing names with these.
+	 * @param string $data Data to search for variables.
+	 * @param array $vars Override existing names with these.
 	 * @return string Reformatted text with variables replaced.
 	 */
 	function ParseVars($data, $vars)
@@ -453,7 +467,7 @@ class VarParser
 	/**
 	 * Callback for each regex match, not for external use.
 	 *
-	 * @param $match array
+	 * @param array $match
 	 * @return string
 	 */
 	function var_parser($match)
