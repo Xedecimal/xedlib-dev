@@ -768,4 +768,48 @@ function ifset($var, $def)
 	if (isset($var)) return $var; return $def;
 }
 
+
+function linkup($tree, $target, $text)
+{
+	require_once('h_template.php');
+	$keys = array_keys($tree);
+	$cur = null;
+	$reps = array();
+
+	$words = split('[^A-Za-z0-9$]+', $text);
+	$vp = new VarParser();
+
+	foreach ($words as $word)
+	{
+		if (isset($cur))
+		{
+			if (in_array($word, array_keys($cur)))
+			{
+				$p = $vp->ParseVars($target, array('name' => $ct, 'word' => $word));
+				$reps[$word] = $p;
+				if (isset($cur[$word]))
+				{
+					$cur = $cur[$word];
+					$ct = $cur[0];
+				}
+				else $cur = null;
+			}
+		}
+		if (in_array($word, $keys))
+		{
+			$p = $vp->ParseVars($target, array('name' => $tree[$word][0], 'word' => $word));
+			$reps[$word] = $p;
+			$cur = $tree[$word];
+			$ct = $tree[$word][0];
+		}
+		else $depth = array();
+	}
+
+	$ret = $text;
+	foreach ($reps as $word => $val) $ret = str_replace($word, $val, $ret);
+
+	if (count($reps)) varinfo($ret);
+	return $ret;
+}
+
 ?>

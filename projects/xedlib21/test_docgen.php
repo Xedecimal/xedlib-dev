@@ -4,6 +4,48 @@ require_once('lib/h_utility.php');
 HandleErrors();
 require_once('lib/a_code.php');
 
+function BuildNamesRecurse(&$t, $m)
+{
+	if ($m->type == T_FUNCTION)
+	{
+		if (@$m->parent->type == T_CLASS)
+			$t[$m->name][0] = 'class_'.$m->parent->name.'.xml#'.$m->name;
+		else
+			$t[$m->name][0] = $m->name;
+		if (!empty($m->members))
+		foreach ($m->members as $m2) BuildNamesRecurse($t[$m->name], $m2);
+	}
+	if ($m->type == T_CLASS)
+	{
+		$t[$m->name][0] = "class_{$m->name}.xml";
+		foreach ($m->members as $m2) BuildNamesRecurse($t[$m->name], $m2);
+	}
+	if ($m->type == T_VARIABLE)
+	{
+		if (@$m->parent->type == T_CLASS)
+			$t[$m->parent->name][$m->name] = 'class_'.$m->parent->name.'.xml#'.$m->name;
+		else $t[$m->name] = 'variable_'.$m->name;
+	}
+}
+
+function LinkUpRecurse($t, $m)
+{
+	if (isset($m->doc->body))
+	{
+		$m->doc->body = linkup($t, '<a href="{{name}}">{{word}}</a>', $m->doc->body);
+	}
+	if (!empty($m->members))
+	foreach ($m->members as $m2) LinkUpRecurse($t, $m2);
+}
+
+function LinkEverything(&$data)
+{
+	$t = array();
+	//Build a name tree
+	foreach ($data->members as $m) BuildNamesRecurse($t, $m);
+	foreach ($data->members as $m) LinkUpRecurse($t, $m);
+}
+
 class DocGeneratorXML
 {
 	function CreateDoc($type)
@@ -171,6 +213,8 @@ class DocGeneratorXML
 
 		$names = array_keys($names);
 
+		LinkEverything($data);
+
 		$d->Validate($data, $names);
 
 		ksort($data->members);
@@ -189,11 +233,6 @@ class DocGeneratorXML
 			$doc->save($target.'/index.xml');
 		}
 	}
-}
-
-function PackageSorter($a, $b)
-{
-	return strcmp($a->doc->package, $b->doc->package);
 }
 
 $GLOBALS['debug'] = true;
