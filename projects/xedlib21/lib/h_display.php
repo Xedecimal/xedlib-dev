@@ -60,7 +60,8 @@ class Box
 		$this->title = "";
 		$this->out = "";
 		$this->name = "";
-		$this->template = "template_box.html";
+		$this->template = ifset(@$GLOBALS['__xedlib_box_template'],
+			'template_box.html');
 	}
 
 	/**
@@ -498,7 +499,7 @@ class Form
 			foreach ($this->hiddens as $hidden)
 			{
 				$fname = $hidden[3] ? $hidden[0] : $this->name.'_'.$hidden[0];
-				$ret .= "<input type=\"hidden\" id=\"".CleanID($fname)."\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
+				$ret .= "<input type=\"hidden\" id=\"".CleanID($this->name.'_'.$fname)."\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
 				if (isset($hidden[2])) $ret .= ' '.$hidden[2];
 				$ret .= " />\n";
 			}
@@ -768,7 +769,8 @@ class FormInput
 			if ($persist)
 			{
 				$sel = GetVar($this->name);
-				if ($sel) $newsels[$sel]->selected = true;
+				if ($sel && isset($newsels[$sel]))
+					$newsels[$sel]->selected = true;
 			}
 			return $newsels;
 		}

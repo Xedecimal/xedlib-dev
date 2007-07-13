@@ -92,7 +92,8 @@ class Database
 				if (call_user_func($handler, mysql_errno())) return;
 			if (isset($this->Handlers[mysql_errno()]))
 				if (call_user_func($this->Handlers[mysql_errno()])) return;
-			echo "MySQL Error [".mysql_errno().']: '.mysql_error()."<br/>\nQuery:{$query}<br/>\n";
+			Error("MySQL Error [".mysql_errno().']: '.mysql_error().
+				"<br/>\nQuery: {$query}<br/>\n");
 		}
 	}
 
@@ -414,6 +415,7 @@ class DataSet
 	/**
 	 * Handler for errors in case something goes wrong.
 	 * @var callback
+	 */
 	public $ErrorHandler;
 
 	/**

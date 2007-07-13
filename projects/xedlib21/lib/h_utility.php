@@ -763,4 +763,9 @@ function array_clone($arr)
 	return $ret;
 }
 
+function ifset($var, $def)
+{
+	if (isset($var)) return $var; return $def;
+}
+
 ?>
