@@ -506,7 +506,8 @@ class CodeReader
 		//I have no clue how the hell I pulled this off, but it works amazingly.
 		//Suggest not changing it cause it's really really tweaked in there.
 		$split = preg_split('/\n\s*\* @/s', $tok[1], 0, 4);
-		$this->curdoc->body = trim(preg_replace('#\s*/*\*+\s*\n*#s', ' ', $split[0][0]));
+		$this->curdoc->body = trim(preg_replace('#\s*/*\*+\s*\n*#s', ' ',
+			$split[0][0]));
 
 		if (!isset($this->curdoc->body) ||
 			strlen($this->curdoc->body) > $this->ret->misc['longest']['len'])

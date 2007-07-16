@@ -351,6 +351,11 @@ class Form
 	/**
 	 * @var string
 	 */
+	public $StringStart = '<tr><td colspan="2" class="form_separator">';
+
+	/**
+	 * @var string
+	 */
 	public $LabelEnd = "</td>";
 
 	/**
@@ -407,7 +412,7 @@ class Form
 		foreach ($args as $ix => $item)
 		{
 			if (is_string($item))
-				$this->out .= $this->LabelStart.$item.$this->FieldEnd;
+				$this->out .= $this->StringStart.$item.$this->FieldEnd;
 			else $this->out .= $this->IterateInput($item);
 		}
 	}

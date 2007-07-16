@@ -20,7 +20,7 @@ function GetTemplateStack(&$data)
 		for ($ix = count($data['template.stack'])-1; $ix >= 0; $ix--)
 		{
 			$ret .= "{$stack[$ix]} made it to line: ".
-				xml_get_current_line_number($parsers[$ix])."\n";
+				xml_get_current_line_number($parsers[$ix])."<br/>\n";
 		}
 	}
 	return $ret;
