@@ -17,6 +17,7 @@
 		<xsl:value-of select="@name" />
 	</a><br/>
 </xsl:for-each>
+<p><a href="todos.xml">Todo List</a></p>
 
 </td><td>
 

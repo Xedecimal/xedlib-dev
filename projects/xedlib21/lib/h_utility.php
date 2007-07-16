@@ -776,7 +776,7 @@ function linkup($tree, $target, $text)
 	$cur = null;
 	$reps = array();
 
-	$words = split('[^A-Za-z0-9$]+', $text);
+	$words = preg_split("/\s|\n/s", $text);
 	$vp = new VarParser();
 
 	foreach ($words as $word)
@@ -785,7 +785,8 @@ function linkup($tree, $target, $text)
 		{
 			if (in_array($word, array_keys($cur)))
 			{
-				$p = $vp->ParseVars($target, array('name' => $ct, 'word' => $word));
+				$p = $vp->ParseVars($target,
+					array('name' => $ct, 'word' => $word));
 				$reps[$word] = $p;
 				if (isset($cur[$word]))
 				{
@@ -797,7 +798,8 @@ function linkup($tree, $target, $text)
 		}
 		if (in_array($word, $keys))
 		{
-			$p = $vp->ParseVars($target, array('name' => $tree[$word][0], 'word' => $word));
+			$p = $vp->ParseVars($target,
+				array('name' => $tree[$word][0], 'word' => $word));
 			$reps[$word] = $p;
 			$cur = $tree[$word];
 			$ct = $tree[$word][0];
@@ -808,7 +810,7 @@ function linkup($tree, $target, $text)
 	$ret = $text;
 	foreach ($reps as $word => $val) $ret = str_replace($word, $val, $ret);
 
-	if (count($reps)) varinfo($ret);
+	//if (count($reps)) varinfo($ret);
 	return $ret;
 }
 

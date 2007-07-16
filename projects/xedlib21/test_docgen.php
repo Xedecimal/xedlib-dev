@@ -28,22 +28,10 @@ function BuildNamesRecurse(&$t, $m)
 	}
 }
 
-function LinkUpRecurse($t, $m)
-{
-	if (isset($m->doc->body))
-	{
-		$m->doc->body = linkup($t, '<a href="{{name}}">{{word}}</a>', $m->doc->body);
-	}
-	if (!empty($m->members))
-	foreach ($m->members as $m2) LinkUpRecurse($t, $m2);
-}
-
-function LinkEverything(&$data)
+function GetNames(&$data)
 {
 	$t = array();
-	//Build a name tree
 	foreach ($data->members as $m) BuildNamesRecurse($t, $m);
-	foreach ($data->members as $m) LinkUpRecurse($t, $m);
 }
 
 class DocGeneratorXML
@@ -192,7 +180,6 @@ class DocGeneratorXML
 	function OutputFiles($mask, $target)
 	{
 		$d = new CodeReader();
-		//$d->refactor = true;
 
 		$files = glob($mask);
 		$data = null;
@@ -202,20 +189,40 @@ class DocGeneratorXML
 		{
 			echo "Parsing file: {$file}\n";
 			$new = $d->Parse($file);
-			echo "Most documented item is {$new['data']->misc['longest']['name']}"
-			." weighing in at {$new['data']->misc['longest']['len']} lines.\n";
+			if (!empty($new['data']->misc['longest']['name']))
+			{
+				echo "Most documented item is {$new['data']->misc['longest']['name']}"
+				." weighing in at {$new['data']->misc['longest']['len']} lines.\n";
+			}
 			if (!isset($data)) $data = $new['data'];
-			$data->members = array_merge($data->members,
-				$new['data']->members);
+
+			if (!empty($new['data']->members))
+				$data->members = array_merge($data->members,
+					$new['data']->members);
 			$names = array_merge($names, $new['names']);
 			$data->file = $file;
 		}
 
 		$names = array_keys($names);
 
-		LinkEverything($data);
+		GetNames($data);
 
 		$d->Validate($data, $names);
+
+		if (!empty($d->todos))
+		{
+			$doc = $this->CreateDoc('todo');
+			$el = $doc->createElement('todos');
+			foreach ($d->todos as $todo)
+			{
+				$elt = $doc->createElement('todo', $todo[2]);
+				$elt->setAttribute('file', $todo[0]);
+				$elt->setAttribute('line', $todo[1]);
+				$el->appendChild($elt);
+			}
+			$doc->appendChild($el);
+			$doc->save($target.'/todos.xml');
+		}
 
 		ksort($data->members);
 
@@ -244,18 +251,18 @@ $switch = true;
 
 if ($switch)
 {
-$d = new DocGeneratorXML();
-$d->OutputFiles('lib/*.php', 'doc/output');
-//$d->OutputFiles('../../tools/jpgraph-2.1.2/src/*.php', 'doc/output2');
+	$d = new DocGeneratorXML();
+	$d->OutputFiles('lib/*.php', 'doc/output');
+	//$d->OutputFiles('../../tools/jpgraph-2.1.2/src/*.php', 'doc/output2');
 }
 else
 {
-$cr = new CodeReader();
-$cr->Refector = true;
-echo "Parsing...\n";
-$ret = $cr->Parse('../../tools/jpgraph-2.1.2/src/jpgraph.php');
-echo "Validating...\n";
-$cr->Validate($ret['data'], $ret['names']);
+	$cr = new CodeReader();
+	$cr->Refector = true;
+	echo "Parsing...\n";
+	$ret = $cr->Parse('../../tools/jpgraph-2.1.2/src/jpgraph.php');
+	echo "Validating...\n";
+	$cr->Validate($ret['data'], $ret['names']);
 }
 echo "Done in ".(microtime(true) - $stime)." seconds.<br/>\n";
 echo '</pre>';

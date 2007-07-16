@@ -542,8 +542,20 @@ class CodeReader
 				$this->curdoc->type = $m[1];
 			else if (preg_match('/package (.+)/', $clean, $m))
 				$this->curpackage = $m[1];
+			else if (preg_match('/todo (.+)/', $clean, $m))
+				$this->todos[] = array($this->file, $this->line, $m[1]);
 			else if (preg_match('/access (.+)/', $clean, $m))
 				$this->curdoc->access = $m[1];
+			else if (preg_match('/see (.+)/', $clean, $m))
+				$this->curdoc->see[] = $m[1];
+			else if (preg_match('/deprecated/', $clean))
+				$this->todos[] = array($this->file, $this->line, "You should"
+					." probably eliminate this item soon, it's marked"
+					." depricated.");
+			else if (preg_match('/version (.+)/', $clean, $m))
+				$this->curdoc->version = $m[1];
+			else if (preg_match('/since (.+)/', $clean, $m))
+				$this->curdoc->since = $m[1];
 			else if (preg_match('/([^\s]+)(.*)/', $clean, $m))
 			{
 				echo "Unknown doc tag: {$m[1]}\n";
@@ -559,13 +571,17 @@ class CodeReader
 	 */
 	function GetName($member)
 	{
-		if (@$member->parent->type == T_CLASS)
-			$ret =  "{$member->parent->name}::";
-		else if ($member->type == T_CLASS) $ret = 'class ';
-		else if ($member->type == T_FUNCTION) $ret = 'function ';
-		else if ($member->type == T_VARIABLE) $ret = 'variable ';
-		else echo "What're you trying to GetName on? {$member->name}\n";
-		$ret .= "{$member->name} at <b>{$member->file}:{$member->line}</b>";
+		$ret = null;
+		if (isset($member))
+		{
+			if (@$member->parent->type == T_CLASS)
+				$ret =  "{$member->parent->name}::";
+			else if ($member->type == T_CLASS) $ret = 'class ';
+			else if ($member->type == T_FUNCTION) $ret = 'function ';
+			else if ($member->type == T_VARIABLE) $ret = 'variable ';
+			else echo "What're you trying to GetName on? {$member->name}\n";
+			$ret .= "{$member->name} at <b>{$member->file}:{$member->line}</b>";
+		}
 		return $ret;
 	}
 
