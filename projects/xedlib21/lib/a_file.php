@@ -511,17 +511,18 @@ EOF;
 					ArrayToSelOptions($this->filters, $fi->Filter->Name,
 					false)));
 
-				$options = $fi->Filter->GetOptions($fi, $def);
+				$options = $fi->Filter->GetOptions($this, $fi, $def);
 				$options = array_merge($options, $this->Behavior->GetOptions($fi));
 
 				if (!empty($options))
 				{
 					foreach ($options as $col => $field)
 					{
-						if (is_string($field)) $form->AddRow(array($field));
+						if (is_string($field)) $form->AddInput($field);
 						else $form->AddInput($field);
 					}
-					$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
+					if ($this->Behavior->UpdateButton)
+						$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
 					//$end = substr(strrchr(substr($this->cf, 0, -1), '/'), 1);
 					//$start = substr($this->cf, 0, -strlen($end)-1);
@@ -626,7 +627,7 @@ EOF;
 		{
 			$uri = URL($target, array('editor' => $this->name));
 			$ret .= "To navigate back, or choose another folder, click the
-			link(s) below<br/> <a href=\"{$uri}\">Home</a> / ";
+			link(s) below<br/> <a href=\"{$uri}\">Home</a> ";
 		}
 
 		for ($ix = 0; $ix < count($items); $ix++)
@@ -635,8 +636,7 @@ EOF;
 			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
 			$uri = URL($target, array('editor' => $this->name,
 				'cf' => $cpath));
-			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
-			if ($ix < count($items)-1) $ret .= " / \n";
+			$ret .= " &raquo; <a href=\"{$uri}\">{$items[$ix]}</a>";
 		}
 		return $ret;
 	}
@@ -656,12 +656,13 @@ EOF;
 		{
 			$ret .= $title;
 			$ret .= '<table class="tableFiles">';
-			$ret .= '<tr><th>File</th>';
 			if (count($this->files[$type]) > 1
 				&& $this->View->Sort == FM_SORT_MANUAL
 				&& $this->Behavior->AllowSort)
+			{
+				$ret .= '<tr><th>File</th>';
 				$ret .= '<th colspan="2">Action</th>';
-			else $ret .= '<th colspan="2">&nbsp;</th>';
+			}
 			if ($this->Behavior->QuickCaptions)
 				$ret .= '<th>Caption</th>';
 			$ret .= '</tr>';
@@ -1035,6 +1036,11 @@ class FileManagerBehavior
 	public $QuickCaptions = false;
 
 	/**
+	 * @var bool
+	 */
+	public $UpdateButton = true;
+
+	/**
 	 * Return true if options are available.
 	 * @return bool
 	 */
@@ -1319,7 +1325,7 @@ class FilterDefault
 	 * @param string $default Default option set.
 	 * @return array
 	 */
-	function GetOptions(&$fi, $default)
+	function GetOptions(&$fm, &$fi, $default)
 	{
 		$more = array(
 			new FormInput('<b>Change Display Name</b> - <i>Type the name that you would like to be displayed with the current file / folder.</i><br/>', 'text', 'info[title]',
@@ -1443,7 +1449,7 @@ class FilterGallery extends FilterDefault
 	 * @param array $default Default values.
 	 * @return array
 	 */
-	function GetOptions(&$fi, $default)
+	function GetOptions(&$fm, &$fi, $default)
 	{
 		$new = array();
 		if (is_dir($fi->path))
