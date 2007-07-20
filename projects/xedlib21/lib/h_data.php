@@ -97,6 +97,10 @@ class Database
 		}
 	}
 
+	function CheckODBCError($query, $handler)
+	{
+	}
+
 	/**
 	 * Instantiates a new Database object.
 	 */
@@ -124,6 +128,7 @@ class Database
 				$this->lq = $this->rq = '`';
 				break;
 			case 'odbc':
+				$this->ErrorHandler = array($this, 'CheckODBCError');
 				$this->link = odbc_connect($m[5], $m[2], $m[3]);
 				if (!$this->link) die("ODBC Error on connect: ".
 					odbc_errormsg($this->link));

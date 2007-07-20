@@ -688,6 +688,31 @@ class FormInput
 			$this->EndLabel = true;
 			return $ret;
 		}
+		if ($this->type == 'radios')
+		{
+			$this->labl = false;
+
+			$ret = null;
+			if (!empty($this->valu))
+			{
+				$newsels = $this->GetValue($persist);
+				foreach ($newsels as $id => $val)
+				{
+					$selected = $val->selected ? 'checked="checked"' : null;
+					if ($val->group)
+						$ret .= "<b><i>{$val->text}</i></b><br/>\n";
+					else
+						$ret .= "<label><input
+							type=\"radio\"
+							name=\"{$this->name}\"
+							value=\"{$id}\"
+							id=\"".CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
+							{$val->text}</label><br/>";
+				}
+			}
+			$this->EndLabel = true;
+			return $ret;
+		}
 		if ($this->type == 'selects')
 		{
 			$ret = '<select
@@ -787,6 +812,20 @@ class FormInput
 				$svalus = GetVar($this->name);
 				if (!empty($svalus))
 				foreach ($svalus as $val) $newsels[$val]->selected = true;
+			}
+			return $newsels;
+		}
+		else if ($this->type == 'radios')
+		{
+			$newsels = array_clone($this->valu);
+			if ($persist)
+			{
+				$pval = GetVar($this->name);
+				if (!empty($val))
+					foreach ($newsels as $id => $val)
+					{
+						if ($id == $pval) $newsels[$id]->selected = true;
+					}
 			}
 			return $newsels;
 		}
@@ -1626,9 +1665,11 @@ function InputToString($field)
 	else if ($field->type == 'checks')
 	{
 		$out = null;
-		foreach ($val as $ix => $val) $out .= ($ix > 0?', ':'').$field->valu[$ix]->text;
+		if (!empty($val))
+		foreach ($val as $ix => $v) $out .= ($ix > 0?', ':'').$field->valu[$ix]->text;
 		return $out;
 	}
+	else if ($field->type == 'radios') return $field->valu[$val]->text;
 	else if ($field->type == 'yesno') return $val == 1 ? 'yes' : 'no';
 	else Error("Unknown field type.");
 }
