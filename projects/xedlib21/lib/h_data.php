@@ -114,7 +114,7 @@ class Database
 	 */
 	function Open($url)
 	{
-		if (preg_match('#([^:]+)://([^:]*):(.*)@([^/]*)/(.*)#', $url, $m) < 1)
+		if (!preg_match('#([^:]+)://([^:]*):(.*)@([^/]*)/(.*)#', $url, $m))
 			Error("Invalid url for database.");
 		switch ($m[1])
 		{
