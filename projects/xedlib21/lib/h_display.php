@@ -671,6 +671,7 @@ class FormInput
 			$ret = null;
 			if (!empty($this->valu))
 			{
+				$ret .= "<div {$this->atrs}>";
 				$newsels = $this->GetValue($persist);
 				foreach ($newsels as $id => $val)
 				{
@@ -681,9 +682,10 @@ class FormInput
 						$ret .= "<label><input
 							type=\"checkbox\"
 							name=\"{$this->name}[{$id}]\"
-							id=\"".CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
+							id=\"".CleanID($this->name.'_'.$id)."\"{$selected} />
 							{$val->text}</label><br/>";
 				}
+				$ret .= '</div>';
 			}
 			$this->EndLabel = true;
 			return $ret;
@@ -1045,6 +1047,7 @@ define('CONTROL_BOUND', 1);
  * @return string 'Yes' or 'No'.
  */
 function BoolCallback($val, $col) { return $val[$col] ? 'Yes' : 'No'; }
+function TSCallback($val, $col) { return date('d-m-Y', $val[$col]); }
 
 /**
  * A node holds children.

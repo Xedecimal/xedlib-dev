@@ -1124,4 +1124,59 @@ class EditorData
 	}
 }
 
+class DisplayData
+{
+	public $name;
+	public $ds;
+
+	function DisplayData($name, $ds)
+	{
+		$this->name = $name;
+		$this->ds = $ds;
+	}
+
+	function Get($target, $ca)
+	{
+		$q = GetVar('q');
+		$ret = $this->GetSearch($target);
+		if ($ca == 'search' && !empty($q))
+		{
+			$fs = GetVar('fields');
+			$items = $this->ds->GetSearch(array_keys($fs), $q);
+			if (!empty($items) && !empty($this->ds->DisplayColumns))
+			{
+				$ret .= "<table>";
+				foreach ($items as $i)
+				{
+					$ret .= "<tr><td colspan=\"2\" class=\"header\">
+					<label><input type=\"checkbox\" value=\"{$i['id']}\" />
+					Compare</label></td></tr>\n";
+					foreach ($this->ds->DisplayColumns as $f => $dc)
+					{
+						$val = !empty($dc->callback) ?
+							call_user_func($dc->callback, $i, $f) : $i[$f];
+						$ret .= "<tr><td align=\"right\">{$dc->text}</td><td>$val</td></tr>\n";
+					}
+				}
+				$ret .= "</table>";
+			}
+		}
+		return $ret;
+	}
+
+	function GetSearch($target)
+	{
+		$frm = new Form('frmSearch');
+		$frm->AddHidden('ca', 'search');
+		$frm->AddHidden('editor', $GLOBALS['editor']);
+		$frm->AddInput(
+			new FormInput('Query', 'text', 'q'),
+			new FormInput('Fields', 'checks', 'fields',
+				ArrayToSelOptions($this->SearchFields), 'style="height: 200px; overflow: auto;"'),
+			new FormInput(null, 'submit', 'butSubmit', 'Search')
+		);
+		return $frm->Get('action="'.$target.'" method="post"');
+	}
+}
+
 ?>
