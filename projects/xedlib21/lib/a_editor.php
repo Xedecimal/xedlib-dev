@@ -1052,7 +1052,7 @@ class EditorData
 
 					$frm->AddInput($in);
 				}
-				else if (is_numeric($col)) $frm->AddRow('&nbsp;');
+				else if (is_numeric($col)) $frm->AddInput('&nbsp;');
 			}
 
 			foreach ($this->handlers as $handler)
