@@ -921,6 +921,11 @@ class FileManagerView
 	 * @var string
 	 */
 	public $TitleUpload = '<b>Upload Files to Current Folder</b> - <i>Browse hard drive then click "upload"</i>';
+
+	/**
+	 * Test displayed as collapsable link from the main view.
+	 * @var string
+	 */
 	public $TextAdditional = '<b>Additional Settings</b>';
 }
 
@@ -1331,6 +1336,7 @@ class FilterDefault
 
 	/**
 	 * Returns an array of options that allow configuring this filter.
+	 * @param FileManager $fm Calling filemanager.
 	 * @param FileInfo $fi Object to get information out of.
 	 * @param string $default Default option set.
 	 * @return array

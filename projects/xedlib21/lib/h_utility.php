@@ -763,12 +763,22 @@ function array_clone($arr)
 	return $ret;
 }
 
+/**
+ * Returns var if it is set, otherwise def.
+ * @param mixed $var Variable to check and return if exists.
+ * @param mixed $def Default to return if $var is not set.
+ */
 function ifset($var, $def)
 {
 	if (isset($var)) return $var; return $def;
 }
 
-
+/**
+ * Will possibly be depricated.
+ * @param array $tree Stack of linkable items.
+ * @param string $target Target script of interaction.
+ * @param string $text Text to test.
+ */
 function linkup($tree, $target, $text)
 {
 	require_once('h_template.php');

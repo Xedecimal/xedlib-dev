@@ -97,6 +97,11 @@ class Database
 		}
 	}
 
+	/**
+	 * Checks for an handles an ODBC error generically.
+	 * @param string $query Query that was attempted.
+	 * @param callback $handler Handler used to process this error.
+	 */
 	function CheckODBCError($query, $handler)
 	{
 	}

@@ -1128,15 +1128,30 @@ class EditorData
 
 class DisplayData
 {
+	/**
+	 * @var string
+	 */
 	public $name;
+
+	/**
+	 * @var DataSet
+	 */
 	public $ds;
 
+	/**
+	 * @param string $name Name of this display for state management.
+	 * @param DataSet $ds Associated dataset to collect information from.
+	 */
 	function DisplayData($name, $ds)
 	{
 		$this->name = $name;
 		$this->ds = $ds;
 	}
 
+	/**
+	 * @param string $target Target script to interact with.
+	 * @param string $ca Current action to execute.
+	 */
 	function Get($target, $ca)
 	{
 		$q = GetVar('q');
@@ -1166,6 +1181,9 @@ class DisplayData
 		return $ret;
 	}
 
+	/**
+	 * @param string $target Target script to interact with.
+	 */
 	function GetSearch($target)
 	{
 		$frm = new Form('frmSearch');

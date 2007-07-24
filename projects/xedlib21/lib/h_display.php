@@ -1047,8 +1047,23 @@ define('CONTROL_BOUND', 1);
  * @return string 'Yes' or 'No'.
  */
 function BoolCallback($val, $col) { return $val[$col] ? 'Yes' : 'No'; }
+
+/**
+ * @param array $val Value array, usually a row from a dataset.
+ * @param mixed $col Index of $val to test for a unix epoch timestamp.
+ */
 function TSCallback($val, $col) { return date('m/d/Y', $val[$col]); }
+
+/**
+ * @param array $val Value array, usually a row from a dataset.
+ * @param mixed $col Index of $val to test for a mysql formatted date.
+ */
 function DateCallback($val, $col) { return date('m/d/Y', MyDateTimestamp($val[$col])); }
+
+/**
+ * @param array $val Value array, usually a row from a dataset.
+ * @param mixed $col Index of $val to test for a mysql formatted datetime.
+ */
 function DateTimeCallback($val, $col) { return date('m/d/Y', MyDateTimestamp($val[$col], true)); }
 
 /**
