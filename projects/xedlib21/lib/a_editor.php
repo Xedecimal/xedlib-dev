@@ -1045,7 +1045,9 @@ class EditorData
 							else $in->valu = $sel[0][$col];
 						}
 						else if (isset($data[2])) { $in->valu = $data[2]; }
-						else { $in->valu = null; }
+						//If we bring this back, make sure setting explicit
+						//values in DataSet::FormInputs still works.
+						//else { $in->valu = null; }
 					}
 
 					$in->name = $col;

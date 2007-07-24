@@ -1047,7 +1047,9 @@ define('CONTROL_BOUND', 1);
  * @return string 'Yes' or 'No'.
  */
 function BoolCallback($val, $col) { return $val[$col] ? 'Yes' : 'No'; }
-function TSCallback($val, $col) { return date('d-m-Y', $val[$col]); }
+function TSCallback($val, $col) { return date('m/d/Y', $val[$col]); }
+function DateCallback($val, $col) { return date('m/d/Y', MyDateTimestamp($val[$col])); }
+function DateTimeCallback($val, $col) { return date('m/d/Y', MyDateTimestamp($val[$col], true)); }
 
 /**
  * A node holds children.
