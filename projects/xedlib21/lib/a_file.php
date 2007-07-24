@@ -476,14 +476,18 @@ EOF;
 			if ($this->Behavior->AllowRename)
 			{
 				$form = new Form('rename');
+				$form->LabelStart = $form->LabelEnd = $form->FieldStart =
+				$form->FieldEnd = '';
 				$form->AddHidden('editor', $this->name);
 				$form->AddHidden('ca', 'rename');
 				$form->AddHidden('ci', $fi->path);
 				$form->AddHidden('cf', $this->cf);
-				$form->AddInput(new FormInput('Current File/Folder Name', 'text', 'name', $fi->filename, null, ' - <span style="font-size: 8pt;">Don\'t forget to
-					include the correct file extension with the name (i.e. -
-					.jpg, .zip, .doc, etc.)</span>'));
-				$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Rename'));
+				$form->AddInput(new FormInput('Current File/Folder Name<br />',
+					'text', 'name', $fi->filename, null,
+					' - <span style="font-size: 8pt;">Don\'t forget to include
+					the correct file extension with the name (i.e. - .jpg, .zip,
+					.doc, etc.)</span>'));
+				$form->AddInput(new FormInput('<br/>', 'submit', 'butSubmit', 'Rename'));
 				global $me;
 				$out = $form->Get('method="post" action="'.$me.'"');
 				$ret .= GetBox('box_rename', '<b>Rename File / Folder</b> - <i>This is not the same as the "Display Name" option above.</i>', $out,
@@ -526,7 +530,7 @@ EOF;
 
 					//$end = substr(strrchr(substr($this->cf, 0, -1), '/'), 1);
 					//$start = substr($this->cf, 0, -strlen($end)-1);
-					$ret .= GetBox('box_settings', '<b>Additional Settings</b>',
+					$ret .= GetBox('box_settings', $this->View->TextAdditional,
 						$form->Get('method="post" action="'.$target.'"'), 'template_box.html');
 				}
 			}
@@ -656,16 +660,21 @@ EOF;
 		{
 			$ret .= $title;
 			$ret .= '<table class="tableFiles">';
+			$end = false;
 			if (count($this->files[$type]) > 1
 				&& $this->View->Sort == FM_SORT_MANUAL
 				&& $this->Behavior->AllowSort)
 			{
 				$ret .= '<tr><th>File</th>';
 				$ret .= '<th colspan="2">Action</th>';
+				$end = true;
 			}
 			if ($this->Behavior->QuickCaptions)
+			{
 				$ret .= '<th>Caption</th>';
-			$ret .= '</tr>';
+				$end = true;
+			}
+			if ($end) $ret .= '</tr>';
 			foreach($this->files[$type] as $ix => $file)
 				$ret .= $this->GetFile($target, $file, $type, $ix);
 			$ret .= '</table>';
@@ -912,6 +921,7 @@ class FileManagerView
 	 * @var string
 	 */
 	public $TitleUpload = '<b>Upload Files to Current Folder</b> - <i>Browse hard drive then click "upload"</i>';
+	public $TextAdditional = '<b>Additional Settings</b>';
 }
 
 class FileManagerBehavior

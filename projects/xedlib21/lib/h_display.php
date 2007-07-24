@@ -776,8 +776,6 @@ class FormInput
 		}
 
 		return "<input type=\"{$this->type}\"
-			class=\"".($this->type == 'button' || $this->type == 'submit' ?
-				'input_button' : 'input_generic')."\"
 			name=\"{$this->name}\"
 			id=\"".CleanID($parent.'_'.$this->name)."\"".
 			' value="'.$this->GetValue($persist).'"'.
@@ -845,11 +843,18 @@ class FormInput
 		}
 		else
 		{
-			if (strpos($this->name, '[') && $persist)
+			if ($persist && preg_match('#([^\[]+)\[([^\]]+)\]#', $this->name, $m))
 			{
-				$match = preg_match('#([^\[]+)\[([^\]]+)\]#', $this->name, $matches);
-				$vals = GetVar($matches[1]);
-				return htmlspecialchars($vals[$matches[2]]);
+				$arg = GetVar($m[1]);
+				$ix = 0;
+				preg_match_all('/\[([^\[]*)\]/', $this->name, $m);
+				foreach ($m[1] as $step)
+				{
+					if ($ix == $step) $ix++;
+					$arg = @$arg[!empty($step) ? $step : $ix++];
+				}
+				if (empty($arg)) $arg = $this->valu;
+				return htmlspecialchars(!empty($arg) ? $arg : $this->valu);
 			}
 			return htmlspecialchars($persist ? GetVar($this->name, $this->valu) : $this->valu);
 		}
