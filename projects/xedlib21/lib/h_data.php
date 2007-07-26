@@ -1083,6 +1083,11 @@ class DataSet
 			$this->database->Query($query);
 		}
 	}
+
+	function Truncate()
+	{
+		$this->database->Query('TRUNCATE '.$this->table);
+	}
 }
 
 ?>
