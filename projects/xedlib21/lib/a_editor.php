@@ -302,10 +302,10 @@ class EditorData
 		$this->name = $name;
 		$this->filter = $filter;
 		$this->handlers = array();
+		$this->ds = $ds;
 
-		if ($ds != null)
+		if ($ds instanceof DataSet)
 		{
-			$this->ds = $ds;
 			$this->sort = $sort;
 			$this->type = CONTROL_BOUND;
 		}
@@ -332,7 +332,7 @@ class EditorData
 	 * @param string $action Current action, usually stored in POST['ca']
 	 * @return null
 	 */
-	function Prepare($action)
+	function Prepare($action, $ci = null)
 	{
 		// Don't speak unless spoken to.
 		if (GetVar('editor') != $this->name) return;
@@ -407,6 +407,16 @@ class EditorData
 		else if ($action == $this->name.'_update')
 		{
 			global $ci;
+			if ($this->type == CONTROL_SIMPLE)
+			{
+				foreach ($this->ds->FieldInputs as $name => $i)
+				{
+					$vals[$name] = GetVar($name);
+				}
+				$fp = fopen($ci, 'w+');
+				fwrite($fp, serialize($vals));
+				fclose($fp);
+			}
 			$child_id = GetVar('child');
 			$context = $child_id != null ? $this->ds->children[$child_id] : $this;
 			$update = array();
@@ -535,6 +545,11 @@ class EditorData
 				}
 			}
 			$context->ds->Remove(array($context->ds->id => $ci));
+		}
+
+		if ($this->type == CONTROL_SIMPLE)
+		{
+			$this->values = unserialize(file_get_contents($ci));
 		}
 	}
 
@@ -972,12 +987,12 @@ class EditorData
 	 */
 	function GetForm($target, $ci, $state, $curchild = null)
 	{
-		$context = isset($curchild) ? $this->ds->children[$curchild] : $this;
+		$fullname = 'form_'.$state;
 
-		$fullname = 'form_'.$state.'_'.$context->ds->table;
-
-		if ($state == CONTROL_BOUND)
+		if ($this->type == CONTROL_BOUND)
 		{
+			$context = isset($curchild) ? $this->ds->children[$curchild] : $this;
+
 			if (!isset($this->ds)) Error("<br />What: Dataset is not set.
 				<br />Where: EditorData({$this->name})::GetForm.
 				<br />Why: This editor was not created with a proper dataset.");
@@ -991,29 +1006,40 @@ class EditorData
 
 			$sel = $state == STATE_EDIT ? $context->ds->Get(
 				array($context->ds->id => $ci), null, null, $joins) : null;
+
+			$ds = $context->ds;
+		}
+		else
+		{
+			$ds = $this->ds;
+			foreach ($ds->FieldInputs as $n => $i)
+			{
+				$i->valu = $this->values[$n];
+			}
 		}
 
-		if (!empty($context->ds->FieldInputs))
+		if (!empty($ds->FieldInputs))
 		{
 			$frm = new Form($fullname, null, false);
 
-			if (isset($context->ds->Validation))
+			if (isset($ds->Validation))
 			{
-				$frm->Validation = $context->ds->Validation;
-				$frm->Errors = $context->ds->Errors;
+				$frm->Validation = $ds->Validation;
+				$frm->Errors = $ds->Errors;
 			}
 			$frm->AddHidden('editor', $this->name);
-			$frm->AddHidden('ca', $state == STATE_EDIT ? $this->name.'_update' :
-				$this->name.'_create');
+			$frm->AddHidden('ca', $state == STATE_EDIT || $this->type != CONTROL_BOUND
+				? $this->name.'_update' : $this->name.'_create');
+			if ($state == STATE_EDIT || $this->type != CONTROL_BOUND)
+				$frm->AddHidden('ci', $ci);
 
-			if ($state == STATE_EDIT) $frm->AddHidden('ci', $ci);
 			if (isset($curchild))
 			{
 				$frm->AddHidden('parent', $ci);
 				$frm->AddHidden('child', $curchild);
 			}
 
-			foreach ($context->ds->FieldInputs as $col => $in)
+			foreach ($ds->FieldInputs as $col => $in)
 			{
 				if (is_object($in))
 				{
@@ -1064,11 +1090,15 @@ class EditorData
 				isset($sel[0]) ? $sel[0] : null);
 			}
 
-			$frm->State = $state == STATE_EDIT ? 'Update' : 'Create';
-			$frm->Description = $context->ds->Description;
+			$frm->State = $state == STATE_EDIT || $this->type != CONTROL_BOUND
+				? 'Update' : 'Create';
+			$frm->Description = $ds->Description;
 			$frm->AddInput(
 				$frm->GetSubmitButton('butSubmit', $frm->State).
-				($state == STATE_EDIT && $this->type == CONTROL_BOUND ? '<input type="button" value="Cancel" onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>' : null)
+				($state == STATE_EDIT && $this->type == CONTROL_BOUND ?
+				 '<input type="button" value="Cancel"
+				 onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>'
+				 : null)
 			);
 
 			return $frm;

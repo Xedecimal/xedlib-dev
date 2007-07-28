@@ -1475,7 +1475,7 @@ class FilterGallery extends FilterDefault
 			$new[] = new FormInput('Thumbnail Height', 'text',
 				'info[thumb_height]', $fi->info['thumb_height']);
 		}
-		return array_merge(parent::GetOptions($fi, $default), $new);
+		return array_merge(parent::GetOptions($fm, $fi, $default), $new);
 	}
 
 	/**
