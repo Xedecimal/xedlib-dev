@@ -1056,10 +1056,10 @@ class EditorData
 					}
 					else if ($in->type == 'selects')
 					{
-						if (isset($sel) && isset($sel[0][$data[0]]))
-						$value = $this->GetSelMask($data[2], isset($sel) &&
-							strlen($data[0]) > 0 ? $sel[0][$data[0]] : null);
-						else $value = $data[2];
+						if (isset($sel) && isset($sel[0][$col]))
+							$value = $this->GetSelMask($in->valu, isset($sel) &&
+								strlen($col) > 0 ? $sel[0][$col] : null);
+						else $value = $in->valu;
 					}
 					else
 					{
