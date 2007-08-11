@@ -549,7 +549,9 @@ class EditorData
 
 		if ($this->type == CONTROL_SIMPLE)
 		{
-			$this->values = unserialize(file_get_contents($ci));
+			if (file_exists($ci))
+				$this->values = unserialize(file_get_contents($ci));
+			else $this->values = array();
 		}
 	}
 
@@ -1014,7 +1016,8 @@ class EditorData
 			$ds = $this->ds;
 			foreach ($ds->FieldInputs as $n => $i)
 			{
-				$i->valu = $this->values[$n];
+				if (isset($this->values[$n]))
+					$i->valu = stripslashes($this->values[$n]);
 			}
 		}
 
