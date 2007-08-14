@@ -304,7 +304,7 @@ class EditorData
 		$this->handlers = array();
 		$this->ds = $ds;
 
-		if ($ds instanceof DataSet)
+		if (is_a($ds, 'DataSet'))
 		{
 			$this->sort = $sort;
 			$this->type = CONTROL_BOUND;
@@ -551,7 +551,8 @@ class EditorData
 		{
 			if (file_exists($ci))
 				$this->values = unserialize(file_get_contents($ci));
-			else $this->values = array();
+			else
+				$this->values = array();
 		}
 	}
 
@@ -649,8 +650,8 @@ class EditorData
 			}
 
 			//Flats
-			//* Convert each item into separated TreeNodes
-			//* Associate all indexes by table, then id
+			// * Convert each item into separated TreeNodes
+			// * Associate all indexes by table, then id
 
 			$flats = array();
 
@@ -1017,7 +1018,7 @@ class EditorData
 			foreach ($ds->FieldInputs as $n => $i)
 			{
 				if (isset($this->values[$n]))
-					$i->valu = stripslashes($this->values[$n]);
+					$ds->FieldInputs[$n]->valu = stripslashes($this->values[$n]);
 			}
 		}
 
@@ -1073,7 +1074,7 @@ class EditorData
 								$in->valu = MyDateTimestamp($sel[0][$col]);
 							else $in->valu = $sel[0][$col];
 						}
-						else if (isset($data[2])) { $in->valu = $data[2]; }
+						else if (isset($data[2])) { echo "Set it to data[2] so that broke it.<br/>\n"; $in->valu = $data[2]; }
 						//If we bring this back, make sure setting explicit
 						//values in DataSet::FormInputs still works.
 						//else { $in->valu = null; }
