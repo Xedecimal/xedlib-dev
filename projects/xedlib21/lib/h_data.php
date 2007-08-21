@@ -935,7 +935,7 @@ class DataSet
 	 * @param int $args
 	 * @return array
 	 */
-	function GetSearch($columns, $phrase, $args = GET_BOTH)
+	function GetSearch($columns, $phrase, $args = GET_BOTH, $start = 0, $limit = 0)
 	{
 		$newphrase = str_replace("'", '%', stripslashes($phrase));
 		$newphrase = str_replace(' ', '%', $newphrase);
@@ -944,6 +944,10 @@ class DataSet
 		{
 			if ($ix > 0) $query .= " OR";
 			$query .= " `$col` LIKE '%{$newphrase}%'";
+		}
+		if ($limit != 0)
+		{
+			$query .= " LIMIT {$start}, {$limit}";
 		}
 		return $this->GetCustom($query);
 	}

@@ -1193,11 +1193,12 @@ class DisplayData
 		if ($ca == 'search' && !empty($q))
 		{
 			$fs = GetVar('fields');
-			$items = $this->ds->GetSearch(array_keys($fs), $q);
+			$result = $this->ds->GetSearch(array_keys($fs), $q);
+			$items = GetFlatPage($result, GetVar('cp', 0), 10);
 			if (!empty($items) && !empty($this->ds->DisplayColumns))
 			{
 				$ret .= "<table>";
-				foreach ($items as $i)
+				foreach ($items as $ix => $i)
 				{
 					$ret .= "<tr><td colspan=\"2\" class=\"header\">
 					<label><input type=\"checkbox\" value=\"{$i['id']}\" />
@@ -1208,8 +1209,13 @@ class DisplayData
 							call_user_func($dc->callback, $i, $f) : $i[$f];
 						$ret .= "<tr><td align=\"right\">{$dc->text}</td><td>$val</td></tr>\n";
 					}
+					if ($ix > 10) break;
 				}
 				$ret .= "</table>";
+				if (count($result) > 10)
+				{
+					$ret .= GetPages($result, 10, array('editor' => 'employee', 'ca' => 'search', 'q' => $q, 'fields' => $fs));
+				}
 			}
 		}
 		return $ret;

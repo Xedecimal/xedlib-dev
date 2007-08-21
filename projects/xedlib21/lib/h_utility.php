@@ -261,16 +261,29 @@ function URL($url, $uri = null)
 
 	if (!empty($nuri))
 	{
-		$start = (strpos($ret, "?") > 0);
+		$start = (strpos($ret, "?") < 1);
 		foreach ($nuri as $key => $val)
 		{
 			if (isset($val))
 			{
-				$nval = str_replace(' ', '%20', $val);
-				$ret .= ($start ? '&amp;' : '?')."{$key}={$nval}";
-				$start = true;
+				$ret .= URLParse($key, $val, $start);
+				$start = false;
 			}
 		}
+	}
+	return $ret;
+}
+
+function URLParse($key, $val, $start = false)
+{
+	$ret = null;
+	if (is_array($val))
+		foreach ($val as $akey => $aval)
+			$ret .= URLParse($key.'['.$akey.']', $aval, false);
+	else
+	{
+		$nval = str_replace(' ', '%20', $val);
+		$ret .= ($start ? '?' : '&amp;')."{$key}={$nval}";
 	}
 	return $ret;
 }
