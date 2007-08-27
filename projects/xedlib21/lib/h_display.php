@@ -408,7 +408,6 @@ class Form
 	{
 		if (func_num_args() < 1) Error("Not enough arguments.");
 		$args = func_get_args();
-		$skip = false;
 		foreach ($args as $ix => $item)
 		{
 			if (is_string($item))
@@ -618,6 +617,11 @@ class FormInput
 	 */
 	function Get($parent = null, $persist = true)
 	{
+		if ($this->type == 'custom')
+		{
+			$callback = $this->valu;
+			return $callback($this);
+		}
 		if ($this->type == 'spamblock')
 		{
 			$this->labl = false;
@@ -1385,7 +1389,7 @@ class Validation
 	 */
 	function Add($value, $child)
 	{
-		$this->validators[$value] = $child;
+		$this->validators[] = array($value, $child);
 	}
 
 	/**
@@ -1398,8 +1402,8 @@ class Validation
 	{
 		$ret = null;
 		if (!empty($this->validators))
-		foreach ($this->validators as $v)
-			$ret .= $v->GetJS($id);
+			foreach ($this->validators as $v)
+				$ret .= $v[1]->GetJS($id);
 		$ret .= "\t\tfunction {$id}_{$this->field}_check(validate) \n\t\t{
 			ret = true;
 			chk_{$this->field} = document.getElementById('{$id}_{$this->field}');
@@ -1425,21 +1429,21 @@ class Validation
 				spn_{$id}_{$this->field}.innerHTML = '{$this->error}';
 				chk_{$this->field}.focus();
 				ret = false;\n";
-				foreach ($this->validators as $reg => $v)
-					$ret .= "\t\t\t\t{$id}_{$v->field}_check(0);\n";
+				foreach ($this->validators as $v)
+					$ret .= "\t\t\t\t{$id}_{$v[1]->field}_check(0);\n";
 			$ret .= "\t\t\t\treturn false;
 			}";
 		}
 		$ret .= "\n\t\t\telse
 			{\n";
-				foreach ($this->validators as $reg => $v)
+				foreach ($this->validators as $v)
 				{
-					$ret .= "\t\t\t\t{$id}_{$v->field}_check(0);\n";
+					$ret .= "\t\t\t\t{$id}_{$v[1]->field}_check(0);\n";
 				}
 				$ret .= "\t\t\t\tspn_{$id}_{$this->field}.innerHTML = '';\n";
-				foreach ($this->validators as $reg => $v)
+				foreach ($this->validators as $v)
 				{
-					$ret .= "\t\t\t\tret = {$id}_{$v->field}_check(/^$reg$/.test(chk_{$this->field}.value));\n";
+					$ret .= "\t\t\t\tret = {$id}_{$v[1]->field}_check(/^$v[0]$/.test(chk_{$this->field}.value));\n";
 					$ret .= "\t\t\t\tif (!ret) return false\n";
 				}
 			$ret .= "\t\t\t}
@@ -1491,7 +1495,7 @@ class Validation
 			$ret['errors'][$this->field] =
 				'<span class="error"
 				id="span_'.$form.'_'.$this->field.'"></span>';
-			foreach ($this->validators as $v) $v->Validate($form, $check, $ret);
+			foreach ($this->validators as $v) $v[1]->Validate($form, $check, $ret);
 		}
 		return $passed;
 	}
@@ -1696,6 +1700,10 @@ function InputToString($field)
 	}
 	else if ($field->type == 'radios') return $field->valu[$val]->text;
 	else if ($field->type == 'yesno') return $val == 1 ? 'yes' : 'no';
+	else if ($field->type == 'select')
+	{
+		return $field->valu[$val]->text;
+	}
 	else Error("Unknown field type.");
 }
 

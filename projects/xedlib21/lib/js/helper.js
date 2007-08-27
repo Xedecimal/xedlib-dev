@@ -28,6 +28,12 @@ function toggleAny(ids, target)
 	else document.getElementById(target).style.display = 'none';
 }
 
+function showAll(prefix, show)
+{
+	for (ix = 0; gebi(prefix+ix) != undefined; ix++)
+		gebi(prefix+ix).style.display = show ? '' : 'none';
+}
+
 function sel_all(type, checked)
 {
 	var ix = 0;
