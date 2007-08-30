@@ -76,7 +76,7 @@ class EditorHandler
 	 * @param mixed $id Unique id of this row.
 	 * @param array $original Original data before update.
 	 * @param array $update Columns suggested to get updated.
-	 * @return bool true by default (meant to be overridden)
+	 * @return bool true by default
 	 */
 	function Update($id, &$original, &$update) { return true; }
 
@@ -304,7 +304,7 @@ class EditorData
 		$this->handlers = array();
 		$this->ds = $ds;
 
-		if (is_a($ds, 'DataSet'))
+		if (instof($ds, 'DataSet'))
 		{
 			$this->sort = $sort;
 			$this->type = CONTROL_BOUND;
@@ -1094,9 +1094,13 @@ class EditorData
 
 			foreach ($this->handlers as $handler)
 			{
+				//Use plural objects to compliment the joins property.
+				//For some reason I change this to a single item when
+				//it can be multiple.
+
 				$handler->GetFields($frm,
-				isset($sel[0]) ? $sel[0][$this->ds->id] : null,
-				isset($sel[0]) ? $sel[0] : null);
+				isset($sel) ? $sel[0][$this->ds->id] : null,
+				isset($sel) ? $sel : null);
 			}
 
 			$frm->State = $state == STATE_EDIT || $this->type != CONTROL_BOUND

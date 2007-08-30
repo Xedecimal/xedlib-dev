@@ -837,4 +837,10 @@ function linkup($tree, $target, $text)
 	return $ret;
 }
 
+function instof($obj, $classname)
+{
+	if (substr(phpversion(), 0, 1) == '5') return ($obj instanceof $classname);
+	else return is_a($obj, $classname);
+}
+
 ?>
