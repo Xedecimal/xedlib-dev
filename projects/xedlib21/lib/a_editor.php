@@ -1037,6 +1037,11 @@ class EditorData
 			if ($state == STATE_EDIT || $this->type != CONTROL_BOUND)
 				$frm->AddHidden('ci', $ci);
 
+			global $PERSISTS;
+			if (!empty($PERSISTS))
+			foreach ($PERSISTS as $key => $val)
+				$frm->AddHidden($key, $val);
+
 			if (isset($curchild))
 			{
 				$frm->AddHidden('parent', $ci);

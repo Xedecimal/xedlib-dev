@@ -1603,14 +1603,14 @@ function GetMonthSelect($name, $default, $attribs = null)
 function GetYearSelect($name, $year)
 {
 	$ret = "<select name=\"$name\">";
-	$ret .= "<option value=\"" . ($year-11) . "\"> &lt;&lt; </option>\n";
-	for ($ix = $year-10; $ix < $year+10; $ix++)
+	$ret .= "<option value=\"" . ($year-6) . "\"> &lt;&lt; </option>\n";
+	for ($ix = $year-5; $ix < $year+5; $ix++)
 	{
 		if ($ix == $year) $sel = " selected=\"selected\"";
 		else $sel = "";
 		$ret .= "<option value=\"$ix\"$sel>$ix</option>\n";
 	}
-	$ret .= "<option value=\"" . ($year+11) . "\"> &gt;&gt; </option>\n";
+	$ret .= "<option value=\"" . ($year+6) . "\"> &gt;&gt; </option>\n";
 	$ret .= "</select>\n";
 	return $ret;
 }
