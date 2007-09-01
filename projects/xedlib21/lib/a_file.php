@@ -859,8 +859,9 @@ EOF;
 			dirname($file->path) != dirname($this->root))
 			return $this->GetVisible(new FileInfo($file->dir));
 
-		if (!empty($file->info['access']) &&
-			isset($file->info['access'][$this->uid])) return true;
+		if (!empty($file->info['access']))
+			if (in_array($this->uid, $file->info['access']))
+				return true;
 
 		return false;
 	}
@@ -1306,7 +1307,9 @@ class FileInfo
 		$fp = fopen($info, 'w+');
 		fwrite($fp, serialize($this->info));
 		fclose($fp);
-		chmod($info, 0777);
+		//This can cause issues if trying to chmod in the root. If the webserver
+		//created the file, it should already be writeable.
+		//chmod($info, 0777);
 	}
 }
 

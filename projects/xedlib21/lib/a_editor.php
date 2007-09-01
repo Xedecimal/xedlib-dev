@@ -155,7 +155,7 @@ class HandlerFile extends EditorHandler
 	 */
 	function Created($id, $inserted)
 	{
-		$target = "{$this->target}/{$data[$this->column]}";
+		$target = "{$this->target}/{$inserted[$this->column]}";
 		if (!isset($this->conditions) && !file_exists($target))
 		{
 			mkdir($target);
@@ -167,7 +167,7 @@ class HandlerFile extends EditorHandler
 			{
 				foreach ($cond as $val)
 				{
-					if ($data[$col] == $val && !file_exists($target))
+					if ($inserted[$col] == $val && !file_exists($target))
 					{
 						mkdir($target);
 						chmod($target, 0777);
@@ -181,7 +181,7 @@ class HandlerFile extends EditorHandler
 
 	function Update($id, &$original, &$update)
 	{
-		$source = "{$this->target}/{$data[$this->column]}";
+		$source = "{$this->target}/{$original[$this->column]}";
 		if (file_exists($source))
 		{
 			rename($source, $this->target.'/'.$update[$this->column]);
@@ -376,6 +376,7 @@ class EditorData
 						$insert[$col] = $value;
 					else $insert[$col] = $value;
 				}
+				else if (is_numeric($col)) continue;
 				else if (is_string($in)) $insert[$col] = DeString($in);
 			}
 
@@ -437,7 +438,7 @@ class EditorData
 						$update[$col] = ($value == 1) ? 1 : 0;
 					else if ($in->type == 'selects')
 					{
-						$update[$data[0]] = $value;
+						$update[$col] = $value;
 					}
 					else if ($in->type == 'file')
 					{
@@ -1089,6 +1090,7 @@ class EditorData
 
 					$frm->AddInput($in);
 				}
+				else if (is_string($in)) $frm->AddInput($in);
 				else if (is_numeric($col)) $frm->AddInput('&nbsp;');
 			}
 
