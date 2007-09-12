@@ -274,6 +274,12 @@ function URL($url, $uri = null)
 	return $ret;
 }
 
+/**
+ * Parses an object or array for serialization to a uri.
+ * @param string $key Parent key for the current series to iterate.
+ * @param mixed $val Object or array to iterate.
+ * @param bool $start Whether or not this is the first item being parsed.
+ */
 function URLParse($key, $val, $start = false)
 {
 	$ret = null;
@@ -837,6 +843,11 @@ function linkup($tree, $target, $text)
 	return $ret;
 }
 
+/**
+ * Workaround for php4 / php5 instanceof keyword or is_a function.
+ * @param mixed $obj Object to check.
+ * @param string $classname Check if $obj is derived somehow out of this type.
+ */
 function instof($obj, $classname)
 {
 	if (substr(phpversion(), 0, 1) == '5') return ($obj instanceof $classname);

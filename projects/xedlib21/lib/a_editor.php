@@ -330,6 +330,7 @@ class EditorData
 	 * data to be used in the Get function.
 	 *
 	 * @param string $action Current action, usually stored in POST['ca']
+	 * @param mixed $ci Current item, if bound use an identifier for the row, otherwise an unbound DataSet object.
 	 * @return null
 	 */
 	function Prepare($action, $ci = null)

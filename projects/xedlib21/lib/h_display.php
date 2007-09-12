@@ -1625,7 +1625,10 @@ function GetStateSelect($name, $state)
 	return MakeSelect($name, $__states, null, $state);
 }
 
-$__states = $options = array(
+/**
+ * @var array Good for a FormInput of type 'select'.
+ */
+$__states = array(
 	new SelOption('Alabama'),
 	new SelOption('Alaska'),
 	new SelOption('Arizona'),

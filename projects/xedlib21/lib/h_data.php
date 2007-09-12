@@ -933,6 +933,8 @@ class DataSet
 	 * @param array $columns
 	 * @param string $phrase
 	 * @param int $args
+	 * @param int $start Where to start results for pagination.
+	 * @param int $limit Limit of items to return for pagination.
 	 * @return array
 	 */
 	function GetSearch($columns, $phrase, $args = GET_BOTH, $start = 0, $limit = 0)
