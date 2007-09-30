@@ -497,7 +497,7 @@ EOF;
 			if ($this->Behavior->AllowEdit)
 			{
 				//Filter options.
-				$form = new Form('formUpdate');
+				$form = new Form('formUpdate', null, false);
 				$form->AddHidden('editor', $this->name);
 				$form->AddHidden('ca', 'update_info');
 				$form->AddHidden('cf', $this->cf);

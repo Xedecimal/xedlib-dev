@@ -572,6 +572,7 @@ class FormInput
 	 * @var string
 	 */
 	public $valu;
+
 	/**
 	 * Whether or not to attach a label to this field.
 	 * @var bool
