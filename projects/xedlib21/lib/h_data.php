@@ -487,7 +487,10 @@ class DataSet
 			foreach ($cols as $name => $val)
 			{
 				if ($ix++ > 0) $ret .= ",\n";
-				$ret .= ' '.$this->QuoteTable($val);
+				if (is_array($val) && $val[0] = 'destring')
+					$ret .= ' '.$val[1];
+				else
+					$ret .= ' '.$this->QuoteTable($val);
 				if (!is_numeric($name)) $ret .= ' AS '.$this->QuoteTable($name);
 			}
 			return $ret;
@@ -657,7 +660,7 @@ class DataSet
 					if ($val[0] == "destring")
 						$ret .= $this->QuoteTable($key)." = {$val[1]}";
 				}
-				else $ret .= $this->QuoteTable($key)." = '".paslash($val)."'";
+				else $ret .= $this->QuoteTable($key)." = '".addslashes($val)."'";
 				if ($x++ < count($values)-1) $ret .= ", ";
 			}
 		}
@@ -691,7 +694,7 @@ class DataSet
 			{
 				if ($val[0] == "destring") $query .= $val[1];
 			}
-			else $query .= "'".paslash($val)."'";
+			else $query .= "'".addslashes($val)."'";
 			if ($ix < count($columns)-1) $query .= ", ";
 			$ix++;
 		}
