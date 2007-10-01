@@ -468,14 +468,14 @@ class CodeReader
 		if ($this->getting == CODE_GET_NAME)
 		{
 			$this->current->name = $tok[1];
+			$this->nametable[$tok[1]] = 1;
 
-			if (isset($this->nextlongest))
+			if (isset($this->setnext))
 			{
-				$this->ret->misc['longest']['name'] = $this->GetName($this->current);
-				unset($this->nextlongest);
+				$this->setnext = $this->GetName($this->current);
+				unset($this->setnext);
 			}
 
-			$this->nametable[$tok[1]] = 1;
 			if ($this->current->type == T_FUNCTION)
 			{
 				if (count($this->tree) == 1) //Method
@@ -509,11 +509,29 @@ class CodeReader
 		$this->curdoc->body = trim(preg_replace('#\s*/*\*+\s*\n*#s', ' ',
 			$split[0][0]));
 
-		if (!isset($this->curdoc->body) ||
-			strlen($this->curdoc->body) > $this->ret->misc['longest']['len'])
+		if (!empty($this->curdoc->body))
 		{
-			$this->ret->misc['longest']['len'] = strlen($this->curdoc->body);
-			$this->nextlongest = true;
+			if (strlen($this->curdoc->body) > $this->ret->misc['longest']['len'])
+			{
+				$this->ret->misc['longest']['len'] = strlen($this->curdoc->body);
+				$this->ret->misc['longest']['name'] = '';
+				$this->setnext = &$this->ret->misc['longest']['name'];
+			}
+		}
+		if (!empty($this->curdoc->body))
+		{
+			if (!isset($this->ret->misc['shortest']['len']))
+			{
+				$this->ret->misc['shortest']['len'] = strlen($this->curdoc->body);
+				$this->ret->misc['shortest']['name'] = '';
+				$this->setnext = &$this->ret->misc['shortest']['name'];
+			}
+			else if (strlen($this->curdoc->body) < $this->ret->misc['shortest']['len'])
+			{
+				$this->ret->misc['shortest']['len'] = strlen($this->curdoc->body);
+				$this->ret->misc['shortest']['name'] = '';
+				$this->setnext = &$this->ret->misc['shortest']['name'];
+			}
 		}
 
 		for ($ix = 1; $ix < count($split); $ix++)
@@ -615,6 +633,12 @@ class CodeReader
 		$d->doc = $this->curdoc;
 		@$d->doc->package = $this->curpackage;
 		$this->curdoc = null;
+
+		if (isset($this->setnext))
+		{
+			$this->setnext = $this->GetName($d);
+			unset($this->setnext);
+		}
 
 		//Function / Method Argument
 		if (@$this->current->type == T_FUNCTION)

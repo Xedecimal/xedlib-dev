@@ -155,6 +155,11 @@ class FileManager
 
 			//SWF Hack. Should be removed later.
 			$swfile = GetVar('Filedata');
+
+			$fp = fopen('debug.txt', 'a');
+			fwrite($fp, "File Data: ".print_r($files, true)."\r\n\r\n");
+			fclose($fp);
+
 			if (!empty($swfile))
 			{
 				$files['name'][] = $swfile['name'];
@@ -295,6 +300,19 @@ class FileManager
 						$fi->path . ' to ' . $ct);
 			}
 		}
+		
+		else if ($action == 'Download Selected')
+		{
+			require_once('3rd/zipfile.php');
+			$zip = new zipfile();
+			$zip->AddFiles(GetVar('sels'));
+
+			header('Content-Type: application/octet-stream');
+			header('Content-Disposition: attachment; filename="example.zip"'); 
+			header('Content-Transfer-Encoding: binary');
+			echo $zip->file();
+			die();
+		}
 
 		if (is_dir($this->root.$this->cf)) $this->files = $this->GetDirectory();
 	}
@@ -403,6 +421,7 @@ EOF;
 			$ret .= '<input type="submit" name="ca" value="Move" /> to '.$this->GetDirectorySelect('ct')."<br/>\n";
 			$ret .= '<input type="submit" name="ca" value="Delete" onclick="return confirm(\'Are you sure you wish to delete'.
 				" these files?')\" />";
+			$ret .= '<input type="submit" name="ca" value="Download Selected" />';
 			$ret .= "</div></form>\n";
 		}
 		if ($this->Behavior->Available())
@@ -452,6 +471,8 @@ EOF;
 	so.write("flashUpload");
 	// ]]>
 	</script>
+	<input type="file" name="cu[]" />
+	<input type="submit" value="Send" />
 	</form>
 EOF;
 				$ret .= GetBox('box_upload', $this->View->TitleUpload,

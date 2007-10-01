@@ -34,7 +34,8 @@ class Calendar
 	private $datesbyday;
 
 	/**
-	 * Body of each day.
+	 * Body of each day. Uses the template identifiers {ts} to include a
+	 * timestamp. The rest are processed regularly.
 	 *
 	 * @var string
 	 */
@@ -333,30 +334,35 @@ class CalendarDay
 	 * @var int
 	 */
 	public $TimeStamp;
+
 	/**
 	 * true if this day is the first weekday.
 	 *
 	 * @var bool
 	 */
 	public $StartWeek;
+
 	/**
 	 * true if this day is the last weekday.
 	 *
 	 * @var bool
 	 */
 	public $EndWeek;
+
 	/**
 	 * Day of the month.
 	 *
 	 * @var int
 	 */
 	public $Day;
+
 	/**
-	 * Day of the week.
+	 * Day of the week. Useful for collecting information for month displays.
 	 *
 	 * @var int
 	 */
 	public $WeekDay;
+
 	/**
 	 * True if this is the last day of the month.
 	 *

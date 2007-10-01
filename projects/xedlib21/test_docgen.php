@@ -192,7 +192,12 @@ class DocGeneratorXML
 			if (!empty($new['data']->misc['longest']['name']))
 			{
 				echo "Most documented item is {$new['data']->misc['longest']['name']}"
-				." weighing in at {$new['data']->misc['longest']['len']} lines.\n";
+				." weighing in at {$new['data']->misc['longest']['len']} characters.\n";
+			}
+			if (!empty($new['data']->misc['shortest']['name']))
+			{
+				echo "Least documented item is {$new['data']->misc['shortest']['name']}"
+				." weighing in at {$new['data']->misc['shortest']['len']} characters.\n";
 			}
 			if (!isset($data)) $data = $new['data'];
 
