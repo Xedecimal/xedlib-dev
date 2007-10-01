@@ -306,7 +306,7 @@ class FileManager
 	* @param string $action Current action, usually stored in GetVar('ca').
 	* @return string Output.
 	*/
-	function Get($target, $action)
+	function Get($target, $action, $defaults = null)
 	{
 		if (!file_exists($this->root.$this->cf))
 			return "FileManager::Get(): File doesn't exist ({$this->root}{$this->cf}).<br/>\n";
@@ -1320,7 +1320,6 @@ class FilterDefault
 {
 	/**
 	 * Name of this filter for identification purposes.
-	 *
 	 * @var string
 	 */
 	public $Name = "Default";
@@ -1347,9 +1346,11 @@ class FilterDefault
 	function GetOptions(&$fm, &$fi, $default)
 	{
 		$more = array(
-			new FormInput('<b>Change Display Name</b> - <i>Type the name that you would like to be displayed with the current file / folder.</i><br/>', 'text', 'info[title]',
+			new FormInput('<b>Change Display Name</b> - <i>Type the name that
+				you would like to be displayed with the current file / folder.</i><br/>', 'text', 'info[title]',
 			stripslashes(@$fi->info['title']), null)
 		);
+
 		if (!empty($default)) return array_merge($default, $more);
 		else return $more;
 	}

@@ -1091,7 +1091,9 @@ class EditorData
 
 					$frm->AddInput($in);
 				}
-				else if (is_string($in)) $frm->AddInput($in);
+				//This ends up disabling static columns eg. 'colname' => 'NOW()';
+				//if we're going to insert text, just use a numeric column.
+				//else if (is_string($in)) $frm->AddInput($in);
 				else if (is_numeric($col)) $frm->AddInput('&nbsp;');
 			}
 
