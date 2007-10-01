@@ -675,8 +675,16 @@ EOF;
 				$end = true;
 			}
 			if ($end) $ret .= '</tr>';
-			foreach($this->files[$type] as $ix => $file)
-				$ret .= $this->GetFile($target, $file, $type, $ix);
+			$ix = 0;
+			foreach($this->files[$type] as $file)
+			{
+				if (!$file->show) continue;
+				if (!$this->Behavior->ShowAllFiles && !empty($file->info['access']))
+				{
+					if (!$this->GetVisible($file)) continue;
+				}
+				$ret .= $this->GetFile($target, $file, $type, $ix++);
+			}
 			$ret .= '</table>';
 			if ($this->Behavior->MassAvailable())
 				$ret .= "<input id=\"butSelAll{$type}\" type=\"button\"
@@ -703,11 +711,7 @@ EOF;
 	{
 		$class = $index % 2 ? 'even' : 'odd';
 		$ret = "\n<tr class=\"{$class}\">\n";
-		if (!$file->show) return;
-		if (!$this->Behavior->ShowAllFiles && !empty($file->info['access']))
-		{
-			if (!$this->GetVisible($file)) return;
-		}
+
 		$types = $file->type ? 'dirs' : 'files';
 		if (isset($file->info['thumb'])) $ret .= "<td><img src=\"".URL($file->info['thumb'])."\" alt=\"Thumbnail\" /></td>\n";
 		else
