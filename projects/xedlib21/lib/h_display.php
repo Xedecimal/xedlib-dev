@@ -1161,7 +1161,7 @@ class LoginManager
 	 * @param string $uservar Name of username session variable to manage.
 	 * @return mixed Array of user data or null if bound or true or false if not bound.
 	 */
-	function Prepare($ca, $passvar = 'sespass', $uservar = null)
+	function Prepare($ca, $passvar = 'sespass', $uservar = 'sesuser')
 	{
 		$check_user = ($this->type == CONTROL_BOUND) ? GetVar($uservar) : null;
 		$check_pass = GetVar($passvar);

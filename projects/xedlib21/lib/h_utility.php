@@ -157,6 +157,8 @@ function SetVar($name, $value)
  */
 function GetVar($name, $default = null)
 {
+	if (strlen($name) < 1) return $default;
+
 	global $HTTP_POST_FILES, $HTTP_POST_VARS, $HTTP_GET_VARS, $HTTP_SERVER_VARS,
 	$HTTP_SESSION_VARS, $HTTP_COOKIE_VARS;
 
