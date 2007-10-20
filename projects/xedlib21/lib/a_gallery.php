@@ -84,9 +84,11 @@ class Gallery
 	 * @param string $path Current location, usually GetVar('galcf')
 	 * @return string Rendered gallery.
 	 */
-	function Get($path)
+	function Get($path, $temp = null)
 	{
 		global $me;
+		
+		$t = new Template();
 
 		$body = <<<EOF
 <!--[if lt IE 7.]>
@@ -152,9 +154,9 @@ EOF;
 					$twidth = $file->info['thumb_width']+16;
 					$theight = $file->info['thumb_height']+32;
 					$url = URL($me, array(
-							'view' => $ix++,
-							'galcf' => "$path",
-							'cp' => GetVar('cp')
+						'view' => $ix++,
+						'galcf' => "$path",
+						'cp' => GetVar('cp')
 					));
 					$caption = $this->GetCaption($file);
 
@@ -176,10 +178,11 @@ EOF;
 			$body .= '</td>';
 		}
 		$body .= "</tr></table>\n";
+
 		if ($this->Behavior->PageCount != null)
 		{
 			$args = array('galcf' => $path);
-			$body .= GetPages($files['files'], $this->Behavior->PageCount, $args);
+			$t->Set('pages', GetPages($files['files'], $this->Behavior->PageCount, $args));
 		}
 
 		$view = GetVar('view');
@@ -250,6 +253,9 @@ EOF;
 $this->GetCaption($files['files'][$view]).'</div>';
 		}
 
+		$t->Set('display', $body);
+		if ($temp == null) return $t->Get(dirname(__FILE__).'/temps/gallery.php');
+		else return $t->Get($temp);
 		return $body;
 	}
 
@@ -266,8 +272,8 @@ $this->GetCaption($files['files'][$view]).'</div>';
 
 		if ($this->InfoCaption
 			&& !empty($file->info['title'])
-			&& $this->Display->Captions == CAPTION_TITLE)
-			$name = psslash($file->info['title']);
+			&& $this->Display->Caption == CAPTION_TITLE)
+			$name = $file->info['title'];
 		else if ($this->Display->Captions == CAPTION_FILE)
 			$name = substr($file->filename, 0, strrpos($file->filename, '.'));
 		else $name = null;
@@ -293,12 +299,14 @@ class GalleryDisplay
 	 * @var string
 	 */
 	public $CaptionLeft = '';
+
 	/**
 	 * String to append on the right side of the caption. This also handles
 	 * variables like templates: {{variable}}.
 	 * @var string
 	 */
 	public $CaptionRight = '';
+
 	/**
 	 * Method of sorting this gallery, can be SORT_MANUAL or SORT_NONE.
 	 * @var int
@@ -314,6 +322,7 @@ class GalleryBehavior
 	 * @var bool
 	 */
 	public $DisableSave = false;
+
 	/**
 	 * The amount of images to display per-page, everything else will be
 	 * calculated.
