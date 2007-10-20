@@ -929,15 +929,15 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 			strlen($selvalue[$selid]) > 0 &&
 			$selvalue[$selid] == $id)
 			{
-				$selected = ' selected="true"';
+				$selected = ' selected="selected"';
 				$selid++;
 			}
 			else if ($selvalue == $id)
 			{
-				$selected = ' selected="true"';
+				$selected = ' selected="selected"';
 			}
 		}
-		else if ($option->selected) $selected = ' selected="true"';
+		else if ($option->selected) $selected = ' selected="selected"';
 		$strout .= "<option value=\"{$id}\"$selected>{$option->text}</option>\n";
 		$selected = null;
 	}
@@ -1623,8 +1623,9 @@ function GetYearSelect($name, $year)
  * @param int $state Default state number.
  * @return string Rendered <select> box.
  */
-function GetStateSelect($name, $state)
+function GetInputState($name, $state = -1)
 {
+	global $__states;
 	return MakeSelect($name, $__states, null, $state);
 }
 

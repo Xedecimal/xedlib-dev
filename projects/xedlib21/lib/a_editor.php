@@ -1252,9 +1252,9 @@ class DisplayData
 				{
 					$ret .= <<<EOD
 <tr><td class="header">
-	<label><input type="checkbox" value="{$i['id']}" />Compare</label>
+	<label><input type="checkbox" value="{$i[$this->ds->id]}" />Compare</label>
 </td><td align="right" class="header">
-	<a href="{$target}?editor={$this->name}&ca=edit&ci={$i['id']}">Edit</a>
+	<a href="{$target}?editor={$this->name}&ca=edit&ci={$i[$this->ds->id]}">Edit</a>
 </td></tr>
 EOD;
 					foreach ($this->ds->DisplayColumns as $f => $dc)
@@ -1274,7 +1274,7 @@ EOD;
 		}
 		else if ($ca == 'edit')
 		{
-			$item = $this->ds->GetOne(array('id' => GetVar('ci')));
+			$item = $this->ds->GetOne(array($this->ds->id => GetVar('ci')));
 			if (!empty($this->ds->FieldInputs))
 			{
 				$frm = new Form('frmEdit');
@@ -1303,13 +1303,14 @@ EOD;
 	 */
 	function GetSearch($target)
 	{
+		if (empty($this->SearchFields)) { Error("You should specify a few SearchField items"); return; }
 		$frm = new Form('frmSearch');
 		$frm->AddHidden('ca', 'search');
-		$frm->AddHidden('editor', $GLOBALS['editor']);
+		if (isset($GLOBALS['editor'])) $frm->AddHidden('editor', $GLOBALS['editor']);
 		$frm->AddInput(
 			new FormInput('Query', 'text', 'q'),
 			new FormInput('Fields', 'checks', 'fields',
-				ArrayToSelOptions($this->SearchFields), 'style="height: 200px; overflow: auto;"'),
+				ArrayToSelOptions($this->SearchFields), 'style="overflow: auto;"'),
 			new FormInput(null, 'submit', 'butSubmit', 'Search')
 		);
 		return $frm->Get('action="'.$target.'" method="post"');

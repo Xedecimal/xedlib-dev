@@ -557,7 +557,7 @@ class DataSet
 	 * @param array $joining
 	 * @return string
 	 */
-	function JoinClause($joining)
+	static function JoinClause($joining)
 	{
 		if (isset($joining))
 		{
@@ -614,7 +614,7 @@ class DataSet
 	 * @param array $amount
 	 * @return string
 	 */
-	function AmountClause($amount)
+	static function AmountClause($amount)
 	{
 		if (isset($amount))
 		{

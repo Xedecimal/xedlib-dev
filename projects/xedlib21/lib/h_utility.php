@@ -387,6 +387,14 @@ function MyDateTimestamp($date, $include_time = false)
 }
 
 /**
+ * Returns timestamp from a GetDateInput style GetVar value.
+ */
+function DateInputToTS($value)
+{
+	return mktime(null, null, null, $value[0], $value[1], $value[2]);
+}
+
+/**
  * @param int $ts Timestamp.
  * @return string English offset.
  */
@@ -410,17 +418,6 @@ function GetDateOffset($ts)
 	else if ($mm >= 1) $ret = number_format($mm, 1).' minute'.($mm > 1 ? 's' : null);
 	else $ret = number_format($ss, 1).' second'.($ss > 1 ? 's' : null);
 	return $ret.' ago';
-}
-
-/**
- * @param array $array Array to bitmask.
- * @return int Bitwise combined values.
- */
-function GetMask($array)
-{
-	$ret = 0;
-	foreach ($array as $ix) $ret |= $ix;
-	return $ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,34 +462,6 @@ function DelTree($dir)
 	}
 	closedir($dh);
 	@rmdir($dir);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//Array
-//
-
-/**
- * Returns a new array with the idcol into the keys of each item's idcol
- * set instead of numeric offset.
- *
- * @param array $rows
- * @param string $idcol
- * @return array
- */
-function DataToArray($rows, $idcol)
-{
-	$ret = array();
-	if (!empty($rows)) foreach ($rows as $row) $ret[$row[$idcol]] = $row;
-	return $ret;
-}
-
-/**
- * @param array $array Array to grab the last item off from.
- * @return mixed Last item on the array.
- */
-function array_get($array)
-{
-	return $array[count($array)-1];
 }
 
 /**
@@ -572,6 +541,34 @@ function GetButton($target, $img, $alt, $attribs = null)
 		"<img src=\"{$path}/images/{$img}\"".
 		" alt=\"{$alt}\" title=\"{$alt}\"".
 		' '.$attribs.' style="vertical-align: text-bottom" /></a>';
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//Array
+//
+
+/**
+ * Returns a new array with the idcol into the keys of each item's idcol
+ * set instead of numeric offset.
+ *
+ * @param array $rows
+ * @param string $idcol
+ * @return array
+ */
+function DataToArray($rows, $idcol)
+{
+	$ret = array();
+	if (!empty($rows)) foreach ($rows as $row) $ret[$row[$idcol]] = $row;
+	return $ret;
+}
+
+/**
+ * @param array $array Array to grab the last item off from.
+ * @return mixed Last item on the array.
+ */
+function array_get($array)
+{
+	return $array[count($array)-1];
 }
 
 /**
@@ -670,6 +667,11 @@ function SecurePath($path)
 function GetFlatPage($data, $page, $count)
 {
 	return array_splice($data, $count*$page, $count);
+}
+
+function GetPageFilter($page, $count)
+{
+	return array(($page-1)*$count, $count);
 }
 
 /**
@@ -852,8 +854,79 @@ function linkup($tree, $target, $text)
  */
 function instof($obj, $classname)
 {
-	if (substr(phpversion(), 0, 1) == '5') return ($obj instanceof $classname);
+	if (substr(phpversion(), 0, 1) == '5')
+		return ($obj instanceof $classname);
 	else return is_a($obj, $classname);
+}
+
+/**
+ * @param array $array Array to bitmask.
+ * @return int Bitwise combined values.
+ */
+function GetMask($array)
+{
+	$ret = 0;
+	foreach ($array as $ix) $ret |= $ix;
+	return $ret;
+}
+
+function GetZipLocation($ds, $zip)
+{
+	return $ds->GetOne(array('zip' => $zip));
+}
+
+function GetMiles($lat1, $lat2, $lon1, $lon2)
+{
+	$lat1 = deg2rad($lat1);
+	$lon1 = deg2rad($lon1);
+	$lat2 = deg2rad($lat2);
+	$lon2 = deg2rad($lon2);
+
+	$delta_lat = $lat2 - $lat1;
+	$delta_lon = $lon2 - $lon1;
+
+	$temp = pow(sin($delta_lat/2.0),2) + cos($lat1) * cos($lat2) * pow(sin($delta_lon/2.0),2);
+	$distance = 3956 * 2 * atan2(sqrt($temp),sqrt(1-$temp));
+	return $distance;
+}
+
+/**
+ * Zip code lookup to collect zip codes by mileage.
+ */
+function GetZips($ds, $zip, $range)
+{
+	$details = GetZipLocation($ds, $zip);  // base zip details
+    if ($details == false) return null;
+
+    $lat_range = $range / 69.172;
+    $lon_range = abs($range / (cos($details['lng']) * 69.172));
+    $min_lat = number_format($details['lat'] - $lat_range, "4", ".", "");
+    $max_lat = number_format($details['lat'] + $lat_range, "4", ".", "");
+    $min_lon = number_format($details['lng'] - $lon_range, "4", ".", "");
+    $max_lon = number_format($details['lng'] + $lon_range, "4", ".", "");
+
+    $ret = array();
+
+	$query = "SELECT zip, lat, lng, name FROM zips 
+		WHERE lat BETWEEN '{$min_lat}' AND '{$max_lat}'
+		AND lng BETWEEN '{$min_lon}' AND '{$max_lon}'";
+
+	$items = $ds->GetCustom($query);
+
+	foreach ($items as $i)
+	{
+		$dist = GetMiles($details['lat'], $i['lat'], $details['lng'], $i['lng']);
+		if ($dist <= $range)
+		{
+			$zip = str_pad($i['zip'], 5, "0", STR_PAD_LEFT);
+			$return['dists'][$zip] = $dist;
+			$return['zips'][] = $zip;
+		}
+	}
+      
+    asort($return['dists']);
+
+	return $return;
 }
 
 ?>
