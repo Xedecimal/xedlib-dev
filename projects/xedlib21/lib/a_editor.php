@@ -182,7 +182,7 @@ class HandlerFile extends EditorHandler
 	function Update($id, &$original, &$update)
 	{
 		$source = "{$this->target}/{$original[$this->column]}";
-		if (file_exists($source))
+		if (file_exists($source) && isset($update[$this->column]))
 		{
 			rename($source, $this->target.'/'.$update[$this->column]);
 		}
@@ -203,6 +203,17 @@ class HandlerFile extends EditorHandler
 			DelTree("{$this->target}/{$data[$this->column]}");
 		return true;
 	}
+
+	/*function Swap($idSrc, $idDst)
+	{
+		if (file_exists("{$this->target}/{$idSrc}"))
+			rename("{$this->target}/{$idSrc}", "{$this->target}/..{$idSrc}");
+		if (file_exists("{$this->target}/{$idDst}"))
+			rename("{$this->target}/{$idDst}", "{$this->target}/{$idSrc}");
+		if (file_exists("{$this->target}/..{$idSrc}"))
+			rename("{$this->target}/..{$idSrc}", "{$this->target}/{$idDst}");
+		return true;
+	}*/
 }
 
 /**
@@ -278,7 +289,7 @@ class EditorData
 	 * @var mixed
 	 * @deprecated use AddHandler instead.
 	 */
-	public $onswap;
+	//var $onswap;
 	/**
 	 * An array of handlers used for extra functionality of create, update,
 	 * delete and swap.
@@ -470,7 +481,7 @@ class EditorData
 			if ($this->type == CONTROL_BOUND)
 				$context->ds->Update(array($context->ds->id => $ci), $update);
 		}
-		else if ($action == $this->name.'_swap')
+		/*else if ($action == $this->name.'_swap')
 		{
 			global $ci;
 			$ct = GetVar('ct');
@@ -518,7 +529,7 @@ class EditorData
 			}
 
 			$context->ds->Swap(array($context->ds->id => $ci), array($context->ds->id => $ct), $context->ds->id);
-		}
+		}*/
 		else if ($action == $this->name.'_delete')
 		{
 			global $ci;
@@ -762,6 +773,7 @@ class EditorData
 	function GetTable($target, $ci)
 	{
 		$ret = null;
+		if (empty($this->ds->DisplayColumns)) return;
 		if ($this->type == CONTROL_BOUND)
 		{
 			$cols = array();
@@ -940,7 +952,7 @@ class EditorData
 
 			$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
 
-			if ($this->sorting == ED_SORT_MANUAL && count($node->children) > 1)
+			/*if ($this->sorting == ED_SORT_MANUAL && count($node->children) > 1)
 			{
 				//We can possibly swap up
 				if ($index > 0)
@@ -973,7 +985,7 @@ class EditorData
 				}
 				else $row[] = '&nbsp;';
 			}
-			else { $row[] = '&nbsp;'; $row[] = '&nbsp;'; }
+			else { $row[] = '&nbsp;'; $row[] = '&nbsp;'; }*/
 
 			$rows[] = $row;
 

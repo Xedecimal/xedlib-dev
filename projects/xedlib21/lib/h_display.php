@@ -1166,6 +1166,7 @@ class LoginManager
 	{
 		$check_user = ($this->type == CONTROL_BOUND) ? GetVar($uservar) : null;
 		$check_pass = GetVar($passvar);
+		if (empty($check_user) || empty($check_pass)) return;
 
 		if ($ca == 'login')
 		{
@@ -1682,6 +1683,12 @@ $__states = array(
 	new SelOption('Wisconsin'),
 	new SelOption('Wyoming')
 );
+
+function StateCallback($data, $col)
+{
+	global $__states;
+	return $__states[$data[$col]]->text;
+}
 
 /**
  * Converts any type of FormInput into a usable string, for example in text

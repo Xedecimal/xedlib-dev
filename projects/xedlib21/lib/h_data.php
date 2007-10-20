@@ -660,7 +660,7 @@ class DataSet
 					if ($val[0] == "destring")
 						$ret .= $this->QuoteTable($key)." = {$val[1]}";
 				}
-				else $ret .= $this->QuoteTable($key)." = '".addslashes($val)."'";
+				else $ret .= $this->QuoteTable($key)." = '".mysql_real_escape_string($val)."'";
 				if ($x++ < count($values)-1) $ret .= ", ";
 			}
 		}
