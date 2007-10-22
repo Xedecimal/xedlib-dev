@@ -119,6 +119,8 @@ class Template
 	 * @var resource
 	 */
 	private $parser;
+	
+	private $skip;
 
 	/**
 	 * Creates a new template parser.
@@ -132,6 +134,7 @@ class Template
 		$this->vars = array();
 		$this->data = &$data;
 		$this->use_getvar = false;
+		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
 	}
 
 	/**
@@ -142,6 +145,7 @@ class Template
 	 */
 	function Start_Tag($parser, $tag, $attribs)
 	{
+		if ($this->skip) return;
 		$show = true;
 		$close = '';
 
@@ -177,6 +181,12 @@ class Template
 					$output = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
 			}
+		}
+		else if ($tag == 'IF')
+		{
+			$check = $attribs['CHECK'];
+			if (!eval('return '.$check.';')) $this->skip = true;
+			$show = false;
 		}
 		else if ($tag == 'IMG') $close = ' /';
 		else if ($tag == 'INCLUDE')
@@ -273,6 +283,9 @@ class Template
 	 */
 	function End_Tag($parser, $tag)
 	{
+		if ($tag == 'IF') { $this->skip = false; return; }
+		if ($this->skip) return;
+
 		if ($tag == 'AMP') return;
 		else if ($tag == 'BOX')
 		{
@@ -321,6 +334,7 @@ class Template
 	 */
 	function CData($parser, $text)
 	{
+		if ($this->skip) return;
 		$obj = &$this->GetCurrentObject();
 		$obj->out .= $text;
 	}
@@ -334,6 +348,7 @@ class Template
 	 */
 	function Process($parser, $text, $data)
 	{
+		if ($this->skip) return;
 		ob_start();
 		eval($data);
 		$obj = &$this->GetCurrentObject();

@@ -341,32 +341,30 @@ class Form
 	/**
 	 * @var string
 	 */
+	public $RowStart = '<tr>';
+
+	public $FirstStart = '<td align="right">';
+	public $FirstEnd = '</td>';
+
+	/**
+	 * @var string
+	 */
+	public $CellStart = '<td>';
+
+	/**
+	 * @var string
+	 */
+	public $CellEnd = '</td>';
+
+	/**
+	 * @var string
+	 */
+	public $RowEnd = '</tr>';
+
+	/**
+	 * @var string
+	 */
 	public $FormEnd = '</table>';
-
-	/**
-	 * @var string
-	 */
-	public $LabelStart = "\n<tr>\n\t<td align=\"right\">";
-
-	/**
-	 * @var string
-	 */
-	public $StringStart = '<tr><td colspan="2" class="form_separator">';
-
-	/**
-	 * @var string
-	 */
-	public $LabelEnd = "</td>";
-
-	/**
-	 * @var string
-	 */
-	public $FieldStart = "\n\t<td>";
-
-	/**
-	 * @var string
-	 */
-	public $FieldEnd = "\n\t</td>\n</tr>";
 
 	/**
 	 * @var array
@@ -402,17 +400,21 @@ class Form
 	}
 
 	/**
-	 * Adds an input item to this form.
+	 * Adds an input item to this form. You can use a single FormInput object,
+	 * a string, an array or a series of arguments of strings and FormInputs and
+	 * this will try to sort it all out vertically or horizontally.
 	 */
 	function AddInput()
 	{
 		if (func_num_args() < 1) Error("Not enough arguments.");
 		$args = func_get_args();
-		foreach ($args as $ix => $item)
+
+		if (!empty($args))
 		{
-			if (is_string($item))
-				$this->out .= $this->StringStart.$item.$this->FieldEnd;
-			else $this->out .= $this->IterateInput($item);
+			$this->out .= $this->RowStart;
+			foreach ($args as $ix => $item)
+				$this->out .= $this->IterateInput($ix == 0, $item);
+			$this->out .= $this->RowEnd;
 		}
 	}
 
@@ -420,22 +422,21 @@ class Form
 	 * @param mixed $input FormInput, multiple FormInputs, arrays, whatever.
 	 * @return string Rendered input field.
 	 */
-	function IterateInput($input)
+	function IterateInput($start, $input)
 	{
 		if (is_array($input) && !empty($input))
 		{
 			$out = null;
-
-			foreach ($input as $item)
-			{
-				$out .= $this->IterateInput($item);
-			}
-
+			foreach ($input as $item) $out .= $this->IterateInput($start, $item);
 			return $out;
 		}
 
 		$helptext = null;
 
+		if (is_string($input))
+			return ($start ? $this->FirstStart : $this->CellStart).$input.
+				($start ? $this->FirstEnd : $this->CellEnd);
+		
 		if (!is_object($input)) Error("Form input is not an object.");
 
 		if ($input->type == 'submit' && isset($this->Validation))
@@ -461,21 +462,18 @@ class Form
 		$out = !empty($input->text)?$input->text:null;
 
 		$helptext = $input->help;
-		if (isset($this->Errors[$input->name]))
-		{
-			$helptext .= $this->Errors[$input->name];
-		}
-		return ($input->labl ?
-			$this->LabelStart.'<label for="'.CleanID($this->name.'_'.$input->name).'">' :
-			$this->LabelStart).
+		if (isset($this->Errors[$input->name])) $helptext .= $this->Errors[$input->name];
+
+		return ($start ? $this->FirstStart : $this->CellStart).
+			($input->labl ? '<label for="'.CleanID($this->name.'_'.$input->name)
+			.'">' : null).
 
 			($right ? null : $out).
 
-			($input->labl ? '</label>' : null).$this->LabelEnd.
-			$this->FieldStart.$input->Get($this->name, $this->Persist).
-			($right ? $out : null).
-			//($input->EndLabel?).
-			$helptext.$this->FieldEnd;
+			($input->labl ? '</label>' : null).$this->CellEnd.
+			$this->CellStart.$input->Get($this->name, $this->Persist).
+			($right ? $out : null).$helptext.
+			($start ? $this->FirstEnd : $this->CellEnd);
 	}
 
 	/**
@@ -1166,7 +1164,6 @@ class LoginManager
 	{
 		$check_user = ($this->type == CONTROL_BOUND) ? GetVar($uservar) : null;
 		$check_pass = GetVar($passvar);
-		if (empty($check_user) || empty($check_pass)) return;
 
 		if ($ca == 'login')
 		{
@@ -1188,6 +1185,8 @@ class LoginManager
 
 		if ($this->type == CONTROL_BOUND)
 		{
+			if (empty($check_user) || empty($check_pass)) return;
+
 			foreach ($this->datasets as $ds)
 			{
 				if (!isset($ds[0]))

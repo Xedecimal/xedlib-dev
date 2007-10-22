@@ -329,64 +329,23 @@ class FileManager
 		if (!file_exists($this->root.$this->cf))
 			return "FileManager::Get(): File doesn't exist ({$this->root}{$this->cf}).<br/>\n";
 
-		$ret = null;
+		$t = new Template();
 
 		$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
 
-		$ret .= $this->GetHeader($target, $fi);
+		$t->Set('name', $this->name);
+		$t->Set('header', $this->GetHeader($target, $fi));
+		$t->Set('mass_available', $this->mass_avail = $this->Behavior->MassAvailable());
 
-		if ($this->mass_avail = $this->Behavior->MassAvailable())
-		{
-			$ret .= <<<EOF
-<script type="text/javascript">
-var __sels;
-
-function docmanSelAll(type)
-{
-	if (__sels == undefined) __sels = {'files': false, 'dirs': false }
-	__sels[type] = !__sels[type];
-	sel_all(type, __sels[type]);
-	toggleAny(['sel_files_','sel_dirs_'],'{$this->name}_mass_options');
-}
-</script>
-EOF;
-			$ret .= '<p>Select the checkbox of the file(s) or folder(s) that
-				you would like to delete or move.</p>';
-			$ret .= "<form action=\"{$target}\" method=\"post\">";
-			$ret .= "<input type=\"hidden\" name=\"editor\" value=\"{$this->name}\" />";
-			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$this->cf}\" />";
-		}
-		else if ($this->Behavior->AllowEdit)
-		{
-			$ret .= "<form action=\"{$target}\" method=\"post\">";
-		}
 		if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
-		$ret .= '<script type="text/javascript" src="'.
-			GetRelativePath(dirname(__FILE__)).'/js/helper.js"></script>';
 
+		$t->Set('options', $this->GetOptions($fi, $target, $action));
+		
 		if (is_dir($this->root.$this->cf))
 		{
-			if ($this->View->ShowFilesFirst)
-			{
-				$title = "<p>{$this->View->FilesHeader}</p>\n";
-				$ret .= $this->GetFiles($target, 'files', $title);
-			}
-			else
-			{
-				$title = "<p>{$this->View->FoldersHeader}</p>\n";
-				$ret .= $this->GetFiles($target, 'dirs', $title);
-			}
-
-			if (!$this->View->ShowFilesFirst)
-			{
-				$title = "<p>{$this->View->FilesHeader}</p>\n";
-				$ret .= $this->GetFiles($target, 'files', $title);
-			}
-			else
-			{
-				$title = "<p>{$this->View->FoldersHeader}</p>\n";
-				$ret .= $this->GetFiles($target, 'dirs', $title);
-			}
+			$t->Set('files', $this->GetFiles($target, 'files'));
+			$t->Set('folders', $this->GetFiles($target, 'dirs'));
+			$ret = $t->Get(dirname(__FILE__).'/temps/file/directory.php');
 		}
 		else
 		{
@@ -396,8 +355,6 @@ EOF;
 			$ret .= "Size: $size bytes<br/>\n";
 			$ret .= "Last Modified: $time<br/>\n";
 		}
-
-		$ret .= $this->GetOptions($fi, $target, $action);
 
 		return $ret;
 	}
@@ -674,12 +631,11 @@ EOF;
 	 * @param string $title Header
 	 * @return string
 	 */
-	function GetFiles($target, $type, $title)
+	function GetFiles($target, $type)
 	{
 		$ret = '';
 		if (!empty($this->files[$type]))
 		{
-			$ret .= $title;
 			$ret .= '<table class="tableFiles">';
 			$end = false;
 			if (count($this->files[$type]) > 1
@@ -730,8 +686,9 @@ EOF;
 	 */
 	function GetFile($target, $file, $type, $index)
 	{
-		$class = $index % 2 ? 'even' : 'odd';
-		$ret = "\n<tr class=\"{$class}\">\n";
+		$t = new Template();
+		$t->Set('class', $index % 2 ? 'even' : 'odd');
+		//$ret = "\n<tr class=\"{$class}\">\n";
 
 		$types = $file->type ? 'dirs' : 'files';
 		if (isset($file->info['thumb'])) $ret .= "<td><img src=\"".URL($file->info['thumb'])."\" alt=\"Thumbnail\" /></td>\n";
@@ -760,13 +717,14 @@ EOF;
 		else
 			$url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
 
-		$ret .= "\t<td>\n";
 		if ($this->mass_avail)
-			$ret .= "\t\t<label><input type=\"checkbox\" id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\" onclick=\"toggleAny(['sel_files_', 'sel_dirs_'], '{$this->name}_mass_options');\" />\n";
-		$ret .= "\t\t<a href=\"$url\">{$name}</a> ".
-		($this->View->ShowDate ? '<br/>'.gmdate("m/d/y h:i", filectime($file->path)) : null)."\n";
-		if ($this->mass_avail) $ret .= '</label>';
-		$ret .= '</td>';
+			$t->Set('check', "\t\t<input type=\"checkbox\"
+			id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\"
+			onclick=\"toggleAny(['sel_files_', 'sel_dirs_'],
+			'{$this->name}_mass_options');\" />\n");
+		else $check = '';
+		$t->Set('file', "<a href=\"$url\">{$name}</a>");
+		$t->Set('date', gmdate("m/d/y h:i", filectime($file->path)));
 
 		$common = array(
 			'cf' => $this->cf,
@@ -798,10 +756,10 @@ EOF;
 			&& $index > 0)
 		{
 			$img = GetRelativePath(dirname(__FILE__)).'/images/up.png';
-			$ret .= "\t<td><a href=\"$uriUp\"><img src=\"{$img}\" ".
-			"alt=\"Move Up\" title=\"Move Up\" /></a></td>";
+			$t->Set('butup', "<a href=\"$uriUp\"><img src=\"{$img}\" ".
+			"alt=\"Move Up\" title=\"Move Up\" /></a>");
 		}
-		else $ret .= "\t<td>&nbsp;</td>\n";
+		else $t->Set('butup', '');
 
 		//Move Down
 
@@ -810,10 +768,10 @@ EOF;
 			&& $index < count($this->files[$types])-1)
 		{
 			$img = GetRelativePath(dirname(__FILE__)).'/images/down.png';
-			$ret .= "\t<td><a href=\"$uriDown\"><img src=\"{$img}\" ".
-			"alt=\"Move Down\" title=\"Move Down\" /></a></td>";
+			$t->Set('butdown', "<a href=\"$uriDown\"><img src=\"{$img}\" ".
+			"alt=\"Move Down\" title=\"Move Down\" /></a>");
 		}
-		else $ret .= "\t<td>&nbsp;</td>\n";
+		else $t->Set('butdown', '');
 
 		if ($this->Behavior->QuickCaptions)
 		{
@@ -824,10 +782,8 @@ EOF;
 				'</textarea>'
 			.'</td>';
 		}
-
-		$ret .= "</tr>\n";
-
-		return $ret;
+	
+		return $t->Get(dirname(__FILE__).'/temps/file/file.php');
 	}
 
 	/**
