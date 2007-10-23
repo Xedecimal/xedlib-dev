@@ -691,7 +691,8 @@ EOF;
 		//$ret = "\n<tr class=\"{$class}\">\n";
 
 		$types = $file->type ? 'dirs' : 'files';
-		if (isset($file->info['thumb'])) $ret .= "<td><img src=\"".URL($file->info['thumb'])."\" alt=\"Thumbnail\" /></td>\n";
+		if (isset($file->info['thumb']))
+			$t->Set('thumb', "<img src=\"".URL($file->info['thumb'])."\" alt=\"Thumbnail\" />");
 		else
 		{
 			if (isset($this->icons[$file->type])) $icon = $this->icons[$file->type];
