@@ -300,7 +300,7 @@ class FileManager
 						$fi->path . ' to ' . $ct);
 			}
 		}
-		
+
 		else if ($action == 'Download Selected')
 		{
 			require_once('3rd/zipfile.php');
@@ -308,7 +308,7 @@ class FileManager
 			$zip->AddFiles(GetVar('sels'));
 
 			header('Content-Type: application/octet-stream');
-			header('Content-Disposition: attachment; filename="example.zip"'); 
+			header('Content-Disposition: attachment; filename="example.zip"');
 			header('Content-Transfer-Encoding: binary');
 			echo $zip->file();
 			die();
@@ -340,7 +340,7 @@ class FileManager
 		if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
 
 		$t->Set('options', $this->GetOptions($fi, $target, $action));
-		
+
 		if (is_dir($this->root.$this->cf))
 		{
 			$t->Set('files', $this->GetFiles($target, 'files'));
@@ -349,11 +349,12 @@ class FileManager
 		}
 		else
 		{
-			$info = dirname($this->root.$this->cf).'/.'.basename($this->root.$this->cf);
-			$time = gmdate("M j Y H:i:s ", filemtime($this->root.$this->cf));
-			$size = filesize($this->root.$this->cf);
-			$ret .= "Size: $size bytes<br/>\n";
-			$ret .= "Last Modified: $time<br/>\n";
+			//$info = dirname($this->root.$this->cf).'/.'.basename($this->root.$this->cf);
+			$t->Set('date', gmdate("M j Y H:i:s ", filemtime($this->root.$this->cf)));
+			$t->Set('size', filesize($this->root.$this->cf));
+			$ret = $t->Get(dirname(__FILE__).'/temps/file/details.php');
+			//$ret .= "Size: $size bytes<br/>\n";
+			//$ret .= "Last Modified: $time<br/>\n";
 		}
 
 		return $ret;
@@ -783,7 +784,7 @@ EOF;
 				'</textarea>'
 			.'</td>';
 		}
-	
+
 		return $t->Get(dirname(__FILE__).'/temps/file/file.php');
 	}
 
