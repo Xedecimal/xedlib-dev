@@ -17,7 +17,7 @@ function docmanSelAll(type)
 	if (__sels == undefined) __sels = {'files': false, 'dirs': false }
 	__sels[type] = !__sels[type];
 	sel_all(type, __sels[type]);
-	toggleAny(['sel_files_','sel_dirs_'],'{$this->name}_mass_options');
+	toggleAny(['sel_files_','sel_dirs_'],'{{name}}_mass_options');
 }
 </script>
 
