@@ -427,7 +427,11 @@ class Form
 		if (is_array($input) && !empty($input))
 		{
 			$out = null;
-			foreach ($input as $item) $out .= $this->IterateInput($start, $item);
+			foreach ($input as $item)
+			{
+				$out .= $this->IterateInput($start, $item);
+				$start = false;
+			}
 			return $out;
 		}
 
@@ -641,8 +645,10 @@ class FormInput
 		}
 		if ($this->type == 'select')
 		{
-			$ret = "<select class=\"input_select\" name=\"{$this->name}\"
-				id=\"".CleanID($parent.'_'.$this->name)."\" {$this->atrs}>";
+			$ret = "<select class=\"input_select\" name=\"{$this->name}\"";
+			if (!preg_match('/id="[^"]+"/', $this->atrs))
+				$ret .= " id=\"".CleanID($parent.'_'.$this->name)."\"";
+			$ret .= " {$this->atrs}>";
 			if (!empty($this->valu))
 			{
 				$newsels = $this->GetValue($persist);

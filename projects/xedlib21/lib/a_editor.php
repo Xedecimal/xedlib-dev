@@ -297,6 +297,8 @@ class EditorData
 	 * @var array
 	 */
 	public $handlers;
+	
+	public $Behavior;
 
 	/**
 	 * Default constructor.
@@ -308,6 +310,7 @@ class EditorData
 	 */
 	function EditorData($name, $ds = null, $filter = null, $sort = null)
 	{
+		$this->Behavior = new EditorDataBehavior();
 		require_once('h_utility.php');
 		require_once('h_display.php');
 		$this->name = $name;
@@ -384,12 +387,15 @@ class EditorData
 						);
 						$insert[$col] = $ext;
 					}
-					else if ($in->type == 'selects')
-						$insert[$col] = $value;
+					else if ($in->type == 'selects') $insert[$col] = $value;
 					else $insert[$col] = $value;
 				}
 				else if (is_numeric($col)) continue;
-				else if (is_string($in)) $insert[$col] = DeString($in);
+				else $insert[$col] = DeString($in);
+				//I just changed this to 'else' (check the history), because a
+				//numeric value with a string column would not go in eg. 5
+				//instead of '5', if this ends up conflicting, we'll need to
+				//come up with a different solution.
 			}
 
 			foreach ($this->handlers as $handler)
@@ -676,6 +682,7 @@ class EditorData
 					$skip = false;
 					foreach ($columns as $column => $id)
 					{
+						if (is_numeric($column)) continue;
 						$colname = $table.'_'.$column;
 						if ($id)
 						{
@@ -698,7 +705,7 @@ class EditorData
 			}
 
 			//Tree
-			//* Construct tree out of all items and children.
+			// * Construct tree out of all items and children.
 
 			$tree = new TreeNode('Root');
 
@@ -786,6 +793,7 @@ class EditorData
 			if (!empty($this->ds->DisplayColumns))
 			foreach ($this->ds->DisplayColumns as $col => $disp)
 			{
+				if (is_numeric($col)) continue;
 				$cols["{$this->ds->table}_{$col}"] =
 					$this->ds->table.'.'.$col;
 			}
@@ -945,10 +953,13 @@ class EditorData
 
 			$p = GetRelativePath(dirname(__FILE__));
 
-			$url_edit = URL($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
-			$url_del = URL($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
-			$row[] = "<a href=\"$url_edit#{$this->name}_editor\"><img src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit Item\" class=\"png\" /></a>";
-			$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\"><img src=\"{$p}/images/delete.png\" alt=\"Delete\" title=\"Delete Item\" class=\"png\" /></a>";
+			if ($this->Behavior->AllowEdit)
+			{
+				$url_edit = URL($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
+				$url_del = URL($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
+				$row[] = "<a href=\"$url_edit#{$this->name}_editor\"><img src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit Item\" class=\"png\" /></a>";
+				$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\"><img src=\"{$p}/images/delete.png\" alt=\"Delete\" title=\"Delete Item\" class=\"png\" /></a>";
+			}
 
 			$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
 
@@ -1074,7 +1085,7 @@ class EditorData
 					}
 					else if ($in->type == 'select')
 					{
-						if (isset($sel) && isset($sel[0][$col]) > 0)
+						if (isset($sel) && isset($in->valu[$sel[0][$col]]))
 							$in->valu[$sel[0][$col]]->selected = true;
 					}
 					else if ($in->type == 'selects')
@@ -1184,6 +1195,11 @@ class EditorData
 				$frm->Get('method="post" action="'.$target.'"'.(isset($form_atrs) ? ' '.$form_atrs : null), 'class="form"'));
 		return $ret;
 	}
+}
+
+class EditorDataBehavior
+{
+	public $AllowEdit = true;
 }
 
 class DisplayData

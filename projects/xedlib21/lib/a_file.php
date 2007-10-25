@@ -156,10 +156,6 @@ class FileManager
 			//SWF Hack. Should be removed later.
 			$swfile = GetVar('Filedata');
 
-			$fp = fopen('debug.txt', 'a');
-			fwrite($fp, "File Data: ".print_r($files, true)."\r\n\r\n");
-			fclose($fp);
-
 			if (!empty($swfile))
 			{
 				$files['name'][] = $swfile['name'];
@@ -187,8 +183,8 @@ class FileManager
 		{
 			if (!$this->Behavior->AllowEdit) return;
 			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
-			$info->Filter->Updated($info);
 			$newinfo = GetPost('info');
+			$info->Filter->Updated($info, $newinfo);
 			$this->Behavior->Update($newinfo);
 
 			if (!empty($newinfo))
@@ -344,17 +340,15 @@ class FileManager
 		if (is_dir($this->root.$this->cf))
 		{
 			$t->Set('files', $this->GetFiles($target, 'files'));
+			$t->Set('files_neck', $this->View->TextFilesNeck);
 			$t->Set('folders', $this->GetFiles($target, 'dirs'));
 			$ret = $t->Get(dirname(__FILE__).'/temps/file/directory.php');
 		}
 		else
 		{
-			//$info = dirname($this->root.$this->cf).'/.'.basename($this->root.$this->cf);
 			$t->Set('date', gmdate("M j Y H:i:s ", filemtime($this->root.$this->cf)));
 			$t->Set('size', filesize($this->root.$this->cf));
 			$ret = $t->Get(dirname(__FILE__).'/temps/file/details.php');
-			//$ret .= "Size: $size bytes<br/>\n";
-			//$ret .= "Last Modified: $time<br/>\n";
 		}
 
 		return $ret;
@@ -388,7 +382,8 @@ class FileManager
 
 			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">View Options for this File or Folder</a></p>\n";
 			$ret .= "<div id=\"{$this->name}_options\">";
-			$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->name}_options').style.display = 'none';</script>";
+			if ($this->Behavior->HideOptions)
+				$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->name}_options').style.display = 'none';</script>";
 
 			if ($this->Behavior->AllowUpload && is_dir($fi->path))
 			{
@@ -445,7 +440,8 @@ EOF;
 	<input type="hidden" name="ca" value="createdir" />
 	<input type="hidden" name="cf" value="{$this->cf}" />
 	<input type="text" name="name" />
-	<input type="submit" value="Create" />
+	<input type="submit" value="Create" /><br/>
+	<small>Type folder name then click "create"</small>
 </form>
 EOF;
 				$ret .= GetBox('box_createdir', $this->View->TitleCreateFolder,
@@ -461,15 +457,16 @@ EOF;
 				$form->AddHidden('ca', 'rename');
 				$form->AddHidden('ci', $fi->path);
 				$form->AddHidden('cf', $this->cf);
-				$form->AddInput(new FormInput('Current File/Folder Name<br />',
-					'text', 'name', $fi->filename, null,
-					' - <span style="font-size: 8pt;">Don\'t forget to include
+				$form->AddInput('</td><td>Current Name');
+				$form->AddInput(new FormInput(null,
+					'text', 'name', $fi->filename, null));
+				$form->AddInput('</td><td><small>Don\'t forget to include
 					the correct file extension with the name (i.e. - .jpg, .zip,
-					.doc, etc.)</span>'));
+					.doc, etc.)</small>');
 				$form->AddInput(new FormInput('<br/>', 'submit', 'butSubmit', 'Rename'));
 				global $me;
 				$out = $form->Get('method="post" action="'.$me.'"');
-				$ret .= GetBox('box_rename', '<b>Rename File / Folder</b> - <i>This is not the same as the "Display Name" option above.</i>', $out,
+				$ret .= GetBox('box_rename', $this->View->RenameTitle, $out,
 					'template_box.html');
 			}
 
@@ -724,7 +721,7 @@ EOF;
 			id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\"
 			onclick=\"toggleAny(['sel_files_', 'sel_dirs_'],
 			'{$this->name}_mass_options');\" />\n");
-		else $check = '';
+		else $t->Set('check', '');
 		$t->Set('file', "<a href=\"$url\">{$name}</a>");
 		$t->Set('date', gmdate("m/d/y h:i", filectime($file->path)));
 
@@ -842,8 +839,12 @@ EOF;
 			dirname($file->path) != dirname($this->root))
 			return $this->GetVisible(new FileInfo($file->dir));
 
+		//Altering this again, user ids are stored as keys, not values!
+		//if there is a specific reason for them to be stored as values then
+		//we'll need another solution. -- Xed
+
 		if (!empty($file->info['access']))
-			if (in_array($this->uid, $file->info['access']))
+			if (isset($file->info['access'][$this->uid]))
 				return true;
 
 		return false;
@@ -899,7 +900,7 @@ class FileManagerView
 	 * Create folder text to be displayed.
 	 * @var string
 	 */
-	public $TitleCreateFolder = '<b>Create New Folder</b> - <i>Type folder name then click "create"</i>';
+	public $TitleCreateFolder = 'Create New Folder';
 	/**
 	 * Title message for the upload box.
 	 * @var string
@@ -911,6 +912,10 @@ class FileManagerView
 	 * @var string
 	 */
 	public $TextAdditional = '<b>Additional Settings</b>';
+	
+	public $TextFilesNeck = '';
+	
+	public $RenameTitle = 'Rename File / Folder';
 }
 
 class FileManagerBehavior
@@ -1038,6 +1043,8 @@ class FileManagerBehavior
 	 * @var bool
 	 */
 	public $UpdateButton = true;
+
+	public $HideOptions = true;
 
 	/**
 	 * Return true if options are available.
@@ -1370,7 +1377,7 @@ class FilterDefault
 	 * When options are updated, this will be fired.
 	 * @param FileInfo $fi Associated file information.
 	 */
-	function Updated(&$fi)
+	function Updated(&$fi, &$newinfo)
 	{
 	}
 
@@ -1437,7 +1444,7 @@ class FilterGallery extends FilterDefault
 	/**
 	 * @param FileInfo $fi Associated file information.
 	 */
-	function Updated(&$fi)
+	function Updated(&$fi, &$newinfo)
 	{
 		if (is_file($fi->path)) unset(
 			$fi->info['thumb_width'],

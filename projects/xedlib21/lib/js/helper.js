@@ -42,3 +42,33 @@ function sel_all(type, checked)
 		cb.checked = checked;
 	}
 }
+
+function getAjax(method, url, block, target)
+{
+	var xmlHttp;
+	try { xmlHttp=new XMLHttpRequest(); }
+	catch (e) //May be IE based
+	{
+		try { xmlHttp=new ActiveXObject("Msxml2.XMLHTTP"); }
+		catch (e)
+		{
+			try { xmlHttp=new ActiveXObject("Microsoft.XMLHTTP"); }
+			catch (e)
+			{
+				alert("Your browser does not support AJAX!");
+				return false;
+			}
+		}
+	}
+
+	xmlHttp.onreadystatechange=function()
+	{
+		if (xmlHttp.readyState == 4)
+		{
+			target(xmlHttp.responseText);
+		}
+	}
+	
+	xmlHttp.open(method, url);
+	xmlHttp.send(null);
+}

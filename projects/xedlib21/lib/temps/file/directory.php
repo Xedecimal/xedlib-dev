@@ -31,6 +31,7 @@ function docmanSelAll(type)
 
 <if check="strlen($this->vars['files']) > 0">
 <box title="Segment Files">
+{{files_neck}}	
 {{files}}
 </box>
 </if>
