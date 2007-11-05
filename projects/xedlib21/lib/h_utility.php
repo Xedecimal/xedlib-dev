@@ -162,12 +162,15 @@ function GetVar($name, $default = null)
 	global $HTTP_POST_FILES, $HTTP_POST_VARS, $HTTP_GET_VARS, $HTTP_SERVER_VARS,
 	$HTTP_SESSION_VARS, $HTTP_COOKIE_VARS;
 
-	if (!empty($_FILES[$name]))   { Trace("GetVar(): $name (File)    -> {$_FILES[$name]}<br/>\n"); return $_FILES[$name]; }
-	if (!empty($_POST[$name]))    { Trace("GetVar(): $name (Post)    -> {$_POST[$name]}<br/>\n"); return $_POST[$name]; }
-	if (!empty($_GET[$name]))     { Trace("GetVar(): $name (Get)     -> {$_GET[$name]}<br/>\n"); return $_GET[$name]; }
-	if (!empty($_SESSION[$name])) { Trace("GetVar(): $name (Session) -> {$_SESSION[$name]}<br/>\n"); return $_SESSION[$name]; }
-	if (!empty($_COOKIE[$name]))  { Trace("GetVar(): $name (Cookie)  -> {$_COOKIE[$name]}<br/>\n"); return $_COOKIE[$name]; }
-	if (!empty($_SERVER[$name]))  { Trace("GetVar(): $name (Server)  -> {$_SERVER[$name]}<br/>\n"); return $_SERVER[$name]; }
+	//This was empty() but that caused blank values that actually are set to
+	//fail with null instead of an empty string, the proper return value I
+	//believe. Changing it back to isset().
+	if (isset($_FILES[$name]))   { Trace("GetVar(): $name (File)    -> {$_FILES[$name]}<br/>\n"); return $_FILES[$name]; }
+	if (isset($_POST[$name]))    { Trace("GetVar(): $name (Post)    -> {$_POST[$name]}<br/>\n"); return $_POST[$name]; }
+	if (isset($_GET[$name]))     { Trace("GetVar(): $name (Get)     -> {$_GET[$name]}<br/>\n"); return $_GET[$name]; }
+	if (isset($_SESSION[$name])) { Trace("GetVar(): $name (Session) -> {$_SESSION[$name]}<br/>\n"); return $_SESSION[$name]; }
+	if (isset($_COOKIE[$name]))  { Trace("GetVar(): $name (Cookie)  -> {$_COOKIE[$name]}<br/>\n"); return $_COOKIE[$name]; }
+	if (isset($_SERVER[$name]))  { Trace("GetVar(): $name (Server)  -> {$_SERVER[$name]}<br/>\n"); return $_SERVER[$name]; }
 
 	if (isset($HTTP_POST_FILES[$name]) && strlen($HTTP_POST_FILES[$name]) > 0)
 		return $HTTP_POST_FILES[$name];
@@ -907,7 +910,7 @@ function GetZips($ds, $zip, $range)
 
     $ret = array();
 
-	$query = "SELECT zip, lat, lng, name FROM zips 
+	$query = "SELECT zip, lat, lng, name FROM zips
 		WHERE lat BETWEEN '{$min_lat}' AND '{$max_lat}'
 		AND lng BETWEEN '{$min_lon}' AND '{$max_lon}'";
 
@@ -923,7 +926,7 @@ function GetZips($ds, $zip, $range)
 			$return['zips'][] = $zip;
 		}
 	}
-      
+
     asort($return['dists']);
 
 	return $return;

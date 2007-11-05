@@ -21,24 +21,24 @@ function docmanSelAll(type)
 }
 </script>
 
-<p>Select the checkbox of the file(s) or folder(s) that
-				you would like to delete or move.</p>
+<p>Select the checkbox of the file(s) or folder(s) that you would like to delete
+or move.</p>
 
 <input type="hidden" name="editor" value="{{name}}" />
 <input type="hidden" name="cf" value="{{cf}}" />
 
 </if>
 
-<if check="strlen($this->vars['files']) > 0">
-<box title="Segment Files">
-{{files_neck}}	
-{{files}}
+<if check="strlen($this->vars['folders']) > 0">
+<box title="Folders">
+{{folders}}
 </box>
 </if>
 
-<if check="strlen($this->vars['folders']) > 0">
-<box title="Courses">
-{{folders}}
+<if check="strlen($this->vars['files']) > 0">
+<box title="Files">
+{{files_neck}}
+{{files}}
 </box>
 </if>
 

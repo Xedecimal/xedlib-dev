@@ -6,7 +6,6 @@
 
 require_once('h_utility.php');
 require_once('h_display.php');
-require_once('a_editor.php');
 
 define('FM_SORT_MANUAL', -1);
 define('FM_SORT_TABLE', -2);
@@ -30,7 +29,7 @@ class FileManager
 	 *
 	 * @var string
 	 */
-	private $name;
+	private $Name;
 
 	/**
 	 * Behavior of this filemanager.
@@ -47,18 +46,18 @@ class FileManager
 	public $View;
 
 	/**
+	 * People are not allowed above this folder.
+	 *
+	 * @var string
+	 */
+	public $Root;
+
+	/**
 	 * Array of filters that are available for this object.
 	 *
 	 * @var array
 	 */
 	private $filters;
-
-	/**
-	 * People are not allowed above this folder.
-	 *
-	 * @var string
-	 */
-	public $root;
 
 	/**
 	 * Icons and their associated filetypes, overridden with FilterGallery.
@@ -80,6 +79,7 @@ class FileManager
 	 * @var FilterDefault
 	 */
 	private $DefaultFilter;
+
 	/**
 	 * Default options for any file.
 	 *
@@ -116,10 +116,11 @@ class FileManager
 	 */
 	function FileManager($name, $root, $filters = null, $DefaultFilter = 'Default')
 	{
-		$this->name = $name;
 		$this->filters = $filters;
+
+		$this->Name = $name;
 		$this->DefaultFilter = $DefaultFilter;
-		$this->root = $root;
+		$this->Root = $root;
 
 		$this->Behavior = new FileManagerBehavior();
 		$this->View = new FileManagerView();
@@ -129,10 +130,10 @@ class FileManager
 			not exist.");
 
 		//Append trailing slash.
-		if (substr($this->root, -1) != '/') $this->root .= '/';
+		if (substr($this->Root, -1) != '/') $this->Root .= '/';
 		$this->cf = SecurePath(GetVar('cf'));
 
-		if (is_dir($this->root.$this->cf)
+		if (is_dir($this->Root.$this->cf)
 			&& strlen($this->cf) > 0
 			&& substr($this->cf, -1) != '/')
 			$this->cf .= '/';
@@ -150,7 +151,7 @@ class FileManager
 		{
 			ini_set('upload_max_filesize', ini_get('post_max_size'));
 
-			$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
+			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 			$files = GetVar('cu');
 
 			//SWF Hack. Should be removed later.
@@ -176,13 +177,13 @@ class FileManager
 
 				if (!empty($this->Behavior->Watcher))
 					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
-					$this->root.$this->cf.$newup['name']);
+					$this->Root.$this->cf.$newup['name']);
 			}
 		}
 		else if ($action == "update_info")
 		{
 			if (!$this->Behavior->AllowEdit) return;
-			$info = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
+			$info = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 			$newinfo = GetPost('info');
 			$info->Filter->Updated($info, $newinfo);
 			$this->Behavior->Update($newinfo);
@@ -215,7 +216,7 @@ class FileManager
 			foreach ($caps as $file => $cap)
 			{
 				if (strlen($cap) < 1) continue;
-				$fi = new FileInfo($this->root.$this->cf.'/'.$file, $this->DefaultFilter);
+				$fi = new FileInfo($this->Root.$this->cf.'/'.$file, $this->DefaultFilter);
 				$fi->info['title'] = $cap;
 				$fi->Filter->Updated($fi);
 				$fi->SaveInfo();
@@ -253,7 +254,7 @@ class FileManager
 		else if ($action == "createdir")
 		{
 			if (!$this->Behavior->AllowCreateDir) return;
-			$p = $this->root.$this->cf.GetVar("name");
+			$p = $this->Root.$this->cf.GetVar("name");
 			mkdir($p);
 			chmod($p, 0755);
 			if (!empty($this->Behavior->Watcher))
@@ -310,7 +311,7 @@ class FileManager
 			die();
 		}
 
-		if (is_dir($this->root.$this->cf)) $this->files = $this->GetDirectory();
+		if (is_dir($this->Root.$this->cf)) $this->files = $this->GetDirectory();
 	}
 
 	/**
@@ -322,14 +323,14 @@ class FileManager
 	*/
 	function Get($target, $action, $defaults = null)
 	{
-		if (!file_exists($this->root.$this->cf))
-			return "FileManager::Get(): File doesn't exist ({$this->root}{$this->cf}).<br/>\n";
+		if (!file_exists($this->Root.$this->cf))
+			return "FileManager::Get(): File doesn't exist ({$this->Root}{$this->cf}).<br/>\n";
 
 		$t = new Template();
 
-		$fi = new FileInfo($this->root.$this->cf, $this->DefaultFilter);
+		$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 
-		$t->Set('name', $this->name);
+		$t->Set('name', $this->Name);
 		$t->Set('header', $this->GetHeader($target, $fi));
 		$t->Set('mass_available', $this->mass_avail = $this->Behavior->MassAvailable());
 
@@ -337,7 +338,7 @@ class FileManager
 
 		$t->Set('options', $this->GetOptions($fi, $target, $action));
 
-		if (is_dir($this->root.$this->cf))
+		if (is_dir($this->Root.$this->cf))
 		{
 			$t->Set('files', $this->GetFiles($target, 'files'));
 			$t->Set('files_neck', $this->View->TextFilesNeck);
@@ -346,8 +347,8 @@ class FileManager
 		}
 		else
 		{
-			$t->Set('date', gmdate("M j Y H:i:s ", filemtime($this->root.$this->cf)));
-			$t->Set('size', filesize($this->root.$this->cf));
+			$t->Set('date', gmdate("M j Y H:i:s ", filemtime($this->Root.$this->cf)));
+			$t->Set('size', filesize($this->Root.$this->cf));
 			$ret = $t->Get(dirname(__FILE__).'/temps/file/details.php');
 		}
 
@@ -367,8 +368,8 @@ class FileManager
 		$ret = null;
 		if ($this->Behavior->MassAvailable())
 		{
-			$ret .= "<div id=\"{$this->name}_mass_options\">";
-			$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->name}_mass_options').style.display = 'none';</script>";
+			$ret .= "<div id=\"{$this->Name}_mass_options\">";
+			$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->Name}_mass_options').style.display = 'none';</script>";
 			$ret .= "<p>With selected files...</p>\n";
 			$ret .= '<input type="submit" name="ca" value="Move" /> to '.$this->GetDirectorySelect('ct')."<br/>\n";
 			$ret .= '<input type="submit" name="ca" value="Delete" onclick="return confirm(\'Are you sure you wish to delete'.
@@ -380,10 +381,10 @@ class FileManager
 		{
 			global $me;
 
-			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->name}_options'); return false;\">View Options for this File or Folder</a></p>\n";
-			$ret .= "<div id=\"{$this->name}_options\">";
+			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->Name}_options'); return false;\">View Options for this File or Folder</a></p>\n";
+			$ret .= "<div id=\"{$this->Name}_options\">";
 			if ($this->Behavior->HideOptions)
-				$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->name}_options').style.display = 'none';</script>";
+				$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->Name}_options').style.display = 'none';</script>";
 
 			if ($this->Behavior->AllowUpload && is_dir($fi->path))
 			{
@@ -402,7 +403,7 @@ class FileManager
 	Maximum allowable individual file size: {$maxsize}<br/>
 	<script type="text/javascript" src="{$pname}/js/swfobject.js"></script>
 	<form action="{$target}" method="post" enctype="multipart/form-data">
-	<input type="hidden" name="editor" value="{$this->name}" />
+	<input type="hidden" name="editor" value="{$this->Name}" />
 	<input type="hidden" name="ca" value="upload"/>
 	<input type="hidden" name="cf" value="{$this->cf}"/>
 	<div id="flashUpload">
@@ -420,7 +421,7 @@ class FileManager
 	so.addParam('movie', 'fileUpload.swf');
 	so.addParam('quality', 'high');
 	so.addParam('wmode', 'transparent');
-	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=editor,{$this->name},ca,upload,cf,{$this->cf},PHPSESSID,{$sid}&amp;ref=editor,{$this->name},cf,{$this->cf}');
+	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=editor,{$this->Name},ca,upload,cf,{$this->cf},PHPSESSID,{$sid}&amp;ref=editor,{$this->Name},cf,{$this->cf}');
 	so.write("flashUpload");
 	// ]]>
 	</script>
@@ -436,7 +437,7 @@ EOF;
 			{
 				$out = <<<EOF
 <form action="{$target}" method="post">
-	<input type="hidden" name="editor" value="{$this->name}" />
+	<input type="hidden" name="editor" value="{$this->Name}" />
 	<input type="hidden" name="ca" value="createdir" />
 	<input type="hidden" name="cf" value="{$this->cf}" />
 	<input type="text" name="name" />
@@ -453,7 +454,7 @@ EOF;
 				$form = new Form('rename');
 				$form->LabelStart = $form->LabelEnd = $form->FieldStart =
 				$form->FieldEnd = '';
-				$form->AddHidden('editor', $this->name);
+				$form->AddHidden('editor', $this->Name);
 				$form->AddHidden('ca', 'rename');
 				$form->AddHidden('ci', $fi->path);
 				$form->AddHidden('cf', $this->cf);
@@ -474,7 +475,7 @@ EOF;
 			{
 				//Filter options.
 				$form = new Form('formUpdate', null, false);
-				$form->AddHidden('editor', $this->name);
+				$form->AddHidden('editor', $this->Name);
 				$form->AddHidden('ca', 'update_info');
 				$form->AddHidden('cf', $this->cf);
 
@@ -524,7 +525,7 @@ EOF;
 	function GetDirectorySelect($name)
 	{
 		$ret = "<select name=\"{$name}\">";
-		$ret .= $this->GetDirectorySelectRecurse($this->root, $this->Behavior->IgnoreRoot);
+		$ret .= $this->GetDirectorySelectRecurse($this->Root, $this->Behavior->IgnoreRoot);
 		$ret .= '</select>';
 		return $ret;
 	}
@@ -567,7 +568,7 @@ EOF;
 		if (is_dir($source->path) && $this->Behavior->AllowSearch)
 		{
 			$ret .= "<form action=\"$target\" method=\"post\">\n";
-			$ret .= "<input type=\"hidden\" name=\"editor\" value=\"$this->name\" />\n";
+			$ret .= "<input type=\"hidden\" name=\"editor\" value=\"$this->Name\" />\n";
 			$ret .= "<input type=\"hidden\" name=\"ca\" value=\"search\"/>\n";
 			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$source->path}\"/>\n";
 			$ret .= "Search in: /\n";
@@ -599,13 +600,13 @@ EOF;
 	 */
 	function GetPath($target, $fi)
 	{
-		$items = explode('/', substr($fi->path, strlen($this->root)));
+		$items = explode('/', substr($fi->path, strlen($this->Root)));
 		$ret = null;
 		$cpath = '';
 
 		if (isset($this->cf))
 		{
-			$uri = URL($target, array('editor' => $this->name));
+			$uri = URL($target, array('editor' => $this->Name));
 			$ret .= "To navigate back, or choose another folder, click the
 			link(s) below<br/> <a href=\"{$uri}\">Home</a> ";
 		}
@@ -614,7 +615,7 @@ EOF;
 		{
 			if (strlen($items[$ix]) < 1) continue;
 			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
-			$uri = URL($target, array('editor' => $this->name,
+			$uri = URL($target, array('editor' => $this->Name,
 				'cf' => $cpath));
 			$ret .= " &raquo; <a href=\"{$uri}\">{$items[$ix]}</a>";
 		}
@@ -709,25 +710,25 @@ EOF;
 				$url = $cb($file);
 			}
 			else if (!$this->Behavior->UseInfo)
-				$url = $this->root.$this->cf.$file->filename.'" target="_new';
+				$url = $this->Root.$this->cf.$file->filename.'" target="_new';
 			else
-				$url = $target.'?editor='.$this->name.'&amp;cf='.urlencode($this->cf.$file->filename);
+				$url = $target.'?editor='.$this->Name.'&amp;cf='.urlencode($this->cf.$file->filename);
 		}
 		else
-			$url = "$target?editor={$this->name}&amp;cf=".urlencode($this->cf.$file->filename);
+			$url = "$target?editor={$this->Name}&amp;cf=".urlencode($this->cf.$file->filename);
 
 		if ($this->mass_avail)
 			$t->Set('check', "\t\t<input type=\"checkbox\"
 			id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\"
 			onclick=\"toggleAny(['sel_files_', 'sel_dirs_'],
-			'{$this->name}_mass_options');\" />\n");
+			'{$this->Name}_mass_options');\" />\n");
 		else $t->Set('check', '');
 		$t->Set('file', "<a href=\"$url\">{$name}</a>");
 		$t->Set('date', gmdate("m/d/y h:i", filectime($file->path)));
 
 		$common = array(
 			'cf' => $this->cf,
-			'editor' => $this->name,
+			'editor' => $this->Name,
 			'type' => $types,
 		);
 
@@ -792,16 +793,16 @@ EOF;
 	 */
 	function GetDirectory()
 	{
-		$dp = opendir($this->root.$this->cf);
+		$dp = opendir($this->Root.$this->cf);
 		$ret['files'] = array();
 		$ret['dirs'] = array();
 		while ($file = readdir($dp))
 		{
 			if ($file[0] == '.') continue;
-			$newfi = new FileInfo($this->root.$this->cf.$file, $this->DefaultFilter);
+			$newfi = new FileInfo($this->Root.$this->cf.$file, $this->DefaultFilter);
 			if (!isset($newfi->info['index'])) $newfi->info['index'] = 0;
 			if (!$newfi->show) continue;
-			if (is_dir($this->root.$this->cf.'/'.$file)) $ret['dirs'][] = $newfi;
+			if (is_dir($this->Root.$this->cf.'/'.$file)) $ret['dirs'][] = $newfi;
 			else $ret['files'][] = $newfi;
 		}
 
@@ -836,7 +837,7 @@ EOF;
 		if (!isset($this->uid)) return true;
 
 		if (!isset($file->info['access']) &&
-			dirname($file->path) != dirname($this->root))
+			dirname($file->path) != dirname($this->Root))
 			return $this->GetVisible(new FileInfo($file->dir));
 
 		//Altering this again, user ids are stored as keys, not values!
@@ -912,9 +913,9 @@ class FileManagerView
 	 * @var string
 	 */
 	public $TextAdditional = '<b>Additional Settings</b>';
-	
+
 	public $TextFilesNeck = '';
-	
+
 	public $RenameTitle = 'Rename File / Folder';
 }
 
@@ -1609,106 +1610,6 @@ class FilterGallery extends FilterDefault
 	}
 }
 
-class FileAccessHandler extends EditorHandler
-{
-	/**
-	 * Top level directory to allow access.
-	 * @var string
-	 */
-	private $root;
 
-	/**
-	 * Constructor for this object, sets required properties.
-	 * @param string $root Top level directory to allow access.
-	 */
-	function FileAccessHandler($root)
-	{
-		$this->root = $root;
-	}
-
-	/**
-	 * Recurses a single folder to collect access information out of it.
-	 * @param string $root Source folder to recurse into.
-	 * @param int $level Amount of levels deep for tree construction.
-	 * @param int $id Identifier of the object we are looking for access to.
-	 * @return array Array of SelOption objects.
-	 */
-	function RecurseFolder($root, $level, $id)
-	{
-		$ret = array();
-
-		//Get information on this item.
-		$so = new SelOption($root);
-		$fi = new FileInfo($root);
-		if (!empty($fi->info['access']) && isset($fi->info['access'][$id]))
-			$so->selected = true;
-		$ret[$root] = $so;
-
-		//Recurse children.
-		$dp = opendir($root);
-		while ($file = readdir($dp))
-		{
-			if ($file[0] == '.') continue;
-			$fp = $root.'/'.$file;
-			if (is_dir($fp)) $ret = array_merge($ret,
-				$this->RecurseFolder($fp, $level+1, $id));
-		}
-
-		return $ret;
-	}
-
-	/**
-	 * Recurses a single folder to set access information in it.
-	 * @param string $root Source folder to recurse into.
-	 * @param int $id Identifier of the object we are looking for access to.
-	 * @param array $accesses Series of access items that will eventually get set.
-	 */
-	function RecurseSetPerm($root, $id, $accesses)
-	{
-		//Set information on this item.
-		$fi = new FileInfo($root);
-
-		if (!empty($accesses) && in_array($root, $accesses))
-			$fi->info['access'][$id] = 1;
-		else
-			unset($fi->info['access'][$id]);
-		$fi->SaveInfo();
-
-		//Recurse children.
-		$dp = opendir($root);
-		while ($file = readdir($dp))
-		{
-			if ($file[0] == '.') continue;
-			$fp = $root.'/'.$file;
-			if (is_dir($fp)) $this->RecurseSetPerm($fp, $id, $accesses);
-		}
-	}
-
-	/**
-	 * Called when a file or folder gets updated.
-	 */
-	function Update($id, &$original, &$update)
-	{
-		$accesses = GetVar('accesses');
-		$this->RecurseSetPerm($this->root, $id, $accesses);
-		return true;
-	}
-
-	function Created($id, $inserted)
-	{
-		$accesses = GetVar('accesses');
-		$this->RecurseSetPerm($this->root, $id, $accesses);
-	}
-
-	/**
-	 * Adds a series of options to the form associated with the given file.
-	 * @todo Rename to AddFields
-	 */
-	function GetFields(&$form, $id, $data)
-	{
-		$form->AddInput(new FormInput('Accessable Folders', 'selects',
-			'accesses', $this->RecurseFolder($this->root, 0, $id)));
-	}
-}
 
 ?>

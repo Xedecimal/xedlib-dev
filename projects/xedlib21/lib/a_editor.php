@@ -227,12 +227,14 @@ class EditorData
 	 * @var string
 	 */
 	public $name;
+
 	/**
 	 * Dataset to interact with.
 	 *
 	 * @var DataSet
 	 */
 	public $ds;
+
 	/**
 	 * Filter to be passed to the DataSet in it's form.
 	 *
@@ -240,6 +242,7 @@ class EditorData
 	 * @see DataSet.WhereClause
 	 */
 	public $filter;
+
 	/**
 	 * Order to sort items, passed to the DataSet.
 	 *
@@ -247,6 +250,7 @@ class EditorData
 	 * @see DataSet.OrderClause
 	 */
 	public $sort;
+
 	/**
 	 * State of this editor.
 	 *
@@ -255,6 +259,7 @@ class EditorData
 	 * @see STATE_EDIT
 	 */
 	public $state;
+
 	/**
 	 * The method used to handle sorting of the table portion of this
 	 * editor. Use either ED_SORT_NONE (0), ED_SORT_MANUAL (1) or ED_SORT_TABLE (2).
@@ -262,6 +267,7 @@ class EditorData
 	 * @var int
 	 */
 	public $sorting;
+
 	/**
 	 * Callback function for when an item is created.
 	 *
@@ -269,6 +275,7 @@ class EditorData
 	 * @deprecated  use AddHandler instead.
 	 */
 	public $oncreate;
+
 	/**
 	 * Calback function to be called when an item is updated.
 	 *
@@ -276,6 +283,7 @@ class EditorData
 	 * @deprecated  use AddHandler instead.
 	 */
 	public $onupdate;
+
 	/**
 	 * Callback function for when an item is deleted.
 	 *
@@ -283,6 +291,7 @@ class EditorData
 	 * @deprecated use AddHandler instead.
 	 */
 	public $ondelete;
+
 	/**
 	 * Callback function for when an item is swapped with another.
 	 *
@@ -290,6 +299,7 @@ class EditorData
 	 * @deprecated use AddHandler instead.
 	 */
 	//var $onswap;
+
 	/**
 	 * An array of handlers used for extra functionality of create, update,
 	 * delete and swap.
@@ -297,7 +307,11 @@ class EditorData
 	 * @var array
 	 */
 	public $handlers;
-	
+
+	/**
+	 * Behavior settings for this editor.
+	 * @var EditorDataBehavior
+	 */
 	public $Behavior;
 
 	/**
@@ -622,12 +636,16 @@ class EditorData
 	 */
 	function Get($target, $ci = null)
 	{
+		$ret['name'] = $this->name;
+
 		$ca = GetVar('ca');
+		$q = GetVar($this->name.'_q');
 
 		if (isset($ci) && $ca == $this->name.'_edit') $this->state = STATE_EDIT;
 		$ret['ds'] = $this->ds;
-		if ($ca != $this->name.'_edit' && !empty($this->ds->DisplayColumns))
-			$ret['table'] = $this->GetTable($target, $ci);
+		if ($ca != $this->name.'_edit' && !empty($this->ds->DisplayColumns)
+			&& isset($q))
+			$ret['table'] = $this->GetTable($target, $ci, $q);
 		$ret['forms'] = $this->GetForms($target, $ci,
 			GetVar('editor') == $this->name ? GetVar('child') : null);
 		return $ret;
@@ -827,8 +845,10 @@ class EditorData
 				}
 			}
 
-			$items = $this->ds->GetInternal($this->filter, $this->sort,
-				null, $joins, $cols);
+			/*$items = $this->ds->GetInternal($this->filter, $this->sort,
+				null, $joins, $cols);*/
+
+			$items = $this->ds->GetSearch($cols, GetVar($this->name.'_q'));
 
 			$root = $this->BuildTree($items);
 		}
@@ -1186,14 +1206,28 @@ class EditorData
 	 */
 	static function GetUI($target, $editor_return, $form_atrs = null)
 	{
-		$ret = null;
-		if (isset($editor_return['table'])) $ret .= GetBox('box_items',
-			Plural($editor_return['ds']->Description), $editor_return['table']);
+		$t = new Template();
+		$t->Set('name', $editor_return['name']);
+
+		if (isset($editor_return['table']))
+		{
+			$t->Set('table_title', Plural($editor_return['ds']->Description));
+			$t->Set('table', $editor_return['table']);
+		}
+
 		if (!empty($editor_return['forms']))
-		foreach ($editor_return['forms'] as $frm)
-			$ret .= GetBox('box_user_form', "{$frm->State} {$frm->Description}",
-				$frm->Get('method="post" action="'.$target.'"'.(isset($form_atrs) ? ' '.$form_atrs : null), 'class="form"'));
-		return $ret;
+		{
+			$forms = null;
+			foreach ($editor_return['forms'] as $frm)
+			{
+				$forms .= GetBox('box_user_form', "{$frm->State} {$frm->Description}",
+					$frm->Get('method="post" action="'.$target.'"'.
+						(isset($form_atrs) ? ' '.$form_atrs : null),
+						'class="form"'));
+			}
+			$t->Set('forms', $forms);
+		}
+		return $t->Get(dirname(__FILE__).'/temps/editor/index.php');
 	}
 }
 
@@ -1213,7 +1247,7 @@ class DisplayData
 	 * @var DataSet
 	 */
 	public $ds;
-	
+
 	public $Behavior;
 
 	/**
@@ -1226,11 +1260,11 @@ class DisplayData
 		$this->ds = $ds;
 		$this->Behavior = new DisplayDataBehavior();
 	}
-	
+
 	function Prepare()
 	{
 		$ca = GetVar('ca');
-		
+
 		if ($ca == 'update')
 		{
 			$up = array();
@@ -1336,10 +1370,113 @@ EOD;
 class DisplayDataBehavior
 {
 	public $AllowEdit;
-	
+
 	function AllowAll()
 	{
 		$this->AllowEdit = true;
+	}
+}
+
+class FileAccessHandler extends EditorHandler
+{
+	/**
+	 * Top level directory to allow access.
+	 * @var string
+	 */
+	private $root;
+
+	/**
+	 * Constructor for this object, sets required properties.
+	 * @param string $root Top level directory to allow access.
+	 */
+	function FileAccessHandler($root)
+	{
+		require_once('a_file.php');
+		$this->root = $root;
+	}
+
+	/**
+	 * Recurses a single folder to collect access information out of it.
+	 * @param string $root Source folder to recurse into.
+	 * @param int $level Amount of levels deep for tree construction.
+	 * @param int $id Identifier of the object we are looking for access to.
+	 * @return array Array of SelOption objects.
+	 */
+	function RecurseFolder($root, $level, $id)
+	{
+		$ret = array();
+
+		//Get information on this item.
+		$so = new SelOption($root);
+		$fi = new FileInfo($root);
+		if (!empty($fi->info['access']) && isset($fi->info['access'][$id]))
+			$so->selected = true;
+		$ret[$root] = $so;
+
+		//Recurse children.
+		$dp = opendir($root);
+		while ($file = readdir($dp))
+		{
+			if ($file[0] == '.') continue;
+			$fp = $root.'/'.$file;
+			if (is_dir($fp)) $ret = array_merge($ret,
+				$this->RecurseFolder($fp, $level+1, $id));
+		}
+
+		return $ret;
+	}
+
+	/**
+	 * Recurses a single folder to set access information in it.
+	 * @param string $root Source folder to recurse into.
+	 * @param int $id Identifier of the object we are looking for access to.
+	 * @param array $accesses Series of access items that will eventually get set.
+	 */
+	function RecurseSetPerm($root, $id, $accesses)
+	{
+		//Set information on this item.
+		$fi = new FileInfo($root);
+
+		if (!empty($accesses) && in_array($root, $accesses))
+			$fi->info['access'][$id] = 1;
+		else
+			unset($fi->info['access'][$id]);
+		$fi->SaveInfo();
+
+		//Recurse children.
+		$dp = opendir($root);
+		while ($file = readdir($dp))
+		{
+			if ($file[0] == '.') continue;
+			$fp = $root.'/'.$file;
+			if (is_dir($fp)) $this->RecurseSetPerm($fp, $id, $accesses);
+		}
+	}
+
+	/**
+	 * Called when a file or folder gets updated.
+	 */
+	function Update($id, &$original, &$update)
+	{
+		$accesses = GetVar('accesses');
+		$this->RecurseSetPerm($this->root, $id, $accesses);
+		return true;
+	}
+
+	function Created($id, $inserted)
+	{
+		$accesses = GetVar('accesses');
+		$this->RecurseSetPerm($this->root, $id, $accesses);
+	}
+
+	/**
+	 * Adds a series of options to the form associated with the given file.
+	 * @todo Rename to AddFields
+	 */
+	function GetFields(&$form, $id, $data)
+	{
+		$form->AddInput(new FormInput('Accessable Folders', 'selects',
+			'accesses', $this->RecurseFolder($this->root, 0, $id)));
 	}
 }
 

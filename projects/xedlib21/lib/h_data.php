@@ -944,16 +944,18 @@ class DataSet
 	{
 		$newphrase = str_replace("'", '%', stripslashes($phrase));
 		$newphrase = str_replace(' ', '%', $newphrase);
-		$query = "SELECT * FROM `{$this->table}` WHERE";
-		foreach ($columns as $ix => $col)
+		$query = "SELECT ".$this->ColsClause($columns)." FROM `{$this->table}` WHERE";
+		$ix = 0;
+		foreach ($columns as $col)
 		{
-			if ($ix > 0) $query .= " OR";
-			$query .= " `$col` LIKE '%{$newphrase}%'";
+			if ($ix++ > 0) $query .= " OR";
+			$query .= " $col LIKE '%{$newphrase}%'";
 		}
 		if ($limit != 0)
 		{
 			$query .= " LIMIT {$start}, {$limit}";
 		}
+
 		return $this->GetCustom($query);
 	}
 
