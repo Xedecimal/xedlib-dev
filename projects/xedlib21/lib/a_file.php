@@ -149,6 +149,10 @@ class FileManager
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
+			$fp = fopen('debug.txt', 'a+');
+			fwrite($fp, "Upload requested.\r\n");
+			fclose($fp);
+
 			ini_set('upload_max_filesize', ini_get('post_max_size'));
 
 			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
@@ -399,7 +403,10 @@ class FileManager
 
 				$pname = GetRelativePath(dirname(__FILE__));
 				$sid = @$_COOKIE['PHPSESSID'];
-				$out = <<<EOF
+
+				//Flash Uploader.
+
+/*				$out = <<<EOF
 	Maximum allowable individual file size: {$maxsize}<br/>
 	<script type="text/javascript" src="{$pname}/js/swfobject.js"></script>
 	<form action="{$target}" method="post" enctype="multipart/form-data">
@@ -428,6 +435,19 @@ class FileManager
 	<input type="file" name="cu[]" />
 	<input type="submit" value="Send" />
 	</form>
+EOF;*/
+
+				//Java Uploader
+
+				$loc = GetRelativePath(dirname(__FILE__));
+
+				$out = <<<EOF
+		<applet codebase="{$loc}/java" code="uploadApplet.class" archive="upapp.jar,commons-codec-1.3.jar,commons-httpclient-3.0.1.jar,commons-logging-1.0.4.jar" width="500" height="100">
+			<param name="host" value="http://{$_SERVER['HTTP_HOST']}" />
+			<param name="pathToScript" value="{$me}" />
+			<param name="path" value='{$this->cf}' />
+			<param name="uploadMax" value="2044304" />
+		</applet>
 EOF;
 				$ret .= GetBox('box_upload', $this->View->TitleUpload,
 					$out, 'template_box.html');

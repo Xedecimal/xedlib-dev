@@ -17,8 +17,8 @@ function WalkMember($m)
 {
 	global $ix, $out;
 
-	$id = @hexdec(crc32($m->file.$m->line));
-	$pid = @hexdec(crc32($m->parent->file.$m->parent->line));
+	$id = @hexdec(crc32($m->file.$m->line.$m->name));
+	$pid = @hexdec(crc32($m->parent->file.$m->parent->line.$m->parent->name));
 
 	echo @"{$m->file}:{$m->line} ({$m->name}) -> {$m->file}:{$m->line} ({$m->parent->name})<br />\n";
 
@@ -42,11 +42,20 @@ function WalkMember($m)
 }
 
 $c = new CodeReader();
-$res = $c->Parse('lib/a_editor.php');
+
+$m = null;
+
+$files = glob('lib/*.php');
+foreach ($files as $file)
+{
+	$res = $c->Parse('lib/a_editor.php');
+	if (!isset($m)) $m = $res['data'];
+	else $m->members = array_merge($m->members, $res['data']->members);
+}
 
 $out = "digraph a {\r\n";
 
-WalkMember($res['data']);
+WalkMember($m);
 
 $out .= "}\r\n";
 
