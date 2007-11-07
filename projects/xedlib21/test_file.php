@@ -19,10 +19,6 @@ $logger = new LoggerAuth($dsLogs, $dsUser);
 
 $ca = GetVar('ca');
 
-$fp = fopen('debug.txt', 'a+');
-fwrite($fp, "test_file action: {$ca}\r\n");
-fclose($fp);
-
 if (!$user = $lm->Prepare($ca))
 {
 	die($lm->Get($me));
