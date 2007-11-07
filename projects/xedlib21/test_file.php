@@ -17,6 +17,12 @@ $lm->AddDataset($dsUser, 'usr_pass', 'usr_name');
 $dsLogs = new DataSet($db, 'docmanlog');
 $logger = new LoggerAuth($dsLogs, $dsUser);
 
+$ca = GetVar('ca');
+
+$fp = fopen('debug.txt', 'a+');
+fwrite($fp, "test_file action: {$ca}\r\n");
+fclose($fp);
+
 if (!$user = $lm->Prepare($ca))
 {
 	die($lm->Get($me));
@@ -42,8 +48,6 @@ function fm_watcher($action, $target)
 
 $page_title = 'File Administration Demo';
 $page_head = '<script type="text/javascript" src="lib/js/swfobject.js"></script>';
-
-$ca = GetVar('ca');
 
 $page_body = "<p><a href=\"{$me}?ca=logout\">Log out</a>
 | <a href=\"{$me}\">Files</a>

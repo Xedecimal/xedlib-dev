@@ -146,13 +146,13 @@ class FileManager
 	 */
 	function Prepare($action)
 	{
+		$fp = fopen('debug.txt', 'a+');
+		fwrite($fp, "Requested action {$action}\r\n");
+		fclose($fp);
+
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
-			$fp = fopen('debug.txt', 'a+');
-			fwrite($fp, "Upload requested.\r\n");
-			fclose($fp);
-
 			ini_set('upload_max_filesize', ini_get('post_max_size'));
 
 			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
