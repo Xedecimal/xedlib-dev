@@ -149,6 +149,21 @@ class FileManager
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
+			if (GetVar('cm') == 'done')
+			{
+				foreach (glob($this->Root.$this->cf.'.*') as $file)
+				{
+					if (preg_match('#/.\[([0-9]*)\]_(.*)#', $file, $m))
+					$fp = fopen($this->Root.$this->cf.$m[2], 'ab');
+					fwrite($fp, file_get_contents($file));
+					fclose($fp);
+					unlink($file);
+				}
+
+				//$fp = fopen('debug.txt', 'a+');
+				//fwrite($fp, "Files in ".$this->Root.$this->cf."...\r\n".print_r($files, true)."\r\n");
+				//fclose($fp);
+			}
 			ini_set('upload_max_filesize', ini_get('post_max_size'));
 
 			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
