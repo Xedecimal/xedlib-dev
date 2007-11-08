@@ -159,10 +159,6 @@ class FileManager
 					fclose($fp);
 					unlink($file);
 				}
-
-				//$fp = fopen('debug.txt', 'a+');
-				//fwrite($fp, "Files in ".$this->Root.$this->cf."...\r\n".print_r($files, true)."\r\n");
-				//fclose($fp);
 			}
 			ini_set('upload_max_filesize', ini_get('post_max_size'));
 
