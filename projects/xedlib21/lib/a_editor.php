@@ -332,7 +332,7 @@ class EditorData
 		$this->handlers = array();
 		$this->ds = $ds;
 
-		if (instof($ds, 'DataSet'))
+		if (get_class($ds) == 'dataset')
 		{
 			$this->sort = $sort;
 			$this->type = CONTROL_BOUND;

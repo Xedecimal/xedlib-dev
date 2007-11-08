@@ -851,18 +851,6 @@ function linkup($tree, $target, $text)
 }
 
 /**
- * Workaround for php4 / php5 instanceof keyword or is_a function.
- * @param mixed $obj Object to check.
- * @param string $classname Check if $obj is derived somehow out of this type.
- */
-function instof($obj, $classname)
-{
-	if (substr(phpversion(), 0, 1) == '5')
-		return ($obj instanceof $classname);
-	else return is_a($obj, $classname);
-}
-
-/**
  * @param array $array Array to bitmask.
  * @return int Bitwise combined values.
  */
