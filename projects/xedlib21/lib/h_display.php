@@ -440,7 +440,7 @@ class Form
 		if (is_string($input))
 			return ($start ? $this->FirstStart : $this->CellStart).$input.
 				($start ? $this->FirstEnd : $this->CellEnd);
-		
+
 		if (!is_object($input)) Error("Form input is not an object.");
 
 		if ($input->type == 'submit' && isset($this->Validation))
@@ -787,11 +787,12 @@ class FormInput
 				$this->atrs." />";
 		}
 
+		$val = $this->GetValue($persist && $this->type != 'radio');
+
 		return "<input type=\"{$this->type}\"
 			name=\"{$this->name}\"
 			id=\"".CleanID($parent.'_'.$this->name)."\"".
-			' value="'.$this->GetValue($persist).'"'.
-			"{$this->atrs}/>";
+			" value=\"{$val}\" {$this->atrs}/>";
 	}
 
 	/**
@@ -858,12 +859,13 @@ class FormInput
 			if ($persist && preg_match('#([^\[]+)\[([^\]]+)\]#', $this->name, $m))
 			{
 				$arg = GetVar($m[1]);
+
 				$ix = 0;
 				preg_match_all('/\[([^\[]*)\]/', $this->name, $m);
 				foreach ($m[1] as $step)
 				{
 					if ($ix == $step) $ix++;
-					$arg = @$arg[!empty($step) ? $step : $ix++];
+					$arg = @$arg[isset($step) ? $step : $ix++];
 				}
 				if (empty($arg)) $arg = $this->valu;
 				return htmlspecialchars(!empty($arg) ? $arg : $this->valu);
