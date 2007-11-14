@@ -69,7 +69,7 @@ else
 {
 	$fm = new FileManager('fman', 'test', array('Default', 'Gallery'));
 	$fm->uid = $user['usr_id'];
-	$fm->Behavior->Recycle = true;
+	//$fm->Behavior->Recycle = true;
 	$fm->Behavior->ShowAllFiles = $user['usr_name'] == 'Admin';
 	$fm->Behavior->Watcher = array('fm_watcher');
 

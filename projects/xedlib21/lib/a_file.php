@@ -268,6 +268,8 @@ class FileManager
 			$p = $this->Root.$this->cf.GetVar("name");
 			mkdir($p);
 			chmod($p, 0755);
+			FilterDefault::UpdateMTime($p);
+
 			if (!empty($this->Behavior->Watcher))
 				RunCallbacks($this->Behavior->Watcher, FM_ACTION_CREATE,
 					$p);
@@ -315,8 +317,11 @@ class FileManager
 			$zip = new zipfile();
 			$zip->AddFiles(GetVar('sels'));
 
+			$fname = pathinfo($this->Root.$this->cf);
+			$fname = $fname['filename'].'.zip';
+
 			header('Content-Type: application/octet-stream');
-			header('Content-Disposition: attachment; filename="example.zip"');
+			header('Content-Disposition: attachment; filename="'.$fname.'"');
 			header('Content-Transfer-Encoding: binary');
 			echo $zip->file();
 			die();
@@ -754,7 +759,8 @@ EOF;
 			'{$this->Name}_mass_options');\" />\n");
 		else $t->Set('check', '');
 		$t->Set('file', "<a href=\"$url\">{$name}</a>");
-		$t->Set('date', gmdate("m/d/y h:i", filectime($file->path)));
+		$time = isset($file->info['mtime']) ? $file->info['mtime'] : filemtime($file->path);
+		$t->Set('date', gmdate("m/d/y h:i", $time));
 
 		$common = array(
 			'cf' => $this->cf,
@@ -1386,6 +1392,7 @@ class FilterDefault
 	{
 		$dest = "{$target->path}{$file['name']}";
 		move_uploaded_file($file['tmp_name'], $dest);
+		$this->UpdateMTime($dest);
 	}
 
 	/**
@@ -1402,6 +1409,7 @@ class FilterDefault
 		if (file_exists($finfo))
 			rename($finfo, $ddir.'/.'.$pinfo['basename']);
 		rename($fi->path, $ddir.'/'.$pinfo['basename']);
+		$this->UpdateMTime($ddir.'/'.$pinfo['basename']);
 	}
 
 	/**
@@ -1443,6 +1451,13 @@ class FilterDefault
 	 * @param string $path Source path.
 	 */
 	function Cleanup($path) {}
+
+	static function UpdateMTime($filename)
+	{
+		$finfo = new FileInfo($filename);
+		$finfo->info['mtime'] = time();
+		$finfo->SaveInfo();
+	}
 }
 
 class FilterGallery extends FilterDefault
@@ -1639,7 +1654,5 @@ class FilterGallery extends FilterDefault
 		return $dimg;
 	}
 }
-
-
 
 ?>

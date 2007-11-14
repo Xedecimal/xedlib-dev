@@ -116,7 +116,6 @@ function GetCallstack($file, $line)
 	foreach ($array as $ix => $entry)
 	{
 		if ($ix < 1) continue;
-		//varinfo($entry);
 		$err .= "<tr>\n";
 		if (isset($entry['file']))
 		{ $err .= "\t<td>{$entry['file']}</td>\n"; }
@@ -151,6 +150,8 @@ function SetVar($name, $value)
 }
 
 /**
+ * Returns a value from files, post, get, session, cookie and finally
+ * server in that order.
  * @param string $name Name of the value to get.
  * @param mixed $default Default value to return if not available.
  * @return mixed
