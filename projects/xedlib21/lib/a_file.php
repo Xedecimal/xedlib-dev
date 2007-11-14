@@ -364,8 +364,8 @@ class FileManager
 		}
 		else
 		{
-			$t->Set('date', gmdate("M j Y H:i:s ", filemtime($this->Root.$this->cf)));
-			$t->Set('size', filesize($this->Root.$this->cf));
+			$t->Set('date', gmdate("M j Y H:i:s ", filectime($this->Root.$this->cf)));
+			$t->Set('size', GetSizeString(filesize($this->Root.$this->cf)));
 			$ret = $t->Get(dirname(__FILE__).'/temps/file/details.php');
 		}
 
