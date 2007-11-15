@@ -119,14 +119,21 @@ class Template
 	 * @var resource
 	 */
 	private $parser;
-	
+
 	private $skip;
+
+	public $Behavior;
+
+	private $config;
+
+	private $start = '';
 
 	/**
 	 * Creates a new template parser.
 	 */
 	function Template()
 	{
+		$this->Behavior = new TemplateBehavior();
 		$args = func_get_args();
 		if (isset($args[0])) $data = &$args[0];
 		$this->out = "";
@@ -172,16 +179,19 @@ class Template
 		else if ($tag == 'COPY') $output .= '&copy;';
 		else if ($tag == 'DOCTYPE')
 		{
+			$this->show = false;
 			if (isset($attribs['TYPE']))
 			{
 				if ($attribs['TYPE'] == 'strict')
-					$output = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+					$this->start .= '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
 				if ($attribs['TYPE'] == 'trans')
-					$output = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+					$this->start .= '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
 			}
 		}
+		else if ($tag == 'FORM' && $this->Behavior->MakeDynamic)
+			$this->start .= $this->ProcessForm($parser, $tag, $attribs);
 		else if ($tag == 'IF')
 		{
 			$check = $attribs['CHECK'];
@@ -197,7 +207,12 @@ class Template
 			RequireModule($this->data, $file, $class);
 			$show = false;
 		}
-		else if ($tag == 'INPUT') $close = ' /';
+		else if ($tag == 'INPUT')
+		{
+			if ($this->Behavior->MakeDynamic)
+				$this->start .= $this->ProcessInput($parser, $tag, $attribs);
+			$close = ' /';
+		}
 		else if ($tag == 'LINK') $close = ' /';
 		else if ($tag == 'META') $close = ' /';
 		else if ($tag == 'NBSP') $output = '&nbsp;';
@@ -356,6 +371,39 @@ class Template
 		ob_end_clean();
 	}
 
+	function ProcessForm($parser, $tag, $attribs)
+	{
+		if (!isset($this->config)) return $this->GetConfig();
+	}
+
+	function ProcessInput($parser, $tag, $attribs)
+	{
+		if (!isset($this->config['fields'][$attribs['NAME']]))
+		{
+			$this->configured = false;
+
+			$frm = new Form('formConfig');
+			$frm->AddHidden('ca', 'template_config');
+			$frm->AddInput(new FormInput('Data Column:', 'text', 'host'));
+			$frm->AddInput(new FormInput('Data Type:', 'text', 'user'));
+			$frm->AddInput(new FormInput('Data Length:', 'password', 'pass'));
+			$frm->AddInput(new FormInput(null, 'submit', null, 'Configure'));
+			return $frm->Get('method="post" action="{{me}}"');
+		}
+	}
+
+	function GetConfig()
+	{
+		$frm = new Form('formConfig');
+		$frm->AddHidden('ca', 'template_config');
+		$frm->AddInput(new FormInput('Database Host:', 'text', 'host'));
+		$frm->AddInput(new FormInput('Database User:', 'text', 'user'));
+		$frm->AddInput(new FormInput('Database Pass:', 'password', 'pass'));
+		$frm->AddInput(new FormInput('Database:', 'text', 'data'));
+		$frm->AddInput(new FormInput(null, 'submit', null, 'Configure'));
+		return GetBox('box_config', 'Template Configuration', $frm->Get('method="post" action="{{me}}"'));
+	}
+
 	/**
 	 * Gets the object before the last object on the stack.
 	 * @return DisplayObject Destination for the last item.
@@ -405,6 +453,26 @@ class Template
 	 */
 	function Get($template)
 	{
+		if ($this->Behavior->MakeDynamic)
+		{
+			if (!file_exists('temp_cache')) mkdir('temp_cache');
+
+			$md5 = md5(file_get_contents($template));
+
+			if (file_exists('temp_cache/'.$md5))
+				$this->config = unserialize(file_get_contents('temp_cache/'.$md5));
+
+			if (GetVar('ca') == 'template_config')
+			{
+				$this->config['db_host'] = GetVar('host');
+				$this->config['db_user'] = GetVar('user');
+				$this->config['db_pass'] = GetVar('pass');
+				$this->config['db_data'] = GetVar('data');
+				$fp = fopen('temp_cache/'.$md5, 'w');
+				fwrite($fp, serialize($this->config));
+				fclose($fp);
+			}
+		}
 		$this->data['template.stack'][] = $template;
 		$this->template = $template;
 		$this->out = "";
@@ -432,7 +500,7 @@ class Template
 		xml_parser_free($this->parser);
 		array_pop($this->data['template.stack']);
 		array_pop($this->data['template.parsers']);
-		return preg_replace_callback("/\{{([^}]+)\}}/", array($this, "parse_vars"), $this->out);
+		return preg_replace_callback("/\{{([^}]+)\}}/", array($this, "parse_vars"), $this->start.$this->out);
 	}
 
 	/**
@@ -452,6 +520,11 @@ class Template
 		else if ($this->use_getvar) return GetVar($tvar);
 		return $match[0];
 	}
+}
+
+class TemplateBehavior
+{
+	public $MakeDynamic = false;
 }
 
 /**

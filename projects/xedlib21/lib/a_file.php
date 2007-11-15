@@ -725,14 +725,12 @@ EOF;
 		//$ret = "\n<tr class=\"{$class}\">\n";
 
 		$types = $file->type ? 'dirs' : 'files';
-		if (isset($file->info['thumb']))
-			$t->Set('thumb', "<img src=\"".URL($file->info['thumb'])."\" alt=\"Thumbnail\" />");
+		if (isset($file->icon))
+			$t->Set('icon', "<img src=\"".URL($file->icon)."\" alt=\"Icon\" />");
+		else if (isset($this->icons[$file->type]))
+			$t->Set('icon', '<img src="'.$this->icons[$file->type].'" alt="'.$file->type.'" />');
 		else
-		{
-			if (isset($this->icons[$file->type])) $icon = $this->icons[$file->type];
-			if (isset($icon))
-				$ret .= '<td><img src="'.$icon.'" alt="'.$file->type.'" /></td> ';
-		}
+			$t->Set('icon', '');
 
 		$name = ($this->View->ShowTitle && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
@@ -1215,12 +1213,12 @@ class FileInfo
 	 */
 	public $type;
 	/**
-	 * Thumbnail of this item, this should be depricated as it only applies
+	 * Icon of this item, this should be depricated as it only applies
 	 * to FilterGallery.
 	 *
 	 * @var string
 	 */
-	public $thumb;
+	public $icon;
 	/**
 	 * Whether or not this file should be shown.
 	 *
@@ -1483,7 +1481,7 @@ class FilterGallery extends FilterDefault
 		if (empty($fi->info['thumb_width'])) $fi->info['thumb_width'] = 200;
 		if (empty($fi->info['thumb_height'])) $fi->info['thumb_height'] = 200;
 		if (file_exists($fi->dir."/t_".$fi->filename))
-			$fi->info['thumb'] = "{$fi->dir}/t_{$fi->filename}";
+			$fi->icon = "{$fi->dir}/t_{$fi->filename}";
 		return $fi;
 	}
 
