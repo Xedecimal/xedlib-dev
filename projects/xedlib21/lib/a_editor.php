@@ -1060,6 +1060,7 @@ class EditorData
 		else
 		{
 			$ds = $this->ds;
+			if (!empty($ds->FieldInputs))
 			foreach ($ds->FieldInputs as $n => $i)
 			{
 				if (isset($this->values[$n]))
@@ -1206,6 +1207,7 @@ class EditorData
 	 */
 	static function GetUI($target, $editor_return, $form_atrs = null)
 	{
+		require_once('h_template.php');
 		$t = new Template();
 		$t->Set('name', $editor_return['name']);
 
@@ -1227,6 +1229,7 @@ class EditorData
 			}
 			$t->Set('forms', $forms);
 		}
+		else $t->Set('forms', '');
 		return $t->Get(dirname(__FILE__).'/temps/editor/index.php');
 	}
 }

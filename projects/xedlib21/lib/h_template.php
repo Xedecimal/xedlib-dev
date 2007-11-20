@@ -210,7 +210,7 @@ class Template
 		else if ($tag == 'INPUT')
 		{
 			if ($this->Behavior->MakeDynamic)
-				$this->start .= $this->ProcessInput($parser, $tag, $attribs);
+				$this->out .= $this->ProcessInput($parser, $tag, $attribs);
 			$close = ' /';
 		}
 		else if ($tag == 'LINK') $close = ' /';
@@ -388,7 +388,8 @@ class Template
 			$frm->AddInput(new FormInput('Data Type:', 'text', 'user'));
 			$frm->AddInput(new FormInput('Data Length:', 'password', 'pass'));
 			$frm->AddInput(new FormInput(null, 'submit', null, 'Configure'));
-			return $frm->Get('method="post" action="{{me}}"');
+			return GetBox('box_field', "Field {$attribs['NAME']}",
+				$frm->Get('method="post" action="{{me}}"'));
 		}
 	}
 

@@ -424,8 +424,9 @@ class Form
 	 */
 	function IterateInput($start, $input)
 	{
-		if (is_array($input) && !empty($input))
+		if (is_array($input))
 		{
+			if (empty($input)) return;
 			$out = null;
 			foreach ($input as $item)
 			{
