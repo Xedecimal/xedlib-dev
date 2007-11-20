@@ -598,7 +598,7 @@ class FormInput
 	 * @param string $atrs
 	 * @param string $help
 	 */
-	function FormInput($text, $type, $name = null, $valu = null, $atrs = null,
+	function FormInput($text, $type = 'text', $name = null, $valu = null, $atrs = null,
 		$help = null)
 	{
 		$this->text = $text;
@@ -625,6 +625,10 @@ class FormInput
 		{
 			$callback = $this->valu;
 			return $callback($this);
+		}
+		if ($this->type == 'mask')
+		{
+			return preg_replace('/t([0-9]*)/', '<input type="text" maxlength="\1" size="\1" name="'.$this->name.'[]" />', $this->valu);
 		}
 		if ($this->type == 'spamblock')
 		{

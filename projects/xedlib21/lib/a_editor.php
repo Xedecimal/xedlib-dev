@@ -1288,9 +1288,34 @@ class DisplayData
 	 */
 	function Get($target, $ca)
 	{
+		$ret = '';
 		$q = GetVar('q');
-		$ret = $this->GetSearch($target);
-		if ($ca == 'search' && !empty($q))
+
+		if ($ca == 'edit')
+		{
+			$item = $this->ds->GetOne(array($this->ds->id => GetVar('ci')));
+			if (!empty($this->ds->FieldInputs))
+			{
+				$frm = new Form('frmEdit');
+				$frm->AddHidden('editor', $this->name);
+				$frm->AddHidden('ca', 'update');
+				$frm->AddHidden('ci', GetVar('ci'));
+
+				foreach ($this->ds->FieldInputs as $col => $fi)
+				{
+					$fi->name = $col;
+					if ($fi->type == 'select')
+						$fi->valu[$item[$col]]->selected = true;
+					else $fi->valu = $item[$col];
+
+					$frm->AddInput($fi);
+				}
+				$frm->AddInput(new FormInput(null, 'submit', null, 'Update'));
+				$ret .= $frm->Get('action="'.$target.'" method="post"');
+			}
+		}
+
+		else if ($ca == 'search' && !empty($q))
 		{
 			$fs = GetVar('fields');
 			$result = $this->ds->GetSearch(array_keys($fs), $q);
@@ -1322,29 +1347,9 @@ EOD;
 				}
 			}
 		}
-		else if ($ca == 'edit')
-		{
-			$item = $this->ds->GetOne(array($this->ds->id => GetVar('ci')));
-			if (!empty($this->ds->FieldInputs))
-			{
-				$frm = new Form('frmEdit');
-				$frm->AddHidden('editor', $this->name);
-				$frm->AddHidden('ca', 'update');
-				$frm->AddHidden('ci', GetVar('ci'));
 
-				foreach ($this->ds->FieldInputs as $col => $fi)
-				{
-					$fi->name = $col;
-					if ($fi->type == 'select')
-						$fi->valu[$item[$col]]->selected = true;
-					else $fi->valu = $item[$col];
+		else $ret = $this->GetSearch($target);
 
-					$frm->AddInput($fi);
-				}
-				$frm->AddInput(new FormInput(null, 'submit', null, 'Update'));
-				$ret .= $frm->Get('action="'.$target.'" method="post"');
-			}
-		}
 		return $ret;
 	}
 
