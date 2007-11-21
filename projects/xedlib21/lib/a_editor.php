@@ -332,7 +332,7 @@ class EditorData
 		$this->handlers = array();
 		$this->ds = $ds;
 
-		if (get_class($ds) == 'dataset')
+		if (strtolower(get_class($ds)) == 'dataset')
 		{
 			$this->sort = $sort;
 			$this->type = CONTROL_BOUND;
@@ -439,7 +439,6 @@ class EditorData
 		}
 		else if ($action == $this->name.'_update')
 		{
-			global $ci;
 			if ($this->type == CONTROL_SIMPLE)
 			{
 				foreach ($this->ds->FieldInputs as $name => $i)
@@ -499,7 +498,7 @@ class EditorData
 			}
 
 			if ($this->type == CONTROL_BOUND)
-				$context->ds->Update(array($context->ds->id => $ci), $update);
+				$context->ds->Update(array($context->ds->id => GetVar('ci')), $update);
 		}
 		/*else if ($action == $this->name.'_swap')
 		{
@@ -634,7 +633,7 @@ class EditorData
 	 * @param mixed $ci ID of current item (eg. GetVar('ci'))
 	 * @return string
 	 */
-	function Get($target, $ci = null)
+	function Get($target, $ci)
 	{
 		$ret['name'] = $this->name;
 
@@ -863,7 +862,7 @@ class EditorData
 			if (!empty($this->ds->DisplayColumns))
 			foreach ($this->ds->DisplayColumns as $col => $disp)
 			{
-				$cols[$col] = "<b>{$disp->text}</b>";
+				$cols[$col] = "{$disp->text}";
 				$atrs[] = $disp->attribs;
 			}
 
@@ -1125,7 +1124,11 @@ class EditorData
 								$in->valu = MyDateTimestamp($sel[0][$col]);
 							else $in->valu = $sel[0][$col];
 						}
-						else if (isset($data[2])) { echo "Set it to data[2] so that broke it.<br/>\n"; $in->valu = $data[2]; }
+						else if (isset($data[2]))
+						{
+							echo "Set it to data[2] so that broke it.<br/>\n";
+							$in->valu = $data[2];
+						}
 						//If we bring this back, make sure setting explicit
 						//values in DataSet::FormInputs still works.
 						//else { $in->valu = null; }
@@ -1278,10 +1281,12 @@ class DisplayData
 					$val = GetVar($col);
 					$up[$col] = sprintf('%04d-%02d-%02d', $val[2], $val[0], $val[1]);
 				}
+				else if ($fi->type == 'select' || $fi->type == 'radios')
+					$up[$col] = (int)GetVar($col);
 				else
 					$up[$col] = GetVar($col);
 			}
-			$this->ds->Update(array('id' => GetVar('ci')), $up);
+			$this->ds->Update(array($this->ds->id => GetVar('ci')), $up);
 		}
 	}
 
@@ -1307,8 +1312,11 @@ class DisplayData
 				foreach ($this->ds->FieldInputs as $col => $fi)
 				{
 					$fi->name = $col;
-					if ($fi->type == 'select')
-						$fi->valu[$item[$col]]->selected = true;
+					if ($fi->type == 'select' || $fi->type == 'radios')
+					{
+						if (isset($fi->valu[$item[$col]]))
+							$fi->valu[$item[$col]]->selected = true;
+					}
 					else $fi->valu = $item[$col];
 
 					$frm->AddInput($fi);
@@ -1318,10 +1326,31 @@ class DisplayData
 			}
 		}
 
-		else if ($ca == 'search' && !empty($q))
+		else if ($ca == 'search')
 		{
-			$fs = GetVar('fields');
-			$result = $this->ds->GetSearch(array_keys($fs), $q);
+			$fs = GetVar('field');
+			$ss = GetVar('search');
+
+			$query = "SELECT * FROM `".$this->ds->table.'`';
+			if (!empty($ss))
+			{
+				$query .= ' WHERE';
+				foreach ($ss as $col => $set)
+				{
+					$fi = $this->ds->FieldInputs[$col];
+					if ($fi->type == 'select') $query .= " $col IN ($fs[$col])";
+					else if ($fi->type == 'date')
+					{
+						$query .= " $col BETWEEN '".
+						TimestampToMySql(DateInputToTS($fs[$col][0]), false).'\' AND \''.
+						TimestampToMySql(DateInputToTS($fs[$col][1]), false).'\'';
+					}
+					else $query .= " $col LIKE '%".$fs[$col]."%'";
+				}
+				$result = $this->ds->GetCustom($query);
+			}
+			else $result = array();
+
 			$items = GetFlatPage($result, GetVar('cp', 0), 10);
 			if (!empty($items) && !empty($this->ds->DisplayColumns))
 			{
@@ -1338,7 +1367,7 @@ EOD;
 					foreach ($this->ds->DisplayColumns as $f => $dc)
 					{
 						$val = !empty($dc->callback) ?
-							call_user_func($dc->callback, $i, $f) : $i[$f];
+							call_user_func($dc->callback, $this->ds, $i, $f) : $i[$f];
 						$ret .= "<tr><td align=\"right\">{$dc->text}</td><td>$val</td></tr>\n";
 					}
 					if ($ix > 10) break;
@@ -1365,13 +1394,30 @@ EOD;
 		$frm = new Form('frmSearch');
 		$frm->AddHidden('ca', 'search');
 		if (isset($GLOBALS['editor'])) $frm->AddHidden('editor', $GLOBALS['editor']);
-		$frm->AddInput(
-			new FormInput('Query', 'text', 'q'),
-			new FormInput('Fields', 'checks', 'fields',
-				ArrayToSelOptions($this->SearchFields), 'style="overflow: auto;"'),
-			new FormInput(null, 'submit', 'butSubmit', 'Search')
-		);
+		$frm->AddInput(new FormInput('Search', 'custom', null, array($this, 'callback_fields')));
+		$frm->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Search'));
 		return $frm->Get('action="'.$target.'" method="post"');
+	}
+
+	function callback_fields()
+	{
+		$ret = '';
+		foreach ($this->SearchFields as $col)
+		{
+			$fi = $this->ds->FieldInputs[$col];
+			$fi->name = 'field['.$col.']';
+			$ret .= '<label><input type="checkbox" value="1" name="search['.$col.']" onchange="show(\''.$col.'\', this.checked)" /> '.$fi->text.'</label>';
+			if ($fi->type == 'date')
+			{
+				$fi->name = 'field['.$col.'][0]';
+				$ret .= ' <span style="display: none" id="'.$col.'"> from '.$fi->Get($this->name).' to ';
+				$fi->name = 'field['.$col.'][1]';
+				$ret .= $fi->Get($this->name)."</span>\n";
+			}
+			else $ret .= ' <span style="display: none" id="'.$col.'">'.$fi->Get($this->name).'</span>';
+			$ret .= '<br/>';
+		}
+		return $ret;
 	}
 }
 

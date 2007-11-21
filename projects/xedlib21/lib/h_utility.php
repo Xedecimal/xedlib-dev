@@ -345,9 +345,9 @@ function ChompString($text, $length)
  * @param int $ts Epoch timestamp.
  * @return string MySql formatted date.
  */
-function TimestampToMySql($ts)
+function TimestampToMySql($ts, $time = true)
 {
-	return gmdate("y-m-d h:i:s", $ts);
+	return gmdate($time ? 'y-m-d h:i:s' : 'y-m-d', $ts);
 }
 
 /**

@@ -341,7 +341,7 @@ class Form
 	/**
 	 * @var string
 	 */
-	public $RowStart = '<tr>';
+	public $RowStart = array('<tr class="even">', '<tr class="odd">');
 
 	public $FirstStart = '<td align="right">';
 	public $FirstEnd = '</td>';
@@ -372,6 +372,8 @@ class Form
 	public $words = array(
 		'complete', 'finish', 'end', 'information'
 	);
+
+	public $rowx = 0;
 
 	/**
 	* Instantiates this form with a unique name.
@@ -411,7 +413,7 @@ class Form
 
 		if (!empty($args))
 		{
-			$this->out .= $this->RowStart;
+			$this->out .= $this->RowStart[$this->rowx++%2];
 			foreach ($args as $ix => $item)
 				$this->out .= $this->IterateInput($ix == 0, $item);
 			$this->out .= $this->RowEnd;
@@ -624,8 +626,7 @@ class FormInput
 	{
 		if ($this->type == 'custom')
 		{
-			$callback = $this->valu;
-			return $callback($this);
+			return call_user_func($this->valu, $this);
 		}
 		if ($this->type == 'mask')
 		{
@@ -1063,7 +1064,7 @@ define('CONTROL_BOUND', 1);
  * @param mixed $col Index of $val to test for yes or no.
  * @return string 'Yes' or 'No'.
  */
-function BoolCallback($val, $col) { return $val[$col] ? 'Yes' : 'No'; }
+function BoolCallback($ds, $val, $col) { return $val[$col] ? 'Yes' : 'No'; }
 
 /**
  * @param array $val Value array, usually a row from a dataset.
@@ -1697,7 +1698,7 @@ $__states = array(
 	new SelOption('Wyoming')
 );
 
-function StateCallback($data, $col)
+function StateCallback($ds, $data, $col)
 {
 	global $__states;
 	return $__states[$data[$col]]->text;
@@ -1730,6 +1731,16 @@ function InputToString($field)
 		return $field->valu[$val]->text;
 	}
 	else Error("Unknown field type.");
+}
+
+/**
+ * A SelOption callback, returns the value by the integer.
+ */
+function SOCallback($ds, $item, $col)
+{
+	if (isset($ds->FieldInputs[$col]->valu[$item[$col]]))
+		return $ds->FieldInputs[$col]->valu[$item[$col]]->text;
+	return $item[$col];
 }
 
 ?>

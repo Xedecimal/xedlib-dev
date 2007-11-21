@@ -2,8 +2,15 @@ function gebi(id) { return document.getElementById(id); }
 
 function toggle(id)
 {
-	obj = document.getElementById(id);
+	obj = gebi(id);
 	if (obj.style.display == 'none') obj.style.display = '';
+	else obj.style.display = 'none';
+}
+
+function show(id, display)
+{
+	obj = gebi(id);
+	if (display) obj.style.display = '';
 	else obj.style.display = 'none';
 }
 
@@ -68,7 +75,7 @@ function getAjax(method, url, block, target)
 			target(xmlHttp.responseText);
 		}
 	}
-	
+
 	xmlHttp.open(method, url);
 	xmlHttp.send(null);
 }

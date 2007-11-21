@@ -36,9 +36,8 @@ function RequireModule(&$data, $file, $class)
 {
 	if (isset($data['includes'][$class]))
 	{
-		if ($GLOBALS['debug'])
-			echo "RequireModule: Returning already included module.
-			({$class})<br/>\n";
+		Trace("RequireModule: Returning already included module.
+			({$class})<br/>\n");
 		return $data['includes'][$class];
 	}
 
