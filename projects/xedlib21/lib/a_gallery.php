@@ -87,7 +87,9 @@ class Gallery
 	function Get($path, $temp = null)
 	{
 		global $me;
-		
+
+		require_once('h_template.php');
+
 		$t = new Template();
 
 		$body = <<<EOF
@@ -113,7 +115,7 @@ EOF;
 			if ($this->InfoCaption && isset($fi->info['title']))
 				$name = htmlspecialchars($fi->info['title']);
 			else $name = $fi->filename;
-			$body .= '<tr><td colspan="3"><a href="'.URL($me).'">View Main Gallery</a> » '.$name.'</td></tr>';
+			$body .= '<tr><td colspan="3"><a href="'.URL($me).'">View Main Gallery</a> &raquo; '.$name.'</td></tr>';
 		}
 
 		if (!empty($files['dirs']))
@@ -149,7 +151,7 @@ EOF;
 
 			foreach ($tot as $file)
 			{
-				if (isset($file->info['thumb']) && file_exists($file->info['thumb']))
+				if (isset($file->icon) && file_exists($file->icon))
 				{
 					$twidth = $file->info['thumb_width']+16;
 					$theight = $file->info['thumb_height']+32;
@@ -184,6 +186,7 @@ EOF;
 			$args = array('galcf' => $path);
 			$t->Set('pages', GetPages($files['files'], $this->Behavior->PageCount, $args));
 		}
+		else $t->Set('pages', '');
 
 		$view = GetVar('view');
 		if (isset($view))
@@ -233,7 +236,7 @@ EOF;
 						'cp' => floor(($view-1)/$this->Behavior->PageCount)
 					)).'#fullview', 'back.png', 'Back', 'class="png"');
 			$body .= ' <b>Picture '.($view+1).' of '.count($files['files']).'</b> ';
-			if ($view < count($files['files']))
+			if ($view < count($files['files'])-1)
 				$body .= GetButton(URL($me, array(
 					'view' => $view+1,
 					'galcf' => $path,
@@ -272,7 +275,7 @@ $this->GetCaption($files['files'][$view]).'</div>';
 
 		if ($this->InfoCaption
 			&& !empty($file->info['title'])
-			&& $this->Display->Caption == CAPTION_TITLE)
+			&& $this->Display->Captions == CAPTION_TITLE)
 			$name = $file->info['title'];
 		else if ($this->Display->Captions == CAPTION_FILE)
 			$name = substr($file->filename, 0, strrpos($file->filename, '.'));

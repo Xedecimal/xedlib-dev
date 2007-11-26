@@ -229,7 +229,7 @@ class FileManager
 				if (strlen($cap) < 1) continue;
 				$fi = new FileInfo($this->Root.$this->cf.'/'.$file, $this->DefaultFilter);
 				$fi->info['title'] = $cap;
-				$fi->Filter->Updated($fi);
+				$fi->Filter->Updated($fi, $fi->info);
 				$fi->SaveInfo();
 			}
 		}
@@ -341,6 +341,8 @@ class FileManager
 	{
 		if (!file_exists($this->Root.$this->cf))
 			return "FileManager::Get(): File doesn't exist ({$this->Root}{$this->cf}).<br/>\n";
+
+		require_once('h_template.php');
 
 		$t = new Template();
 
@@ -810,11 +812,9 @@ EOF;
 		if ($this->Behavior->QuickCaptions)
 		{
 			$id = $type.'_'.$index;
-			$ret .= '<td>'
-			.'<textarea name="titles['.$file->filename.']" rows="2" cols="30">'
+			$t->Set('caption', '<textarea name="titles['.$file->filename.']" rows="2" cols="30">'
 				.@htmlspecialchars(stripslashes($file->info['title'])).
-				'</textarea>'
-			.'</td>';
+				'</textarea>');
 		}
 
 		return $t->Get(dirname(__FILE__).'/temps/file/file.php');
