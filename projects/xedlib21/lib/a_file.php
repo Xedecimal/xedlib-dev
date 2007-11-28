@@ -165,17 +165,6 @@ class FileManager
 			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 			$files = GetVar('cu');
 
-			//SWF Hack. Should be removed later.
-			$swfile = GetVar('Filedata');
-
-			if (!empty($swfile))
-			{
-				$files['name'][] = $swfile['name'];
-				$files['type'][] = $swfile['type'];
-				$files['tmp_name'][] = $swfile['tmp_name'];
-			}
-			//End SWF hack. - Xed
-
 			foreach ($files['name'] as $ix => $file)
 			{
 				$newup = array(
@@ -400,7 +389,6 @@ class FileManager
 		{
 			global $me;
 
-			$ret .= "<p><a href=\"#\" onclick=\"toggle('{$this->Name}_options'); return false;\">View Options for this File or Folder</a></p>\n";
 			$ret .= "<div id=\"{$this->Name}_options\">";
 			if ($this->Behavior->HideOptions)
 				$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->Name}_options').style.display = 'none';</script>";
@@ -418,39 +406,6 @@ class FileManager
 
 				$pname = GetRelativePath(dirname(__FILE__));
 				$sid = @$_COOKIE['PHPSESSID'];
-
-				//Flash Uploader.
-
-/*				$out = <<<EOF
-	Maximum allowable individual file size: {$maxsize}<br/>
-	<script type="text/javascript" src="{$pname}/js/swfobject.js"></script>
-	<form action="{$target}" method="post" enctype="multipart/form-data">
-	<input type="hidden" name="editor" value="{$this->Name}" />
-	<input type="hidden" name="ca" value="upload"/>
-	<input type="hidden" name="cf" value="{$this->cf}"/>
-	<div id="flashUpload">
-	<p><strong>You need to upgrade your Flash Player</strong></p>
-	<p>Please visit <a href="http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash&amp;promoid=BIOW">Adobe</a> to obtain this.
-	</p></div>
-	<noscript>
-	<input type="file" name="cu[]"/>
-	<input type="submit" value="Upload" />
-	</noscript>
-	<script type="text/javascript">
-	// <![CDATA[
-	var so = new SWFObject("{$pname}/swf/fileUpload.swf", "fileUpload", "550", "100", "9");
-	so.addParam('allowScriptAccess', 'sameDomain');
-	so.addParam('movie', 'fileUpload.swf');
-	so.addParam('quality', 'high');
-	so.addParam('wmode', 'transparent');
-	so.addParam('flashvars', 'uploadPage={$me}&amp;returns=editor,{$this->Name},ca,upload,cf,{$this->cf},PHPSESSID,{$sid}&amp;ref=editor,{$this->Name},cf,{$this->cf}');
-	so.write("flashUpload");
-	// ]]>
-	</script>
-	<input type="file" name="cu[]" />
-	<input type="submit" value="Send" />
-	</form>
-EOF;*/
 
 				//Java Uploader
 
@@ -723,6 +678,7 @@ EOF;
 	function GetFile($target, $file, $type, $index)
 	{
 		$t = new Template();
+		$t->Behavior->Bleed = false;
 		$t->Set('class', $index % 2 ? 'even' : 'odd');
 		//$ret = "\n<tr class=\"{$class}\">\n";
 
@@ -760,7 +716,8 @@ EOF;
 		else $t->Set('check', '');
 		$t->Set('file', "<a href=\"$url\">{$name}</a>");
 		$time = isset($file->info['mtime']) ? $file->info['mtime'] : filemtime($file->path);
-		$t->Set('date', gmdate("m/d/y h:i", $time));
+		if ($this->View->ShowDate)
+			$t->Set('date', gmdate("m/d/y h:i", $time));
 
 		$common = array(
 			'cf' => $this->cf,

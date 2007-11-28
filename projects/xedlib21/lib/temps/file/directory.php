@@ -42,6 +42,11 @@ or move.</p>
 </box>
 </if>
 
+<if check="$GLOBALS['user']['usr_access'] == 3">
+<p><a href="#" onclick="toggle('{{name}}_options'); return false;">
+	View Options for this File or Folder</a></p>
+</if>
+
 {{options}}
 </form>
 </null>

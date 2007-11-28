@@ -518,13 +518,14 @@ class Template
 		else if (defined($tvar)) return constant($tvar);
 		else if (isset($this->data[$tvar])) return $this->data[$tvar];
 		else if ($this->use_getvar) return GetVar($tvar);
-		return $match[0];
+		return $this->Behavior->Bleed ? $match[0] : null;
 	}
 }
 
 class TemplateBehavior
 {
 	public $MakeDynamic = false;
+	public $Bleed = true;
 }
 
 /**
