@@ -346,6 +346,8 @@ class Form
 	public $FirstStart = '<td align="right">';
 	public $FirstEnd = '</td>';
 
+	public $StringStart = '<td colspan="2">';
+
 	/**
 	 * @var string
 	 */
@@ -441,7 +443,7 @@ class Form
 		$helptext = null;
 
 		if (is_string($input))
-			return ($start ? $this->FirstStart : $this->CellStart).$input.
+			return $this->StringStart.$input.
 				($start ? $this->FirstEnd : $this->CellEnd);
 
 		if (!is_object($input)) Error("Form input is not an object.");
@@ -509,7 +511,7 @@ class Form
 			foreach ($this->hiddens as $hidden)
 			{
 				$fname = $hidden[3] ? $hidden[0] : $this->name.'_'.$hidden[0];
-				$ret .= "<input type=\"hidden\" id=\"".CleanID($this->name.'_'.$fname)."\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
+				$ret .= "<input type=\"hidden\" id=\"".CleanID($fname)."\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
 				if (isset($hidden[2])) $ret .= ' '.$hidden[2];
 				$ret .= " />\n";
 			}
@@ -807,76 +809,41 @@ class FormInput
 	 */
 	function GetValue($persist = true)
 	{
-		if ($this->type == 'password') return null;
-		else if ($this->type == 'file') return null;
-		else if ($this->type == 'spamblock') return null;
-		else if ($this->type == 'select')
+		switch ($this->type)
 		{
-			$newsels = array_clone($this->valu);
-			if ($persist)
-			{
-				$sel = GetVar($this->name);
-				if ($sel && isset($newsels[$sel]))
-					$newsels[$sel]->selected = true;
-			}
-			return $newsels;
-		}
-		else if ($this->type == 'selects')
-		{
-			$newsels = array_clone($this->valu);
-			if ($persist)
-			{
-				$svalus = GetVar($this->name);
-				if (!empty($svalus))
-				foreach ($svalus as $val) $newsels[$val]->selected = true;
-			}
-			return $newsels;
-		}
-		else if ($this->type == 'radios')
-		{
-			$newsels = array_clone($this->valu);
-			if ($persist)
-			{
-				$pval = GetVar($this->name);
-				if (!empty($val))
-					foreach ($newsels as $id => $val)
-					{
-						if ($id == $pval) $newsels[$id]->selected = true;
-					}
-			}
-			return $newsels;
-		}
-		else if ($this->type == 'checks')
-		{
-			$newsels = array_clone($this->valu);
-			if ($persist)
-			{
-				$svalus = GetVar($this->name, array());
-				foreach ($svalus as $id => $val) $newsels[$id]->selected = true;
-			}
-			return $newsels;
-		}
-		else if ($this->type == 'checkbox')
-		{
-			return $persist && GetVar($this->name) ? ' checked="checked"' : null;
-		}
-		else
-		{
-			if ($persist && preg_match('#([^\[]+)\[([^\]]+)\]#', $this->name, $m))
-			{
-				$arg = GetVar($m[1]);
-
-				$ix = 0;
-				preg_match_all('/\[([^\[]*)\]/', $this->name, $m);
-				foreach ($m[1] as $step)
+			//Definate Failures...
+			case 'password':
+			case 'file':
+			case 'spamblock':
+				return null;
+			//Single Selectables...
+			case 'select':
+			case 'radios':
+				$newsels = array_clone($this->valu);
+				if ($persist)
 				{
-					if ($ix == $step) $ix++;
-					$arg = @$arg[isset($step) ? $step : $ix++];
+					$sel = GetVar($this->name);
+					if ($sel && isset($newsels[$sel]))
+						$newsels[$sel]->selected = true;
 				}
-				if (empty($arg)) $arg = $this->valu;
-				return htmlspecialchars(!empty($arg) ? $arg : $this->valu);
-			}
-			return htmlspecialchars($persist ? GetVar($this->name, $this->valu) : $this->valu);
+				return $newsels;
+			//Multi Selectables...
+			case 'selects':
+			case 'checks':
+				$newsels = array_clone($this->valu);
+				if ($persist)
+				{
+					$svalus = GetVar($this->name);
+					if (!empty($svalus))
+					foreach ($svalus as $val) $newsels[$val]->selected = true;
+				}
+				return $newsels;
+			//Simple Checked...
+			case 'checkbox':
+				return $persist && GetVar($this->name) ? ' checked="checked"' : null;
+			//May get a little more complicated if we don't know what it is...
+			default:
+				return htmlspecialchars($persist ? GetVars($this->name, $this->valu) : $this->valu);
 		}
 	}
 }
@@ -1731,6 +1698,16 @@ function InputToString($field)
 		return $field->valu[$val]->text;
 	}
 	else Error("Unknown field type.");
+}
+
+function GetHiddenPost($name, $val)
+{
+	$ret = '';
+	if (is_array($val))
+		foreach ($val as $n => $v)
+			$ret .= GetHiddenPost($name.'['.$n.']', $v);
+	else if (!empty($val)) $ret .= '<input type="hidden" name="'.$name.'" value="'.$val."\" />\n";
+	return $ret;
 }
 
 /**
