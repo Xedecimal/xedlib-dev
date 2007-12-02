@@ -95,4 +95,5 @@ function appendTag(parent, tag, args)
 		for (i in args) tag.setAttribute(i, args[i]);
 	}
 	parent.appendChild(tag);
+	return tag;
 }

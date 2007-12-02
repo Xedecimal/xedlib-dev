@@ -471,14 +471,13 @@ class Form
 		$out = !empty($input->text)?$input->text:null;
 
 		$helptext = $input->help;
-		if (isset($this->Errors[$input->name])) $helptext .= $this->Errors[$input->name];
+		if (isset($this->Errors[$input->name]))
+			$helptext .= $this->Errors[$input->name];
 
 		return ($start ? $this->FirstStart : $this->CellStart).
 			($input->labl ? '<label for="'.CleanID($this->name.'_'.$input->name)
 			.'">' : null).
-
 			($right ? null : $out).
-
 			($input->labl ? '</label>' : null).$this->CellEnd.
 			$this->CellStart.$input->Get($this->name, $this->Persist).
 			($right ? $out : null).$helptext.
@@ -632,7 +631,9 @@ class FormInput
 		}
 		if ($this->type == 'mask')
 		{
-			return preg_replace('/t([0-9]*)/', '<input type="text" maxlength="\1" size="\1" name="'.$this->name.'[]" />', $this->valu);
+			return preg_replace('/t([0-9]*)/', '<input type="text"
+				maxlength="\1" size="\1" name="'.$this->name.'[]" />',
+				$this->valu);
 		}
 		if ($this->type == 'spamblock')
 		{
