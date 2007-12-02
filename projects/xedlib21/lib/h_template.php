@@ -178,7 +178,7 @@ class Template
 		else if ($tag == 'COPY') $output .= '&copy;';
 		else if ($tag == 'DOCTYPE')
 		{
-			$this->show = false;
+			$show = false;
 			if (isset($attribs['TYPE']))
 			{
 				if ($attribs['TYPE'] == 'strict')

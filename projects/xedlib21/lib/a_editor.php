@@ -1299,7 +1299,7 @@ class DisplayData
 		$ret = '';
 		$q = GetVar('q');
 
-		if ($ca == 'edit')
+		if ($ca == 'edit' && $this->Behavior->AllowEdit)
 		{
 			$item = $this->ds->GetOne(array($this->ds->id => GetVar('ci')));
 			if (!empty($this->ds->FieldInputs))
@@ -1335,9 +1335,11 @@ class DisplayData
 			if (!empty($ss))
 			{
 				$query .= ' WHERE';
+				$ix = 0;
 				foreach ($ss as $col => $set)
 				{
 					$fi = $this->ds->FieldInputs[$col];
+					if ($ix++ > 0) $query .= ' AND';
 					if ($fi->type == 'select') $query .= " $col IN ($fs[$col])";
 					else if ($fi->type == 'date')
 					{
@@ -1360,7 +1362,10 @@ class DisplayData
 					$ret .= <<<EOD
 <tr><td class="header">
 	<label><input type="checkbox" value="{$i[$this->ds->id]}" />Compare</label>
-</td><td align="right" class="header">
+</td>
+EOD;
+					if ($this->Behavior->AllowEdit) $ret .= <<<EOD
+<td align="right" class="header">
 	<a href="{$target}?editor={$this->name}&ca=edit&ci={$i[$this->ds->id]}">Edit</a>
 </td></tr>
 EOD;
@@ -1406,7 +1411,7 @@ EOD;
 		{
 			$fi = $this->ds->FieldInputs[$col];
 			$fi->name = 'field['.$col.']';
-			$ret .= '<label><input type="checkbox" value="1" name="search['.$col.']" onchange="show(\''.$col.'\', this.checked)" /> '.$fi->text.'</label>';
+			$ret .= '<p style="margin: 0;"><label><input type="checkbox" value="1" name="search['.$col.']" onclick="show(\''.$col.'\', this.checked)" /> '.$fi->text.'</label>';
 			if ($fi->type == 'date')
 			{
 				$fi->name = 'field['.$col.'][0]';
@@ -1415,7 +1420,7 @@ EOD;
 				$ret .= $fi->Get($this->name)."</span>\n";
 			}
 			else $ret .= ' <span style="display: none" id="'.$col.'">'.$fi->Get($this->name).'</span>';
-			$ret .= '<br/>';
+			$ret .= '</p>';
 		}
 		return $ret;
 	}

@@ -81,11 +81,11 @@ class Box
 			$t->set("box_body", $this->out);
 			return $t->get($temp);
 		}
-		$ret  = "<!-- Start Box: {$this->title} -->\n";
-		$ret .= "<div class=\"box\">\n";
-		$ret .= "<div class=\"box_title\">{$this->title}</div>\n";
-		$ret .= "<div class=\"box_body\">{$this->out}</div>\n";
-		$ret .= "</div>\n";
+		$ret  = '<!-- Start Box: '.$this->title.' -->';
+		$ret .= '<div class="box">';
+		$ret .= '<div class="box_title">'.$this->title.'</div>';
+		$ret .= '<div class="box_body">'.$this->out.'</div>';
+		$ret .= '</div>';
 		$ret .= "<!-- End Box {$this->title} -->\n";
 		return $ret;
 	}
@@ -720,14 +720,15 @@ class FormInput
 				{
 					$selected = $val->selected ? 'checked="checked"' : null;
 					if ($val->group)
-						$ret .= "<b><i>{$val->text}</i></b><br/>\n";
+						$ret .= "<b><i>{$val->text}</i></b>\n";
 					else
 						$ret .= "<label><input
 							type=\"radio\"
 							name=\"{$this->name}\"
 							value=\"{$id}\"
 							id=\"".CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
-							{$val->text}</label><br/>";
+							{$val->text}</label>";
+					if (empty($this->Horizontal)) $ret .= '<br/>';
 				}
 			}
 			$this->EndLabel = true;
@@ -904,9 +905,10 @@ function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
 		$selected = null;
 		if (isset($selvalue))
 		{
-			if (isset($selvalue[$selid]) &&
-			strlen($selvalue[$selid]) > 0 &&
-			$selvalue[$selid] == $id)
+			if (is_array($selvalue)
+				&& isset($selvalue[$selid])
+				&& strlen($selvalue[$selid]) > 0
+				&& $selvalue[$selid] == $id)
 			{
 				$selected = ' selected="selected"';
 				$selid++;
@@ -1613,56 +1615,57 @@ function GetInputState($name, $state = -1)
  * @var array Good for a FormInput of type 'select'.
  */
 $__states = array(
-	new SelOption('Alabama'),
-	new SelOption('Alaska'),
-	new SelOption('Arizona'),
-	new SelOption('Arkansas'),
-	new SelOption('California'),
-	new SelOption('Colorado'),
-	new SelOption('Connecticut'),
-	new SelOption('Delaware'),
-	new SelOption('Florida'),
-	new SelOption('Georgia'),
-	new SelOption('Hawaii'),
-	new SelOption('Idaho'),
-	new SelOption('Illinois'),
-	new SelOption('Indiana'),
-	new SelOption('Iowa'),
-	new SelOption('Kansas'),
-	new SelOption('Kentucky'),
-	new SelOption('Louisiana'),
-	new SelOption('Maine'),
-	new SelOption('Maryland'),
-	new SelOption('Massachusetts'),
-	new SelOption('Michigan'),
-	new SelOption('Minnesota'),
-	new SelOption('Mississippi'),
-	new SelOption('Missouri'),
-	new SelOption('Montana'),
-	new SelOption('Nebraska'),
-	new SelOption('Nevada'),
-	new SelOption('New Hampshire'),
-	new SelOption('New Jersey'),
-	new SelOption('New Mexico'),
-	new SelOption('New York'),
-	new SelOption('North Carolina'),
-	new SelOption('North Dakota'),
-	new SelOption('Ohio'),
-	new SelOption('Oklahoma'),
-	new SelOption('Oregon'),
-	new SelOption('Pennsylvania'),
-	new SelOption('Rhode Island'),
-	new SelOption('South Carolina'),
-	new SelOption('South Dakota'),
-	new SelOption('Tennessee'),
-	new SelOption('Texas'),
-	new SelOption('Utah'),
-	new SelOption('Vermont'),
-	new SelOption('Virginia'),
-	new SelOption('Washington'),
-	new SelOption('West Virginia'),
-	new SelOption('Wisconsin'),
-	new SelOption('Wyoming')
+	50 => new SelOption('None'),
+	0 => new SelOption('Alabama'),
+	1 => new SelOption('Alaska'),
+	2 => new SelOption('Arizona'),
+	3 => new SelOption('Arkansas'),
+	4 => new SelOption('California'),
+	5 => new SelOption('Colorado'),
+	6 => new SelOption('Connecticut'),
+	7 => new SelOption('Delaware'),
+	8 => new SelOption('Florida'),
+	9 => new SelOption('Georgia'),
+	10 => new SelOption('Hawaii'),
+	11 => new SelOption('Idaho'),
+	12 => new SelOption('Illinois'),
+	13 => new SelOption('Indiana'),
+	14 => new SelOption('Iowa'),
+	15 => new SelOption('Kansas'),
+	16 => new SelOption('Kentucky'),
+	17 => new SelOption('Louisiana'),
+	18 => new SelOption('Maine'),
+	19 => new SelOption('Maryland'),
+	20 => new SelOption('Massachusetts'),
+	21 => new SelOption('Michigan'),
+	22 => new SelOption('Minnesota'),
+	23 => new SelOption('Mississippi'),
+	24 => new SelOption('Missouri'),
+	25 => new SelOption('Montana'),
+	26 => new SelOption('Nebraska'),
+	27 => new SelOption('Nevada'),
+	28 => new SelOption('New Hampshire'),
+	29 => new SelOption('New Jersey'),
+	30 => new SelOption('New Mexico'),
+	31 => new SelOption('New York'),
+	32 => new SelOption('North Carolina'),
+	33 => new SelOption('North Dakota'),
+	34 => new SelOption('Ohio'),
+	35 => new SelOption('Oklahoma'),
+	36 => new SelOption('Oregon'),
+	37 => new SelOption('Pennsylvania'),
+	38 => new SelOption('Rhode Island'),
+	39 => new SelOption('South Carolina'),
+	40 => new SelOption('South Dakota'),
+	41 => new SelOption('Tennessee'),
+	42 => new SelOption('Texas'),
+	43 => new SelOption('Utah'),
+	44 => new SelOption('Vermont'),
+	45 => new SelOption('Virginia'),
+	46 => new SelOption('Washington'),
+	47 => new SelOption('West Virginia'),
+	48 => new SelOption('Wisconsin'),
+	49 => new SelOption('Wyoming'),
 );
 
 function StateCallback($ds, $data, $col)
@@ -1700,6 +1703,16 @@ function InputToString($field)
 	else Error("Unknown field type.");
 }
 
+<<<<<<< .mine
+function ArrayToSelText($array, $sel)
+{
+	$ret = null;
+	foreach ($array as $ix => $v)
+		$ret .= ($ix > 0?', ':null).$sel[$v]->text;
+	return $ret;
+}
+
+=======
 function GetHiddenPost($name, $val)
 {
 	$ret = '';
@@ -1710,6 +1723,7 @@ function GetHiddenPost($name, $val)
 	return $ret;
 }
 
+>>>>>>> .r1611
 /**
  * A SelOption callback, returns the value by the integer.
  */
