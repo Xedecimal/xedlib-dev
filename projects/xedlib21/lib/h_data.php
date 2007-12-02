@@ -521,13 +521,13 @@ class DataSet
 	 * @param array $match
 	 * @return string
 	 */
-	function WhereClause($match)
+	function WhereClause($match, $start = ' WHERE')
 	{
 		if (isset($match))
 		{
 			if (is_array($match))
 			{
-				$ret = "\n WHERE";
+				$ret = "\n".$start;
 				$ix = 0;
 				foreach ($match as $col => $val)
 				{
@@ -546,13 +546,13 @@ class DataSet
 				}
 				return $ret;
 			}
-			else return " \nWHERE {$match}";
+			else return "\n".$start.' '.$match;
 		}
 		return null;
 	}
 
 	/**
-	 * Gets a LEFT JOIN clause in SQL format.
+	 * Gets a JOIN clause in SQL format.
 	 *
 	 * @param array $joining
 	 * @return string
@@ -940,7 +940,7 @@ class DataSet
 	 * @param int $limit Limit of items to return for pagination.
 	 * @return array
 	 */
-	function GetSearch($columns, $phrase, $args = GET_BOTH, $start = 0, $limit = 0)
+	function GetSearch($columns, $phrase, $limit = null, $filter = null)
 	{
 		$newphrase = str_replace("'", '%', stripslashes($phrase));
 		$newphrase = str_replace(' ', '%', $newphrase);
@@ -948,17 +948,16 @@ class DataSet
 		$ix = 0;
 		if (!empty($columns))
 		{
-			$query .=  ' WHERE';
+			$query .=  ' WHERE (';
 			foreach ($columns as $col)
 			{
 				if ($ix++ > 0) $query .= " OR";
 				$query .= " $col LIKE '%{$newphrase}%'";
 			}
+			$query .= ')';
 		}
-		if ($limit != 0)
-		{
-			$query .= " LIMIT {$start}, {$limit}";
-		}
+		if ($filter != null) $query .= $this->WhereClause($filter, ' AND');
+		if ($limit != null) $query .= " LIMIT {$limit[0]}, {$limit[1]}";
 
 		return $this->GetCustom($query);
 	}

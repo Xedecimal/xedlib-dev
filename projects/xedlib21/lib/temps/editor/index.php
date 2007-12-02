@@ -1,5 +1,4 @@
 <null>
-
 <box title="Search">
 <form action="{{me}}">
 <input type="hidden" name="editor" value="{{name}}" />

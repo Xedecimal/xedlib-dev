@@ -1145,8 +1145,9 @@ class LoginManager
 	 */
 	function Prepare($ca, $passvar = 'sespass', $uservar = 'sesuser')
 	{
-		$check_user = ($this->type == CONTROL_BOUND) ? $_SESSION[$uservar] : null;
-		$check_pass = $_SESSION[$passvar];
+		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
+			? $_SESSION[$uservar] : null;
+		$check_pass = isset($_SESSION[$passvar]) ? $_SESSION[$passvar] : null;
 
 		if ($ca == 'login')
 		{
@@ -1703,7 +1704,6 @@ function InputToString($field)
 	else Error("Unknown field type.");
 }
 
-<<<<<<< .mine
 function ArrayToSelText($array, $sel)
 {
 	$ret = null;
@@ -1712,7 +1712,6 @@ function ArrayToSelText($array, $sel)
 	return $ret;
 }
 
-=======
 function GetHiddenPost($name, $val)
 {
 	$ret = '';
@@ -1723,15 +1722,14 @@ function GetHiddenPost($name, $val)
 	return $ret;
 }
 
->>>>>>> .r1611
 /**
  * A SelOption callback, returns the value by the integer.
  */
-function SOCallback($ds, $item, $col)
+function SOCallback($ds, $item, $icol, $col)
 {
-	if (isset($ds->FieldInputs[$col]->valu[$item[$col]]))
-		return $ds->FieldInputs[$col]->valu[$item[$col]]->text;
-	return $item[$col];
+	if (isset($ds->FieldInputs[$col]->valu[$item[$icol]]))
+		return $ds->FieldInputs[$col]->valu[$item[$icol]]->text;
+	return $item[$icol];
 }
 
 ?>

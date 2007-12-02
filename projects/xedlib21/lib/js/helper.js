@@ -79,3 +79,20 @@ function getAjax(method, url, block, target)
 	xmlHttp.open(method, url);
 	xmlHttp.send(null);
 }
+
+function appendTag(parent, tag, args)
+{
+	try
+	{
+		var add = '<'+tag;
+		for (i in args) add += ' '+i+'="'+args[i]+'"';
+		add += ' />';
+		tag = document.createElement(add);
+	}
+	catch (err)
+	{
+		tag = document.createElement(tag);
+		for (i in args) tag.setAttribute(i, args[i]);
+	}
+	parent.appendChild(tag);
+}

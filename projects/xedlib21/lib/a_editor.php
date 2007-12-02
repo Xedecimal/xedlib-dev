@@ -847,7 +847,8 @@ class EditorData
 			/*$items = $this->ds->GetInternal($this->filter, $this->sort,
 				null, $joins, $cols);*/
 
-			$items = $this->ds->GetSearch($cols, GetVar($this->name.'_q'));
+			$items = $this->ds->GetSearch($cols, GetVar($this->name.'_q'),
+				null, $this->filter);
 
 			$root = $this->BuildTree($items);
 		}
@@ -955,7 +956,7 @@ class EditorData
 				if (isset($disp->callback))
 				{
 					$row[$ix++] = call_user_func_array($disp->callback,
-						array($cnode->data, $disp_index));
+						array($this->ds, $cnode->data, $disp_index, $col));
 				}
 				//Regular field
 				else
