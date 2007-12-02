@@ -307,7 +307,7 @@ class FileManager
 			$zip->AddFiles(GetVar('sels'));
 
 			$fname = pathinfo($this->Root.$this->cf);
-			$fname = $fname['filename'].'.zip';
+			$fname = $fname['basename'].'.zip';
 
 			header('Content-Type: application/octet-stream');
 			header('Content-Disposition: attachment; filename="'.$fname.'"');
