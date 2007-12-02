@@ -247,10 +247,8 @@ function UnsetVar($name)
 function VarInfo($var)
 {
 	echo "<pre>\n";
-	if (!isset($var)) { echo "[NULL VALUE]"; }
-	else if (is_string($var) && strlen($var) < 1)
-	{ echo '[EMPTY STRING]'; }
-
+	if (!isset($var)) echo "[NULL VALUE]";
+	else if (is_string($var) && strlen($var) < 1) echo '[EMPTY STRING]';
 	echo str_replace("<", "&lt;", print_r($var, true));
 	echo "</pre>\n";
 }

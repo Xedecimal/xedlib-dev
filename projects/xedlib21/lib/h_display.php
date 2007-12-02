@@ -1145,8 +1145,8 @@ class LoginManager
 	 */
 	function Prepare($ca, $passvar = 'sespass', $uservar = 'sesuser')
 	{
-		$check_user = ($this->type == CONTROL_BOUND) ? GetVar($uservar) : null;
-		$check_pass = GetVar($passvar);
+		$check_user = ($this->type == CONTROL_BOUND) ? $_SESSION[$uservar] : null;
+		$check_pass = $_SESSION[$passvar];
 
 		if ($ca == 'login')
 		{
