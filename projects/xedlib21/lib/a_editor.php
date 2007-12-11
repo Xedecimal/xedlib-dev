@@ -1382,7 +1382,8 @@ EOD;
 				$ret .= "</table>";
 				if (count($result) > 10)
 				{
-					$ret .= GetPages($result, 10, array('editor' => 'employee', 'ca' => 'search', 'q' => $q, 'fields' => $fs));
+					$ret .= GetPages($result, 10, array('editor' => 'employee',
+						'ca' => 'search', 'q' => $q, 'fields' => $fs));
 				}
 			}
 		}
@@ -1413,7 +1414,9 @@ EOD;
 		{
 			$fi = $this->ds->FieldInputs[$col];
 			$fi->name = 'field['.$col.']';
-			$ret .= '<p style="margin: 0;"><label><input type="checkbox" value="1" name="search['.$col.']" onclick="show(\''.$col.'\', this.checked)" /> '.$fi->text.'</label>';
+			$ret .= '<p style="margin: 0;"><label><input type="checkbox"
+				value="1" name="search['.$col.']" onclick="show(\''.$col.'\',
+				this.checked)" /> '.$fi->text.'</label>';
 			if ($fi->type == 'date')
 			{
 				$fi->name = 'field['.$col.'][0]';

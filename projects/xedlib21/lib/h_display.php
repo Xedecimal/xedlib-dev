@@ -1727,7 +1727,7 @@ function GetHiddenPost($name, $val)
 /**
  * A SelOption callback, returns the value by the integer.
  */
-function SOCallback($ds, $item, $icol, $col)
+function SOCallback($ds, $item, $icol, $col = null)
 {
 	if (isset($ds->FieldInputs[$col]->valu[$item[$icol]]))
 		return $ds->FieldInputs[$col]->valu[$item[$icol]]->text;
