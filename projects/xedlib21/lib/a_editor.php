@@ -642,8 +642,8 @@ class EditorData
 
 		if (isset($ci) && $ca == $this->name.'_edit') $this->state = STATE_EDIT;
 		$ret['ds'] = $this->ds;
-		if ($ca != $this->name.'_edit' && !empty($this->ds->DisplayColumns)
-			&& isset($q))
+		if (($ca != $this->name.'_edit' && !empty($this->ds->DisplayColumns))
+			|| ($this->Behavior->Search && isset($q)))
 			$ret['table'] = $this->GetTable($target, $ci, $q);
 		$ret['forms'] = $this->GetForms($target, $ci,
 			GetVar('editor') == $this->name ? GetVar('child') : null);
@@ -1241,6 +1241,7 @@ class EditorData
 class EditorDataBehavior
 {
 	public $AllowEdit = true;
+	public $Search = true;
 }
 
 class DisplayData
@@ -1462,7 +1463,7 @@ class FileAccessHandler extends EditorHandler
 	 * @param int $id Identifier of the object we are looking for access to.
 	 * @return array Array of SelOption objects.
 	 */
-	function RecurseFolder($root, $level, $id)
+	static function PathToSelOption($root, $id, $level)
 	{
 		$ret = array();
 
@@ -1480,7 +1481,7 @@ class FileAccessHandler extends EditorHandler
 			if ($file[0] == '.') continue;
 			$fp = $root.'/'.$file;
 			if (is_dir($fp)) $ret = array_merge($ret,
-				$this->RecurseFolder($fp, $level+1, $id));
+				FileAccessHandler::PathToSelOption($fp, $id, $level+1));
 		}
 
 		return $ret;
@@ -1492,14 +1493,14 @@ class FileAccessHandler extends EditorHandler
 	 * @param int $id Identifier of the object we are looking for access to.
 	 * @param array $accesses Series of access items that will eventually get set.
 	 */
-	function RecurseSetPerm($root, $id, $accesses)
+	static function RecurseSetPerm($root, $id, $accesses)
 	{
 		//Set information on this item.
 		$fi = new FileInfo($root);
 
 		if (!empty($accesses) && in_array($root, $accesses))
 			$fi->info['access'][$id] = 1;
-		else
+		else if (isset($fi->info['access']))
 			unset($fi->info['access'][$id]);
 		$fi->SaveInfo();
 
@@ -1509,7 +1510,7 @@ class FileAccessHandler extends EditorHandler
 		{
 			if ($file[0] == '.') continue;
 			$fp = $root.'/'.$file;
-			if (is_dir($fp)) $this->RecurseSetPerm($fp, $id, $accesses);
+			if (is_dir($fp)) FileAccessHandler::RecurseSetPerm($fp, $id, $accesses);
 		}
 	}
 
@@ -1536,7 +1537,7 @@ class FileAccessHandler extends EditorHandler
 	function GetFields(&$form, $id, $data)
 	{
 		$form->AddInput(new FormInput('Accessable Folders', 'selects',
-			'accesses', $this->RecurseFolder($this->root, 0, $id)));
+			'accesses', $this->PathToSelOption($this->root, 0, $id)));
 	}
 }
 

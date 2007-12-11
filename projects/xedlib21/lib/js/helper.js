@@ -97,3 +97,23 @@ function appendTag(parent, tag, args)
 	parent.appendChild(tag);
 	return tag;
 }
+
+function findElementsByRegex(parent, target)
+{
+	ret = Array();
+	if (parent.nodeType != 9 && parent.nodeType != 1) return ret;
+	for (ix in parent.childNodes)
+		ret = ret.concat(findElementsByRegex(parent.childNodes[ix], target));
+	if (parent.id != null && parent.id.match(target))
+		ret = ret.concat(parent);
+	return ret;
+}
+
+function selAllChecks(target, on)
+{
+	objs = findElementsByRegex(document, target);
+	for (ix in objs)
+	{
+		objs[ix].checked = on;
+	}
+}

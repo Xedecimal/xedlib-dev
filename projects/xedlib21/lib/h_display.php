@@ -344,6 +344,7 @@ class Form
 	public $RowStart = array('<tr class="even">', '<tr class="odd">');
 
 	public $FirstStart = '<td align="right">';
+
 	public $FirstEnd = '</td>';
 
 	public $StringStart = '<td colspan="2">';
@@ -700,7 +701,7 @@ class FormInput
 					else
 						$ret .= "<label><input
 							type=\"checkbox\"
-							name=\"{$this->name}[{$id}]\"
+							name=\"{$this->name}[]\" value=\"{$id}\"
 							id=\"".CleanID($this->name.'_'.$id)."\"{$selected} />
 							{$val->text}</label><br/>";
 				}

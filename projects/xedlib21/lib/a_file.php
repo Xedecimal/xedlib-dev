@@ -450,10 +450,10 @@ EOF;
 				$form->AddHidden('ca', 'rename');
 				$form->AddHidden('ci', $fi->path);
 				$form->AddHidden('cf', $this->cf);
-				$form->AddInput('</td><td>Current Name');
-				$form->AddInput(new FormInput(null,
+				$form->AddInput(new FormInput('Current Name',
 					'text', 'name', $fi->filename, null));
-				$form->AddInput('</td><td><small>Don\'t forget to include
+				if (is_file($this->Root.$this->cf))
+				$form->AddInput('<small>Don\'t forget to include
 					the correct file extension with the name (i.e. - .jpg, .zip,
 					.doc, etc.)</small>');
 				$form->AddInput(new FormInput('<br/>', 'submit', 'butSubmit', 'Rename'));
@@ -648,9 +648,7 @@ EOF;
 			{
 				if (!$file->show) continue;
 				if (!$this->Behavior->ShowAllFiles && !empty($file->info['access']))
-				{
 					if (!$this->GetVisible($file)) continue;
-				}
 				$ret .= $this->GetFile($target, $file, $type, $ix++);
 			}
 			$ret .= '</table>';
@@ -793,7 +791,10 @@ EOF;
 			$newfi = new FileInfo($this->Root.$this->cf.$file, $this->DefaultFilter);
 			if (!isset($newfi->info['index'])) $newfi->info['index'] = 0;
 			if (!$newfi->show) continue;
-			if (is_dir($this->Root.$this->cf.'/'.$file)) $ret['dirs'][] = $newfi;
+			if (is_dir($this->Root.$this->cf.'/'.$file))
+			{
+				if ($this->Behavior->ShowFolders) $ret['dirs'][] = $newfi;
+			}
 			else $ret['files'][] = $newfi;
 		}
 
@@ -825,7 +826,7 @@ EOF;
 	 */
 	function GetVisible($file)
 	{
-		if (!isset($this->uid)) return true;
+		if (!isset($this->uid) || is_file($file->path)) return true;
 
 		if (!isset($file->info['access']) &&
 			dirname($file->path) != dirname($this->Root))
@@ -992,6 +993,8 @@ class FileManagerBehavior
 	 * @var bool
 	 */
 	public $ShowAllFiles = false;
+
+	public $ShowFolders = true;
 
 	/**
 	 * Allow searching files.
