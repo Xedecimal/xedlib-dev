@@ -29,17 +29,17 @@ class Billderator
 		else $toggle = 'style="width: 300px; height: 50px;"';
 
 		$ret = '<div class="menu"><p style="text-align: center"><b>Tool Box</b></p><hr />';
-		$ret .= GetButton("{$target}?ca=add&amp;type=textarea", 'billderator/textarea.png', 'Textarea').' Text Area<br/>';
-		$ret .= GetButton("{$target}?ca=add&amp;type=radio", 'billderator/radio.png', 'Radio','Radio Button').' Radio Button<br/>';
-		$ret .= GetButton("{$target}?ca=add&amp;type=checkbox", 'billderator/checkbox.png', 'Checkbox').' Checkbox<br/>';
-		$ret .= GetButton("{$target}?ca=add&amp;type=button", 'billderator/button.png', 'Button').' Button<br/>';
-		$ret .= GetButton("{$target}?ca=add&amp;type=file", 'billderator/button.png', 'File Upload').' File Upload<br/>';
-		$ret .= GetButton("{$target}?ca=add&amp;type=image", 'billderator/image.png', 'Image Button').' Image Button<br/>';
-		$ret .= GetButton("{$target}?ca=add&amp;type=reset", 'billderator/button.png', 'Reset Button').' Reset Button<br/>';
-		$ret .= GetButton("{$target}?ca=add&amp;type=submit", 'billderator/button.png', 'Submit Button').' Submit Button<br/>';
-		$ret .= GetButton("{$target}?ca=add&amp;type=text", 'billderator/text.png', 'Textbox').' Textbox<br/>';
-		$ret .= GetButton("{$target}?ca=add&amp;type=password", 'billderator/password.png', 'Password').' Password<br/>';
-		$ret .= '</div><div>';
+		$ret .= "\n".GetButton("{$target}?ca=add&amp;type=textarea", 'billderator/textarea.png', 'Textarea').' Text Area<br/>';
+		$ret .= "\n".GetButton("{$target}?ca=add&amp;type=radio", 'billderator/radio.png', 'Radio Button').' Radio Button<br/>';
+		$ret .= "\n".GetButton("{$target}?ca=add&amp;type=checkbox", 'billderator/checkbox.png', 'Checkbox').' Checkbox<br/>';
+		$ret .= "\n".GetButton("{$target}?ca=add&amp;type=button", 'billderator/button.png', 'Button').' Button<br/>';
+		$ret .= "\n".GetButton("{$target}?ca=add&amp;type=file", 'billderator/button.png', 'File Upload').' File Upload<br/>';
+		$ret .= "\n".GetButton("{$target}?ca=add&amp;type=image", 'billderator/image.png', 'Image Button').' Image Button<br/>';
+		$ret .= "\n".GetButton("{$target}?ca=add&amp;type=reset", 'billderator/button.png', 'Reset Button').' Reset Button<br/>';
+		$ret .= "\n".GetButton("{$target}?ca=add&amp;type=submit", 'billderator/button.png', 'Submit Button').' Submit Button<br/>';
+		$ret .= "\n".GetButton("{$target}?ca=add&amp;type=text", 'billderator/text.png', 'Textbox').' Textbox<br/>';
+		$ret .= "\n".GetButton("{$target}?ca=add&amp;type=password", 'billderator/password.png', 'Password').' Password<br/>';
+		$ret .= "\n</div><table>\n";
 
 		for($x = 0; $x < count($this->inputs); $x++)
 		{
@@ -48,7 +48,7 @@ class Billderator
 			$ret .= '</td><td>'.$this->GetEditButtons($target, $x).'</td></tr>';
 		}
 
-		return $ret.'</div>';
+		return $ret.'</table>';
 	}
 
 	function AddInput($input) { array_push($this->inputs, $input); }
@@ -74,9 +74,8 @@ class Billderator
 				<td colspan="3" style="background-color:#ededed;
 				font-size:11px;
 				text-align:center;">Options</td>
-			<tr>
-			<tr>
-				<td style="padding:3px;">$butProp</a></td>
+			</tr><tr>
+				<td style="padding:3px;">$butProp</td>
 				<td style="padding:3px;">$butMove</td>
 				<td style="padding:3px;">$butDelete</td>
 			</tr>
@@ -111,7 +110,8 @@ EOF;
 
 		$frm->AddInput(new FormInput(null, 'submit', 'butUpdate', 'Update'));
 
-		return $frm->Get('method="post"');
+		global $me;
+		return $frm->Get('method="post" action="'.$me.'"');
 	}
 
 	function SaveProperties($current_input)
@@ -235,68 +235,28 @@ EOF;
 
 		switch ($this->type)
 		{
-			case 'button':
-				$ret .= <<<EOF
-				value="{$this->attributes['value']}"
-EOF;
-				break;
-			case 'checkbox':
-				$ret .= <<<EOF
-				value="{$this->attributes['value']}"
-EOF;
-				break;
-
-			case 'file':
-				$ret .= <<<EOF
-				size="{$this->attributes['size']}"
-EOF;
-				break;
-
-			case 'image':
-				$ret .= <<<EOF
-				src="{$this->attributes['src']}"
-EOF;
-				break;
-
+			case 'button': $ret .= " value=\"{$this->attributes['value']}\""; break;
+			case 'checkbox': $ret .= " value=\"{$this->attributes['value']}\""; break;
+			case 'file': $ret .= " size=\"{$this->attributes['size']}\""; break;
+			case 'image': " src=\"{$this->attributes['src']}\""; break;
 			case 'password':
-				$ret .= <<<EOF
-				value="{$this->attributes['value']}"
-				size="{$this->attributes['size']}"
-EOF;
-				if($this->attributes['readonly'] == 'readonly')
-					$ret .= "readonly";
-				break;
-
-			case 'radio':
-				$ret .= <<<EOF
-				value="{$this->attributes['value']}"
-EOF;
-				break;
-
-			case 'reset':
-				$ret .= <<<EOF
-				value="{$this->attributes['value']}"
-EOF;
-				break;
-
-			case 'submit':
-				$ret .= <<<EOF
-				value="{$this->attributes['value']}"
-EOF;
-				break;
-
+				$ret .= " value=\"{$this->attributes['value']}\"";
+				$ret .= " size=\"{$this->attributes['size']}\"";
+				if ($this->attributes['readonly'] == 'readonly')
+					$ret .= ' readonly="readonly"';
+			break;
+			case 'radio': $ret .= " value=\"{$this->attributes['value']}\""; break;
+			case 'reset': $ret .= " value=\"{$this->attributes['value']}\""; break;
+			case 'submit': $ret .= " value=\"{$this->attributes['value']}\""; break;
 			case 'text':
-				$ret .= <<<EOF
-				value="{$this->attributes['value']}"
-				size="{$this->attributes['size']}"
-EOF;
+				$ret .= " value=\"{$this->attributes['value']}\"";
+				$ret .= " size=\"{$this->attributes['size']}\"";
 				if($this->attributes['readonly'] == 'readonly')
-					$ret .= "readonly";
-				break;
-
+					$ret .= ' readonly="readonly"';
+			break;
 			case 'textarea':
 				$area =  <<<EOF
-			<textarea id="{$this->attributes['id']}"
+			<textarea
 			rows="{$this->attributes['rows']}"
 			cols="{$this->attributes['cols']}"
 			class="{$this->attributes['class']}"

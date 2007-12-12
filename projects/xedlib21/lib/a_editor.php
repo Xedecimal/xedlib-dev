@@ -1412,6 +1412,7 @@ EOD;
 		$ret = '';
 		foreach ($this->SearchFields as $col)
 		{
+			if (!isset($this->ds->FieldInputs[$col])) continue;
 			$fi = $this->ds->FieldInputs[$col];
 			$fi->name = 'field['.$col.']';
 			$ret .= '<p style="margin: 0;"><label><input type="checkbox"
