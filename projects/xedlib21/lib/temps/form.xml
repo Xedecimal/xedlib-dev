@@ -1,0 +1,9 @@
+<null>
+	<!-- Begin Form: {{form_name}} -->
+	<form>
+	<table>
+		<field><tr><td>{{text}}</td><td>{{field}}</td></tr></field>
+	</table>
+	</form>
+	<!-- End Form: {{form_name}} -->
+</null>

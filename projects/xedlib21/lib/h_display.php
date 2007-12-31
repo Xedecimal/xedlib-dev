@@ -389,6 +389,7 @@ class Form
 		$this->name = $name;
 		$this->attribs = array();
 		$this->Persist = $persist;
+		$this->Template = dirname(__FILE__).'/temps/form.xml';
 	}
 
 	/**
@@ -449,6 +450,8 @@ class Form
 
 		if (!is_object($input)) Error("Form input is not an object.");
 
+		$this->inputs[] = $input;
+
 		if ($input->type == 'submit' && isset($this->Validation))
 		{
 			$input->atrs .= " onclick=\"return {$this->name}_check(1);\"";
@@ -485,6 +488,40 @@ class Form
 			($start ? $this->FirstEnd : $this->CellEnd);
 	}
 
+	function TagForm($guts)
+	{
+		global $PERSISTS;
+		$ret = "<form {$this->formAttribs}>\n";
+
+		if ($this->Persist && !empty($PERSISTS))
+		foreach ($PERSISTS as $name => $value)
+			$this->AddHidden($name, $value, null, true);
+
+		if (!empty($this->hiddens))
+		foreach ($this->hiddens as $hidden)
+		{
+			$fname = $hidden[3] ? $hidden[0] : $this->name.'_'.$hidden[0];
+			$ret .= "<input type=\"hidden\" id=\"".CleanID($fname)."\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
+			if (isset($hidden[2])) $ret .= ' '.$hidden[2];
+			$ret .= " />\n";
+		}
+
+		return $ret.$guts.'</form>';
+	}
+
+	function TagField($guts)
+	{
+		$ret = '';
+		$vp = new VarParser();
+		foreach ($this->inputs as $in)
+		{
+			$d['text'] = !empty($in->text) ? $in->text : '';
+			$d['field'] = $in->Get($this->name);
+			$ret .= $vp->ParseVars($guts, $d);
+		}
+		return $ret;
+	}
+
 	/**
 	* Returns the complete html rendered form for output purposes.
 	* @param string $formAttribs Additional form attributes (method, class, action, etc)
@@ -493,35 +530,12 @@ class Form
 	*/
 	function Get($formAttribs = null, $tblAttribs = null)
 	{
-		global $PERSISTS;
-		$ret  = "<!-- Begin Form: {$this->name} -->\n";
-		if ($formAttribs != null) $formAttribs = " " . $formAttribs;
-		$ret .= "<form class=\"form\"$formAttribs";
-		if (isset($this->attribs))
-		{
-			foreach ($this->attribs as $atr => $val) $ret .= " $atr=\"$val\"";
-		}
-		$ret .= ">\n";
-		if ($this->Persist && !empty($PERSISTS))
-		{
-			foreach ($PERSISTS as $name => $value) $this->AddHidden($name, $value, null, true);
-		}
-		if (!empty($this->hiddens))
-		{
-			foreach ($this->hiddens as $hidden)
-			{
-				$fname = $hidden[3] ? $hidden[0] : $this->name.'_'.$hidden[0];
-				$ret .= "<input type=\"hidden\" id=\"".CleanID($fname)."\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
-				if (isset($hidden[2])) $ret .= ' '.$hidden[2];
-				$ret .= " />\n";
-			}
-		}
-		$ret .= $this->FormStart;
-		$ret .= $this->out;
-		$ret .= $this->FormEnd;
-		$ret .= "</form>\n";
-		$ret .= "<!-- End Form: {$this->name} -->\n";
-		return $ret;
+		$this->formAttribs = $formAttribs;
+		$t = new Template();
+		$t->Set('form_name', $this->name);
+		$t->ReWrite('form', array($this, 'TagForm'));
+		$t->ReWrite('field', array($this, 'TagField'));
+		return $t->Get($this->Template);
 	}
 
 	/**
@@ -1209,6 +1223,7 @@ class LoginManager
 			$f->AddInput(new FormInput('Login', 'text', 'auth_user'));
 		$f->AddInput(new FormInput('Password', 'password', 'auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
+		$f->Template = dirname(__FILE__).'/temps/login_manager.xml';
 		return $f->Get('action="'.$target.'" method="post"');
 	}
 

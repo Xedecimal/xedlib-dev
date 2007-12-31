@@ -143,6 +143,11 @@ class Template
 		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
 	}
 
+	function ReWrite($tag, $callback)
+	{
+		$this->rewrites[strtoupper($tag)][] = $callback;
+	}
+
 	/**
 	 * Begin a template tag.
 	 * @param resource $parser Xml parser for current document.
@@ -152,7 +157,13 @@ class Template
 	function Start_Tag($parser, $tag, $attribs)
 	{
 		if ($this->skip) return;
-		$show = true;
+
+		if (isset($this->rewrites[$tag]))
+		{
+			$this->objs[] = new stdClass();
+			$show = false;
+		}
+		else $show = true;
 		$close = '';
 
 		$output = '';
@@ -299,6 +310,14 @@ class Template
 	{
 		if ($tag == 'IF') { $this->skip = false; return; }
 		if ($this->skip) return;
+		if (!empty($this->rewrites[$tag]))
+		{
+			$obj = &$this->GetCurrentObject();
+			$objd = &$this->GetDestinationObject();
+			$objd->out .= RunCallbacks($this->rewrites[$tag], $obj->out);
+			array_pop($this->objs);
+			return;
+		}
 
 		if ($tag == 'AMP') return;
 		else if ($tag == 'BOX')
