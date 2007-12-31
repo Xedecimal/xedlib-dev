@@ -53,8 +53,8 @@ class Box
 	public $template;
 
 	/**
-	* Constructs a new box object with empty title and body.
-	*/
+	 * Constructs a new box object with empty title and body.
+	 */
 	function Box()
 	{
 		$this->title = "";

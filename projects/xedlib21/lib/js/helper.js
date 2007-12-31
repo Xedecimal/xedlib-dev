@@ -50,7 +50,7 @@ function sel_all(type, checked)
 	}
 }
 
-function getAjax(method, url, block, target)
+function getAjax(method, url, block, target, args)
 {
 	var xmlHttp;
 	try { xmlHttp=new XMLHttpRequest(); }
@@ -72,12 +72,22 @@ function getAjax(method, url, block, target)
 	{
 		if (xmlHttp.readyState == 4)
 		{
-			target(xmlHttp.responseText);
+			target(xmlHttp.responseText, args);
 		}
 	}
 
 	xmlHttp.open(method, url);
 	xmlHttp.send(null);
+}
+
+function putAjax(method, url, block, target)
+{
+	getAjax(method, url, block, ajOutput, target);
+}
+
+function ajOutput(data, target)
+{
+	gebi(target).innerHTML = data;
 }
 
 function appendTag(parent, tag, args)

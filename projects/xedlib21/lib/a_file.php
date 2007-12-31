@@ -151,13 +151,22 @@ class FileManager
 		{
 			if (GetVar('cm') == 'done')
 			{
-				foreach (glob($this->Root.$this->cf.'.*') as $file)
+
+				$cu = GetVar('cu');
+
+				$files = glob($this->Root.$this->cf.'.*');
+				natsort($files);
+
+				foreach ($files as $file)
 				{
-					if (preg_match('#/.\[([0-9]*)\]_(.*)#', $file, $m))
-					$fp = fopen($this->Root.$this->cf.$m[2], 'ab');
-					fwrite($fp, file_get_contents($file));
-					fclose($fp);
-					unlink($file);
+					if (preg_match('#/\.\[([0-9]*)\]_'.$cu.'#', $file, $m))
+					{
+						$fp = fopen($this->Root.$this->cf.$cu, 'ab');
+						fwrite($fp, file_get_contents($file));
+						fclose($fp);
+						$fi = new FileInfo($file);
+						$fi->Filter->Delete($fi, false);
+					}
 				}
 			}
 			ini_set('upload_max_filesize', ini_get('post_max_size'));
@@ -647,7 +656,7 @@ EOF;
 			foreach($this->files[$type] as $file)
 			{
 				if (!$file->show) continue;
-				if (!$this->Behavior->ShowAllFiles && !empty($file->info['access']))
+				if (!$this->Behavior->ShowAllFiles)
 					if (!$this->GetVisible($file)) continue;
 				$ret .= $this->GetFile($target, $file, $type, $ix++);
 			}
@@ -1288,6 +1297,8 @@ class FileInfo
 	 */
 	function SaveInfo()
 	{
+		//Access is not stored in files, just directories.
+		if (is_file($this->path)) unset($this->info['access']);
 		$info = $this->dir.'/.'.$this->filename;
 		$fp = fopen($info, 'w+');
 		fwrite($fp, serialize($this->info));

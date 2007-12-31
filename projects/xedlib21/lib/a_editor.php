@@ -1541,7 +1541,7 @@ class FileAccessHandler extends EditorHandler
 	function GetFields(&$form, $id, $data)
 	{
 		$form->AddInput(new FormInput('Accessable Folders', 'selects',
-			'accesses', $this->PathToSelOption($this->root, 0, $id)));
+			'accesses', $this->PathToSelOption($this->root, $id, 0)));
 	}
 }
 
