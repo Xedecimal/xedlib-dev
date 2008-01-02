@@ -445,8 +445,11 @@ class Form
 		$helptext = null;
 
 		if (is_string($input))
+		{
+			$this->inputs[] = $input;
 			return $this->StringStart.$input.
 				($start ? $this->FirstEnd : $this->CellEnd);
+		}
 
 		if (!is_object($input)) Error("Form input is not an object.");
 
@@ -513,10 +516,15 @@ class Form
 	{
 		$ret = '';
 		$vp = new VarParser();
+		$ix = 0;
+		if (!empty($this->inputs))
 		foreach ($this->inputs as $in)
 		{
+			$d['even_odd'] = ($ix++ % 2) ? 'even' : 'odd';
 			$d['text'] = !empty($in->text) ? $in->text : '';
-			$d['field'] = $in->Get($this->name);
+			if (get_class($in) == 'FormInput')
+				$d['field'] = $in->Get($this->name);
+			else $d['field'] = $in;
 			$ret .= $vp->ParseVars($guts, $d);
 		}
 		return $ret;

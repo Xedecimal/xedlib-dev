@@ -890,7 +890,7 @@ class EditorData
 
 			foreach ($rows as $ix => $row)
 			{
-				$class = $ix % 2 == 0 ? 'row_even' : 'row_odd';
+				$class = $ix % 2 ? 'even' : 'odd';
 				$table->AddRow($row, "class=\"{$class}\"");
 			}
 
@@ -1202,6 +1202,23 @@ class EditorData
 		return $ret;
 	}
 
+	function TagForms($guts)
+	{
+		$out = '';
+		$forms = $this->GetForms($this->target, $this->ci);
+		$vp = new VarParser();
+		if (!empty($forms))
+		foreach ($forms as $frm)
+		{
+			$d['form_title'] = "{$frm->State} {$frm->Description}";
+			$d['form_content'] = $frm->Get('method="post" action="'.
+				$this->target.'"'.(isset($form_atrs) ? ' '.$form_atrs : null),
+				'class="form"');
+			$out .= $vp->ParseVars($guts, $d);
+		}
+		return $out;
+	}
+
 	/**
 	 * Gets a standard user interface for a single editor's Get() method.
 	 * @param string $target Target script to post to.
@@ -1209,17 +1226,18 @@ class EditorData
 	 * @param string $form_atrs Additional form attributes.
 	 * @return string Rendered html of associated objects.
 	 */
-	static function GetUI($target, $editor_return, $form_atrs = null)
+	function GetUI($target, $ci)
 	{
 		require_once('h_template.php');
+		$this->target = $target;
+		$this->ci = $ci;
 		$t = new Template();
-		$t->Set('name', $editor_return['name']);
+		$t->ReWrite('forms', array($this, 'TagForms'));
+		$t->Set('name', $this->name);
+		$t->Set('plural', Plural($this->name));
 
-		if (isset($editor_return['table']))
-		{
-			$t->Set('table_title', Plural($editor_return['ds']->Description));
-			$t->Set('table', $editor_return['table']);
-		}
+		$t->Set('table_title', Plural($this->ds->Description));
+		$t->Set('table', $this->GetTable($target, $ci));
 
 		if (!empty($editor_return['forms']))
 		{
@@ -1234,7 +1252,7 @@ class EditorData
 			$t->Set('forms', $forms);
 		}
 		else $t->Set('forms', '');
-		return $t->Get(dirname(__FILE__).'/temps/editor/index.php');
+		return $t->Get(dirname(__FILE__).'/temps/editor.xml');
 	}
 }
 
