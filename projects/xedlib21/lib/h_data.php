@@ -868,9 +868,9 @@ class DataSet
 	 * @param int $args Arguments passed to fetch_array.
 	 * @return array A single serialized row matching $match or null if not found.
 	 */
-	function GetOne($match, $joins = null, $args = GET_BOTH)
+	function GetOne($match, $joins = null, $cols = null, $group = null, $args = GET_BOTH)
 	{
-		$data = $this->Get($match, null, null, $joins, null, null, $args);
+		$data = $this->Get($match, null, null, $joins, $cols, $group, $args);
 		if (isset($data)) return $data[0];
 		return $data;
 	}

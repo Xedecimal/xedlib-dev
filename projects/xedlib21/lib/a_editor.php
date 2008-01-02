@@ -1274,6 +1274,8 @@ class DisplayData
 	 */
 	public $ds;
 
+	private $joins;
+
 	public $Behavior;
 
 	/**
@@ -1285,6 +1287,11 @@ class DisplayData
 		$this->name = $name;
 		$this->ds = $ds;
 		$this->Behavior = new DisplayDataBehavior();
+	}
+
+	function AddJoin($join)
+	{
+		$this->joins[] = $join;
 	}
 
 	function Prepare()
@@ -1303,7 +1310,7 @@ class DisplayData
 				}
 				else if ($fi->type == 'select' || $fi->type == 'radios')
 					$up[$col] = (int)GetVar($col);
-				else
+				else if ($fi->type != 'checks')
 					$up[$col] = GetVar($col);
 			}
 			$this->ds->Update(array($this->ds->id => GetVar('ci')), $up);
@@ -1321,9 +1328,18 @@ class DisplayData
 
 		if ($ca == 'edit' && $this->Behavior->AllowEdit)
 		{
-			$item = $this->ds->GetOne(array($this->ds->id => GetVar('ci')));
 			if (!empty($this->ds->FieldInputs))
 			{
+				foreach ($this->ds->FieldInputs as $col => $in)
+				{
+					if ($in->type == 'checks')
+						$cols[$col] = DeString("GROUP_CONCAT(DISTINCT $col)");
+					else $cols[$col] = $col;
+				}
+
+				$item = $this->ds->GetOne(array($this->ds->id => GetVar('ci')),
+					$this->joins, $cols, $this->ds->id);
+
 				$frm = new Form('frmEdit');
 				$frm->AddHidden('editor', $this->name);
 				$frm->AddHidden('ca', 'update');
@@ -1332,8 +1348,14 @@ class DisplayData
 				foreach ($this->ds->FieldInputs as $col => $fi)
 				{
 					$fi->name = $col;
-					if ($fi->type == 'select' || $fi->type == 'radios')
+					if ($fi->type == 'select' || $fi->type == 'selects'
+						|| $fi->type == 'radios' || $fi->type == 'checks')
 					{
+						$sels = explode(',', $item[$col]);
+						if (!empty($sels))
+						foreach($sels as $sel)
+							if (isset($fi->valu[$sel]))
+								$fi->valu[$sel]->selected = true;
 						if (isset($fi->valu[$item[$col]]))
 							$fi->valu[$item[$col]]->selected = true;
 					}
@@ -1351,25 +1373,51 @@ class DisplayData
 			$fs = GetVar('field');
 			$ss = GetVar('search');
 
-			$query = "SELECT * FROM `".$this->ds->table.'`';
+			$query = "SELECT *";
+
+			foreach ($ss as $col => $set)
+			{
+				$fi = $this->ds->FieldInputs[$col];
+				if ($fi->type == 'checks')
+					$query .= ", GROUP_CONCAT(DISTINCT {$col}) AS gc_{$col}";
+			}
+
+			$query .= " FROM `{$this->ds->table}`";
+			$query .= DataSet::JoinClause($this->joins);
+
 			if (!empty($ss))
 			{
-				$query .= ' WHERE';
+				$where = ' WHERE';
+				$having = ' HAVING';
+
 				$ix = 0;
 				foreach ($ss as $col => $set)
 				{
+					if (!isset($fs[$col])) continue;
+
 					$fi = $this->ds->FieldInputs[$col];
-					if ($ix++ > 0) $query .= ' AND';
-					if ($fi->type == 'select') $query .= " $col IN ($fs[$col])";
+					if ($ix++ > 0) $where .= ' AND';
+
+					if ($fi->type == 'select') $where .= " $col IN ($fs[$col])";
+					else if ($fi->type == 'checks')
+					{
+						$having .= " FIND_IN_SET('".implode(',', $fs[$col])."', gc_$col) > 0";
+					}
 					else if ($fi->type == 'date')
 					{
-						$query .= " $col BETWEEN '".
+						$where .= " $col BETWEEN '".
 						TimestampToMySql(DateInputToTS($fs[$col][0]), false).'\' AND \''.
 						TimestampToMySql(DateInputToTS($fs[$col][1]), false).'\'';
 					}
-					else $query .= " $col LIKE '%".$fs[$col]."%'";
+					else $where .= " $col LIKE '%".$fs[$col]."%'";
 				}
+
+				if (strlen($where) > 6) $query .= $where;
+				$query .= ' GROUP BY app_id';
+				if (strlen($having) > 7) $query .= $having;
+
 				$result = $this->ds->GetCustom($query);
+				varinfo($query);
 			}
 			else $result = array();
 
@@ -1427,26 +1475,26 @@ EOD;
 
 	function callback_fields()
 	{
-		$ret = '';
+		$ret = '<table>';
 		foreach ($this->SearchFields as $col)
 		{
 			if (!isset($this->ds->FieldInputs[$col])) continue;
 			$fi = $this->ds->FieldInputs[$col];
 			$fi->name = 'field['.$col.']';
-			$ret .= '<p style="margin: 0;"><label><input type="checkbox"
+			$ret .= '<tr><td valign="top"><label><input type="checkbox"
 				value="1" name="search['.$col.']" onclick="show(\''.$col.'\',
-				this.checked)" /> '.$fi->text.'</label>';
+				this.checked)" /> '.$fi->text.'</label></td>';
 			if ($fi->type == 'date')
 			{
 				$fi->name = 'field['.$col.'][0]';
-				$ret .= ' <span style="display: none" id="'.$col.'"> from '.$fi->Get($this->name).' to ';
+				$ret .= ' <td valign="top" style="display: none" id="'.$col.'"> from '.$fi->Get($this->name).' to ';
 				$fi->name = 'field['.$col.'][1]';
-				$ret .= $fi->Get($this->name)."</span>\n";
+				$ret .= $fi->Get($this->name)."</td>\n";
 			}
-			else $ret .= ' <span style="display: none" id="'.$col.'">'.$fi->Get($this->name).'</span>';
-			$ret .= '</p>';
+			else $ret .= '<td style="display: none" id="'.$col.'">'.$fi->Get($this->name).'</td>';
+			$ret .= '</tr>';
 		}
-		return $ret;
+		return $ret.'</table>';
 	}
 }
 
