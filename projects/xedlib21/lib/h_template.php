@@ -160,7 +160,9 @@ class Template
 
 		if (isset($this->rewrites[$tag]))
 		{
-			$this->objs[] = new stdClass();
+			$obj = new stdClass();
+			$obj->out = '';
+			$this->objs[] = $obj;
 			$show = false;
 		}
 		else $show = true;
@@ -582,7 +584,15 @@ class VarParser
 	{
 		$tvar = $match[1];
 		global $$tvar;
-		if (isset($this->vars[$tvar])) return $this->vars[$tvar];
+		if (isset($this->vars[$tvar]))
+		{
+			if (is_string($this->vars[$tvar])) return $this->vars[$tvar];
+			if (is_object($this->vars[$tvar]))
+			{
+				$obj = &$this->vars[$tvar];
+				return $obj->Get();
+			}
+		}
 		else if (isset($$tvar)) return $$tvar;
 		else if (defined($tvar)) return constant($tvar);
 		return $match[0];

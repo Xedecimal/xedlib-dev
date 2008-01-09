@@ -890,7 +890,7 @@ class EditorData
 
 			foreach ($rows as $ix => $row)
 			{
-				$class = $ix % 2 ? 'even' : 'odd';
+				$class = $ix%2?'even':'odd';
 				$table->AddRow($row, "class=\"{$class}\"");
 			}
 

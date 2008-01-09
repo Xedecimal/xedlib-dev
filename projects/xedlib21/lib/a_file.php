@@ -427,7 +427,7 @@ class FileManager
 			<param name="host" value="http://{$_SERVER['HTTP_HOST']}" />
 			<param name="pathToScript" value="{$me}?PHPSESSID={$sid}" />
 			<param name="path" value='{$this->cf}' />
-			<param name="uploadMax" value="2044304" />
+			<param name="uploadMax" value="5242880" />
 		</applet>
 EOF;
 				$ret .= GetBox('box_upload', $this->View->TitleUpload,
