@@ -1,10 +1,10 @@
 <null>
 
-<box title="Search for {{plural}}">
+<box title="Locate and Edit {{plural}}">
 <form action="{{me}}">
 <input type="hidden" name="editor" value="{{name}}" />
-Search: <input type="text" name="{{name}}_q" />
-<input type="submit" value="Search" />
+Search: <input type="text" name="{{name}}_q" onkeyup="gebi('ssub').value = this.value.length > 0 ? 'Search' : 'Retrieve All'" />
+<input type="submit" value="Retrieve All" id="ssub" />
 </form>
 </box>
 

@@ -642,9 +642,10 @@ class EditorData
 
 		if (isset($ci) && $ca == $this->name.'_edit') $this->state = STATE_EDIT;
 		$ret['ds'] = $this->ds;
-		if (($ca != $this->name.'_edit' && !empty($this->ds->DisplayColumns))
-			|| ($this->Behavior->Search && isset($q)))
+		if ($ca != $this->name.'_edit' && !empty($this->ds->DisplayColumns)
+			&& ($this->Behavior->Search && isset($q)))
 			$ret['table'] = $this->GetTable($target, $ci, $q);
+		else $ret['table'] = null;
 		$ret['forms'] = $this->GetForms($target, $ci,
 			GetVar('editor') == $this->name ? GetVar('child') : null);
 		return $ret;
@@ -1231,13 +1232,14 @@ class EditorData
 		require_once('h_template.php');
 		$this->target = $target;
 		$this->ci = $ci;
+		$editor_return = $this->Get($target, $ci);
 		$t = new Template();
 		$t->ReWrite('forms', array($this, 'TagForms'));
 		$t->Set('name', $this->name);
 		$t->Set('plural', Plural($this->name));
 
 		$t->Set('table_title', Plural($this->ds->Description));
-		$t->Set('table', $this->GetTable($target, $ci));
+		$t->Set('table', $editor_return['table']);
 
 		if (!empty($editor_return['forms']))
 		{
@@ -1260,6 +1262,7 @@ class EditorDataBehavior
 {
 	public $AllowEdit = true;
 	public $Search = true;
+	public $Group;
 }
 
 class DisplayData
@@ -1417,7 +1420,6 @@ class DisplayData
 				if (strlen($having) > 7) $query .= $having;
 
 				$result = $this->ds->GetCustom($query);
-				varinfo($query);
 			}
 			else $result = array();
 
@@ -1584,6 +1586,28 @@ class FileAccessHandler extends EditorHandler
 		}
 	}
 
+	static function RecurseGetPerm($root, $id)
+	{
+		$ret = array();
+		$fi = new FileInfo($root);
+		if (isset($fi->info['access'][$id])) $ret[] = $root;
+
+		$dp = opendir($root);
+		while ($file = readdir($dp))
+		{
+			if ($file[0] == '.') continue;
+			$fp = $root.'/'.$file;
+			if (is_dir($fp)) $ret = array_merge($ret, FileAccessHandler::RecurseGetPerm($fp, $id));
+		}
+
+		return $ret;
+	}
+
+	static function Copy($root, $src, $dst)
+	{
+		FileAccessHandler::RecurseSetPerm($root, $dst, FileAccessHandler::RecurseGetPerm($root, $src));
+	}
+
 	/**
 	 * Called when a file or folder gets updated.
 	 */
@@ -1607,7 +1631,7 @@ class FileAccessHandler extends EditorHandler
 	function GetFields(&$form, $id, $data)
 	{
 		$form->AddInput(new FormInput('Accessable Folders', 'selects',
-			'accesses', $this->PathToSelOption($this->root, $id, 0)));
+			'accesses', $this->PathToSelOption($this->root, $id, 0), 'size="8"'));
 	}
 }
 
