@@ -425,6 +425,7 @@ class EditorData
 				$insert[$child->child_key] = $parent;
 			}
 			$id = $context->ds->Add($insert);
+			$insert[$context->ds->id] = $id;
 
 			if (!empty($moves))
 			foreach ($moves as $move)

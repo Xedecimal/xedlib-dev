@@ -262,6 +262,7 @@ class Relation
 	 * @var string
 	 */
 	public $parent_key;
+
 	/**
 	 * Name of the column that is the primary key for the child of this
 	 * relation.
@@ -401,6 +402,7 @@ class DataSet
 	 * @see EditorData
 	 */
 	public $DisplayColumns;
+
 	/**
 	 * Array of field information that this DataSet is associated with.
 	 *
@@ -408,6 +410,7 @@ class DataSet
 	 * @see EditorData
 	 */
 	public $FieldInputs;
+
 	/**
 	 * A single or mutliple validations for the associated form.
 	 *
@@ -830,7 +833,7 @@ class DataSet
 		$group = null,
 		$args = GET_BOTH)
 	{
-
+		
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 
@@ -940,7 +943,7 @@ class DataSet
 	 * @param int $limit Limit of items to return for pagination.
 	 * @return array
 	 */
-	function GetSearch($columns, $phrase, $limit = null, $filter = null)
+	function GetSearch($columns, $phrase, $start = 0, $limit = null, $sort = null)
 	{
 		$newphrase = str_replace("'", '%', stripslashes($phrase));
 		$newphrase = str_replace(' ', '%', $newphrase);
@@ -956,8 +959,9 @@ class DataSet
 			}
 			$query .= ')';
 		}
+		if ($sort != null) $query .= DataSet::OrderClause($sort);
 		if ($filter != null) $query .= $this->WhereClause($filter, ' AND');
-		if ($limit != null) $query .= " LIMIT {$limit[0]}, {$limit[1]}";
+		if ($limit != null) $query .= " LIMIT {$start}, {$limit}";
 
 		return $this->GetCustom($query);
 	}
@@ -1064,7 +1068,7 @@ class DataSet
 					WHERE `__TEMP`.`{$child->ds->id}` = `{$child->ds->table}`.`{$child->parent_key}`";
 				$child->ds->database->query($query);
 			}
-
+			
 			$child->ds->database->query("DROP TABLE IF EXISTS `__TEMP`");
 		}
 

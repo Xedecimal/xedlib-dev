@@ -42,7 +42,7 @@ or move.</p>
 </box>
 </if>
 
-<if check="$GLOBALS['user']['usr_access'] == 3">
+<if check="strlen($this->vars['options']) > 0">
 <p><a href="#" onclick="toggle('{{name}}_options'); return false;">
 	View Options for this File or Folder</a></p>
 </if>
