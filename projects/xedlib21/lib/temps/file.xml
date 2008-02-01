@@ -1,0 +1,190 @@
+<null>
+
+<!-- Bits -->
+
+<part type="SearchContent">
+<form action="{{target}}" method="post">
+	<input type="hidden" name="editor" value="{{name}}" />
+	<input type="hidden" name="ca" value="search" />
+	<input type="hidden" name="cf" value="{{cf}}"/>
+	Search in: {{path}} for <input type="text" name="cq" />
+	<input type="submit" value="Search" />
+</form>
+</part>
+
+<part type="DownloadContent"> [<a href="{{cf}}" target="_blank">Download</a>]</part>
+
+<part type="CheckContent">
+	<input type="checkbox" id="sel_{{type}}_{{index}}" name="sels[]"
+		value="{{fipath}}" onclick="toggleAny(['sel_files_', 'sel_folders_'],
+		'{{name}}_mass_options');" />
+</part>
+
+<part type="IconContent"><img src="{{icon}}" /></part>
+
+<part type="ContentCreateDir">
+<form action="{$target}" method="post">
+	<input type="text" name="name" />
+	<input type="submit" name="ca" value="Create" /><br/>
+	<small>Type folder name then click "create"</small>
+</form>
+</part>
+
+<part type="ContentField">
+	<tr><td>{{text}}</td><td>{{field}}</td></tr>
+</part>
+
+<!-- /Bits -->
+
+<script type="text/javascript" src="{{relpath}}/js/helper.js"></script>
+
+<script type="text/javascript">
+var __sels = { 'files': false, 'dirs': false };
+
+function docmanSelAll(type)
+{
+	__sels[type] = !__sels[type];
+	sel_all(type, __sels[type]);
+	toggleAny(['sel_files_','sel_dirs_'],'{{name}}_mass_options');
+}
+
+function expander(name)
+{
+	gebi('img'+name).src = (toggle(name) ?
+		'lib/images/up.png' : 'lib/images/down.png');
+}
+</script>
+
+<box title="Location">
+<header />
+</box>
+
+<form action="{{me}}" method="post">
+<input type="hidden" name="editor" value="{{name}}" />
+<input type="hidden" name="cf" value="{{cf}}" />
+
+<table>
+	<tr>
+
+<if check="!empty($this->vars['options'])">
+	<td valign="top">
+		<box title="File and Folder Tasks">
+			<table>
+
+			<!-- Mass Options -->
+			<tr><td>
+				<div id="{{name}}_mass_options">
+				<script type="text/javascript">document.getElementById('{{name}}_mass_options').style.display = 'none';</script>
+				<p>With selected files...</p>
+				<input type="submit" name="ca" value="Move" /> to {{dirsel}}<br/>
+				<input type="submit" name="ca" value="Delete"
+					onclick="return confirm('Are you sure you wish to delete these files?')" />
+				<input type="submit" name="ca" value="Download Selected" />
+				</div>
+			</td></tr>
+
+			<!-- Upload File -->
+			<tr><td>
+				<a href="javascript:expander('{{name}}_upload');">Send Files</a>
+			</td><td>
+				<img id="img{{name}}_upload" src="lib/images/down.png" alt="Visibility" />
+			</td></tr><tr><td colspan="2">
+				<div id="{{name}}_upload" style="display: none">
+					<applet codebase="{{relpath}}/java" code="uploadApplet.class"
+						archive="UploadApplet.jar,commons-codec-1.3.jar,commons-httpclient-3.0.1.jar,commons-logging-1.0.4.jar"
+						width="500" height="100">
+						<param name="host" value="http://{{host}}" />
+						<param name="pathToScript" value="{{target}}?PHPSESSID={{sid}}" />
+						<param name="path" value="{{cf}}" />
+						<param name="uploadMax" value="2044304" />
+					</applet>
+				</div>
+			</td></tr>
+
+			<!-- Create Folder -->
+			<tr><td>
+				<a href="javascript:expander('{{name}}_create');">Create Folder</a>
+			</td><td>
+				<img id="img{{name}}_create" src="lib/images/down.png" alt="Visibility" />
+			</td></tr><tr><td colspan="2">
+				<div id="{{name}}_create" style="display: none">
+					<input type="text" name="name" />
+					<input type="submit" name="ca" value="Create" /><br/>
+				</div>
+			</td></tr>
+
+			<!-- Rename File / Folder -->
+			<if check="!empty($this->vars['cf'])">
+			<tr><td>
+				<a href="javascript:expander('{{name}}_rename');">Rename This File / Folder</a>
+			</td><td>
+				<img id="img{{name}}_rename" src="lib/images/down.png" alt="Visibility" />
+			</td></tr><tr><td>
+				<div id="{{name}}_rename" style="display: none">
+				<input type="text" name="name" value="{{filename}}" />
+				<input type="submit" name="ca" value="Rename" /><br/>
+				</div>
+			</td></tr>
+			</if>
+
+			<!-- Additional Settings -->
+			<tr><td>
+				<a href="javascript:expander('{{name}}_add');">Additional Settings</a>
+			</td><td>
+				<img id="img{{name}}_add" src="lib/images/down.png" alt="Visibility" />
+			</td></tr><tr><td colspan="2">
+				<div id="{{name}}_add" style="display: none">
+				<addopts />
+				</div>
+			</td></tr>
+
+			</table> <!-- File Table ending? -->
+		</box>
+	</td>
+</if>
+
+<directory>
+	<td valign="top">
+		<if check="{{folders}} > 0">
+		<box title="Folders">
+			<table>
+				<folder>
+					<tr><td>{{icon}}</td><td>{{check}}</td>
+					<td><a href="{{target}}?cf={{cf}}{{filename}}">{{filename}}</a>
+					</td></tr>
+				</folder>
+			</table>
+		</box>
+		</if>
+	</td><td valign="top">
+		<if check="{{files}} > 0">
+		<box title="Files">
+			<table>
+				<file>
+				<tr><td>{{icon}}</td><td>{{check}}</td>
+				<td><a href="{{target}}?cf={{cf}}{{filename}}">{{filename}}</a>
+				</td></tr>
+				</file>
+			</table>
+			</box>
+		</if>
+	</td>
+</directory>
+
+<details>
+<td valign="top">
+<box title="File Information">
+	<header/>
+<table>
+	<tr><td align="right">Modified:</td><td>{{date}}</td></tr>
+	<tr><td align="right">Size:</td><td>{{size}}</td></tr>
+</table>
+</box>
+</td>
+</details>
+
+</tr>
+</table>
+
+</form>
+</null>

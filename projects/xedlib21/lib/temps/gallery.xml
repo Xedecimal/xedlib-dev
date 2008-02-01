@@ -1,0 +1,134 @@
+<!DOCTYPE null [
+	<!ENTITY raquo "&#187;">
+	<!ENTITY nbsp "&#160;">
+	<!ENTITY amp "&amp;">
+]>
+
+<null>
+
+<if check="{{disable_save}}">
+<script type="text/javascript">
+<!--
+var message = "Saving images is not allowed.";
+function click(e)
+{
+	if (document.all)
+	{
+		if (event.button == 2 || event.button == 3)
+		{
+			alert(message);
+			return false;
+		}
+	}
+	if (document.layers)
+	{
+		if (e.which == 3)
+		{
+			alert(message);
+			return false;
+		}
+	}
+}
+if (document.layers)
+{
+	document.captureEvents(Event.MOUSEDOWN);
+}
+document.onmousedown = click;
+// -->
+</script>
+</if>
+
+<!--[if lt IE 7.]>
+<script defer type="text/javascript" src="js/pngfix.js"></script>
+<![endif]-->
+
+<style type="text/css">
+.float
+{
+	float: left;
+	text-align: center;
+	height: {{thumb_height}}px;
+	width: {{thumb_width}}px;
+	overflow: auto;
+	margin: 10px;
+}
+
+.gallery table
+{
+	border-collapse: collapse;
+}
+
+.float img { border: 1px solid #000; }
+
+.shadow_tr
+{
+	width: 5px;
+	height: 10px;
+	background-image: url(lib/images/shad_tr.png);
+}
+
+.shadow_right
+{
+	width: 10px;
+	height: 10px;
+	background-image: url(lib/images/shad_r.png);
+	background-repeat: repeat-y;
+}
+
+.shadow_bottom
+{
+	height: 5px;
+	background-image: url(lib/images/shad_b.png);
+}
+
+.shadow_br
+{
+	height: 10px;
+	width: 10px;
+	background-image: url(lib/images/shad_br.png);
+	background-repeat: no-repeat;
+}
+
+td { padding: 0; }
+</style>
+
+<a href="{{me}}">View Main Gallery</a> &raquo; {{name}}
+
+<table class="gallery">
+	<tr><td>
+		<folder>
+			<div class="float">
+			<a href="{{me}}?galcf={{path}}/{{name}}">
+			<img src="{{icon}}" title="{{name}}" alt="{{name}}" /></a>
+			</div>
+		</folder>
+	</td></tr><tr><td>
+		<file>
+			<div class="float">
+			<a href="{{me}}?galcf={{path}}&amp;view={{idx}}#fullview">
+			<img src="{{icon}}" title="{{name}}" alt="{{name}}" /></a>
+			<p style="text-align: center;">{{name}}</p>
+			</div>
+		</file>
+	</td></tr>
+</table>
+
+<image>
+	{{butBack}}
+	<b>Picture {{current}} of {{total}}</b>
+	{{butForward}}
+
+	<div class="gallery_cell">
+	<table class="gallery_shadow">
+		<tr>
+			<td><img id="fullview" src="{{url}}" alt="{{caption}}" /></td>
+			<td class="gallery_shadow_right">&nbsp;&nbsp;</td>
+		</tr><tr>
+			<td class="gallery_shadow_bottom"></td>
+			<td class="gallery_shadow_bright"></td>
+		</tr>
+	</table></div>
+	<div class="gallery_caption">{{caption}}</div>
+</image>
+<page>{{prev}} Picture {{curnum}} of {{totnum}} {{next}}</page>
+</null>
