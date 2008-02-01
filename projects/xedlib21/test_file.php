@@ -28,6 +28,7 @@ $fm_actions = array(
 	FM_ACTION_UNKNOWN => 'Unknown',
 	FM_ACTION_CREATE  => 'Created',
 	FM_ACTION_DELETE  => 'Deleted',
+	FM_ACTION_MOVE    => 'Moved',
 	FM_ACTION_REORDER => 'Reordered',
 	FM_ACTION_RENAME  => 'Renamed',
 	FM_ACTION_UPDATE  => 'Updated',
@@ -63,15 +64,18 @@ if ($ed == 'user')
 	$edUser = new EditorData('user', $dsUser);
 	$edUser->AddHandler(new FileAccessHandler('test'));
 	$edUser->Prepare($ca);
-	$page_body .= EditorData::GetUI($me, $edUser->Get($me, $ci));
+	$page_body .= $edUser->GetUI($me, $ci);
 }
 else
 {
 	$fm = new FileManager('fman', 'test', array('Default', 'Gallery'));
 	$fm->uid = $user['usr_id'];
 	//$fm->Behavior->Recycle = true;
+	$fm->Behavior->AllowSearch = true;
 	$fm->Behavior->ShowAllFiles = $user['usr_name'] == 'Admin';
 	$fm->Behavior->Watcher = array('fm_watcher');
+	$fm->Behavior->QuickCaptions = true;
+	$fm->View->Sort = FM_SORT_MANUAL;
 
 	$fm->Behavior->AllowAll();
 	$fm->Prepare($ca);

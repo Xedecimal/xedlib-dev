@@ -7,6 +7,8 @@ require_once('lib/h_data.php');
 
 require_once('lib/a_editor.php');
 
+$page_head = '';
+
 $db = new Database();
 $db->Open('mysql://root:ransal@localhost/test');
 

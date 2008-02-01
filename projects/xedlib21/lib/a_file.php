@@ -149,9 +149,11 @@ class FileManager
 		//Actions
 		if ($action == "upload" && $this->Behavior->AllowUpload)
 		{
+			ob_start();
+			varinfo($_FILES['cu']);
+
 			if (GetVar('cm') == 'done')
 			{
-
 				$cu = GetVar('cu');
 
 				$files = glob($this->Root.$this->cf.'.*');
@@ -165,7 +167,7 @@ class FileManager
 						fwrite($fp, file_get_contents($file));
 						fclose($fp);
 						$fi = new FileInfo($file);
-						$fi->Filter->Delete($fi, false);
+						$f->Delete($fi, false);
 					}
 				}
 			}
@@ -174,6 +176,7 @@ class FileManager
 			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 			$files = GetVar('cu');
 
+			if (!empty($files))
 			foreach ($files['name'] as $ix => $file)
 			{
 				$newup = array(
@@ -182,27 +185,33 @@ class FileManager
 					'tmp_name' => $files['tmp_name'][$ix]
 				);
 
-				$fi->Filter->Upload($newup, $fi);
+				$f = FileInfo::GetFilter(null, $this->Root, $this->filters);
+				$f->Upload($newup, $fi);
 
 				if (!empty($this->Behavior->Watcher))
 					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
 					$this->Root.$this->cf.$newup['name']);
 			}
+
+			$fp = fopen('debug.txt', 'w');
+			fwrite($fp, ob_get_contents());
+			fclose($fp);
 		}
-		else if ($action == "update_info")
+		else if ($action == "Save")
 		{
 			if (!$this->Behavior->AllowEdit) return;
 			$info = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 			$newinfo = GetPost('info');
-			$info->Filter->Updated($info, $newinfo);
+			$f = FileInfo::GetFilter($info, $this->Root, $this->filters);
+			$f->Updated($info, $newinfo);
 			$this->Behavior->Update($newinfo);
 
 			if (!empty($newinfo))
 			{
 				//Filter has been changed, we need to notify them.
-				if (isset($newinfo['type']) && $info->Filter->Name != $newinfo['type'])
+				if (isset($newinfo['type']) && $f->Name != $newinfo['type'])
 				{
-					$info->Filter->Cleanup($info->path);
+					$f->Cleanup($info->path);
 					$type = "Filter".$newinfo['type'];
 					$newfilter = new $type();
 					$newfilter->Install($info->path);
@@ -227,19 +236,19 @@ class FileManager
 				if (strlen($cap) < 1) continue;
 				$fi = new FileInfo($this->Root.$this->cf.'/'.$file, $this->DefaultFilter);
 				$fi->info['title'] = $cap;
-				$fi->Filter->Updated($fi, $fi->info);
+				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
+				$f->Updated($fi, $fi->info);
 				$fi->SaveInfo();
 			}
 		}
-		else if ($action == 'rename')
+		else if ($action == 'Rename')
 		{
 			if (!$this->Behavior->AllowRename) return;
-			$fi = new FileInfo(GetVar('ci'), $this->DefaultFilter);
+			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 			$name = GetVar('name');
-			$fi->Filter->Rename($fi, $name);
-			$pinfo = pathinfo($this->cf);
-			if ($pinfo['basename'] == $fi->filename)
-				$this->cf = $pinfo['dirname'].'/'.$name;
+			$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
+			$f->Rename($fi, $name);
+			$this->cf = substr($fi->path, strlen($this->Root)).'/';
 			if (!empty($this->Behavior->Watcher))
 				RunCallbacks($this->Behavior->Watcher, FM_ACTION_RENAME,
 					$fi->path.' to '.$name);
@@ -251,7 +260,8 @@ class FileManager
 			foreach ($sels as $file)
 			{
 				$fi = new FileInfo($file, $this->DefaultFilter);
-				$fi->Filter->Delete($fi, $this->Behavior->Recycle);
+				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
+				$f->Delete($fi, $this->Behavior->Recycle);
 				$types = GetVar('type');
 				$this->files = $this->GetDirectory();
 				$ix = 0;
@@ -301,7 +311,8 @@ class FileManager
 			foreach ($sels as $file)
 			{
 				$fi = new FileInfo($file, $this->DefaultFilter);
-				$fi->Filter->Rename($fi, $ct.$fi->filename);
+				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
+				$f->Rename($fi, $ct.$fi->filename);
 
 				if (!empty($this->Behavior->Watcher))
 					RunCallbacks($this->Behavior->Watcher, FM_ACTION_MOVE,
@@ -328,6 +339,172 @@ class FileManager
 		if (is_dir($this->Root.$this->cf)) $this->files = $this->GetDirectory();
 	}
 
+	function TagPart($guts, $attribs)
+	{
+		$this->$attribs['TYPE'] = $guts;
+	}
+
+	function TagDownload($guts, $attribs)
+	{
+		$this->DownloadContent = $guts;
+	}
+
+	function TagFolder($guts, $attribs)
+	{
+		if (is_file($this->Root.$this->cf)) return;
+		$vp = new VarParser();
+		$ret = '';
+		$ix = 0;
+		foreach ($this->files['folders'] as $f)
+		{
+			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
+			if (!$f->show) continue;
+			$this->vars['filename'] = $f->filename;
+			$this->vars['fipath'] = $f->path;
+			$this->vars['type'] = 'folders';
+			$this->vars['index'] = $ix++;
+			$this->vars['check'] = $vp->ParseVars($this->CheckContent, $this->vars);
+			if (!empty($f->icon))
+			{
+				$this->vars['icon'] = $f->icon;
+				$this->vars['icon'] = $vp->ParseVars($this->IconContent, $this->vars);
+			}
+			else $this->vars['icon'] = '';
+			$ret .= $vp->ParseVars($guts, $this->vars);
+		}
+		return $ret;
+	}
+
+	function TagFile($guts, $attribs)
+	{
+		if (is_file($this->Root.$this->cf)) return;
+		$vp = new VarParser();
+		$ret = '';
+		$ix = 0;
+		foreach ($this->files['files'] as $f)
+		{
+			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
+			if (!$f->show) continue;
+			$this->vars['filename'] = $f->filename;
+			$this->vars['fipath'] = $f->path;
+			$this->vars['type'] = 'files';
+			$this->vars['index'] = $ix++;
+			$this->vars['check'] = $vp->ParseVars($this->CheckContent, $this->vars);
+			if (!empty($f->icon))
+			{
+				$this->vars['icon'] = $f->icon;
+				$this->vars['icon'] = $vp->ParseVars($this->IconContent, $this->vars);
+			}
+			else $this->vars['icon'] = '';
+			$ret .= $vp->ParseVars($guts, $this->vars);
+		}
+		return $ret;
+	}
+
+	/**
+	 * Returns the top portion of the file manager.
+	 * * Path
+	 * * Search
+	 *
+	 * @return string
+	 */
+	function TagHeader($guts, $attribs)
+	{
+		$ret = null;
+		$vp = new VarParser();
+
+		$fi = new FileInfo($this->Root.$this->cf);
+		$this->vars['path'] = $this->GetPath($this->vars['target'], $fi);
+
+		if (is_dir($fi->path) && $this->Behavior->AllowSearch)
+			$ret .= $vp->ParseVars($this->SearchContent, $this->vars);
+		if (is_file($fi->path))
+			$ret .= $vp->ParseVars($this->DownloadContent, $this->vars);
+		return $ret;
+	}
+
+	function TagDetails($guts, $attribs)
+	{
+		if (is_dir($this->Root.$this->cf)) return;
+		$vp = new VarParser();
+		$this->vars['date'] = gmdate("M j Y H:i:s ", filectime($this->Root.$this->cf));
+		$this->vars['size'] = GetSizeString(filesize($this->Root.$this->cf));
+		return $vp->ParseVars($guts, $this->vars);
+	}
+
+	function TagDirectory($guts, $attribs)
+	{
+		if (is_file($this->Root.$this->cf)) return;
+		return $guts;
+	}
+
+	function TagAddOpts()
+	{
+		$ret = '<table>';
+		//$form = new Form('formUpdate', null, false);
+		//$form->AddHidden('editor', $this->Name);
+		//$form->AddHidden('ca', 'update_info');
+		//$form->AddHidden('cf', $this->cf);
+		$vp = new VarParser();
+
+		if (isset($this->DefaultOptionHandler))
+		{
+			$handler = $this->DefaultOptionHandler;
+			$def = $handler($fi);
+		}
+		else $def = null;
+
+		$fi = new FileInfo($this->Root.$this->cf);
+
+		$f = FileInfo::GetFilter($fi, $this->Root, $this->filters, $fi->info);
+
+		if ($this->Behavior->AllowSetType && count($this->filters) > 1 && is_dir($fi->path))
+		{
+			$in = new FormInput('Change Type', 'select',
+				'info[type]',
+				ArrayToSelOptions($this->filters, $f->Name,
+				false));
+			$this->vars['text'] = $in->text;
+			$this->vars['field'] = $in->Get($this->Name);
+			$ret .= $vp->ParseVars($this->ContentField, $this->vars);
+		}
+
+		$options = $f->GetOptions($this, $fi, $def);
+		$options = array_merge($options, $this->Behavior->GetOptions($fi));
+
+		if (!empty($options))
+		{
+			foreach ($options as $col => $field)
+			{
+				//if (is_string($field)) $form->AddInput($field);
+				//else $form->AddInput($field);
+				if (is_string($field))
+				{
+					$this->vars['text'] = '';
+					$this->vars['field'] = $field;
+					$ret .= $vp->ParseVars($this->ContentField, $this->vars);
+				}
+				else
+				{
+					$this->vars['text'] = $field->text;
+					$this->vars['field'] = $field->Get($this->Name);
+					$ret .= $vp->ParseVars($this->ContentField, $this->vars);
+				}
+			}
+			if ($this->Behavior->UpdateButton)
+			{
+				$sub = new FormInput(null, 'submit', 'ca', 'Save');
+				$this->vars['text'] = '';
+				$this->vars['field'] = $sub->Get($this->Name);
+				$ret .= $vp->ParseVars($this->ContentField, $this->vars);
+			}
+
+			/*$ret .= $form->Get('method="post" enctype="multipart/form-data"
+				action="'.$this->vars['target'].'"');*/
+		}
+		return $ret.'</table>';
+	}
+
 	/**
 	* Return the display.
 	*
@@ -342,34 +519,43 @@ class FileManager
 
 		require_once('h_template.php');
 
+		//TODO: Get rid of this.
+		$fi = new FileInfo($this->Root.$this->cf);
+
+		$this->vars['target'] = $target;
+		$this->vars['cf'] = $this->cf;
+		$this->vars['filename'] = $fi->filename;
+		$this->vars['path'] = $this->Root.$this->cf;
+		$this->vars['dirsel'] = $this->GetDirectorySelect('ct');
+		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
+		$this->vars['host'] = GetVar('HTTP_HOST');
+		$this->vars['sid'] = GetVar('PHPSESSID');
+
+		$this->vars['folders'] = count($this->files['folders']);
+		$this->vars['files'] = count($this->files['files']);
+
 		$t = new Template();
+		$t->Set($this->vars);
+
+		$t->ReWrite('part', array($this, 'TagPart'));
+		$t->ReWrite('details', array($this, 'TagDetails'));
+		$t->ReWrite('directory', array($this, 'TagDirectory'));
+		$t->ReWrite('header', array($this, 'TagHeader'));
+		$t->ReWrite('folder', array($this, 'TagFolder'));
+		$t->ReWrite('file', array($this, 'TagFile'));
+
+		$t->ReWrite('addopts', array($this, 'TagAddOpts'));
 
 		$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 
 		$t->Set('name', $this->Name);
-		$t->Set('header', $this->GetHeader($target, $fi));
 		$t->Set('mass_available', $this->mass_avail = $this->Behavior->MassAvailable());
 
-		if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
+		//if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
 
 		$t->Set('options', $this->GetOptions($fi, $target, $action));
 
-		if (is_dir($this->Root.$this->cf))
-		{
-			$t->Set('files', $this->GetFiles($target, 'files'));
-			$t->Set('files_neck', $this->View->TextFilesNeck);
-			$t->Set('folders', $this->GetFiles($target, 'dirs'));
-			$t->Set('cf', $this->cf);
-			$ret = $t->Get(dirname(__FILE__).'/temps/file/directory.php');
-		}
-		else
-		{
-			$t->Set('date', gmdate("M j Y H:i:s ", filectime($this->Root.$this->cf)));
-			$t->Set('size', GetSizeString(filesize($this->Root.$this->cf)));
-			$ret = $t->Get(dirname(__FILE__).'/temps/file/details.php');
-		}
-
-		return $ret;
+		return $t->Get(dirname(__FILE__).'/temps/file.xml');
 	}
 
 	/**
@@ -385,14 +571,14 @@ class FileManager
 		$ret = null;
 		if ($this->Behavior->MassAvailable())
 		{
-			$ret .= "<div id=\"{$this->Name}_mass_options\">";
+			/*$ret .= "<div id=\"{$this->Name}_mass_options\">";
 			$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->Name}_mass_options').style.display = 'none';</script>";
 			$ret .= "<p>With selected files...</p>\n";
 			$ret .= '<input type="submit" name="ca" value="Move" /> to '.$this->GetDirectorySelect('ct')."<br/>\n";
 			$ret .= '<input type="submit" name="ca" value="Delete" onclick="return confirm(\'Are you sure you wish to delete'.
 				" these files?')\" />";
 			$ret .= '<input type="submit" name="ca" value="Download Selected" />';
-			$ret .= "</div></form>\n";
+			$ret .= "</div></form>\n";*/
 		}
 		if ($this->Behavior->Available())
 		{
@@ -487,13 +673,17 @@ EOF;
 				}
 				else $def = null;
 
-				if ($this->Behavior->AllowSetType && count($this->filters) > 1 && is_dir($fi->path))
-				$form->AddInput(new FormInput('Change Type', 'select',
-					'info[type]',
-					ArrayToSelOptions($this->filters, $fi->Filter->Name,
-					false)));
+				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters, $fi->info);
 
-				$options = $fi->Filter->GetOptions($this, $fi, $def);
+				if ($this->Behavior->AllowSetType && count($this->filters) > 1 && is_dir($fi->path))
+				{
+					$form->AddInput(new FormInput('Change Type', 'select',
+						'info[type]',
+						ArrayToSelOptions($this->filters, $f->Name,
+						false)));
+				}
+
+				$options = $f->GetOptions($this, $fi, $def);
 				$options = array_merge($options, $this->Behavior->GetOptions($fi));
 
 				if (!empty($options))
@@ -506,10 +696,8 @@ EOF;
 					if ($this->Behavior->UpdateButton)
 						$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
-					//$end = substr(strrchr(substr($this->cf, 0, -1), '/'), 1);
-					//$start = substr($this->cf, 0, -strlen($end)-1);
 					$ret .= GetBox('box_settings', $this->View->TextAdditional,
-						$form->Get('method="post" action="'.$target.'"'), 'template_box.html');
+						$form->Get('method="post" enctype="multipart/form-data" action="'.$target.'"'), 'template_box.html');
 				}
 			}
 			$ret .= "</div>";
@@ -555,41 +743,6 @@ EOF;
 	}
 
 	/**
-	 * Returns the top portion of the file manager.
-	 * * Path
-	 * * Search
-	 *
-	 * @param string $target Destination of all forms.
-	 * @param string $source Related directory.
-	 * @return string
-	 */
-	function GetHeader($target, $source)
-	{
-		$ret = null;
-		if (is_dir($source->path) && $this->Behavior->AllowSearch)
-		{
-			$ret .= "<form action=\"$target\" method=\"post\">\n";
-			$ret .= "<input type=\"hidden\" name=\"editor\" value=\"$this->Name\" />\n";
-			$ret .= "<input type=\"hidden\" name=\"ca\" value=\"search\"/>\n";
-			$ret .= "<input type=\"hidden\" name=\"cf\" value=\"{$source->path}\"/>\n";
-			$ret .= "Search in: /\n";
-		}
-		//else $ret .= '<p>';
-		$ret .= $this->GetPath($target, $source);
-
-		if (is_file($source->path))
-			$ret .= " [<a href=\"{$source->path}\" target=\"_blank\">Download</a>]</p>";
-		if (is_dir($source->path) && $this->Behavior->AllowSearch)
-		{
-			$ret .= " for <input type=\"text\" name=\"cq\"/>\n";
-			$ret .= "<input type=\"submit\" value=\"Search\"/>\n";
-			$ret .= "</form>\n";
-		}
-		//else $ret .= '</p>';
-		return $ret;
-	}
-
-	/**
 	 * Returns a linked breadcrumb trail of the path back to the root of this
 	 * file manager.
 	 *
@@ -608,8 +761,7 @@ EOF;
 		if (isset($this->cf))
 		{
 			$uri = URL($target, array('editor' => $this->Name));
-			$ret .= "To navigate back, or choose another folder, click the
-			link(s) below<br/> <a href=\"{$uri}\">Home</a> ";
+			$ret .= "<a href=\"{$uri}\">Home</a> ";
 		}
 
 		for ($ix = 0; $ix < count($items); $ix++)
@@ -636,6 +788,8 @@ EOF;
 		$ret = '';
 		if (!empty($this->files[$type]))
 		{
+			$cfi = new FileInfo($this->Root.$this->cf);
+			$f = FileInfo::GetFilter($cfi, $this->Root, $this->filters);
 			$ret .= '<table class="tableFiles">';
 			$end = false;
 			if (count($this->files[$type]) > 1
@@ -646,15 +800,11 @@ EOF;
 				$ret .= '<th colspan="2">Action</th>';
 				$end = true;
 			}
-			if ($this->Behavior->QuickCaptions)
-			{
-				$ret .= '<th>Caption</th>';
-				$end = true;
-			}
 			if ($end) $ret .= '</tr>';
 			$ix = 0;
 			foreach($this->files[$type] as $file)
 			{
+				$f->GetInfo($file);
 				if (!$file->show) continue;
 				if (!$this->Behavior->ShowAllFiles)
 					if (!$this->GetVisible($file)) continue;
@@ -682,20 +832,17 @@ EOF;
 	 * @param int $index Index of this item in the parent.
 	 * @return string Single row for the files table.
 	 */
-	function GetFile($target, $file, $type, $index)
+	function GetFile($file, $type, $index)
 	{
-		$t = new Template();
-		$t->Behavior->Bleed = false;
-		$t->Set('class', $index % 2 ? 'even' : 'odd');
-		//$ret = "\n<tr class=\"{$class}\">\n";
+		$d['class'] = $index % 2 ? 'even' : 'odd';
 
-		$types = $file->type ? 'dirs' : 'files';
+		$types = $file->type ? 'folders' : 'files';
 		if (isset($file->icon))
-			$t->Set('icon', "<img src=\"".URL($file->icon)."\" alt=\"Icon\" />");
+			$d['icon'] = "<img src=\"".URL($file->icon)."\" alt=\"Icon\" />";
 		else if (isset($this->icons[$file->type]))
-			$t->Set('icon', '<img src="'.$this->icons[$file->type].'" alt="'.$file->type.'" />');
+			$d['icon'] = '<img src="'.$this->icons[$file->type].'" alt="'.$file->type.'" />';
 		else
-			$t->Set('icon', '');
+			$d['icon'] = '';
 
 		$name = ($this->View->ShowTitle && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
@@ -713,41 +860,23 @@ EOF;
 				$url = $target.'?editor='.$this->Name.'&amp;cf='.urlencode($this->cf.$file->filename);
 		}
 		else
-			$url = "$target?editor={$this->Name}&amp;cf=".urlencode($this->cf.$file->filename);
+			$uri = "?editor={$this->Name}&amp;cf=".urlencode($this->cf.$file->filename);
 
 		if ($this->mass_avail)
-			$t->Set('check', "\t\t<input type=\"checkbox\"
+			$d['check'] = "\t\t<input type=\"checkbox\"
 			id=\"sel_{$type}_{$index}\" name=\"sels[]\" value=\"{$file->path}\"
 			onclick=\"toggleAny(['sel_files_', 'sel_dirs_'],
-			'{$this->Name}_mass_options');\" />\n");
-		else $t->Set('check', '');
-		$t->Set('file', "<a href=\"$url\">{$name}</a>");
+			'{$this->Name}_mass_options');\" />\n";
+		else $d['check'] = '';
+		$d['uri'] = $uri;
+		$d['file'] = $name;
 		$time = isset($file->info['mtime']) ? $file->info['mtime'] : filemtime($file->path);
-		if ($this->View->ShowDate)
-			$t->Set('date', gmdate("m/d/y h:i", $time));
+		if ($this->View->ShowDate) $d['date'] = gmdate("m/d/y h:i", $time);
 
-		$common = array(
-			'cf' => $this->cf,
-			'editor' => $this->Name,
-			'type' => $types,
-		);
-
-		$uriUp = URL($target, array_merge($common, array(
-			'ca' => 'swap',
-			'cd' => 'up',
-			'index' => $index
-		)));
-
-		$uriDown = URL($target, array_merge($common, array(
-			'ca' => 'swap',
-			'cd' => 'down',
-			'index' => $index
-		)));
-
-		$uriDel = URL($target, array_merge($common, array(
-			'ca' => "delete",
-			'ci' => urlencode($file->filename)
-		)));
+		$common = "?cf={$this->cf}&amp;editor={$this->Name}&amp;type={$types}";
+		$uriUp = $common."&amp;ca=swap&amp;cd=up&amp;index={$index}";
+		$uriDown = $common."&amp;ca=swap&amp;cd=down&amp;index={$index}";
+		$uriDel = $common."&amp;ca=delete&amp;".urlencode($file->filename);
 
 		//Move Up
 
@@ -756,32 +885,33 @@ EOF;
 			&& $index > 0)
 		{
 			$img = GetRelativePath(dirname(__FILE__)).'/images/up.png';
-			$t->Set('butup', "<a href=\"$uriUp\"><img src=\"{$img}\" ".
-			"alt=\"Move Up\" title=\"Move Up\" /></a>");
+			$d['butup'] = "<a href=\"$uriUp\"><img src=\"{$img}\" ".
+			"alt=\"Move Up\" title=\"Move Up\" /></a>";
 		}
-		else $t->Set('butup', '');
+		else $d['butup'] = '';
 
 		//Move Down
 
 		if ($this->Behavior->AllowSort
 			&& $this->View->Sort == FM_SORT_MANUAL
-			&& $index < count($this->files[$types])-1)
+			&& $index < count($this->files[$type])-1)
 		{
 			$img = GetRelativePath(dirname(__FILE__)).'/images/down.png';
-			$t->Set('butdown', "<a href=\"$uriDown\"><img src=\"{$img}\" ".
-			"alt=\"Move Down\" title=\"Move Down\" /></a>");
+			$d['butdown'] = "<a href=\"$uriDown\"><img src=\"{$img}\" ".
+			"alt=\"Move Down\" title=\"Move Down\" /></a>";
 		}
-		else $t->Set('butdown', '');
+		else $d['butdown'] = '';
 
 		if ($this->Behavior->QuickCaptions)
 		{
 			$id = $type.'_'.$index;
-			$t->Set('caption', '<textarea name="titles['.$file->filename.']" rows="2" cols="30">'
-				.@htmlspecialchars(stripslashes($file->info['title'])).
-				'</textarea>');
+			$d['caption'] = '<textarea name="titles['.$file->filename.
+				']" rows="2" cols="30">'.
+				@htmlspecialchars(stripslashes($file->info['title'])).
+				'</textarea>';
 		}
 
-		return $t->Get(dirname(__FILE__).'/temps/file/file.php');
+		return $d;
 	}
 
 	/**
@@ -793,7 +923,7 @@ EOF;
 	{
 		$dp = opendir($this->Root.$this->cf);
 		$ret['files'] = array();
-		$ret['dirs'] = array();
+		$ret['folders'] = array();
 		while ($file = readdir($dp))
 		{
 			if ($file[0] == '.') continue;
@@ -802,12 +932,12 @@ EOF;
 			if (!$newfi->show) continue;
 			if (is_dir($this->Root.$this->cf.'/'.$file))
 			{
-				if ($this->Behavior->ShowFolders) $ret['dirs'][] = $newfi;
+				if ($this->Behavior->ShowFolders) $ret['folders'][] = $newfi;
 			}
 			else $ret['files'][] = $newfi;
 		}
 
-		usort($ret['dirs'], array($this, 'cmp_file'));
+		usort($ret['folders'], array($this, 'cmp_file'));
 		usort($ret['files'], array($this, 'cmp_file'));
 
 		return $ret;
@@ -914,8 +1044,6 @@ class FileManagerView
 	 * @var string
 	 */
 	public $TextAdditional = '<b>Additional Settings</b>';
-
-	public $TextFilesNeck = '';
 
 	public $RenameTitle = 'Rename File / Folder';
 }
@@ -1151,12 +1279,6 @@ class FileInfo
 	public $filename;
 
 	/**
-	* Directory Filter.
-	*
-	* @var FilterDefault
-	*/
-	public $Filter;
-	/**
 	 * Name of the associated filter, hopefully depricated.
 	 *
 	 * @var string
@@ -1225,11 +1347,11 @@ class FileInfo
 				Error("Failed to unserialize: {$finfo}<br/>\n");
 		}
 		else $this->info = array();
-		$this->GetFilter($source, $DefaultFilter);
-		if (is_dir($source)) $this->type = 'folder';
+		//$this->GetFilter($source, $DefaultFilter);
+		//if (is_dir($source)) $this->type = 'folder';
 
-		$s = $this->Filter->GetInfo($this);
-		if (!isset($s)) $this->show = false;
+		//$s = $this->Filter->GetInfo($this);
+		//if (!isset($s)) $this->show = false;
 	}
 
 	/**
@@ -1240,40 +1362,27 @@ class FileInfo
 	 * @param string $default Default filter to fall back on.
 	 * @return FilterDefault Or a derivitive.
 	 */
-	function GetFilter($path, $default = 'Default')
+	static function GetFilter(&$fi, $root, $defaults)
 	{
-		if (is_file($path))
+		$ft = $fi;
+		while (is_file($ft->path) || empty($ft->info['type']))
 		{
-			$dirname = substr(strrchr('/'.$this->dir, '/'), 1);
-			$dinfo = dirname($path).'/../.'.$dirname;
-			if (file_exists($dinfo))
+			if (is_in($ft->dir, $root)) $ft = new FileInfo($ft->dir);
+			else
 			{
-				$dinfo = unserialize(file_get_contents($dinfo));
-				unset($dinfo['title']); //Don't inherit captions.
-				if (is_array($dinfo))
-					$this->info = array_merge($dinfo, $this->info);
-			}
-		}
-		if (isset($this->info['type']))
-		{
-			$name = $this->info['type'];
-			if (class_exists("Filter{$name}"))
-			{
-				$objname = "Filter$name";
-				return $this->Filter = new $objname();
+				$fname = 'Filter'.$defaults[0];
+				return new $fname();
 			}
 		}
 
-		if (isset($default))
+		if (in_array($ft->info['type'], $defaults))
 		{
-			$name = $default;
-			if (class_exists("Filter$name"))
-			{
-				$objname = "Filter$name";
-				return $this->Filter = new $objname();
-			}
+			//Replace fi->info values with $info and take the remainder.
+			$fname = 'Filter'.$ft->info['type'];
+			$f = new $fname();
+			$f->GetInfo($fi);
+			return $f;
 		}
-		return $this->Filter = new FilterDefault();
 	}
 
 	/**
@@ -1342,8 +1451,7 @@ class FilterDefault
 	function GetOptions(&$fm, &$fi, $default)
 	{
 		$more = array(
-			new FormInput('<b>Change Display Name</b> - <i>Type the name that
-				you would like to be displayed with the current file / folder.</i><br/>', 'text', 'info[title]',
+			new FormInput('Description', 'text', 'info[title]',
 			stripslashes(@$fi->info['title']), null)
 		);
 
@@ -1378,6 +1486,7 @@ class FilterDefault
 		if (file_exists($finfo))
 			rename($finfo, $ddir.'/.'.$pinfo['basename']);
 		rename($fi->path, $ddir.'/'.$pinfo['basename']);
+		$fi->path = $ddir.'/'.$newname;
 		$this->UpdateMTime($ddir.'/'.$pinfo['basename']);
 	}
 
@@ -1448,11 +1557,16 @@ class FilterGallery extends FilterDefault
 	function GetInfo(&$fi)
 	{
 		parent::GetInfo($fi);
-		if (substr($fi->filename, 0, 2) == 't_') return null;
+		if (substr($fi->filename, 0, 2) == 't_') $fi->show = false;
 		if (empty($fi->info['thumb_width'])) $fi->info['thumb_width'] = 200;
 		if (empty($fi->info['thumb_height'])) $fi->info['thumb_height'] = 200;
 		if (file_exists($fi->dir."/t_".$fi->filename))
 			$fi->icon = "{$fi->dir}/t_{$fi->filename}";
+		if (is_dir($fi->path))
+		{
+			$fs = glob($fi->path.'/.t_image.*');
+			if (!empty($fs)) $fi->icon = $fs[0];
+		}
 		return $fi;
 	}
 
@@ -1461,11 +1575,65 @@ class FilterGallery extends FilterDefault
 	 */
 	function Updated(&$fi, &$newinfo)
 	{
+		$upimg = GetVar('upimage');
+		$img = GetVar('image');
+		if (!empty($upimg['name']))
+		{
+			mkdir("timg");
+			move_uploaded_file($upimg['tmp_name'], 'timg/'.$upimg['name']);
+			$newimg = 'timg/'.$upimg['name'];
+		}
+		else if (!empty($img)) $newimg = $fi->path.$img;
+		if (!empty($newimg))
+		{
+			$this->ResizeFile($newimg,
+				"{$fi->path}/._image",
+				$newinfo['thumb_width'], $newinfo['thumb_height']);
+		}
+		if (!empty($upimg['name']))
+		{
+			unlink("timg/{$upimg['name']}");
+			rmdir("timg");
+		}
+
+		if (is_dir($fi->path)) $this->UpdateThumbs($fi, $newinfo);
+
 		if (is_file($fi->path)) unset(
-			$fi->info['thumb_width'],
-			$fi->info['thumb_height'],
-			$fi->info['thumb']
+			$newinfo['thumb_width'],
+			$newinfo['thumb_height'],
+			$newinfo['thumb']
 		);
+	}
+
+	function UpdateThumbs($fi, $info)
+	{
+		$dp = opendir($fi->path);
+		while ($file = readdir($dp))
+		{
+			if ($file[0] == '.') continue;
+			if (substr($file, 0, 2) == 't_') continue;
+
+			$fir = new FileInfo($fi->path.$file);
+
+			if (is_dir($fi->path.$file))
+			{
+				$g = glob("$fir->path/._image.*");
+				if (!empty($g))
+				{
+					echo "Target: ".$fir->path.'/'.filenoext('t_'.basename($g[0]))."<br/>\n";
+					$this->ResizeFile($g[0], $fir->path.'/.'.filenoext('t'.substr(basename($g[0]), 1)), $info['thumb_width'], $info['thumb_height']);
+				}
+				$this->UpdateThumbs($fir, $info);
+			}
+			else
+			{
+				$w = $info['thumb_width'];
+				$h = $info['thumb_height'];
+				$src = $fir->path;
+				$dst = $fir->dir.'/t_'.filenoext($fir->filename);
+				$this->ResizeFile($src, $dst, $w, $h);
+			}
+		}
 	}
 
 	/**
@@ -1479,10 +1647,18 @@ class FilterGallery extends FilterDefault
 		$new = array();
 		if (is_dir($fi->path))
 		{
+			$selImages[0] = new SelOption('None');
+			foreach ($fm->files['files'] as $fiImg)
+				$selImages[$fiImg->filename] = new SelOption($fiImg->filename);
+
 			$new[] = new FormInput('Thumbnail Width', 'text',
 				'info[thumb_width]', $fi->info['thumb_width']);
 			$new[] = new FormInput('Thumbnail Height', 'text',
 				'info[thumb_height]', $fi->info['thumb_height']);
+			$new[] = new FormInput('Gallery Image', 'select',
+				'image', $selImages);
+			$new[] = new FormInput('or Upload', 'file',
+				'upimage');
 		}
 		return array_merge(parent::GetOptions($fm, $fi, $default), $new);
 	}
@@ -1522,29 +1698,8 @@ class FilterGallery extends FilterDefault
 	 */
 	function Upload($file, $target)
 	{
-		$filename = substr(basename($file['name']), 0, strrpos(basename($file['name']), '.'));
-		$ext = strrchr($file['name'], '.');
-		$destthumb = "{$target->path}/t_{$filename}{$ext}";
-		switch (strtolower($ext))
-		{
-			case ".jpg":
-			case ".jpeg":
-				$img = imagecreatefromjpeg($file['tmp_name']);
-				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
-				imagejpeg($img, $destthumb);
-			break;
-			case ".png":
-				$img = imagecreatefrompng($file['tmp_name']);
-				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
-				imagepng($img, $destthumb);
-			break;
-			case ".gif":
-				$img = imagecreatefromgif($file['tmp_name']);
-				$img = $this->ResizeImg($img, $target->info['thumb_width'], $target->info['thumb_height']);
-				imagegif($img, $destthumb);
-			break;
-		}
-		//$destimage = "{$target->path}/{$filename}.jpg";
+		$this->ResizeFile($file['tmp_name'],
+			substr(basename($file['name']), 0, strrpos(basename($file['name']), '.')));
 		parent::Upload($file, $target);
 	}
 
@@ -1561,26 +1716,8 @@ class FilterGallery extends FilterDefault
 		{
 			if (substr($file, 0, 2) == 't_') continue;
 			$pinfo = pathinfo($file);
-			$destthumb = "{$pinfo['dirname']}/t_{$pinfo['basename']}";
-			switch ($pinfo['extension'])
-			{
-				case "jpg":
-				case "jpeg":
-					$img = imagecreatefromjpeg($file);
-					$img = $this->ResizeImg($img, $fi->info['thumb_width'], $fi->info['thumb_height']);
-					imagejpeg($img, $destthumb);
-				break;
-				case "png":
-					$img = imagecreatefrompng($file);
-					$img = $this->ResizeImg($img, $fi->info['thumb_width'], $fi->info['thumb_height']);
-					imagepng($img, $destthumb);
-				break;
-				case "gif":
-					$img = imagecreatefromgif($file);
-					$img = $this->ResizeImg($img, $fi->info['thumb_width'], $fi->info['thumb_height']);
-					imagegif($img, $destthumb);
-				break;
-			}
+			$this->ResizeFile($file, $path.'t_'.filenoext($pinfo['basename']),
+				$fi->info['thumb_width'], $fi->info['thumb_height']);
 		}
 	}
 
@@ -1592,6 +1729,35 @@ class FilterGallery extends FilterDefault
 	{
 		$files = glob($path."t_*.*");
 		foreach ($files as $file) unlink($file);
+	}
+
+	/**
+	 * Extension will be automatically appended to $dest filename.
+	 */
+	function ResizeFile($file, $dest, $nx, $ny)
+	{
+		$pinfo = pathinfo($file);
+		$dt = $dest.'.'.$pinfo['extension'];
+
+		switch (strtolower($pinfo['extension']))
+		{
+			case "jpg":
+			case "jpeg":
+				$img = imagecreatefromjpeg($file);
+				$img = $this->ResizeImg($img, $nx, $ny);
+				imagejpeg($img, $dt);
+			break;
+			case "png":
+				$img = imagecreatefrompng($file);
+				$img = $this->ResizeImg($img, $nx, $ny);
+				imagepng($img, $dt);
+			break;
+			case "gif":
+				$img = imagecreatefromgif($file);
+				$img = $this->ResizeImg($img, $nx, $ny);
+				imagegif($img, $dt);
+			break;
+		}
 	}
 
 	/**

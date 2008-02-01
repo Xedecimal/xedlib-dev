@@ -3,8 +3,8 @@ function gebi(id) { return document.getElementById(id); }
 function toggle(id)
 {
 	obj = gebi(id);
-	if (obj.style.display == 'none') obj.style.display = '';
-	else obj.style.display = 'none';
+	if (obj.style.display == 'none') { obj.style.display = ''; return 1; }
+	else { obj.style.display = 'none'; return 0; }
 }
 
 function show(id, display)

@@ -79,67 +79,54 @@ class Gallery
 		return $ret;
 	}
 
-	/**
-	 * Returns the rendered gallery.
-	 * @param string $path Current location, usually GetVar('galcf')
-	 * @return string Rendered gallery.
-	 */
-	function Get($path, $temp = null)
+	function TagFolder($guts)
 	{
-		global $me;
-
-		require_once('h_template.php');
-
-		$t = new Template();
-
-		$body = <<<EOF
-<!--[if lt IE 7.]>
-<script defer type="text/javascript" src="js/pngfix.js"></script>
-<![endif]-->
-EOF;
-
-		$GLOBALS['page_section'] = "View Gallery";
-
-		$fm = new FileManager('gallery', $path, array('Gallery'), 'Gallery');
-		$fm->Behavior->ShowAllFiles = true;
-		$fm->View->Sort = $this->Display->Sort;
-		$files = $fm->GetDirectory();
-
-		$fi = new FileInfo($path);
-
-		if (is_file($path)) return;
-		$body .= "<table class=\"gallery_table\">\n";
-
-		if ($path != $this->root)
+		$out = '';
+		$vp = new VarParser();
+		$dp = opendir($this->path);
+		while ($file = readdir($dp))
 		{
-			if ($this->InfoCaption && isset($fi->info['title']))
-				$name = htmlspecialchars($fi->info['title']);
-			else $name = $fi->filename;
-			$body .= '<tr><td colspan="3"><a href="'.URL($me).'">View Main Gallery</a> &raquo; '.$name.'</td></tr>';
+			if ($file[0] == '.') continue;
+
+			$p = $this->path.'/'.$file;
+			if (!is_dir($p)) continue;
+
+			$fi = new FileInfo($this->path.'/'.$file);
+
+			$icons = glob($this->path.'/'.$file.'/._image.*');
+
+			$d['name'] = $file;
+			$d['path'] = GetVar('galcf', '');
+			if (!empty($icons)) $d['icon'] = $icons[0];
+			else $d['icon'] = '';
+
+			$out .= $vp->ParseVars($guts, $d);
 		}
+		return $out;
+	}
 
-		if (!empty($files['dirs']))
+	function TagFile($guts)
+	{
+		$out = '';
+		$vp = new VarParser();
+		$dp = opendir($this->path);
+
+		foreach ($this->files['files'] as $ix => $fi)
 		{
-			$ix = 0;
-			$body .= "<tr class=\"category_row\">";
-			foreach ($files['dirs'] as $dir)
-			{
-				$imgs = glob("$path/{$dir->path}/t_*.jpg");
-				$imgcount = is_array($imgs) ? count($imgs) : 0;
+			$this->f->GetInfo($fi);
+			if (!$fi->show) continue;
 
-				if ($this->InfoCaption && !empty($dir->info['title']))
-				{
-					$name = @$dir->info['title'];
-				}
-				else $name = $dir->filename;
+			$d['idx'] = $ix;
+			$d['name'] = $this->GetCaption($fi);
+			$d['path'] = GetVar('galcf', '');
+			$d['icon'] = $fi->icon;
+			$d['desc'] = @$fi->info['title'];
 
-				$body .= "<td class=\"gallery_cat\">» <a href=\"".URL($me, array('galcf' => $dir->path))."\">{$name}</a></td>\n";
-				if ($ix++ % 3 == 2) $body .= "</tr><tr>\n";
-			}
+			$out .= $vp->ParseVars($guts, $d);
 		}
+		return $out;
 
-		if (!empty($files['files']))
-		{
+
 			if ($this->Behavior->PageCount != null)
 			{
 				$tot = GetFlatPage($files['files'], GetVar('cp'), $this->Behavior->PageCount);
@@ -178,86 +165,122 @@ EOF;
 				}
 			}
 			$body .= '</td>';
-		}
-		$body .= "</tr></table>\n";
+	}
 
+	function TagImage($guts)
+	{
+		global $me;
+
+		$out = '';
+		$view = GetVar('view');
+		if (!isset($view)) return null;
+		$imgurl = $this->path.'/'.$this->files['files'][$view]->filename;
+		$vname = substr(strrchr($imgurl, '/'), 1);
+
+		$out .= '  ';
+
+		$out .= '</p>';
+		$out .= '';
+		return $guts;
+	}
+
+	function TagPage($guts)
+	{
+		$vp = new VarParser();
 		if ($this->Behavior->PageCount != null)
 		{
 			$args = array('galcf' => $path);
-			$t->Set('pages', GetPages($files['files'], $this->Behavior->PageCount, $args));
+			return GetPages($files['files'], $this->Behavior->PageCount, $args);
 		}
-		else $t->Set('pages', '');
+		//return $vp->ParseVars($guts, $d);
+		//else return '';
+	}
 
+	/**
+	 * Returns the rendered gallery.
+	 * @param string $path Current location, usually GetVar('galcf')
+	 * @return string Rendered gallery.
+	 */
+	function Get($path, $temp = null)
+	{
+		global $me;
+		$this->f = new FilterGallery();
+
+		require_once('h_template.php');
+
+		$fm = new FileManager('gallery', $path, array('Gallery'), 'Gallery');
+		$fm->Behavior->ShowAllFiles = true;
+		$fm->View->Sort = $this->Display->Sort;
+		$this->files = $fm->GetDirectory();
+
+		$t = new Template();
+		$this->path = $path;
+		$t->ReWrite('folder', array($this, 'TagFolder'));
+		$t->ReWrite('file', array($this, 'TagFile'));
+		$t->ReWrite('image', array($this, 'TagImage'));
+		$t->ReWrite('page', array($this, 'TagPage'));
+
+		$t->Set('disable_save', $this->Behavior->DisableSave);
+		$t->Set('current', GetVar('view'));
+		$tot = 0;
+		foreach ($this->files['files'] as $f)
+		{
+			if (substr($f->filename, 0, 2) == 't_') continue;
+			$tot++;
+		}
+		$t->Set('total', count($this->files['files']));
+
+		//Page related
 		$view = GetVar('view');
+
 		if (isset($view))
 		{
-			if ($this->Behavior->DisableSave)
-			$body .= <<<EOF
-<meta http-equiv="imagetoolbar" content="no">
-<script type="text/javascript">
-<!--
-var message = "Saving images is not allowed.";
-function click(e)
-{
-	if (document.all)
-	{
-		if (event.button == 2 || event.button == 3)
-		{
-			alert(message);
-			return false;
-		}
-	}
-	if (document.layers)
-	{
-		if (e.which == 3)
-		{
-			alert(message);
-			return false;
-		}
-	}
-}
-if (document.layers)
-{
-	document.captureEvents(Event.MOUSEDOWN);
-}
-document.onmousedown = click;
-// -->
-</SCRIPT>
-EOF;
-			$GLOBALS['page_section'] = 'View Image';
-
-			$imgurl = $path.'/'.$files['files'][$view]->filename;
-			$vname = substr(strrchr($imgurl, '/'), 1);
-			$body .= '<p class="gallery_nav">';
-			if ($view > 0)
-				$body .= GetButton(URL($me, array(
-						'view' => $view-1,
-						'galcf' => $path,
-						'cp' => floor(($view-1)/$this->Behavior->PageCount)
-					)).'#fullview', 'back.png', 'Back', 'class="png"');
-			$body .= ' <b>Picture '.($view+1).' of '.count($files['files']).'</b> ';
-			if ($view < count($files['files'])-1)
-				$body .= GetButton(URL($me, array(
-					'view' => $view+1,
-					'galcf' => $path,
-					'cp' => floor(($view+1)/$this->Behavior->PageCount)
-					)).'#fullview', 'forward.png', 'Forward', 'class="png"');
-			$body .= '</p>';
-			$body .= '<div class="gallery_cell">
-<table class="gallery_shadow">
-<tr><td><img id="fullview"
-	src="'.$imgurl.'"
-	alt="'.$vname.'" /></td>
-<td class="gallery_shadow_right">&nbsp;&nbsp;</td>
-</tr><tr>
-<td class="gallery_shadow_bottom"></td>
-<td class="gallery_shadow_bright"></td>
-</tr></table></div><div class="gallery_caption">'.
-$this->GetCaption($files['files'][$view]).'</div>';
+			$fi = $this->files['files'][$view];
+			$t->Set('url', $fi->path);
+			$t->Set('caption', $this->GetCaption($fi));
 		}
 
-		$t->Set('display', $body);
-		if ($temp == null) return $t->Get(dirname(__FILE__).'/temps/gallery.php');
+		//Back Button
+		if ($view > 0)
+		{
+			$args = array(
+				'view' => $view-1,
+				'galcf' => GetVar('galcf'),
+			);
+			if ($this->Behavior->PageCount > 0)
+				$args['cp'] = floor(($view-1)/$this->Behavior->PageCount);
+
+			$t->Set('butBack', GetButton(URL($me, $args).'#fullview',
+				'back.png', 'Back', 'class="png"'));
+		}
+		else $t->Set('butBack', '');
+
+		//Forward Button
+		if ($view < count($this->files['files'])-1)
+		{
+			$args = array(
+				'view' => $view+1,
+				'galcf' => GetVar('galcf'),
+
+			);
+			if ($this->Behavior->PageCount > 0)
+				$args['cp'] = floor(($view+1)/$this->Behavior->PageCount);
+
+			$t->Set('butForward', GetButton(URL($me, $args).'#fullview', 'forward.png',
+				'Forward', 'class="png"'));
+		}
+		else $t->Set('butForward', '');
+
+		//Gallery settings
+		$fig = new FileInfo($this->root);
+		$t->Set('thumb_width', $fig->info['thumb_width']+10);
+		$t->Set('thumb_height', $fig->info['thumb_height']+50);
+
+		$fi = new FileInfo($path);
+		if ($path != $this->root) $t->Set('name', $this->GetCaption($fi));
+		else $t->Set('name', '');
+
+		if ($temp == null) return $t->Get(dirname(__FILE__).'/temps/gallery.xml');
 		else return $t->Get($temp);
 		return $body;
 	}
@@ -270,20 +293,13 @@ $this->GetCaption($files['files'][$view]).'</div>';
 	 */
 	function GetCaption($file)
 	{
-		$vp = new VarParser();
-		$d['image'] = $file->path;
-
 		if ($this->InfoCaption
 			&& !empty($file->info['title'])
 			&& $this->Display->Captions == CAPTION_TITLE)
-			$name = $file->info['title'];
+			return $file->info['title'];
 		else if ($this->Display->Captions == CAPTION_FILE)
-			$name = substr($file->filename, 0, strrpos($file->filename, '.'));
-		else $name = null;
-
-		return $vp->ParseVars($this->Display->CaptionLeft, $d).
-			$name.
-			$vp->ParseVars($this->Display->CaptionRight, $d);
+			return str_replace('_', ' ', substr($file->filename, 0, strrpos($file->filename, '.')));
+		else return str_replace('_', ' ', $file->filename);
 	}
 }
 

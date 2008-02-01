@@ -1101,6 +1101,8 @@ class TreeNode
 	 */
 	public $children;
 
+	public $parent;
+
 	/**
 	 * Create a new TreeNode object.
 	 *

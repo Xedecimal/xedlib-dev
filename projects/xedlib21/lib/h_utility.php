@@ -97,6 +97,9 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 	$err = "[{$errortype[$errno]}] ".nl2br($errmsg)."<br/>";
 	$err .= "Error seems to be in one of these places...\n";
 
+	if (isset($GLOBALS['_trace']))
+		$err .= '<p>Template Trace</p><p>'.$GLOBALS['_trace'].'</p>';
+
 	$err .= GetCallstack($filename, $linenum);
 
 	echo $err;
@@ -454,7 +457,7 @@ function GetDateOffset($ts)
  * @param string $name Name of the file to return the extension from.
  * @return string File extension.
  */
-function filext($name)
+function fileext($name)
 {
 	return substr(strrchr($name, '.'), 1);
 }
@@ -938,6 +941,31 @@ function GetZips($ds, $zip, $range)
     asort($return['dists']);
 
 	return $return;
+}
+
+define('PREG_FILES', 1);
+define('PREG_DIRS', 2);
+
+function preg_files($pattern, $path, $opts = 3)
+{
+	echo "Opts: ".($opts & PREG_DIRS)."<br/>\n";
+	$ret = array();
+	$dp = opendir($path);
+	while ($file = readdir($dp))
+	{
+		if (is_file("$path/$file") && $opts & PREG_FILES != PREG_FILES) continue;
+		if (is_dir("$path/$file") && $opts & PREG_DIRS != PREG_DIRS) continue;
+		if (preg_match($pattern, $file)) $ret[] = $file;
+	}
+	return $ret;
+}
+
+/**
+ * Returns true if $src directory is inside directory $dst.
+ */
+function is_in($src, $dst)
+{
+	return substr(realpath($src), 0, strlen(realpath($dst))) == realpath($dst);
 }
 
 ?>

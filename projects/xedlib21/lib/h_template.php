@@ -135,7 +135,7 @@ class Template
 		$this->Behavior = new TemplateBehavior();
 		$args = func_get_args();
 		if (isset($args[0])) $data = &$args[0];
-		$this->out = "";
+		$this->out = '';
 		$this->objs = array();
 		$this->vars = array();
 		$this->data = &$data;
@@ -161,6 +161,7 @@ class Template
 		if (isset($this->rewrites[$tag]))
 		{
 			$obj = new stdClass();
+			$obj->attribs = $attribs;
 			$obj->out = '';
 			$this->objs[] = $obj;
 			$show = false;
@@ -206,7 +207,9 @@ class Template
 			$this->start .= $this->ProcessForm($parser, $tag, $attribs);
 		else if ($tag == 'IF')
 		{
-			$check = $attribs['CHECK'];
+			$vp = new VarParser();
+			$check = $vp->ParseVars($attribs['CHECK'], $this->vars);
+			$GLOBALS['_trace'] = GetTemplateStack($this->data);
 			if (!eval('return '.$check.';')) $this->skip = true;
 			$show = false;
 		}
@@ -229,6 +232,7 @@ class Template
 		else if ($tag == 'META') $close = ' /';
 		else if ($tag == 'NBSP') $output = '&nbsp;';
 		else if ($tag == 'NULL') $show = false;
+		else if ($tag == 'PARAM') $close = ' /';
 		else if ($tag == 'PRESENT')
 		{
 			$name = $attribs['NAME'];
@@ -316,7 +320,10 @@ class Template
 		{
 			$obj = &$this->GetCurrentObject();
 			$objd = &$this->GetDestinationObject();
-			$objd->out .= RunCallbacks($this->rewrites[$tag], $obj->out);
+
+			$objd->out .= RunCallbacks($this->rewrites[$tag], $obj->out,
+				$obj->attribs);
+
 			array_pop($this->objs);
 			return;
 		}
@@ -339,6 +346,7 @@ class Template
 		else if ($tag == 'META') return;
 		else if ($tag == 'NBSP') return;
 		else if ($tag == 'NULL') return;
+		else if ($tag == 'PARAM') return;
 		else if ($tag == 'PRESENT')
 		{
 			$objc = &$this->GetCurrentObject();
@@ -474,11 +482,24 @@ class Template
 	 */
 	function Get($template)
 	{
+		if (!file_exists($template))
+		{
+			trigger_error("Template not found ({$template})", E_USER_ERROR);
+			return NULL;
+		}
+
+		$this->data['template.stack'][] = $template;
+		$this->template = $template;
+		return $this->GetString(file_get_contents($template));
+	}
+
+	function GetString($str)
+	{
 		if ($this->Behavior->MakeDynamic)
 		{
 			if (!file_exists('temp_cache')) mkdir('temp_cache');
 
-			$md5 = md5(file_get_contents($template));
+			$md5 = md5($str);
 
 			if (file_exists('temp_cache/'.$md5))
 				$this->config = unserialize(file_get_contents('temp_cache/'.$md5));
@@ -494,29 +515,23 @@ class Template
 				fclose($fp);
 			}
 		}
-		$this->data['template.stack'][] = $template;
-		$this->template = $template;
+
 		$this->out = "";
-		if (!file_exists($template)) { trigger_error("Template not found (" . $template . ")", E_USER_ERROR); return NULL; }
 		$this->parser = xml_parser_create_ns();
 		$this->data['template.parsers'][] = $this->parser;
 		$data = array();
 		$index = array();
 		xml_set_object($this->parser, $this);
-		xml_set_element_handler($this->parser, "Start_Tag", "End_Tag");
-		xml_set_character_data_handler($this->parser, "CData");
- 		xml_set_default_handler($this->parser, "CData");
- 		xml_set_processing_instruction_handler($this->parser, "Process");
+		xml_set_element_handler($this->parser, 'Start_Tag', 'End_Tag');
+		xml_set_character_data_handler($this->parser, 'CData');
+ 		xml_set_default_handler($this->parser, 'CData');
+ 		xml_set_processing_instruction_handler($this->parser, 'Process');
 
-		$lines = file($template);
-		foreach ($lines as $line)
+		if (!xml_parse($this->parser, $str))
 		{
-			if (!xml_parse($this->parser, $line))
-			{
-				echo "XML Error: " . xml_error_string(xml_get_error_code($this->parser)) .
-				" on line " . xml_get_current_line_number($this->parser) .
-				" of file " . $template . "\n";
-			}
+			echo "XML Error: " . xml_error_string(xml_get_error_code($this->parser)) .
+			" on line " . xml_get_current_line_number($this->parser) .
+			" of file " . $template . "\n";
 		}
 		xml_parser_free($this->parser);
 		array_pop($this->data['template.stack']);
@@ -584,14 +599,15 @@ class VarParser
 	{
 		$tvar = $match[1];
 		global $$tvar;
-		if (isset($this->vars[$tvar]))
+
+		//Process an array values from $this->vars
+		if (is_array($this->vars) && isset($this->vars[$tvar]))
+			return $this->vars[$tvar];
+		//Process an object property from $this->vars
+		if (is_object($this->vars))
 		{
-			if (is_string($this->vars[$tvar])) return $this->vars[$tvar];
-			if (is_object($this->vars[$tvar]))
-			{
-				$obj = &$this->vars[$tvar];
-				return $obj->Get();
-			}
+			$ov = get_object_vars($this->vars);
+			if (isset($ov[$tvar])) return $ov[$tvar];
 		}
 		else if (isset($$tvar)) return $$tvar;
 		else if (defined($tvar)) return constant($tvar);

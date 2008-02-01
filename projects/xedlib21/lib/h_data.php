@@ -1108,4 +1108,43 @@ class DataSet
 	}
 }
 
+function BuildTree($items, $parent, $assoc = null)
+{
+	$flats = LinkList($items, $parent, $assoc);
+
+	foreach ($flats as $id => $f)
+	{
+		$p = $f->data[$assoc];
+		if (isset($flats[$p]))
+		{
+			$flats[$p]->children = $f;
+			$f->parents[$p] = $flats[$p];
+		}
+		else $tree[$f->id] = $f;
+	}
+	return $tree;
+}
+
+function LinkList($items, $parent, $assoc = null)
+{
+	//Build Flat
+	foreach ($items as $i)
+	{
+		$tn = new TreeNode($i);
+		$tn->id = $i[$parent];
+		$ret[$i[$parent]] = $tn;
+	}
+	foreach ($ret as $id => $i)
+	{
+		$p = $i->data[$assoc];
+		echo "Parent: {$p}<br/>\n";
+		if (isset($ret[$p]))
+		{
+			$ret[$p]->children[$id] = $i;
+			$i->parent = $ret[$p];
+		}
+	}
+	return $ret;
+}
+
 ?>
