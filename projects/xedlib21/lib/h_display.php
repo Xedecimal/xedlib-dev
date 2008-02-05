@@ -1759,4 +1759,17 @@ function SOCallback($ds, $item, $icol, $col = null)
 	return $item[$icol];
 }
 
+function TagInput($guts, $attribs)
+{
+	if (!empty($attribs['TYPE']))
+	switch (strtolower($attribs['TYPE']))
+	{
+		case 'year':
+			return GetYearSelect($attribs['NAME'], @$attribs['VALUE']);
+		case 'month':
+			return GetMonthSelect($attribs['NAME'], @$attribs['VALUE']);
+	}
+	return $guts;
+}
+
 ?>

@@ -321,8 +321,10 @@ class Template
 			$obj = &$this->GetCurrentObject();
 			$objd = &$this->GetDestinationObject();
 
+			$vp = new VarParser();
+
 			$objd->out .= RunCallbacks($this->rewrites[$tag], $obj->out,
-				$obj->attribs);
+				$vp->ParseVars($obj->attribs, $this->vars));
 
 			array_pop($this->objs);
 			return;

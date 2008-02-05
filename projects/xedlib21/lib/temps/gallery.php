@@ -1,4 +1,0 @@
-<null>
-{{display}}
-{{pages}}
-</null>

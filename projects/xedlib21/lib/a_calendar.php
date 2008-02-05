@@ -86,18 +86,19 @@ class Calendar
 	function Get($timestamp = null)
 	{
 		global $me, $cs;
+		require_once('h_template.php');
+
 		$vp = new VarParser();
 
-		if ($timestamp != null)
-		{
-			$thismonth = gmdate("n", $timestamp);
-			$thisyear = gmdate("Y", $timestamp);
-		}
-		else
-		{
-			$thismonth = GetVar('calmonth', gmdate("n"));
-			$thisyear = GetVar('calyear', gmdate("Y"));
-		}
+		$t = new Template();
+
+		$ts = $timestamp != null ? $timestamp : time();
+
+		$t->Set('month', GetVar('calmonth', gmdate("n", $ts)));
+		$t->Set('year', GetVar('calyear', gmdate("Y", $ts)));
+
+		$t->ReWrite('input', 'TagInput');
+		return $t->Get(dirname(__FILE__).'/temps/calendar_horiz.xml');
 
 		$ts = gmmktime(0, 0, 0, $thismonth, 1, $thisyear); //Get timestamp for first day of this month.
 
@@ -107,7 +108,7 @@ class Calendar
 		//$days = gmdate("t", $ts); //Get total amount of days in this month.
 $ret = <<<EOF
 <form action="$me" method="post">
-<div><input type="hidden" name="cs" value="$cs" /></div>
+<input type="hidden" name="cs" value="$cs" />
 <table class="CalendarTable">
 	<tr class="CalendarHead">
 		<td valign="top" colspan="7">

@@ -833,7 +833,7 @@ class DataSet
 		$group = null,
 		$args = GET_BOTH)
 	{
-		
+
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 
@@ -1068,7 +1068,7 @@ class DataSet
 					WHERE `__TEMP`.`{$child->ds->id}` = `{$child->ds->table}`.`{$child->parent_key}`";
 				$child->ds->database->query($query);
 			}
-			
+
 			$child->ds->database->query("DROP TABLE IF EXISTS `__TEMP`");
 		}
 
