@@ -162,6 +162,7 @@ class Template
 		{
 			$obj = new stdClass();
 			$obj->attribs = $attribs;
+			$obj->tag = $tag;
 			$obj->out = '';
 			$this->objs[] = $obj;
 			$show = false;
@@ -324,7 +325,7 @@ class Template
 			$vp = new VarParser();
 
 			$objd->out .= RunCallbacks($this->rewrites[$tag], $obj->out,
-				$vp->ParseVars($obj->attribs, $this->vars));
+				$vp->ParseVars($obj->attribs, $this->vars), $obj->tag);
 
 			array_pop($this->objs);
 			return;

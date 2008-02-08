@@ -77,6 +77,48 @@ class Calendar
 		}
 	}
 
+	function TagPart($guts, $attribs)
+	{
+		$this->$attribs['TYPE'] = $guts;
+	}
+
+	function TagPad($guts, $attribs)
+	{
+		$vp = new VarParser();
+		if ($this->month->Pad > 0)
+		{
+			$d['amount'] = $this->month->Pad;
+			return $vp->ParseVars($guts, $d);
+		}
+		return null;
+	}
+
+	function TagDays($guts, $attribs)
+	{
+		foreach ($this->month->Days as $day)
+		{
+			$dayts = $day->TimeStamp;
+			if ($day->StartWeek) $ret .= "\t<tr>\n";
+			$ret .= "\t\t<td valign=\"top\" class=\"CalendarDay\">\n";
+			$ret .= "\t\t\t<div class=\"CalendarDayTitle\">\n";
+			$ret .= "\t\t\t{$day->Day}</div>\n";
+			$ret .= $vp->ParseVars($this->daybody, array('ts' => $dayts));
+
+			if (isset($this->dates[$dayts]))
+			{
+				foreach ($this->dates[$dayts] as $eventid)
+				{
+					$event = $this->events[$eventid];
+					$ret .= "\t\t\t<p class=\"CalendarDayBody\">\n";
+					$ret .= "\t\t\t{$event[2]}</p>\n";
+				}
+			}
+			$ret .= "\t\t</td>\n";
+			if ($day->LastDay) $ret .= "\t\t<td class=\"CalendarPadding\" colspan=\"".(6 - $day->WeekDay)."\">&nbsp;</td></tr>\n";
+			if ($day->EndWeek) $ret .= "\t</tr>\n";
+		}
+	}
+
 	/**
 	* Gets an html rendered calander display relative to the given
 	* timestamp.
@@ -92,21 +134,25 @@ class Calendar
 
 		$t = new Template();
 
-		$ts = $timestamp != null ? $timestamp : time();
+		$this->ts = $timestamp != null ? $timestamp : time();
+		$this->month = new CalendarMonth($this->ts);
 
-		$t->Set('month', GetVar('calmonth', gmdate("n", $ts)));
-		$t->Set('year', GetVar('calyear', gmdate("Y", $ts)));
+		$t->Set('month', GetVar('calmonth', gmdate("n", $this->ts)));
+		$t->Set('year', GetVar('calyear', gmdate("Y", $this->ts)));
+		$t->Set('cs', $cs);
 
 		$t->ReWrite('input', 'TagInput');
+		$t->ReWrite('part', array($this, 'TagPart'));
+		$t->ReWrite('pad', array($this, 'TagPad'));
+		$t->ReWrite('days', array($this, 'TagDays'));
+
 		return $t->Get(dirname(__FILE__).'/temps/calendar_horiz.xml');
 
 		$ts = gmmktime(0, 0, 0, $thismonth, 1, $thisyear); //Get timestamp for first day of this month.
 
-		$month = new CalendarMonth($ts);
-
 		//$off = gmdate("w", $ts); //Gets the offset of the first  day of this month.
 		//$days = gmdate("t", $ts); //Get total amount of days in this month.
-$ret = <<<EOF
+/*$ret = <<<EOF
 <form action="$me" method="post">
 <input type="hidden" name="cs" value="$cs" />
 <table class="CalendarTable">
@@ -129,7 +175,7 @@ $ret .= <<<EOF
 		<td>Saturday</td>
 	</tr>
 EOF;
-		if ($month->Pad > 0) $ret .= "<td class=\"CalendarPadding\" colspan=\"{$month->Pad}\">&nbsp;</td>\n";
+		if ($month->Pad > 0) $ret .= "<td class=\"CalendarPadding\" colspan=\"{$month->Pad}\">&nbsp;</td>\n";*/
 		foreach ($month->Days as $day)
 		{
 			$dayts = $day->TimeStamp;
@@ -152,7 +198,7 @@ EOF;
 			if ($day->LastDay) $ret .= "\t\t<td class=\"CalendarPadding\" colspan=\"".(6 - $day->WeekDay)."\">&nbsp;</td></tr>\n";
 			if ($day->EndWeek) $ret .= "\t</tr>\n";
 		}
-		$ret .= "</table></form>\n";
+		//$ret .= "</table></form>\n";
 		return $ret;
 	}
 
@@ -314,7 +360,7 @@ class CalendarMonth
 	{
 		$this->Year = gmdate('Y', $timestamp);
 		$this->Month = gmdate('n', $timestamp);
-		$this->Pad = gmdate('w', $timestamp);
+		$this->Pad = gmdate('w', mktime(0, 0, 0, $this->Month, 1, $this->Year));
 		$daycount = gmdate('t', $timestamp);
 
 		for ($ix = 1; $ix < $daycount+1; $ix++)

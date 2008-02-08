@@ -1759,7 +1759,7 @@ function SOCallback($ds, $item, $icol, $col = null)
 	return $item[$icol];
 }
 
-function TagInput($guts, $attribs)
+function TagInput($guts, $attribs, $tag)
 {
 	if (!empty($attribs['TYPE']))
 	switch (strtolower($attribs['TYPE']))
@@ -1769,7 +1769,14 @@ function TagInput($guts, $attribs)
 		case 'month':
 			return GetMonthSelect($attribs['NAME'], @$attribs['VALUE']);
 	}
-	return $guts;
+	$atrout = '';
+	foreach ($attribs as $atr => $val)
+		$atrout .= ' '.strtolower($atr).'="'.$val.'"';
+
+	if (empty($guts))
+	{
+		return '<'.strtolower($tag).$atrout.' />';
+	}
 }
 
 ?>

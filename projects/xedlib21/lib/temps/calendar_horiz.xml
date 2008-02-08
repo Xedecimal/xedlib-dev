@@ -1,0 +1,35 @@
+<!DOCTYPE null [
+	<!ENTITY nbsp "&#160;">
+]>
+
+<null>
+<style type="text/css">
+form { margin: 0; }
+</style>
+
+<part type="ContentWeek"><tr>{{days}}</tr></part>
+<part type="ContentPad"><td class="CalendarPadding" colspan="{{amount}}">&nbsp;</td></part>
+<part type="ContentDay"><td>Day!</td></part>
+
+<table class="CalendarTable">
+	<tr class="CalendarHead">
+		<td valign="top" colspan="7" class="calendar_head">
+			<form action="{{me}}" method="post">
+				<input type="hidden" name="cs" value="{{cs}}" />
+				<input type="year" name="calyear" value="{{year}}" />
+				<input type="month" name="calmonth" value="{{month}}" />
+				<input type="submit" value="Go" />
+			</form>
+		</td>
+	</tr><tr class="CalendarWeekTitle">
+		<td>Sunday</td>
+		<td>Monday</td>
+		<td>Tuesday</td>
+		<td>Wednesday</td>
+		<td>Thursday</td>
+		<td>Friday</td>
+		<td>Saturday</td>
+	</tr>
+	<days />
+</table>
+</null>
