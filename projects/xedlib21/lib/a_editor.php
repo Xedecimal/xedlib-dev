@@ -1278,7 +1278,7 @@ class DisplayData
 	 */
 	public $ds;
 
-	private $joins;
+	public $joins;
 
 	public $Behavior;
 
@@ -1293,31 +1293,41 @@ class DisplayData
 		$this->Behavior = new DisplayDataBehavior();
 	}
 
-	function AddJoin($join)
-	{
-		$this->joins[] = $join;
-	}
-
+	/**
+	 * Available to calling script to prepare any actions that may be ready to be
+	 * performed.
+	 * @access public
+	 */
 	function Prepare()
 	{
 		$ca = GetVar('ca');
 
 		if ($ca == 'update')
 		{
+			$ci = GetVar('ci');
 			$up = array();
 			foreach ($this->ds->FieldInputs as $col => $fi)
 			{
-				if ($fi->type == 'date')
+				$fi->name = $col;
+				// Sub table, we're going to need to clear and re-create the
+				// associated table rows.
+				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
 				{
-					$val = GetVar($col);
-					$up[$col] = sprintf('%04d-%02d-%02d', $val[2], $val[0], $val[1]);
+					$join = $this->joins[$ms[1]];
+					$cond = $join->Condition;
+					$join->DataSet->Remove(array($cond[0] => $ci));
+					$vals = GetVar($ms[2]);
+					if (!empty($vals))
+					foreach ($vals as $ix => $val)
+					{
+						$add = array($cond[0] => $ci);
+						$add[$ms[2]] = $val;
+						$join->DataSet->Add($add);
+					}
 				}
-				else if ($fi->type == 'select' || $fi->type == 'radios')
-					$up[$col] = (int)GetVar($col);
-				else if ($fi->type != 'checks')
-					$up[$col] = GetVar($col);
+				else $up[$col] = $fi->GetData();
 			}
-			$this->ds->Update(array($this->ds->id => GetVar('ci')), $up);
+			$this->ds->Update(array($this->ds->id => $ci), $up);
 		}
 	}
 
@@ -1336,8 +1346,11 @@ class DisplayData
 			{
 				foreach ($this->ds->FieldInputs as $col => $in)
 				{
-					if ($in->type == 'checks')
-						$cols[$col] = DeString("GROUP_CONCAT(DISTINCT $col)");
+					// This is a sub table, we GROUP_CONCAT these for
+					// finding later if need be.
+					if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+						$cols[$ms[2]] =
+							DeString("GROUP_CONCAT(DISTINCT {$ms[2]})");
 					else $cols[$col] = $col;
 				}
 
@@ -1351,6 +1364,8 @@ class DisplayData
 
 				foreach ($this->ds->FieldInputs as $col => $fi)
 				{
+					if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+						$col = $ms[2];
 					$fi->name = $col;
 					if ($fi->type == 'select' || $fi->type == 'selects'
 						|| $fi->type == 'radios' || $fi->type == 'checks')
@@ -1382,8 +1397,8 @@ class DisplayData
 			foreach ($ss as $col => $set)
 			{
 				$fi = $this->ds->FieldInputs[$col];
-				if ($fi->type == 'checks')
-					$query .= ", GROUP_CONCAT(DISTINCT {$col}) AS gc_{$col}";
+				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+					$query .= ", GROUP_CONCAT(DISTINCT {$col}) AS gc_{$ms[2]}";
 			}
 
 			$query .= " FROM `{$this->ds->table}`";
@@ -1400,20 +1415,20 @@ class DisplayData
 					if (!isset($fs[$col])) continue;
 
 					$fi = $this->ds->FieldInputs[$col];
+					$fi->name = $col;
 					if ($ix++ > 0) $where .= ' AND';
 
 					if ($fi->type == 'select') $where .= " $col IN ($fs[$col])";
-					else if ($fi->type == 'checks')
-					{
-						$having .= " FIND_IN_SET('".implode(',', $fs[$col])."', gc_$col) > 0";
-					}
+					else if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+						$having .= " FIND_IN_SET('".implode(',', $fs[$col])."', gc_$ms[2]) > 0";
 					else if ($fi->type == 'date')
 					{
 						$where .= " $col BETWEEN '".
 						TimestampToMySql(DateInputToTS($fs[$col][0]), false).'\' AND \''.
 						TimestampToMySql(DateInputToTS($fs[$col][1]), false).'\'';
 					}
-					else $where .= " $col LIKE '%".$fs[$col]."%'";
+					//else $where .= " $col LIKE '%".$fs[$col]."%'";
+					else $where .= " $col LIKE '%".$fi->GetData($fs[$col])."%'";
 				}
 
 				if (strlen($where) > 6) $query .= $where;

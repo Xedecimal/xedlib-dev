@@ -640,6 +640,21 @@ class FormInput
 	}
 
 	/**
+	 * This is eventually going to need to be an array instead of a substr for
+	 * masked fields that do not specify length, we wouldn't know the length
+	 * for the substr. Works fine for limited lengths for now though.
+	 */
+	function mask_callback($m)
+	{
+		$ret = '<input type="text" maxlength="'.$m[1].'" size="'.$m[1].
+			'" name="'.$this->name.'[]"';
+		if (!empty($this->valu))
+			$ret .= ' value="'.substr($this->valu, $this->mask_walk, $m[1]).'"';
+		$this->mask_walk += $m[1];
+		return $ret.' />';
+	}
+
+	/**
 	 * Returns this input object rendered in html.
 	 *
 	 * @param string $parent name of the parent.
@@ -649,14 +664,12 @@ class FormInput
 	function Get($parent = null, $persist = true)
 	{
 		if ($this->type == 'custom')
-		{
 			return call_user_func($this->valu, $this);
-		}
 		if ($this->type == 'mask')
 		{
-			return preg_replace('/t([0-9]*)/', '<input type="text"
-				maxlength="\1" size="\1" name="'.$this->name.'[]" />',
-				$this->valu);
+			$this->mask_walk = 0;
+			return preg_replace_callback('/t([0-9]+)/',
+				array($this, 'mask_callback'), @$this->mask);
 		}
 		if ($this->type == 'spamblock')
 		{
@@ -869,6 +882,23 @@ class FormInput
 			//May get a little more complicated if we don't know what it is...
 			default:
 				return htmlspecialchars($persist ? GetVars($this->name, $this->valu) : $this->valu);
+		}
+	}
+
+	function GetData($val = null)
+	{
+		$val = GetVar($this->name, $val);
+		switch ($this->type)
+		{
+			case 'mask':
+				$ret = implode(null, $val);
+				return !empty($ret) ? $ret : 0;
+				break;
+			case 'date':
+				return sprintf('%04d-%02d-%02d', $val[2], $val[0], $val[1]);
+			default:
+				return $val;
+			break;
 		}
 	}
 }

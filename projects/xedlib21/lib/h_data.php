@@ -574,7 +574,9 @@ class DataSet
 						$ret .= "\n {$on->Type} `{$on->DataSet->table}`";
 						if (isset($on->Shortcut)) $ret .= " {$on->Shortcut}";
 						else if (isset($on->DataSet->Shortcut)) $ret .= " {$on->DataSet->Shortcut}";
-						$ret .= " ON ({$on->Condition})";
+						if (is_array($on->Condition))
+							$ret .= " ON ({$on->Condition[0]} = {$on->Condition[1]})";
+						else $ret .= " ON {$on->Condition}";
 					}
 					else
 						$ret .= "\n LEFT JOIN `{$table}` ON({$on})";
@@ -960,7 +962,6 @@ class DataSet
 			$query .= ')';
 		}
 		if ($sort != null) $query .= DataSet::OrderClause($sort);
-		if ($filter != null) $query .= $this->WhereClause($filter, ' AND');
 		if ($limit != null) $query .= " LIMIT {$start}, {$limit}";
 
 		return $this->GetCustom($query);
