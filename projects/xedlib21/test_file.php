@@ -3,6 +3,7 @@
 session_start();
 
 require_once('h_main.php');
+$GLOBALS['error_file'] = 'debug.txt';
 require_once('lib/h_template.php');
 require_once('lib/a_file.php');
 require_once('lib/a_log.php');
@@ -68,7 +69,7 @@ if ($ed == 'user')
 }
 else
 {
-	$fm = new FileManager('fman', 'test', array('Default', 'Gallery'));
+	$fm = new FileManager('fman', 'test', array('Gallery'));
 	$fm->uid = $user['usr_id'];
 	//$fm->Behavior->Recycle = true;
 	$fm->Behavior->AllowSearch = true;
@@ -78,6 +79,7 @@ else
 	$fm->View->Sort = FM_SORT_MANUAL;
 
 	$fm->Behavior->AllowAll();
+
 	$fm->Prepare($ca);
 	$page_body .= $fm->Get($me, $ca);
 

@@ -184,7 +184,6 @@ class FileManager
 				);
 
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
-
 				$f->Upload($newup, $fi);
 
 				if (!empty($this->Behavior->Watcher))
@@ -1378,6 +1377,14 @@ class FileInfo
 			$f->GetInfo($fi);
 			return $f;
 		}
+
+		else
+		{
+			$fname = 'Filter'.$defaults[0];
+			$f = new $fname();
+			$f->GetInfo($fi);
+			return $f;
+		}
 	}
 
 	/**
@@ -1689,13 +1696,24 @@ class FilterGallery extends FilterDefault
 	 * Called when a file is requested to upload.
 	 *
 	 * @param array $file Upload form's file field.
-	 * @param string $target Destination folder.
+	 * @param FileInfo $target Destination folder.
 	 */
 	function Upload($file, $target)
 	{
-		$this->ResizeFile($file['tmp_name'],
-			substr(basename($file['name']), 0, strrpos(basename($file['name']), '.')));
 		parent::Upload($file, $target);
+
+		$tdest = 't_'.substr(basename($file['name']), 0,
+			strrpos(basename($file['name']), '.'));
+
+		$fp = fopen('debug.txt', 'a');
+		ob_start();
+
+		$this->ResizeFile($target->path.$file['name'], $target->path.$tdest,
+			$target->info['thumb_width'], $target->info['thumb_height']);
+
+		echo "Resizing: {$target->path}{$file['name']} to {$tdest}\r\n";
+		fwrite($fp, ob_get_contents());
+		fclose($fp);
 	}
 
 	/**
