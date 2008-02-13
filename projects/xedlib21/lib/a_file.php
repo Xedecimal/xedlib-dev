@@ -147,11 +147,8 @@ class FileManager
 	function Prepare($action)
 	{
 		//Actions
-		if ($action == "upload" && $this->Behavior->AllowUpload)
+		if ($action == 'upload' && $this->Behavior->AllowUpload)
 		{
-			ob_start();
-			varinfo($_FILES['cu']);
-
 			if (GetVar('cm') == 'done')
 			{
 				$cu = GetVar('cu');
@@ -174,6 +171,7 @@ class FileManager
 			ini_set('upload_max_filesize', ini_get('post_max_size'));
 
 			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
+
 			$files = GetVar('cu');
 
 			if (!empty($files))
@@ -185,17 +183,14 @@ class FileManager
 					'tmp_name' => $files['tmp_name'][$ix]
 				);
 
-				$f = FileInfo::GetFilter(null, $this->Root, $this->filters);
+				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
+
 				$f->Upload($newup, $fi);
 
 				if (!empty($this->Behavior->Watcher))
 					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
 					$this->Root.$this->cf.$newup['name']);
 			}
-
-			$fp = fopen('debug.txt', 'w');
-			fwrite($fp, ob_get_contents());
-			fclose($fp);
 		}
 		else if ($action == "Save")
 		{
