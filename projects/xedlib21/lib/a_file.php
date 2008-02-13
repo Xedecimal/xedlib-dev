@@ -1705,15 +1705,8 @@ class FilterGallery extends FilterDefault
 		$tdest = 't_'.substr(basename($file['name']), 0,
 			strrpos(basename($file['name']), '.'));
 
-		$fp = fopen('debug.txt', 'a');
-		ob_start();
-
 		$this->ResizeFile($target->path.$file['name'], $target->path.$tdest,
 			$target->info['thumb_width'], $target->info['thumb_height']);
-
-		echo "Resizing: {$target->path}{$file['name']} to {$tdest}\r\n";
-		fwrite($fp, ob_get_contents());
-		fclose($fp);
 	}
 
 	/**
