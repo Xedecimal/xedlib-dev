@@ -531,14 +531,14 @@ class FileManager
 		$t = new Template();
 		$t->Set($this->vars);
 
-		$t->ReWrite('part', array($this, 'TagPart'));
-		$t->ReWrite('details', array($this, 'TagDetails'));
-		$t->ReWrite('directory', array($this, 'TagDirectory'));
-		$t->ReWrite('header', array($this, 'TagHeader'));
-		$t->ReWrite('folder', array($this, 'TagFolder'));
-		$t->ReWrite('file', array($this, 'TagFile'));
+		$t->ReWrite('part', array(&$this, 'TagPart'));
+		$t->ReWrite('details', array(&$this, 'TagDetails'));
+		$t->ReWrite('directory', array(&$this, 'TagDirectory'));
+		$t->ReWrite('header', array(&$this, 'TagHeader'));
+		$t->ReWrite('folder', array(&$this, 'TagFolder'));
+		$t->ReWrite('file', array(&$this, 'TagFile'));
 
-		$t->ReWrite('addopts', array($this, 'TagAddOpts'));
+		$t->ReWrite('addopts', array(&$this, 'TagAddOpts'));
 
 		$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 
@@ -1359,32 +1359,26 @@ class FileInfo
 	static function GetFilter(&$fi, $root, $defaults)
 	{
 		$ft = $fi;
+
 		while (is_file($ft->path) || empty($ft->info['type']))
 		{
 			if (is_in($ft->dir, $root)) $ft = new FileInfo($ft->dir);
 			else
 			{
 				$fname = 'Filter'.$defaults[0];
-				return new $fname();
+				$f = new $fname();
+				$f->GetInfo($fi);
+				return $f;
 			}
 		}
 
 		if (in_array($ft->info['type'], $defaults))
-		{
-			//Replace fi->info values with $info and take the remainder.
 			$fname = 'Filter'.$ft->info['type'];
-			$f = new $fname();
-			$f->GetInfo($fi);
-			return $f;
-		}
+		else $fname = 'Filter'.$defaults[0];
 
-		else
-		{
-			$fname = 'Filter'.$defaults[0];
-			$f = new $fname();
-			$f->GetInfo($fi);
-			return $f;
-		}
+		$f = new $fname();
+		$f->GetInfo($fi);
+		return $f;
 	}
 
 	/**

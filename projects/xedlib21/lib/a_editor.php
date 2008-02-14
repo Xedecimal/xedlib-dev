@@ -1234,6 +1234,7 @@ class EditorData
 		$this->target = $target;
 		$this->ci = $ci;
 		$editor_return = $this->Get($target, $ci);
+		$editor_return['table'] = $this->GetTable($target, $ci);
 		$t = new Template();
 		$t->ReWrite('forms', array($this, 'TagForms'));
 		$t->Set('name', $this->name);
