@@ -522,7 +522,7 @@ class Form
 		{
 			$d['even_odd'] = ($ix++ % 2) ? 'even' : 'odd';
 			$d['text'] = !empty($in->text) ? $in->text : '';
-			if (get_class($in) == 'FormInput')
+			if (strtolower(get_class($in)) == 'forminput')
 				$d['field'] = $in->Get($this->name);
 			else $d['field'] = $in;
 			$ret .= $vp->ParseVars($guts, $d);

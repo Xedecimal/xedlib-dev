@@ -110,26 +110,9 @@ $tbl = new Table('tblMain',
 	array('valign="top"', 'valign="top"', 'valign="top"')
 );
 
-$ret = $edSelf->Get($me, $ci);
-$row[0] = isset($ret['table']) ? $ret['table'] : null;
-foreach ($ret['forms'] as $frm)
-	$row[0] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
-		$frm->Get('action="'.$me.'" method="post"'),
-		'templates/box.html');
-
-$ret = $edForeign->Get($me, $ci);
-$row[1] = isset($ret['table']) ? $ret['table'] : null;
-foreach ($ret['forms'] as $frm)
-	$row[1] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
-		$frm->Get('action="'.$me.'" method="post"'),
-		'templates/box.html');
-
-$ret = $edBoth->Get($me, $ci);
-$row[2] = isset($ret['table']) ? $ret['table'] : null;
-foreach ($ret['forms'] as $frm)
-	$row[2] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
-		$frm->Get('action="'.$me.'" method="post"'),
-		'templates/box.html');
+$row[0] = $edSelf->GetUI($me, $ci);
+$row[1] = $edForeign->GetUI($me, $ci);
+$row[2] = $edBoth->GetUI($me, $ci);
 
 $tbl->AddRow($row);
 
