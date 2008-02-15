@@ -33,9 +33,10 @@ if (!isset($__checked) && substr(phpversion(), 0, 1) != '5')
  * Enter description here...
  *
  */
-function HandleErrors()
+function HandleErrors($file = null)
 {
-	ini_set('display_errors', 1);
+	if (!empty($file)) $GLOBALS['__err_file'] = $file;
+	else ini_set('display_errors', 1);
 	$ver = phpversion();
 	if ($ver[0] == '5') ini_set('error_reporting', E_ALL | E_STRICT);
 	else ini_set('error_reporting', E_ALL);
@@ -56,8 +57,7 @@ function HandleErrors()
  */
 function Trace($msg)
 {
-	global $debug;
-	if ($debug) echo $msg;
+	if (!empty($GLOBALS['debug'])) echo $msg;
 }
 
 /**
@@ -90,9 +90,8 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 	);
 	$ver = phpversion();
 	if ($ver[0] > 4)  $errortype[E_STRICT] = 'Strict Error';
-	if ($ver[0] > 4 && $ver[2] > 1) $errortype[E_RECOVERABLE_ERROR] = 'Recoverable Error';
-
-	//$user_errors = array(E_USER_ERROR, E_USER_WARNING, E_USER_NOTICE);
+	if ($ver[0] > 4 && $ver[2] > 1)
+		$errortype[E_RECOVERABLE_ERROR] = 'Recoverable Error';
 
 	$err = "[{$errortype[$errno]}] ".nl2br($errmsg)."<br/>";
 	$err .= "Error seems to be in one of these places...\n";
@@ -102,9 +101,9 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 
 	$err .= GetCallstack($filename, $linenum);
 
-	if (!empty($GLOBALS['error_file']))
+	if (!empty($GLOBALS['__err_file']))
 	{
-		$fp = fopen($GLOBALS['error_file'], 'a+');
+		$fp = fopen($GLOBALS['__err_file'], 'a+');
 		fwrite($fp, $err);
 		fclose($fp);
 	}
