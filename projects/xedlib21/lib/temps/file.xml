@@ -94,7 +94,7 @@ function expander(name)
 						archive="UploadApplet.jar,commons-codec-1.3.jar,commons-httpclient-3.0.1.jar,commons-logging-1.0.4.jar"
 						width="500" height="100">
 						<param name="host" value="http://{{host}}" />
-						<param name="pathToScript" value="{{target}}?PHPSESSID={{sid}}" />
+						<param name="pathToScript" value="{{target}}?editor={{name}}&amp;PHPSESSID={{sid}}" />
 						<param name="path" value="{{cf}}" />
 						<param name="uploadMax" value="2044304" />
 					</applet>

@@ -605,7 +605,7 @@ class FileManager
 				$out = <<<EOF
 		<applet codebase="{$loc}/java" code="uploadApplet.class" archive="UploadApplet.jar,commons-codec-1.3.jar,commons-httpclient-3.0.1.jar,commons-logging-1.0.4.jar" width="500" height="100">
 			<param name="host" value="http://{$_SERVER['HTTP_HOST']}" />
-			<param name="pathToScript" value="{$me}?PHPSESSID={$sid}" />
+			<param name="pathToScript" value="{$me}?editor={$this->Name}&amp;PHPSESSID={$sid}" />
 			<param name="path" value='{$this->cf}' />
 			<param name="uploadMax" value="5242880" />
 		</applet>
