@@ -392,7 +392,6 @@ class EditorData
 					}
 					else if ($in->type == 'file' && $value != null)
 					{
-						varinfo($value);
 						$ext = substr(strrchr($value['name'], '.'), 1);
 
 						$moves[] = array(
@@ -432,7 +431,6 @@ class EditorData
 			foreach ($moves as $move)
 			{
 				$target = "{$move['dst']}/{$id}_{$col}.{$move['ext']}";
-				varinfo($move);
 				move_uploaded_file($move['tmp'], $target);
 				chmod($target, 0777);
 			}
