@@ -161,7 +161,7 @@ class Database
 	function Query($query, $silent = false, $handler = null)
 	{
 		if (!isset($this->type)) Error("Database has not been opened.");
-		if ($GLOBALS['debug']) varinfo($query);
+		if (isset($GLOBALS['debug'])) varinfo($query);
 		switch ($this->type)
 		{
 			case DB_MY:

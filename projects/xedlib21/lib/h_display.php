@@ -459,6 +459,7 @@ class Form
 		{
 			$input->atrs .= " onclick=\"return {$this->name}_check(1);\"";
 		}
+		if ($input->type == 'file') $this->multipart = true;
 
 		$right = false;
 		if ($input->type == 'checkbox') $right = true;
@@ -494,7 +495,9 @@ class Form
 	function TagForm($guts)
 	{
 		global $PERSISTS;
-		$ret = "<form {$this->formAttribs}>\n";
+		$ret = "<form {$this->formAttribs}";
+		if ($this->multipart) $ret .= ' enctype="multipart/form-data"';
+		$ret .= ">\n";
 
 		if ($this->Persist && !empty($PERSISTS))
 		foreach ($PERSISTS as $name => $value)

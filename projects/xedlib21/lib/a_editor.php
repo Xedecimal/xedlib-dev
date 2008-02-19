@@ -392,11 +392,12 @@ class EditorData
 					}
 					else if ($in->type == 'file' && $value != null)
 					{
+						varinfo($value);
 						$ext = substr(strrchr($value['name'], '.'), 1);
 
 						$moves[] = array(
 							'tmp' => $value['tmp_name'], //Source
-							'dst' => $data[2], //Destination folder
+							'dst' => $in->valu, //Destination folder
 							'ext' => $ext
 						);
 						$insert[$col] = $ext;
@@ -430,7 +431,8 @@ class EditorData
 			if (!empty($moves))
 			foreach ($moves as $move)
 			{
-				$target = "{$move['dst']}/{$id}_{$data[0]}.{$move['ext']}";
+				$target = "{$move['dst']}/{$id}_{$col}.{$move['ext']}";
+				varinfo($move);
 				move_uploaded_file($move['tmp'], $target);
 				chmod($target, 0777);
 			}
@@ -476,13 +478,13 @@ class EditorData
 					{
 						if (strlen($value['tmp_name']) > 0)
 						{
-							$files = glob("{$data[2]}/{$ci}_{$data[0]}.*");
+							$files = glob("{$in->valu}/{$ci}_{$col}.*");
 							foreach ($files as $file) unlink($file);
 							$ext = substr(strrchr($value['name'], '.'), 1);
 							$src = $value['tmp_name'];
-							$dst = "{$data[2]}/{$ci}_{$data[0]}.{$ext}";
+							$dst = "{$in->valu}/{$ci}_{$col}.{$ext}";
 							move_uploaded_file($src, $dst);
-							$update[$data[0]] = $ext;
+							$update[$col] = $ext;
 						}
 					}
 					else $update[$col] = GetVar($col);
@@ -566,13 +568,13 @@ class EditorData
 				}
 			}
 			if (!empty($context->ds->FieldInputs))
-			foreach ($context->ds->FieldInputs as $name => $data)
+			foreach ($context->ds->FieldInputs as $name => $in)
 			{
-				if (is_array($data))
+				if (strtolower(get_class($in)) == 'forminput')
 				{
-					if ($data[1] == 'file')
+					if ($in->type == 'file')
 					{
-						$files = glob("{$data[2]}/{$ci}_{$data[0]}.*");
+						$files = glob("{$in->valu}/{$ci}_{$name}.*");
 						foreach ($files as $file) unlink($file);
 					}
 				}
