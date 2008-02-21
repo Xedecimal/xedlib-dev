@@ -95,6 +95,8 @@ class Calendar
 
 	function TagDays($guts, $attribs)
 	{
+		$vp = new VarParser();
+		$ret = '';
 		foreach ($this->month->Days as $day)
 		{
 			$dayts = $day->TimeStamp;
@@ -117,6 +119,7 @@ class Calendar
 			if ($day->LastDay) $ret .= "\t\t<td class=\"CalendarPadding\" colspan=\"".(6 - $day->WeekDay)."\">&nbsp;</td></tr>\n";
 			if ($day->EndWeek) $ret .= "\t</tr>\n";
 		}
+		return $ret;
 	}
 
 	/**
@@ -139,6 +142,7 @@ class Calendar
 
 		$t->Set('month', GetVar('calmonth', gmdate("n", $this->ts)));
 		$t->Set('year', GetVar('calyear', gmdate("Y", $this->ts)));
+
 		$t->Set('cs', $cs);
 
 		$t->ReWrite('input', 'TagInput');
@@ -147,59 +151,6 @@ class Calendar
 		$t->ReWrite('days', array($this, 'TagDays'));
 
 		return $t->Get(dirname(__FILE__).'/temps/calendar_horiz.xml');
-
-		$ts = gmmktime(0, 0, 0, $thismonth, 1, $thisyear); //Get timestamp for first day of this month.
-
-		//$off = gmdate("w", $ts); //Gets the offset of the first  day of this month.
-		//$days = gmdate("t", $ts); //Get total amount of days in this month.
-/*$ret = <<<EOF
-<form action="$me" method="post">
-<input type="hidden" name="cs" value="$cs" />
-<table class="CalendarTable">
-	<tr class="CalendarHead">
-		<td valign="top" colspan="7">
-EOF;
-$ret .= "			Year: " . GetYearSelect("calyear", $thisyear) . "\n";
-$ret .= "			Month: " . GetMonthSelect("calmonth", $thismonth) . "\n";
-$ret .= <<<EOF
-			<input type="submit" value="Go" />
-		</td>
-	</tr>
-	<tr class="CalendarWeekTitle">
-		<td>Sunday</td>
-		<td>Monday</td>
-		<td>Tuesday</td>
-		<td>Wednesday</td>
-		<td>Thursday</td>
-		<td>Friday</td>
-		<td>Saturday</td>
-	</tr>
-EOF;
-		if ($month->Pad > 0) $ret .= "<td class=\"CalendarPadding\" colspan=\"{$month->Pad}\">&nbsp;</td>\n";*/
-		foreach ($month->Days as $day)
-		{
-			$dayts = $day->TimeStamp;
-			if ($day->StartWeek) $ret .= "\t<tr>\n";
-			$ret .= "\t\t<td valign=\"top\" class=\"CalendarDay\">\n";
-			$ret .= "\t\t\t<div class=\"CalendarDayTitle\">\n";
-			$ret .= "\t\t\t{$day->Day}</div>\n";
-			$ret .= $vp->ParseVars($this->daybody, array('ts' => $dayts));
-
-			if (isset($this->dates[$dayts]))
-			{
-				foreach ($this->dates[$dayts] as $eventid)
-				{
-					$event = $this->events[$eventid];
-					$ret .= "\t\t\t<p class=\"CalendarDayBody\">\n";
-					$ret .= "\t\t\t{$event[2]}</p>\n";
-				}
-			}
-			$ret .= "\t\t</td>\n";
-			if ($day->LastDay) $ret .= "\t\t<td class=\"CalendarPadding\" colspan=\"".(6 - $day->WeekDay)."\">&nbsp;</td></tr>\n";
-			if ($day->EndWeek) $ret .= "\t</tr>\n";
-		}
-		//$ret .= "</table></form>\n";
-		return $ret;
 	}
 
 	/**

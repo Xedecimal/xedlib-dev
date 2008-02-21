@@ -816,7 +816,7 @@ class DataSet
 	}
 
 	/**
-	 * Get a set of data given the specific arguments.
+	 * Internal version of getting data, not to be used in code.
 	 * @param array $match Column to Value to match for in a WHERE statement.
 	 * @param array $sort Column to Direction array.
 	 * @param array $filter Column to Value array.
@@ -826,7 +826,7 @@ class DataSet
 	 * @param int $args passed to mysql_fetch_array.
 	 * @return array Array of items selected.
 	 */
-	function GetInternal(
+	/*function GetInternal(
 		$match = null,
 		$sort = null,
 		$filter = null,
@@ -864,7 +864,7 @@ class DataSet
 			$items[] = $newrow;
 		}
 		return $items;
-	}
+	}*/
 
 	/**
 	 * Return a single item from this dataset
@@ -957,7 +957,7 @@ class DataSet
 			foreach ($columns as $col)
 			{
 				if ($ix++ > 0) $query .= " OR";
-				$query .= " $col LIKE '%{$newphrase}%'";
+				$query .= ' '.$this->QuoteTable($col)." LIKE '%{$newphrase}%'";
 			}
 			$query .= ')';
 		}

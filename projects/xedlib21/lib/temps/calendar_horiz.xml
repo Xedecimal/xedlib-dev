@@ -8,7 +8,7 @@ form { margin: 0; }
 </style>
 
 <part type="ContentWeek"><tr>{{days}}</tr></part>
-<part type="ContentPad"><td class="CalendarPadding" colspan="{{amount}}">&nbsp;</td></part>
+<part type="ContentPad"><td class="CalendarPadding" colspan="{{amount}}"></td></part>
 <part type="ContentDay"><td>Day!</td></part>
 
 <table class="CalendarTable">

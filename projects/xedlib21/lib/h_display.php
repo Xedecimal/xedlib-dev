@@ -378,6 +378,8 @@ class Form
 
 	public $rowx = 0;
 
+	private $multipart = false;
+
 	/**
 	* Instantiates this form with a unique name.
 	* @param string $name Unique name only used in Html comments for identification.
@@ -1649,14 +1651,14 @@ function GetMonthSelect($name, $default, $attribs = null)
 function GetYearSelect($name, $year)
 {
 	$ret = "<select name=\"$name\">";
-	$ret .= "<option value=\"" . ($year-6) . "\"> &lt;&lt; </option>\n";
+	$ret .= "<option value=\"" . ($year-6) . "\"> &laquo; </option>\n";
 	for ($ix = $year-5; $ix < $year+5; $ix++)
 	{
 		if ($ix == $year) $sel = " selected=\"selected\"";
 		else $sel = "";
 		$ret .= "<option value=\"$ix\"$sel>$ix</option>\n";
 	}
-	$ret .= "<option value=\"" . ($year+6) . "\"> &gt;&gt; </option>\n";
+	$ret .= "<option value=\"" . ($year+6) . "\"> &raquo; </option>\n";
 	$ret .= "</select>\n";
 	return $ret;
 }
