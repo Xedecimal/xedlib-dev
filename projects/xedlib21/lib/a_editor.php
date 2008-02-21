@@ -397,6 +397,7 @@ class EditorData
 						$moves[] = array(
 							'tmp' => $value['tmp_name'], //Source
 							'dst' => $in->valu, //Destination folder
+							'col' => $col,
 							'ext' => $ext
 						);
 						$insert[$col] = $ext;
@@ -430,7 +431,7 @@ class EditorData
 			if (!empty($moves))
 			foreach ($moves as $move)
 			{
-				$target = "{$move['dst']}/{$id}_{$col}.{$move['ext']}";
+				$target = "{$move['dst']}/{$id}_{$move['col']}.{$move['ext']}";
 				move_uploaded_file($move['tmp'], $target);
 				chmod($target, 0777);
 			}

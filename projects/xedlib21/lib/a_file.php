@@ -264,7 +264,7 @@ class FileManager
 						$fi->path);
 			}
 		}
-		else if ($action == "createdir")
+		else if ($action == 'Create')
 		{
 			if (!$this->Behavior->AllowCreateDir) return;
 			$p = $this->Root.$this->cf.GetVar("name");
