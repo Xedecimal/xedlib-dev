@@ -671,9 +671,7 @@ class EditorData
 			$cols[$this->ds->table] = array($this->ds->id => 1);
 			if (!empty($this->ds->DisplayColumns))
 			foreach ($this->ds->DisplayColumns as $col => $disp)
-			{
-				$cols[$this->ds->table][$col] = 0;
-			}
+				$cols[$this->ds->table][$col] = $this->ds->id == $col;
 
 			if (!empty($this->ds->children))
 			foreach ($this->ds->children as $ix => $child)
@@ -694,16 +692,29 @@ class EditorData
 
 			$flats = array();
 
+			//Iterate all the resulting database rows.
 			foreach ($items as $ix => $item)
 			{
+
+				//Iterate the columns that were created in step 1.
 				foreach ($cols as $table => $columns)
 				{
+					//This will store all the associated data in the treenode
+					//for the editor to reference while processing the treee.
 					$data = array();
 					$skip = false;
+
+					//Now we're iterating the display columns.
 					foreach ($columns as $column => $id)
 					{
+						//This column is not associated with a database row.
 						if (is_numeric($column)) continue;
+
+						//Table names are included to avoid ambiguity.
 						$colname = $table.'_'.$column;
+
+						//ID would be specified if this is specified as a keyed
+						//value.
 						if ($id)
 						{
 							if (empty($item[$colname]))
@@ -851,7 +862,7 @@ class EditorData
 				null, $joins, $cols);*/
 
 			$items = $this->ds->GetSearch($cols, GetVar($this->name.'_q'),
-				null, $this->filter);
+				null, null, $this->sort, $this->filter);
 
 			$root = $this->BuildTree($items);
 		}

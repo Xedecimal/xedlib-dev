@@ -945,7 +945,8 @@ class DataSet
 	 * @param int $limit Limit of items to return for pagination.
 	 * @return array
 	 */
-	function GetSearch($columns, $phrase, $start = 0, $limit = null, $sort = null)
+	function GetSearch($columns, $phrase, $start = 0, $limit = null,
+		$sort = null, $filter = null)
 	{
 		$newphrase = str_replace("'", '%', stripslashes($phrase));
 		$newphrase = str_replace(' ', '%', $newphrase);
@@ -961,6 +962,7 @@ class DataSet
 			}
 			$query .= ')';
 		}
+		if ($filter != null) $query .= $this->WhereClause($filter, ' AND');
 		if ($sort != null) $query .= DataSet::OrderClause($sort);
 		if ($limit != null) $query .= " LIMIT {$start}, {$limit}";
 

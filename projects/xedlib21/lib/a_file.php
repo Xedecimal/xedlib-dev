@@ -630,7 +630,7 @@ EOF;
 					$out, 'template_box.html');
 			}
 
-			if ($this->Behavior->AllowRename)
+			if ($this->Behavior->AllowRename && !empty($this->cf))
 			{
 				$form = new Form('rename');
 				$form->LabelStart = $form->LabelEnd = $form->FieldStart =
@@ -652,7 +652,7 @@ EOF;
 					'template_box.html');
 			}
 
-			if ($this->Behavior->AllowEdit)
+			if ($this->Behavior->AllowEdit && !empty($this->cf))
 			{
 				//Filter options.
 				$form = new Form('formUpdate', null, false);
