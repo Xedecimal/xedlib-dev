@@ -37,6 +37,7 @@
 <!-- /Bits -->
 
 <script type="text/javascript" src="{{relpath}}/js/helper.js"></script>
+<script type="text/javascript" src="{{relpath}}/js/jquery.js"></script>
 
 <script type="text/javascript">
 var __sels = { 'files': false, 'dirs': false };
@@ -48,10 +49,8 @@ function docmanSelAll(type)
 	toggleAny(['sel_files_','sel_dirs_'],'{{name}}_mass_options');
 }
 
-function expander(name)
-{
-	gebi('img'+name).src = (toggle(name) ?
-		'lib/images/up.png' : 'lib/images/down.png');
+window.onload = function() {
+	$('#{{name}}_mass_options').hide();
 }
 </script>
 
@@ -74,7 +73,6 @@ function expander(name)
 			<!-- Mass Options -->
 			<tr><td>
 				<div id="{{name}}_mass_options">
-				<script type="text/javascript">document.getElementById('{{name}}_mass_options').style.display = 'none';</script>
 				<p>With selected files...</p>
 				<input type="submit" name="ca" value="Move" /> to {{dirsel}}<br/>
 				<input type="submit" name="ca" value="Delete"
@@ -85,14 +83,14 @@ function expander(name)
 
 			<!-- Upload File -->
 			<tr><td>
-				<a href="javascript:expander('{{name}}_upload');">Send Files</a>
+				<a href="" onclick="$('#{{name}}_upload').slideToggle(500);return false;">Send Files</a>
 			</td><td>
-				<img id="img{{name}}_upload" src="lib/images/down.png" alt="Visibility" />
+				<img id="img{{name}}_upload" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
 				<div id="{{name}}_upload" style="display: none">
 					<applet codebase="{{relpath}}/java" code="uploadApplet.class"
 						archive="UploadApplet.jar,commons-codec-1.3.jar,commons-httpclient-3.0.1.jar,commons-logging-1.0.4.jar"
-						width="500" height="100">
+						width="525" height="100">
 						<param name="host" value="http://{{host}}" />
 						<param name="pathToScript" value="{{target}}?editor={{name}}&amp;PHPSESSID={{sid}}" />
 						<param name="path" value="{{cf}}" />
@@ -103,9 +101,9 @@ function expander(name)
 
 			<!-- Create Folder -->
 			<tr><td>
-				<a href="javascript:expander('{{name}}_create');">Create Folder</a>
+				<a href="" onclick="$('#{{name}}_create').slideToggle(500);return false;">Create Folder</a>
 			</td><td>
-				<img id="img{{name}}_create" src="lib/images/down.png" alt="Visibility" />
+				<img id="img{{name}}_create" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
 				<div id="{{name}}_create" style="display: none">
 					<input type="text" name="name" />
@@ -116,9 +114,9 @@ function expander(name)
 			<!-- Rename File / Folder -->
 			<if check="!empty($this->vars['cf'])">
 			<tr><td>
-				<a href="javascript:expander('{{name}}_rename');">Rename This File / Folder</a>
+				<a href="" onclick="$('#{{name}}_rename').toggle('slow');return false;">Rename This File / Folder</a>
 			</td><td>
-				<img id="img{{name}}_rename" src="lib/images/down.png" alt="Visibility" />
+				<img id="img{{name}}_rename" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td>
 				<div id="{{name}}_rename" style="display: none">
 				<input type="text" name="name" value="{{filename}}" />
@@ -129,9 +127,9 @@ function expander(name)
 
 			<!-- Additional Settings -->
 			<tr><td>
-				<a href="javascript:expander('{{name}}_add');">Additional Settings</a>
+				<a href="" onclick="$('#{{name}}_add').slideToggle(500);return false;">Additional Settings</a>
 			</td><td>
-				<img id="img{{name}}_add" src="lib/images/down.png" alt="Visibility" />
+				<img id="img{{name}}_add" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
 				<div id="{{name}}_add" style="display: none">
 				<addopts />

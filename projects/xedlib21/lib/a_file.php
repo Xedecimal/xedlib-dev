@@ -184,6 +184,7 @@ class FileManager
 				);
 
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
+
 				$f->Upload($newup, $fi);
 
 				if (!empty($this->Behavior->Watcher))
@@ -1738,6 +1739,12 @@ class FilterGallery extends FilterDefault
 	{
 		$pinfo = pathinfo($file);
 		$dt = $dest.'.'.$pinfo['extension'];
+
+		ob_start();
+		echo "Function: ".function_exists('imgjpeg')."\r\n";
+		$fp = fopen('debug.txt', 'a');
+		fwrite($fp, ob_get_contents());
+		fclose($fp);
 
 		switch (strtolower($pinfo['extension']))
 		{

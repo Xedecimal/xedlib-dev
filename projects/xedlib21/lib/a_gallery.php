@@ -97,7 +97,11 @@ class Gallery
 
 			$d['name'] = $file;
 			$d['path'] = GetVar('galcf', '');
-			if (!empty($icons)) $d['icon'] = $icons[0];
+			if (!empty($icons))
+			{
+				$d['icon'] = $icons[0];
+				$d['icon'] = $vp->ParseVars($this->IconContent, $d);
+			}
 			else $d['icon'] = '';
 
 			$out .= $vp->ParseVars($guts, $d);
@@ -126,17 +130,18 @@ class Gallery
 		}
 		return $out;
 
+		if ($this->Behavior->PageCount != null)
+		{
+			$tot = GetFlatPage($files['files'], GetVar('cp'), $this->Behavior->PageCount);
+		}
+		else $tot = $files['files'];
 
-			if ($this->Behavior->PageCount != null)
-			{
-				$tot = GetFlatPage($files['files'], GetVar('cp'), $this->Behavior->PageCount);
-			}
-			else $tot = $files['files'];
+		$ix = GetVar('cp')*$this->Behavior->PageCount;
+		$body .= "<tr class=\"images\"><td>\n";
 
-			$ix = GetVar('cp')*$this->Behavior->PageCount;
-			$body .= "<tr class=\"images\"><td>\n";
-
-			foreach ($tot as $file)
+		foreach ($tot as $file)
+		{
+			if (isset($file->icon) && file_exists($file->icon))
 			{
 				if (isset($file->icon) && file_exists($file->icon))
 				{
@@ -149,7 +154,7 @@ class Gallery
 					));
 					$caption = $this->GetCaption($file);
 
-					$body .= <<<EOF
+				$body .= <<<EOF
 <div class="gallery_cell" style="overflow: auto; width: {$twidth}px; height:{$theight}px">
 <table class="gallery_shadow">
 <tr><td>
@@ -162,9 +167,9 @@ class Gallery
 </tr>
 </table><div class="gallery_caption">$caption</div></div>
 EOF;
-				}
 			}
-			$body .= '</td>';
+		}
+		$body .= '</td>';
 	}
 
 	function TagImage($guts)
@@ -196,6 +201,11 @@ EOF;
 		//else return '';
 	}
 
+	function TagPart($guts, $attribs)
+	{
+		$this->$attribs['TYPE'] = $guts;
+	}
+
 	/**
 	 * Returns the rendered gallery.
 	 * @param string $path Current location, usually GetVar('galcf')
@@ -219,6 +229,7 @@ EOF;
 		$t->ReWrite('file', array($this, 'TagFile'));
 		$t->ReWrite('image', array($this, 'TagImage'));
 		$t->ReWrite('page', array($this, 'TagPage'));
+		$t->ReWrite('part', array($this, 'TagPart'));
 
 		$t->Set('disable_save', $this->Behavior->DisableSave);
 		$t->Set('current', GetVar('view'));
@@ -273,6 +284,7 @@ EOF;
 
 		//Gallery settings
 		$fig = new FileInfo($this->root);
+		FileInfo::GetFilter($fig, $this->root, array('Gallery'));
 		$t->Set('thumb_width', $fig->info['thumb_width']+10);
 		$t->Set('thumb_height', $fig->info['thumb_height']+50);
 
@@ -299,7 +311,8 @@ EOF;
 			return $file->info['title'];
 		else if ($this->Display->Captions == CAPTION_FILE)
 			return str_replace('_', ' ', substr($file->filename, 0, strrpos($file->filename, '.')));
-		else return str_replace('_', ' ', $file->filename);
+		else if ($this->Display->Captions != CAPTION_TITLE)
+			return str_replace('_', ' ', $file->filename);
 	}
 }
 

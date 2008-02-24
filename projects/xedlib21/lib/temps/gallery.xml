@@ -5,6 +5,8 @@
 
 <null>
 
+<part type="IconContent"><img src="{{icon}}" /></part>
+
 <if check="{{disable_save}}">
 <script type="text/javascript">
 <!--
@@ -98,7 +100,9 @@ td { padding: 0; }
 		<folder>
 			<div class="float">
 			<a href="{{me}}?galcf={{path}}/{{name}}">
-			<img src="{{icon}}" title="{{name}}" alt="{{name}}" /></a>
+			{{icon}}
+			<p style="text-align: center;">{{name}}</p>
+			</a>
 			</div>
 		</folder>
 	</td></tr><tr><td>
