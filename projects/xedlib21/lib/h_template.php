@@ -158,6 +158,16 @@ class Template
 	{
 		if ($this->skip) return;
 
+		if ($tag == 'IF')
+		{
+			$vp = new VarParser();
+			$check = $vp->ParseVars($attribs['CHECK'], $this->vars);
+			$GLOBALS['_trace'] = GetTemplateStack($this->data);
+			if (!eval('return '.$check.';')) $this->skip = true;
+			$show = false;
+			return;
+		}
+
 		if (isset($this->rewrites[$tag]))
 		{
 			$obj = new stdClass();
@@ -206,14 +216,6 @@ class Template
 		}
 		else if ($tag == 'FORM' && $this->Behavior->MakeDynamic)
 			$this->start .= $this->ProcessForm($parser, $tag, $attribs);
-		else if ($tag == 'IF')
-		{
-			$vp = new VarParser();
-			$check = $vp->ParseVars($attribs['CHECK'], $this->vars);
-			$GLOBALS['_trace'] = GetTemplateStack($this->data);
-			if (!eval('return '.$check.';')) $this->skip = true;
-			$show = false;
-		}
 		else if ($tag == 'IMG') $close = ' /';
 		else if ($tag == 'INCLUDE')
 		{

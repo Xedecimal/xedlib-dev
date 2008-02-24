@@ -1233,6 +1233,11 @@ class EditorData
 		return $out;
 	}
 
+	function TagPart($guts, $attribs)
+	{
+		$this->parts[$attribs['TYPE']] = $guts;
+	}
+
 	/**
 	 * Gets a standard user interface for a single editor's Get() method.
 	 * @param string $target Target script to post to.
@@ -1243,16 +1248,22 @@ class EditorData
 	function GetUI($target, $ci)
 	{
 		require_once('h_template.php');
+
 		$this->target = $target;
 		$this->ci = $ci;
+
 		$editor_return = $this->Get($target, $ci);
 		$editor_return['table'] = $this->GetTable($target, $ci);
+
 		$t = new Template();
 		$t->ReWrite('forms', array($this, 'TagForms'));
+		$t->ReWrite('part', array($this, 'TagPart'));
 		$t->Set('name', $this->name);
 		$t->Set('plural', Plural($this->name));
 
-		$t->Set('table_title', Plural($this->ds->Description));
+		if (!empty($this->ds))
+			$t->Set('table_title', Plural($this->ds->Description));
+
 		$t->Set('table', $editor_return['table']);
 
 		if (!empty($editor_return['forms']))
@@ -1661,6 +1672,39 @@ class FileAccessHandler extends EditorHandler
 	{
 		$form->AddInput(new FormInput('Accessable Folders', 'selects',
 			'accesses', $this->PathToSelOption($this->root, $id, 0), 'size="8"'));
+	}
+}
+
+class EditorText
+{
+	public $Name;
+	private $item;
+
+	function EditorText($name, $item)
+	{
+		$this->Name = $name;
+		$this->item = $item;
+	}
+
+	function Prepare($action)
+	{
+		if ($action == 'update')
+		{
+			$fp = fopen($this->item, 'w');
+			fwrite($fp, GetVar('body'));
+			fclose($fp);
+		}
+	}
+
+	function Get($target)
+	{
+		$frmRet = new Form($this->Name);
+		$frmRet->AddHidden('ca', 'update');
+
+		$frmRet->AddInput(new FormInput(null, 'area', 'body'));
+		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
+
+		return $frmRet->Get('method="post"');
 	}
 }
 

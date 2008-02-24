@@ -436,10 +436,6 @@ class FileManager
 	function TagAddOpts()
 	{
 		$ret = '<table>';
-		//$form = new Form('formUpdate', null, false);
-		//$form->AddHidden('editor', $this->Name);
-		//$form->AddHidden('ca', 'update_info');
-		//$form->AddHidden('cf', $this->cf);
 		$vp = new VarParser();
 
 		if (isset($this->DefaultOptionHandler))
@@ -1645,6 +1641,8 @@ class FilterGallery extends FilterDefault
 		if (is_dir($fi->path))
 		{
 			$selImages[0] = new SelOption('None');
+
+			if (!empty($fm->files['files']))
 			foreach ($fm->files['files'] as $fiImg)
 				$selImages[$fiImg->filename] = new SelOption($fiImg->filename);
 

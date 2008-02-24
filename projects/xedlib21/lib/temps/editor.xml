@@ -1,12 +1,15 @@
 <null>
 
-<box title="Locate and Edit {{plural}}">
-<form action="{{me}}">
-<input type="hidden" name="editor" value="{{name}}" />
-Search: <input type="text" name="{{name}}_q" onkeyup="gebi('ssub').value = this.value.length > 0 ? 'Search' : 'Retrieve All'" />
-<input type="submit" value="Retrieve All" id="ssub" />
-</form>
-</box>
+<part type="ContentSearch">
+	<box title="Locate and Edit {{plural}}">
+	<form action="{{me}}">
+	<input type="hidden" name="editor" value="{{name}}" />
+	Search: <input type="text" name="{{name}}_q"
+		onkeyup="$('#ssub').val(this.value.length > 0 ? 'Search' : 'Retrieve All');" />
+	<input type="submit" value="Retrieve All" id="ssub" />
+	</form>
+	</box>
+</part>
 
 <if check="isset($this->vars['table'])">
 <box title="{{table_title}}">

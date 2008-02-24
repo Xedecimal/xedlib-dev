@@ -83,15 +83,15 @@ class Gallery
 	{
 		$out = '';
 		$vp = new VarParser();
-		$dp = opendir($this->path);
+		$dp = opendir($this->root.$this->path);
 		while ($file = readdir($dp))
 		{
 			if ($file[0] == '.') continue;
 
-			$p = $this->path.'/'.$file;
+			$p = $this->root.$this->path.'/'.$file;
 			if (!is_dir($p)) continue;
 
-			$fi = new FileInfo($this->path.'/'.$file);
+			$fi = new FileInfo($this->root.$this->path.'/'.$file);
 
 			$icons = glob($this->path.'/'.$file.'/._image.*');
 
@@ -113,7 +113,7 @@ class Gallery
 	{
 		$out = '';
 		$vp = new VarParser();
-		$dp = opendir($this->path);
+		$dp = opendir($this->root.$this->path);
 
 		foreach ($this->files['files'] as $ix => $fi)
 		{
@@ -167,6 +167,7 @@ class Gallery
 </tr>
 </table><div class="gallery_caption">$caption</div></div>
 EOF;
+				}
 			}
 		}
 		$body .= '</td>';
@@ -218,7 +219,7 @@ EOF;
 
 		require_once('h_template.php');
 
-		$fm = new FileManager('gallery', $path, array('Gallery'), 'Gallery');
+		$fm = new FileManager('gallery', $this->root.$path, array('Gallery'), 'Gallery');
 		$fm->Behavior->ShowAllFiles = true;
 		$fm->View->Sort = $this->Display->Sort;
 		$this->files = $fm->GetDirectory();
@@ -288,7 +289,7 @@ EOF;
 		$t->Set('thumb_width', $fig->info['thumb_width']+10);
 		$t->Set('thumb_height', $fig->info['thumb_height']+50);
 
-		$fi = new FileInfo($path);
+		$fi = new FileInfo($this->root.$path);
 		if ($path != $this->root) $t->Set('name', $this->GetCaption($fi));
 		else $t->Set('name', '');
 

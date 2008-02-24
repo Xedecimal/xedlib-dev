@@ -543,6 +543,7 @@ class Form
 	*/
 	function Get($formAttribs = null, $tblAttribs = null)
 	{
+		require_once('h_template.php');
 		$this->formAttribs = $formAttribs;
 		$t = new Template();
 		$t->Set('form_name', $this->name);
