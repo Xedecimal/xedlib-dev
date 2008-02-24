@@ -141,7 +141,7 @@ class Gallery
 				if (isset($file->icon) && file_exists($file->icon))
 				{
 					$twidth = $file->info['thumb_width']+16;
-					$theight = $file->info['thumb_height']+32;
+					$theight = $file->info['thumb_height']+60;
 					$url = URL($me, array(
 						'view' => $ix++,
 						'galcf' => "$path",
