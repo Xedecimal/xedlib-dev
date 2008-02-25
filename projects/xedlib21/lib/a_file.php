@@ -391,6 +391,10 @@ class FileManager
 				$this->vars['icon'] = $vp->ParseVars($this->IconContent, $this->vars);
 			}
 			else $this->vars['icon'] = '';
+			if ($this->Behavior->QuickCaptions)
+				$this->vars['masscaption'] = '<textarea cols="30" rows="2" name="titles['.
+					$f->filename.']">'.@htmlspecialchars($f->info['title']).'</textarea>';
+			else $this->vars['masscaption'] = '';
 			$ret .= $vp->ParseVars($guts, $this->vars);
 		}
 		return $ret;
@@ -521,6 +525,7 @@ class FileManager
 		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
 		$this->vars['host'] = GetVar('HTTP_HOST');
 		$this->vars['sid'] = GetVar('PHPSESSID');
+		$this->vars['behavior'] = $this->Behavior;
 
 		$this->vars['folders'] = count($this->files['folders']);
 		$this->vars['files'] = count($this->files['files']);

@@ -160,10 +160,14 @@ window.onload = function() {
 			<table>
 				<file>
 				<tr><td>{{icon}}</td><td>{{check}}</td>
-				<td><a href="{{target}}?editor={{name}}&amp;amp;cf={{cf}}{{filename}}">{{filename}}</a>
-				</td></tr>
+				<td><a href="{{target}}?cf={{cf}}{{filename}}">{{filename}}</a></td>
+				<td>{{masscaption}}</td>
+				</tr>
 				</file>
 			</table>
+			<if check="$this->vars['behavior']->QuickCaptions">
+				<input type="submit" name="ca" value="Update Captions" />
+			</if>
 			</box>
 		</if>
 	</td>
