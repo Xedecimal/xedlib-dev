@@ -460,7 +460,6 @@ class FileManager
 		return $ret;
 	}
 
-
 	function TagIcon($guts)
 	{
 		if (empty($this->vars['icon'])) return;
@@ -469,6 +468,7 @@ class FileManager
 
 	function TagQuickCap($guts)
 	{
+		if (!$this->Behavior->QuickCaptions) return;
 		return $guts;
 	}
 
@@ -582,6 +582,7 @@ class FileManager
 		$fi = new FileInfo($this->Root.$this->cf);
 
 		$this->vars['target'] = $target;
+		$this->vars['root'] = $this->Root;
 		$this->vars['cf'] = $this->cf;
 		$this->vars['filename'] = $fi->filename;
 		$this->vars['path'] = $this->Root.$this->cf;

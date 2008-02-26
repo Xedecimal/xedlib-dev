@@ -26,7 +26,7 @@ window.onload = function() {
 <header>
 <box title="Location">
 <path root="Home" sep="&raquo;"> <a href="{{uri}}">{{name}}</a></path>
-<download>[<a href="{{cf}}" target="_blank">Download</a>]</download>
+<download>[<a href="{{root}}{{cf}}" target="_blank">Download</a>]</download>
 </box>
 </header>
 
