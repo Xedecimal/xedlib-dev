@@ -1,40 +1,9 @@
+<!DOCTYPE null SYSTEM "/just/a/test.dtd" [
+	<!ENTITY nbsp "&#160;">
+	<!ENTITY raquo "&#187;">
+]>
+
 <null>
-
-<!-- Bits -->
-
-<part type="SearchContent">
-<form action="{{target}}" method="post">
-	<input type="hidden" name="editor" value="{{name}}" />
-	<input type="hidden" name="ca" value="search" />
-	<input type="hidden" name="cf" value="{{cf}}"/>
-	Search in: {{path}} for <input type="text" name="cq" />
-	<input type="submit" value="Search" />
-</form>
-</part>
-
-<part type="DownloadContent"> [<a href="{{cf}}" target="_blank">Download</a>]</part>
-
-<part type="CheckContent">
-	<input type="checkbox" id="sel_{{type}}_{{index}}" name="sels[]"
-		value="{{fipath}}" onclick="toggleAny(['sel_files_', 'sel_folders_'],
-		'{{name}}_mass_options');" />
-</part>
-
-<part type="IconContent"><img src="{{icon}}" /></part>
-
-<part type="ContentCreateDir">
-<form action="{$target}" method="post">
-	<input type="text" name="name" />
-	<input type="submit" name="ca" value="Create" /><br/>
-	<small>Type folder name then click "create"</small>
-</form>
-</part>
-
-<part type="ContentField">
-	<tr><td>{{text}}</td><td>{{field}}</td></tr>
-</part>
-
-<!-- /Bits -->
 
 <script type="text/javascript" src="{{relpath}}/js/helper.js"></script>
 <script type="text/javascript" src="{{relpath}}/js/jquery.js"></script>
@@ -54,9 +23,12 @@ window.onload = function() {
 }
 </script>
 
+<header>
 <box title="Location">
-<header />
+<path root="Home" sep="&raquo;"> <a href="{{uri}}">{{name}}</a></path>
+<download>[<a href="{{cf}}" target="_blank">Download</a>]</download>
 </box>
+</header>
 
 <form action="{{me}}" method="post">
 <input type="hidden" name="editor" value="{{name}}" />
@@ -65,11 +37,10 @@ window.onload = function() {
 <table>
 	<tr>
 
-<if check="!empty($this->vars['options'])">
+<options>
 	<td valign="top">
 		<box title="File and Folder Tasks">
 			<table>
-
 			<!-- Mass Options -->
 			<tr><td>
 				<div id="{{name}}_mass_options">
@@ -80,6 +51,27 @@ window.onload = function() {
 				<input type="submit" name="ca" value="Download Selected" />
 				</div>
 			</td></tr>
+
+			<search>
+			<!-- Search -->
+			<tr><td>
+				<a href="#" onclick="$('#{{name}}_search').slideToggle(500);return false;">Search</a>
+			</td><td>
+				<img id="img{{name}}_search" src="{{relpath}}/images/down.png" alt="Visibility" />
+			</td></tr><tr><td colspan="2">
+				<div id="{{name}}_search" style="display: none">
+					<form action="{{target}}" method="post">
+						<input type="hidden" name="editor" value="{{name}}" />
+						<input type="hidden" name="ca" value="search" />
+						<input type="hidden" name="cf" value="{{cf}}"/>
+						<table>
+						<tr><td>Search for</td><td><input type="text" name="cq" /></td></tr>
+						<tr><td></td><td><input type="submit" value="Search" /></td></tr>
+						</table>
+					</form>
+				</div>
+			</td></tr>
+			</search>
 
 			<!-- Upload File -->
 			<tr><td>
@@ -132,44 +124,65 @@ window.onload = function() {
 				<img id="img{{name}}_add" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
 				<div id="{{name}}_add" style="display: none">
-				<addopts />
+				<addopts>
+					<tr><td>{{text}}</td><td>{{field}}</td></tr>
+				</addopts>
 				</div>
 			</td></tr>
 
-			</table> <!-- File Table ending? -->
+			</table>
 		</box>
 	</td>
-</if>
+</options>
 
 <directory>
 	<td valign="top">
-		<if check="{{folders}} > 0">
+		<folders>
 		<box title="Folders">
 			<table>
 				<folder>
-					<tr><td>{{icon}}</td><td>{{check}}</td>
+					<tr>
+					<td><icon><img src="{{icon}}" /></icon></td>
+					<check>
+						<td>
+							<input type="checkbox" id="sel_{{type}}_{{index}}"
+							name="sels[]" value="{{fipath}}"
+							onclick="toggleAny(['sel_files_', 'sel_folders_'],
+							'{{name}}_mass_options');" />
+						</td>
+					</check>
 					<td><a href="{{target}}?editor={{name}}&amp;amp;cf={{cf}}{{filename}}">{{filename}}</a>
 					</td></tr>
 				</folder>
 			</table>
 		</box>
-		</if>
+		</folders>
 	</td><td valign="top">
-		<if check="{{files}} > 0">
+		<files>
 		<box title="Files">
 			<table>
 				<file>
-				<tr><td>{{icon}}</td><td>{{check}}</td>
+				<tr>
+				<td><icon><img src="{{icon}}" /></icon></td>
+				<check>
+					<td>
+						<input type="checkbox" id="sel_{{type}}_{{index}}"
+						name="sels[]" value="{{fipath}}"
+						onclick="toggleAny(['sel_files_', 'sel_folders_'],
+						'{{name}}_mass_options');" />
+					</td>
+				</check>
 				<td><a href="{{target}}?cf={{cf}}{{filename}}">{{filename}}</a></td>
-				<td>{{masscaption}}</td>
+				<quickcap><td><textarea cols="30" rows="2"
+					name="titles[{{filename}}]">{{title}}</textarea></td></quickcap>
 				</tr>
 				</file>
 			</table>
-			<if check="$this->vars['behavior']->QuickCaptions">
+			<QuickCapButton>
 				<input type="submit" name="ca" value="Update Captions" />
-			</if>
-			</box>
-		</if>
+			</QuickCapButton>
+		</box>
+		</files>
 	</td>
 </directory>
 

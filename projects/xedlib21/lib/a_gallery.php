@@ -195,8 +195,8 @@ EOF;
 		$vp = new VarParser();
 		if ($this->Behavior->PageCount != null)
 		{
-			$args = array('galcf' => $path);
-			return GetPages($files['files'], $this->Behavior->PageCount, $args);
+			$args = array('galcf' => $this->path);
+			return GetPages($this->files['files'], $this->Behavior->PageCount, $args);
 		}
 		//return $vp->ParseVars($guts, $d);
 		//else return '';

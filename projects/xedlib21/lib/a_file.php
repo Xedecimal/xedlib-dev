@@ -228,7 +228,6 @@ class FileManager
 			if (!empty($caps))
 			foreach ($caps as $file => $cap)
 			{
-				if (strlen($cap) < 1) continue;
 				$fi = new FileInfo($this->Root.$this->cf.'/'.$file, $this->DefaultFilter);
 				$fi->info['title'] = $cap;
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
@@ -334,70 +333,10 @@ class FileManager
 		if (is_dir($this->Root.$this->cf)) $this->files = $this->GetDirectory();
 	}
 
+
 	function TagPart($guts, $attribs)
 	{
-		$this->$attribs['TYPE'] = $guts;
-	}
-
-	function TagDownload($guts, $attribs)
-	{
-		$this->DownloadContent = $guts;
-	}
-
-	function TagFolder($guts, $attribs)
-	{
-		if (is_file($this->Root.$this->cf)) return;
-		$vp = new VarParser();
-		$ret = '';
-		$ix = 0;
-		foreach ($this->files['folders'] as $f)
-		{
-			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
-			if (!$f->show) continue;
-			$this->vars['filename'] = $f->filename;
-			$this->vars['fipath'] = $f->path;
-			$this->vars['type'] = 'folders';
-			$this->vars['index'] = $ix++;
-			$this->vars['check'] = $vp->ParseVars($this->CheckContent, $this->vars);
-			if (!empty($f->icon))
-			{
-				$this->vars['icon'] = $f->icon;
-				$this->vars['icon'] = $vp->ParseVars($this->IconContent, $this->vars);
-			}
-			else $this->vars['icon'] = '';
-			$ret .= $vp->ParseVars($guts, $this->vars);
-		}
-		return $ret;
-	}
-
-	function TagFile($guts, $attribs)
-	{
-		if (is_file($this->Root.$this->cf)) return;
-		$vp = new VarParser();
-		$ret = '';
-		$ix = 0;
-		foreach ($this->files['files'] as $f)
-		{
-			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
-			if (!$f->show) continue;
-			$this->vars['filename'] = $f->filename;
-			$this->vars['fipath'] = $f->path;
-			$this->vars['type'] = 'files';
-			$this->vars['index'] = $ix++;
-			$this->vars['check'] = $vp->ParseVars($this->CheckContent, $this->vars);
-			if (!empty($f->icon))
-			{
-				$this->vars['icon'] = $f->icon;
-				$this->vars['icon'] = $vp->ParseVars($this->IconContent, $this->vars);
-			}
-			else $this->vars['icon'] = '';
-			if ($this->Behavior->QuickCaptions)
-				$this->vars['masscaption'] = '<textarea cols="30" rows="2" name="titles['.
-					$f->filename.']">'.@htmlspecialchars($f->info['title']).'</textarea>';
-			else $this->vars['masscaption'] = '';
-			$ret .= $vp->ParseVars($guts, $this->vars);
-		}
-		return $ret;
+		$this->vars[$attribs['TYPE']] = $guts;
 	}
 
 	/**
@@ -409,17 +348,128 @@ class FileManager
 	 */
 	function TagHeader($guts, $attribs)
 	{
-		$ret = null;
-		$vp = new VarParser();
+		//$ret = null;
+		//$vp = new VarParser();
 
+		//$fi = new FileInfo($this->Root.$this->cf);
+		//$this->vars['path'] = $this->GetPath($this->vars['target'], $fi);
+
+		//if (is_dir($fi->path) && $this->Behavior->AllowSearch)
+		//	$ret .= $vp->ParseVars($this->SearchContent, $this->vars);
+		//if (is_file($fi->path))
+		//	$ret .= $vp->ParseVars($this->DownloadContent, $this->vars);
+		return $guts;
+	}
+
+	function TagPath($guts, $attribs)
+	{
 		$fi = new FileInfo($this->Root.$this->cf);
-		$this->vars['path'] = $this->GetPath($this->vars['target'], $fi);
+		$vp = new VarParser();
+		$ret = null;
+		$cpath = '';
 
-		if (is_dir($fi->path) && $this->Behavior->AllowSearch)
-			$ret .= $vp->ParseVars($this->SearchContent, $this->vars);
-		if (is_file($fi->path))
-			$ret .= $vp->ParseVars($this->DownloadContent, $this->vars);
+		if (isset($this->cf))
+		{
+			$d['uri'] = URL($this->vars['target'], array('editor' => $this->Name));
+			$d['name'] = $attribs['ROOT'];
+			$ret .= $vp->ParseVars($guts, $d);
+		}
+
+		$items = explode('/', substr($fi->path, strlen($this->Root)));
+		for ($ix = 0; $ix < count($items); $ix++)
+		{
+			if (strlen($items[$ix]) < 1) continue;
+			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
+			$uri = URL($this->vars['target'], array('editor' => $this->Name,
+				'cf' => $cpath));
+			$ret .= ' '.$attribs['SEP'];
+			$d['name'] = $items[$ix];
+			$d['uri'] = $uri;
+			$ret .= $vp->ParseVars($guts, $d);
+		}
 		return $ret;
+	}
+
+	function TagSearch($guts, $attribs)
+	{
+		if (!$this->Behavior->AllowSearch) return null;
+		return $guts;
+	}
+
+	function TagDownload($guts, $attribs)
+	{
+		if (!is_file($this->Root.$this->cf)) return;
+		return $guts;
+		//$this->DownloadContent = $guts;
+	}
+
+	function TagFolders($guts, $attribs)
+	{
+		if (empty($this->files['folders'])) return null;
+		return $guts;
+	}
+
+	function TagFolder($guts, $attribs)
+	{
+		if (is_file($this->Root.$this->cf)) return;
+
+		$ret = '';
+		$ix = 0;
+		foreach ($this->files['folders'] as $f)
+		{
+			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
+			if (!$f->show) continue;
+			$this->vars['filename'] = $f->filename;
+			$this->vars['fipath'] = $f->path;
+			$this->vars['type'] = 'folders';
+			$this->vars['index'] = $ix++;
+			if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
+			else $this->vars['icon'] = '';
+
+			$tfile = new Template($this->vars);
+			$tfile->ReWrite('icon', array(&$this, 'TagIcon'));
+			$ret .= $tfile->GetString($guts);
+		}
+		return $ret;
+	}
+
+	function TagFile($guts, $attribs)
+	{
+		if (is_file($this->Root.$this->cf)) return;
+		$ret = '';
+		$ix = 0;
+
+		foreach ($this->files['files'] as $f)
+		{
+			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
+			if (!$f->show) continue;
+			$this->vars['filename'] = $f->filename;
+			$this->vars['fipath'] = $f->path;
+			$this->vars['type'] = 'files';
+			$this->vars['index'] = $ix++;
+			if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
+			else $this->vars['icon'] = '';
+			$this->vars['title'] = @stripslashes($f->info['title']);
+
+			//$ret .= $vp->ParseVars($guts, $this->vars);
+			$tfile = new Template($this->vars);
+			$tfile->ReWrite('icon', array(&$this, 'TagIcon'));
+			$tfile->ReWrite('quickcap', array(&$this, 'TagQuickCap'));
+			$ret .= $tfile->GetString($guts);
+		}
+		return $ret;
+	}
+
+
+	function TagIcon($guts)
+	{
+		if (empty($this->vars['icon'])) return;
+		return $guts;
+	}
+
+	function TagQuickCap($guts)
+	{
+		return $guts;
 	}
 
 	function TagDetails($guts, $attribs)
@@ -434,10 +484,11 @@ class FileManager
 	function TagDirectory($guts, $attribs)
 	{
 		if (is_file($this->Root.$this->cf)) return;
-		return $guts;
+		$vp = new VarParser();
+		return $vp->ParseVars($guts, $this->vars);
 	}
 
-	function TagAddOpts()
+	function TagAddOpts($guts)
 	{
 		$ret = '<table>';
 		$vp = new VarParser();
@@ -477,13 +528,13 @@ class FileManager
 				{
 					$this->vars['text'] = '';
 					$this->vars['field'] = $field;
-					$ret .= $vp->ParseVars($this->ContentField, $this->vars);
+					$ret .= $vp->ParseVars($guts, $this->vars);
 				}
 				else
 				{
 					$this->vars['text'] = $field->text;
 					$this->vars['field'] = $field->Get($this->Name);
-					$ret .= $vp->ParseVars($this->ContentField, $this->vars);
+					$ret .= $vp->ParseVars($guts, $this->vars);
 				}
 			}
 			if ($this->Behavior->UpdateButton)
@@ -491,13 +542,26 @@ class FileManager
 				$sub = new FormInput(null, 'submit', 'ca', 'Save');
 				$this->vars['text'] = '';
 				$this->vars['field'] = $sub->Get($this->Name);
-				$ret .= $vp->ParseVars($this->ContentField, $this->vars);
+				$ret .= $vp->ParseVars($guts, $this->vars);
 			}
 
 			/*$ret .= $form->Get('method="post" enctype="multipart/form-data"
 				action="'.$this->vars['target'].'"');*/
 		}
 		return $ret.'</table>';
+	}
+
+	function TagCheck($guts)
+	{
+		return $guts;
+	}
+
+	function TagQuickCapButton($guts)
+	{
+		if (!$this->Behavior->QuickCaptions ||
+			(empty($this->files['files']) && empty($this->files['folders'])))
+			return null;
+		return $guts;
 	}
 
 	/**
@@ -533,12 +597,21 @@ class FileManager
 		$t = new Template();
 		$t->Set($this->vars);
 
+		//Depricated
 		$t->ReWrite('part', array(&$this, 'TagPart'));
+
+		$t->ReWrite('header', array(&$this, 'TagHeader'));
+		$t->ReWrite('path', array(&$this, 'TagPath'));
+		$t->ReWrite('download', array(&$this, 'TagDownload'));
+		$t->ReWrite('search', array(&$this, 'TagSearch'));
+
 		$t->ReWrite('details', array(&$this, 'TagDetails'));
 		$t->ReWrite('directory', array(&$this, 'TagDirectory'));
-		$t->ReWrite('header', array(&$this, 'TagHeader'));
+		$t->ReWrite('folders', array(&$this, 'TagFolders'));
 		$t->ReWrite('folder', array(&$this, 'TagFolder'));
 		$t->ReWrite('file', array(&$this, 'TagFile'));
+		$t->ReWrite('check', array(&$this, 'TagCheck'));
+		$t->ReWrite('quickcapbutton', array(&$this, 'TagQuickCapButton'));
 
 		$t->ReWrite('addopts', array(&$this, 'TagAddOpts'));
 
@@ -1558,8 +1631,10 @@ class FilterGallery extends FilterDefault
 		if (substr($fi->filename, 0, 2) == 't_') $fi->show = false;
 		if (empty($fi->info['thumb_width'])) $fi->info['thumb_width'] = 200;
 		if (empty($fi->info['thumb_height'])) $fi->info['thumb_height'] = 200;
+
 		if (file_exists($fi->dir."/t_".$fi->filename))
 			$fi->icon = "{$fi->dir}/t_{$fi->filename}";
+
 		if (is_dir($fi->path))
 		{
 			$fs = glob($fi->path.'/.t_image.*');
@@ -1585,7 +1660,7 @@ class FilterGallery extends FilterDefault
 		if (!empty($newimg))
 		{
 			$this->ResizeFile($newimg,
-				"{$fi->path}/._image",
+				"{$fi->path}/.t_image",
 				$newinfo['thumb_width'], $newinfo['thumb_height']);
 		}
 		if (!empty($upimg['name']))
@@ -1649,7 +1724,10 @@ class FilterGallery extends FilterDefault
 
 			if (!empty($fm->files['files']))
 			foreach ($fm->files['files'] as $fiImg)
+			{
+				if (substr($fiImg->filename, 0, 2) == 't_') continue;
 				$selImages[$fiImg->filename] = new SelOption($fiImg->filename);
+			}
 
 			$new[] = new FormInput('Thumbnail Width', 'text',
 				'info[thumb_width]', $fi->info['thumb_width']);
@@ -1742,12 +1820,6 @@ class FilterGallery extends FilterDefault
 	{
 		$pinfo = pathinfo($file);
 		$dt = $dest.'.'.$pinfo['extension'];
-
-		ob_start();
-		echo "Function: ".function_exists('imgjpeg')."\r\n";
-		$fp = fopen('debug.txt', 'a');
-		fwrite($fp, ob_get_contents());
-		fclose($fp);
 
 		switch (strtolower($pinfo['extension']))
 		{

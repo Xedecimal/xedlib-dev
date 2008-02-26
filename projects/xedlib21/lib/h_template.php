@@ -158,16 +158,6 @@ class Template
 	{
 		if ($this->skip) return;
 
-		if ($tag == 'IF')
-		{
-			$vp = new VarParser();
-			$check = $vp->ParseVars($attribs['CHECK'], $this->vars);
-			$GLOBALS['_trace'] = GetTemplateStack($this->data);
-			if (!eval('return '.$check.';')) $this->skip = true;
-			$show = false;
-			return;
-		}
-
 		if (isset($this->rewrites[$tag]))
 		{
 			$obj = new stdClass();
@@ -216,6 +206,15 @@ class Template
 		}
 		else if ($tag == 'FORM' && $this->Behavior->MakeDynamic)
 			$this->start .= $this->ProcessForm($parser, $tag, $attribs);
+		if ($tag == 'IF')
+		{
+			$vp = new VarParser();
+			$check = $vp->ParseVars($attribs['CHECK'], $this->vars);
+			$GLOBALS['_trace'] = GetTemplateStack($this->data);
+			if (!eval('return '.$check.';')) $this->skip = true;
+			$show = false;
+			return;
+		}
 		else if ($tag == 'IMG') $close = ' /';
 		else if ($tag == 'INCLUDE')
 		{
@@ -495,7 +494,9 @@ class Template
 
 		$this->data['template.stack'][] = $template;
 		$this->template = $template;
-		return $this->GetString(file_get_contents($template));
+		$ret = $this->GetString(file_get_contents($template));
+		array_pop($this->data['template.stack']);
+		return $ret;
 	}
 
 	function GetString($str)
@@ -527,9 +528,10 @@ class Template
 		$data = array();
 		$index = array();
 		xml_set_object($this->parser, $this);
+		xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'ISO-8859-1');
 		xml_set_element_handler($this->parser, 'Start_Tag', 'End_Tag');
 		xml_set_character_data_handler($this->parser, 'CData');
- 		xml_set_default_handler($this->parser, 'CData');
+ 		//xml_set_default_handler($this->parser, 'CData');
  		xml_set_processing_instruction_handler($this->parser, 'Process');
 
 		if (!xml_parse($this->parser, $str))
@@ -539,7 +541,6 @@ class Template
 			" of file " . $template . "\n";
 		}
 		xml_parser_free($this->parser);
-		array_pop($this->data['template.stack']);
 		array_pop($this->data['template.parsers']);
 		return preg_replace_callback("/\{{([^}]+)\}}/", array($this, "parse_vars"), $this->start.$this->out);
 	}
