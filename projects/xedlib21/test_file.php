@@ -75,7 +75,7 @@ else
 	$fm->Behavior->AllowSearch = true;
 	$fm->Behavior->ShowAllFiles = $user['usr_name'] == 'Admin';
 	$fm->Behavior->Watcher = array('fm_watcher');
-	$fm->Behavior->QuickCaptions = true;
+	//$fm->Behavior->QuickCaptions = true;
 	$fm->View->Sort = FM_SORT_MANUAL;
 
 	$fm->Behavior->AllowAll();
