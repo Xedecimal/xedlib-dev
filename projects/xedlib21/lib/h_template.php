@@ -531,7 +531,6 @@ class Template
 		xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'ISO-8859-1');
 		xml_set_element_handler($this->parser, 'Start_Tag', 'End_Tag');
 		xml_set_character_data_handler($this->parser, 'CData');
- 		//xml_set_default_handler($this->parser, 'CData');
  		xml_set_processing_instruction_handler($this->parser, 'Process');
 
 		if (!xml_parse($this->parser, $str))

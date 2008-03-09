@@ -92,17 +92,13 @@ class Gallery
 			if (!is_dir($p)) continue;
 
 			$fi = new FileInfo($this->root.$this->path.'/'.$file);
-
-			$icons = glob($this->path.'/'.$file.'/._image.*');
+			$this->f->GetInfo($fi);
 
 			$d['name'] = $file;
 			$d['path'] = GetVar('galcf', '');
-			if (!empty($icons))
-			{
-				$d['icon'] = $icons[0];
+			$d['icon'] = $fi->icon;
+			if (!empty($d['icon']))
 				$d['icon'] = $vp->ParseVars($this->IconContent, $d);
-			}
-			else $d['icon'] = '';
 
 			$out .= $vp->ParseVars($guts, $d);
 		}
