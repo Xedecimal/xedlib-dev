@@ -157,7 +157,7 @@ window.onload = function() {
 							'{{name}}_mass_options');" />
 						</td>
 					</check>
-					<td><a href="{{target}}?editor={{name}}&amp;amp;cf={{cf}}{{filename}}/">{{filename}}</a>
+					<td><a href="{{target}}?editor={{fn_name}}&amp;amp;cf={{cf}}{{filename}}/">{{filename}}</a>
 					</td></tr>
 				</folder>
 			</table>
@@ -178,7 +178,7 @@ window.onload = function() {
 						'{{name}}_mass_options');" />
 					</td>
 				</check>
-				<td><a href="{{target}}?cf={{cf}}/{{filename}}">{{filename}}</a></td>
+				<td><a href="{{target}}?editor={{fn_name}}&ampamp;cf={{cf}}/{{filename}}">{{filename}}</a></td>
 				<quickcap><td><textarea cols="30" rows="2"
 					name="titles[{{filename}}]">{{title}}</textarea></td></quickcap>
 				</tr>
