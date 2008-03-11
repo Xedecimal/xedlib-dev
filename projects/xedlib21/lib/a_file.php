@@ -506,8 +506,7 @@ class FileManager
 
 	function TagQuickCapButton($guts)
 	{
-		if (!$this->Behavior->QuickCaptions ||
-			(empty($this->files['files']) && empty($this->files['folders'])))
+		if (!$this->Behavior->QuickCaptions || empty($this->files['files']))
 			return null;
 		return $guts;
 	}
@@ -583,18 +582,6 @@ class FileManager
 		return $ret.'</table>';
 	}
 
-	function TagCheck($guts)
-	{
-		return $guts;
-	}
-
-	function TagQuickCapButton($guts)
-	{
-		if (!$this->Behavior->QuickCaptions || empty($this->files['files']))
-			return null;
-		return $guts;
-	}
-
 	/**
 	* Return the display.
 	*
@@ -617,6 +604,7 @@ class FileManager
 		$this->vars['target'] = $target;
 		$this->vars['root'] = $this->Root;
 		$this->vars['cf'] = $this->cf;
+
 		$this->vars['filename'] = $fi->filename;
 		$this->vars['path'] = $this->Root.$this->cf;
 		$this->vars['dirsel'] = $this->GetDirectorySelect('ct');
