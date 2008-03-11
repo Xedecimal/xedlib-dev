@@ -1104,4 +1104,10 @@ function LinkList($items, $parent, $assoc = null)
 	return $ret;
 }
 
+function MySqlDate($ds, $data, $col, $dbcol)
+{
+	$ts = MyDateTimestamp($data[$col]);
+	return date('m/d/y', $ts);
+}
+
 ?>

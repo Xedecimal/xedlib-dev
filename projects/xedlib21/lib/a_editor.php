@@ -461,7 +461,7 @@ class EditorData
 					$value = GetVar($col);
 					if ($in->type == 'date')
 					{
-						$insert[$data[0]] = $value[2].'-'.$value[0].'-'.$value[1];
+						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1];
 					}
 					else if ($in->type == 'password')
 					{
