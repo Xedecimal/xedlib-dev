@@ -222,14 +222,16 @@ EOF;
 
 		$t = new Template();
 		$this->path = $path;
-		$t->ReWrite('folder', array($this, 'TagFolder'));
-		$t->ReWrite('file', array($this, 'TagFile'));
-		$t->ReWrite('image', array($this, 'TagImage'));
-		$t->ReWrite('page', array($this, 'TagPage'));
-		$t->ReWrite('part', array($this, 'TagPart'));
+		$t->ReWrite('folder', array(&$this, 'TagFolder'));
+		$t->ReWrite('file', array(&$this, 'TagFile'));
+		$t->ReWrite('image', array(&$this, 'TagImage'));
+		$t->ReWrite('page', array(&$this, 'TagPage'));
+		$t->ReWrite('part', array(&$this, 'TagPart'));
 
 		$t->Set('disable_save', $this->Behavior->DisableSave);
 		$t->Set('current', GetVar('view'));
+		$t->Set('galcf', GetVar('galcf'));
+
 		$tot = 0;
 		foreach ($this->files['files'] as $f)
 		{

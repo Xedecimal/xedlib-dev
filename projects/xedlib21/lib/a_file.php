@@ -583,6 +583,18 @@ class FileManager
 		return $ret.'</table>';
 	}
 
+	function TagCheck($guts)
+	{
+		return $guts;
+	}
+
+	function TagQuickCapButton($guts)
+	{
+		if (!$this->Behavior->QuickCaptions || empty($this->files['files']))
+			return null;
+		return $guts;
+	}
+
 	/**
 	* Return the display.
 	*
@@ -1681,6 +1693,11 @@ class FilterGallery extends FilterDefault
 			move_uploaded_file($upimg['tmp_name'], 'timg/'.$upimg['name']);
 			$newimg = 'timg/'.$upimg['name'];
 		}
+		else if ($img == 1)
+		{
+			$files = glob("{$fi->path}.t_image.*");
+			foreach ($files as $f) unlink($f);
+		}
 		else if (!empty($img)) $newimg = $fi->path.$img;
 		if (!empty($newimg))
 		{
@@ -1745,7 +1762,8 @@ class FilterGallery extends FilterDefault
 		$new = array();
 		if (is_dir($fi->path))
 		{
-			$selImages[0] = new SelOption('None');
+			$selImages[0] = new SelOption('No Change');
+			$selImages[1] = new SelOption('Remove');
 
 			if (!empty($fm->files['files']))
 			foreach ($fm->files['files'] as $fiImg)

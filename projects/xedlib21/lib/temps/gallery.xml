@@ -93,7 +93,9 @@ document.onmousedown = click;
 td { padding: 0; }
 </style>
 
+<if check="!empty($this->vars['galcf'])">
 <a href="{{me}}">View Main Gallery</a> &raquo; {{name}}
+</if>
 
 <table class="gallery">
 	<tr><td>
