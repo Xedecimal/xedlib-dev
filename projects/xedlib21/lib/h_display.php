@@ -902,6 +902,9 @@ class FormInput
 				break;
 			case 'date':
 				return sprintf('%04d-%02d-%02d', $val[2], $val[0], $val[1]);
+			case 'checks':
+			case 'selects':
+				varinfo($val);
 			default:
 				return $val;
 			break;
