@@ -275,8 +275,7 @@ class FileManager
 			FilterDefault::UpdateMTime($p);
 
 			if (!empty($this->Behavior->Watcher))
-				RunCallbacks($this->Behavior->Watcher, FM_ACTION_CREATE,
-					$p);
+				RunCallbacks($this->Behavior->Watcher, FM_ACTION_CREATE, $p);
 		}
 		else if ($action == 'swap')
 		{
