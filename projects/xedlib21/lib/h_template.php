@@ -143,9 +143,15 @@ class Template
 		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
 	}
 
-	function ReWrite($tag, $callback)
+	function ReWrite($tag, $callback, $args)
 	{
 		$this->rewrites[strtoupper($tag)][] = $callback;
+		$this->rewriteargs[strtoupper($tag)] = $args;
+	}
+
+	function Transform($tag, $callback)
+	{
+		$this->transforms[strtoupper($tag)][] = $callback;
 	}
 
 	/**
@@ -157,6 +163,12 @@ class Template
 	function Start_Tag($parser, $tag, $attribs)
 	{
 		if ($this->skip) return;
+
+		if (isset($this->transforms[$tag]))
+		{
+			$ret = RunCallbacks($this->transforms[$tag], $attribs);
+			$attribs = array_merge($attribs, $ret);
+		}
 
 		if (isset($this->rewrites[$tag]))
 		{
@@ -324,9 +336,9 @@ class Template
 			$objd = &$this->GetDestinationObject();
 
 			$vp = new VarParser();
-
 			$objd->out .= RunCallbacks($this->rewrites[$tag], $obj->out,
-				$vp->ParseVars($obj->attribs, $this->vars), $obj->tag);
+				$vp->ParseVars($obj->attribs, $this->vars), $obj->tag,
+				@$this->rewriteargs[$tag]);
 
 			array_pop($this->objs);
 			return;
@@ -522,13 +534,15 @@ class Template
 			}
 		}
 
-		$this->out = "";
+		$this->out = '';
 		$this->parser = xml_parser_create_ns();
 		$this->data['template.parsers'][] = $this->parser;
 		$data = array();
 		$index = array();
 		xml_set_object($this->parser, $this);
-		xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'ISO-8859-1');
+		//IF we get weird characters, this helps, but ruins other pages. Very
+		//interesting. - Nick
+		//xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'ISO-8859-1');
 		xml_set_element_handler($this->parser, 'Start_Tag', 'End_Tag');
 		xml_set_character_data_handler($this->parser, 'CData');
  		xml_set_processing_instruction_handler($this->parser, 'Process');

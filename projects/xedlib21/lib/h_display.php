@@ -1073,12 +1073,15 @@ function GetInputTime($name, $timestamp)
  * @param bool $value Whether we default to yes or no.
  * @return string Rendered time input.
  */
-function GetInputYesNo($parent, $name, $value)
+function GetInputYesNo($parent, $attribs)
 {
-	return '<label><input type="radio" id="'.CleanID($parent.'_'.$name).'" name="'.$name.'" value="0"'.
-	($value ? null : ' checked="checked"').' /> No</label> ' .
-	'<label><input type="radio" name="'.$name.'" value="1"'.
-	($value ? ' checked="checked"' : null).' /> Yes</label>';
+	if (!isset($attribs['ID'])) $attribs['ID'] = CleanID($parent.'_'.$name);
+	if (!isset($attribs['VALUE'])) $attribs['VALUE'] = 0;
+	return '<label><input type="radio" id="'.$attribs['ID'].'"
+	name="'.$attribs['NAME'].'" value="0"'.
+	($attribs['VALUE'] ? null : ' checked="checked"').' /> No</label> ' .
+	'<label><input type="radio" name="'.$attribs['NAME'].'" value="1"'.
+	($attribs['VALUE'] ? ' checked="checked"' : null).' /> Yes</label>';
 }
 
 define('STATE_CREATE', 0);
@@ -1795,24 +1798,89 @@ function SOCallback($ds, $item, $icol, $col = null)
 	return $item[$icol];
 }
 
-function TagInput($guts, $attribs, $tag)
+function TagInput($guts, $attribs, $tag, $args)
 {
+	$searchable = $attribs['TYPE'] != 'hidden' && $attribs['TYPE'] != 'radio';
+
 	if (!empty($attribs['TYPE']))
 	switch (strtolower($attribs['TYPE']))
 	{
+		case 'date':
+			$field = '<input type="hidden" name="type_'.$attribs['NAME'].'" value="'.$attribs['TYPE'].'" />';
+			$field .= GetInputDate($attribs['NAME'], @$attribs['VALUE']);
+			break;
 		case 'year':
-			return GetYearSelect($attribs['NAME'], @$attribs['VALUE']);
+			$field = GetYearSelect($attribs['NAME'], @$attribs['VALUE']);
+			break;
 		case 'month':
-			return GetMonthSelect($attribs['NAME'], @$attribs['VALUE']);
+			$field = GetMonthSelect($attribs['NAME'], @$attribs['VALUE']);
+			break;
+		case 'state':
+			$field = GetInputState($attribs['NAME'], @$attribs['VALUE']);
+			break;
+		case 'mask':
+			$in = new FormInput(null, 'mask', $attribs['NAME'], @$attribs['VALUE']);
+			$in->mask = $attribs['MASK'];
+			$field = $in->Get();
+			break;
+		case 'yesno':
+			$field = GetInputYesNo(null, $attribs);
+			break;
+		case 'radio':
+			$attribs['TYPE'] = 'checkbox';
+			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
+			break;
+		default:
+			$field = '<input'.GetAttribs($attribs).' />';
+			break;
 	}
-	$atrout = '';
-	foreach ($attribs as $atr => $val)
-		$atrout .= ' '.strtolower($atr).'="'.$val.'"';
 
-	if (empty($guts))
+	$ret = '';
+
+	if ($args == 'search' && $searchable)
 	{
-		return '<'.strtolower($tag).$atrout.' />';
+		if (!isset($attribs['ID'])) $attribs['ID'] = 'in'.$attribs['NAME'];
+
+		$ret .= "<input type=\"checkbox\" onclick=\"$('#div{$attribs['ID']}').toggle('slow');\" />";
+		$ret .= '<div id="div'.$attribs['ID'].'" style="display: none">';
 	}
+
+	$ret .= $field;
+
+	if ($args == 'search' && $searchable) $ret .= '</div>';
+	return $ret;
+}
+
+function GetAttribs($attribs)
+{
+	$ret = '';
+	foreach ($attribs as $n => $v) $ret .= ' '.strtolower($n).'="'.$v.'"';
+	return $ret;
+}
+
+function TagInputData(&$atrs)
+{
+	global $ci, $binds;
+
+	if (!empty($atrs['NAME']))
+	{
+		//Bound
+		if (preg_match('/db\.([^.]+)/', $atrs['NAME'], $ms))
+		{
+			switch (strtolower($atrs['TYPE']))
+			{
+				case 'date': $atrs['VALUE'] = MyDateTimestamp($binds[$ms[1]]); break;
+				case 'radio':
+				case 'checkbox':
+					if (!isset($atrs['VALUE'])) $atrs['VALUE'] = 1;
+					if ($atrs['VALUE'] == $binds[$ms[1]])
+						$atrs['CHECKED'] = 'checked';
+					break;
+				default: $atrs['VALUE'] = $binds[$ms[1]];
+			}
+		}
+	}
+	return $atrs;
 }
 
 ?>

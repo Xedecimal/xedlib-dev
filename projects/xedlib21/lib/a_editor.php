@@ -1366,6 +1366,8 @@ class DisplayData
 
 		if ($ca == 'edit' && $this->Behavior->AllowEdit)
 		{
+			$ci = GetVar('ci');
+
 			if (!empty($this->ds->FieldInputs))
 			{
 				foreach ($this->ds->FieldInputs as $col => $in)
@@ -1378,13 +1380,13 @@ class DisplayData
 					else $cols[$col] = $col;
 				}
 
-				$item = $this->ds->GetOne(array($this->ds->id => GetVar('ci')),
+				$item = $this->ds->GetOne(array($this->ds->id => $ci),
 					$this->joins, $cols, $this->ds->id);
 
 				$frm = new Form('frmEdit');
 				$frm->AddHidden('editor', $this->name);
 				$frm->AddHidden('ca', 'update');
-				$frm->AddHidden('ci', GetVar('ci'));
+				$frm->AddHidden('ci', $ci);
 
 				foreach ($this->ds->FieldInputs as $col => $fi)
 				{
@@ -1408,6 +1410,14 @@ class DisplayData
 				}
 				$frm->AddInput(new FormInput(null, 'submit', null, 'Update'));
 				$ret .= $frm->Get('action="'.$target.'" method="post"');
+			}
+
+			if (!empty($this->Editors))
+			foreach ($this->Editors as $join => $editor)
+			{
+				if (preg_match('/([^.]+)\.(.*)/', $join, $ms))
+					$editor->filter = "{$ms[2]} = $ci";
+				$ret .= $editor->GetUI($target, $ci);
 			}
 		}
 

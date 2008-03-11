@@ -660,13 +660,14 @@ class DataSet
 			$x = 0;
 			foreach ($values as $key => $val)
 			{
+				if (empty($val)) continue;
+				if ($x++ > 0) $ret .= ", ";
 				if (is_array($val))
 				{
 					if ($val[0] == "destring")
 						$ret .= $this->QuoteTable($key)." = {$val[1]}";
 				}
 				else $ret .= $this->QuoteTable($key)." = '".mysql_real_escape_string($val)."'";
-				if ($x++ < count($values)-1) $ret .= ", ";
 			}
 		}
 		return $ret;
@@ -687,20 +688,24 @@ class DataSet
 		$query = "INSERT INTO {$lq}{$this->table}{$rq} (";
 		foreach (array_keys($columns) as $ix => $key)
 		{
-			if ($ix != 0) $query .= ", ";
-			$query .= $this->QuoteTable($key);
+			if (!empty($columns[$key]))
+			{
+				if ($ix != 0) $query .= ", ";
+				$query .= $this->QuoteTable($key);
+			}
 		}
 		$query .= ") VALUES(";
 		$ix = 0;
 		foreach ($columns as $key => $val)
 		{
 			//destring('value') for functions and such.
+			if (empty($val)) continue;
+			if ($ix > 0) $query .= ', ';
 			if (is_array($val))
 			{
 				if ($val[0] == "destring") $query .= $val[1];
 			}
 			else $query .= "'".addslashes($val)."'";
-			if ($ix < count($columns)-1) $query .= ", ";
 			$ix++;
 		}
 		$query .= ")";
@@ -814,57 +819,6 @@ class DataSet
 		}
 		return $items;
 	}
-
-	/**
-	 * Internal version of getting data, not to be used in code.
-	 * @param array $match Column to Value to match for in a WHERE statement.
-	 * @param array $sort Column to Direction array.
-	 * @param array $filter Column to Value array.
-	 * @param array $joins Table to ON Expression values.
-	 * @param array $columns Specific columns to return: array('col1', 'col2' => 'c2');
-	 * @param string $group Grouping, eg: 'product'.
-	 * @param int $args passed to mysql_fetch_array.
-	 * @return array Array of items selected.
-	 */
-	/*function GetInternal(
-		$match = null,
-		$sort = null,
-		$filter = null,
-		$joins = null,
-		$columns = null,
-		$group = null,
-		$args = GET_BOTH)
-	{
-
-		$lq = $this->database->lq;
-		$rq = $this->database->rq;
-
-		//Prepare Query
-		$query = "SELECT\n";
-		$query .= $this->ColsClause($columns);
-		$query .= " FROM {$lq}{$this->table}{$rq}";
-		$query .= $this->JoinClause($joins);
-		$query .= $this->WhereClause($match);
-		$query .= $this->GroupClause($group);
-		$query .= $this->OrderClause($sort);
-		$query .= $this->AmountClause($filter);
-
-		//Execute Query
-		$rows = $this->database->Query($query);
-
-		//Prepare Data
-		$items = null;
-		while (($row = call_user_func($this->func_fetch, $rows)))
-		{
-			$newrow = array();
-			foreach ($row as $key => $val)
-			{
-				$newrow[$key] = stripslashes($val);
-			}
-			$items[] = $newrow;
-		}
-		return $items;
-	}*/
 
 	/**
 	 * Return a single item from this dataset
