@@ -74,6 +74,7 @@ window.onload = function() {
 			</search>
 
 			<!-- Upload File -->
+			<behavior type="AllowUpload">
 			<tr><td>
 				<a href="#" onclick="$('#{{name}}_upload').slideToggle(500);return false;">Send Files</a>
 			</td><td>
@@ -90,8 +91,10 @@ window.onload = function() {
 					</applet>
 				</div>
 			</td></tr>
+			</behavior>
 
 			<!-- Create Folder -->
+			<behavior type="AllowCreateDir">
 			<tr><td>
 				<a href="#" onclick="$('#{{name}}_create').slideToggle(500);return false;">Create Folder</a>
 			</td><td>
@@ -102,9 +105,10 @@ window.onload = function() {
 					<input type="submit" name="ca" value="Create" /><br/>
 				</div>
 			</td></tr>
+			</behavior>
 
 			<!-- Rename File / Folder -->
-			<if check="!empty($this->vars['cf'])">
+			<behavior type="AllowRename">
 			<tr><td>
 				<a href="#" onclick="$('#{{name}}_rename').toggle('slow');return false;">Rename This File / Folder</a>
 			</td><td>
@@ -115,9 +119,10 @@ window.onload = function() {
 				<input type="submit" name="ca" value="Rename" /><br/>
 				</div>
 			</td></tr>
-			</if>
+			</behavior>
 
 			<!-- Additional Settings -->
+			<behavior type="AllowEdit">
 			<tr><td>
 				<a href="#" onclick="$('#{{name}}_add').slideToggle(500);return false;">Additional Settings</a>
 			</td><td>
@@ -129,6 +134,7 @@ window.onload = function() {
 				</addopts>
 				</div>
 			</td></tr>
+			</behavior>
 
 			</table>
 		</box>

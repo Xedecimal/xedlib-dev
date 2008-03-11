@@ -146,6 +146,8 @@ class FileManager
 	 */
 	function Prepare($action)
 	{
+		//Don't allow renaming the root or the file manager will throw errors ever after.
+		if (empty($this->cf)) $this->Behavior->AllowRename = false;
 		//Actions
 		if ($action == 'upload' && $this->Behavior->AllowUpload)
 		{
@@ -396,6 +398,12 @@ class FileManager
 		return $guts;
 	}
 
+	function TagBehavior($guts, $attribs)
+	{
+		$name = $attribs['TYPE'];
+		if ($this->Behavior->$name) return $guts;
+	}
+
 	function TagDownload($guts, $attribs)
 	{
 		if (!is_file($this->Root.$this->cf)) return;
@@ -405,8 +413,7 @@ class FileManager
 
 	function TagFolders($guts, $attribs)
 	{
-		if (empty($this->files['folders'])) return null;
-		return $guts;
+		if (!empty($this->files['folders'])) return $guts;
 	}
 
 	function TagFolder($guts, $attribs)
@@ -431,6 +438,11 @@ class FileManager
 			$ret .= $tfile->GetString($guts);
 		}
 		return $ret;
+	}
+
+	function TagFiles($guts)
+	{
+		if (!empty($this->files['files'])) return $guts;
 	}
 
 	function TagFile($guts, $attribs)
@@ -486,6 +498,27 @@ class FileManager
 		if (is_file($this->Root.$this->cf)) return;
 		$vp = new VarParser();
 		return $vp->ParseVars($guts, $this->vars);
+	}
+
+	function TagCheck($guts)
+	{
+		if ($this->mass_avail) return $guts;
+	}
+
+	function TagQuickCapButton($guts)
+	{
+		if (!$this->Behavior->QuickCaptions ||
+			(empty($this->files['files']) && empty($this->files['folders'])))
+			return null;
+		return $guts;
+	}
+
+	function TagOptions($guts)
+	{
+		if ($this->Behavior->AllowMove ||
+			$this->Behavior->AllowCreateDir ||
+			$this->Behavior->AllowEdit ||
+			$this->Behavior->AllowRename) return $guts;
 	}
 
 	function TagAddOpts($guts)
@@ -551,19 +584,6 @@ class FileManager
 		return $ret.'</table>';
 	}
 
-	function TagCheck($guts)
-	{
-		return $guts;
-	}
-
-	function TagQuickCapButton($guts)
-	{
-		if (!$this->Behavior->QuickCaptions ||
-			(empty($this->files['files']) && empty($this->files['folders'])))
-			return null;
-		return $guts;
-	}
-
 	/**
 	* Return the display.
 	*
@@ -577,6 +597,8 @@ class FileManager
 			return "FileManager::Get(): File doesn't exist ({$this->Root}{$this->cf}).<br/>\n";
 
 		require_once('h_template.php');
+
+		$this->mass_avail = $this->Behavior->MassAvailable();
 
 		//TODO: Get rid of this.
 		$fi = new FileInfo($this->Root.$this->cf);
@@ -598,28 +620,28 @@ class FileManager
 		$t = new Template();
 		$t->Set($this->vars);
 
-		//Depricated
-		$t->ReWrite('part', array(&$this, 'TagPart'));
-
 		$t->ReWrite('header', array(&$this, 'TagHeader'));
 		$t->ReWrite('path', array(&$this, 'TagPath'));
 		$t->ReWrite('download', array(&$this, 'TagDownload'));
 		$t->ReWrite('search', array(&$this, 'TagSearch'));
 
+		$t->ReWrite('behavior', array(&$this, 'TagBehavior'));
+
 		$t->ReWrite('details', array(&$this, 'TagDetails'));
 		$t->ReWrite('directory', array(&$this, 'TagDirectory'));
 		$t->ReWrite('folders', array(&$this, 'TagFolders'));
 		$t->ReWrite('folder', array(&$this, 'TagFolder'));
+		$t->ReWrite('files', array(&$this, 'TagFiles'));
 		$t->ReWrite('file', array(&$this, 'TagFile'));
 		$t->ReWrite('check', array(&$this, 'TagCheck'));
 		$t->ReWrite('quickcapbutton', array(&$this, 'TagQuickCapButton'));
 
+		$t->ReWrite('options', array(&$this, 'TagOptions'));
 		$t->ReWrite('addopts', array(&$this, 'TagAddOpts'));
 
 		$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 
 		$t->Set('name', $this->Name);
-		$t->Set('mass_available', $this->mass_avail = $this->Behavior->MassAvailable());
 
 		//if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
 
@@ -1441,7 +1463,10 @@ class FileInfo
 			if (is_in($ft->dir, $root)) $ft = new FileInfo($ft->dir);
 			else
 			{
-				$fname = 'Filter'.$defaults[0];
+				if (isset($defaults[0]))
+					$fname = 'Filter'.$defaults[0];
+				else
+					$fname = 'FilterDefault';
 				$f = new $fname();
 				$f->GetInfo($fi);
 				return $f;
@@ -1687,7 +1712,7 @@ class FilterGallery extends FilterDefault
 			if ($file[0] == '.') continue;
 			if (substr($file, 0, 2) == 't_') continue;
 
-			$fir = new FileInfo($fi->path.$file);
+			$fir = new FileInfo($fi->path.'/'.$file);
 
 			if (is_dir($fi->path.$file))
 			{
