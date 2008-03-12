@@ -15,11 +15,11 @@ function docmanSelAll(type)
 {
 	__sels[type] = !__sels[type];
 	sel_all(type, __sels[type]);
-	toggleAny(['sel_files_','sel_dirs_'],'{{name}}_mass_options');
+	toggleAny(['sel_files_','sel_dirs_'],'{{fn_name}}_mass_options');
 }
 
 window.onload = function() {
-	$('#{{name}}_mass_options').hide();
+	$('#{{fn_name}}_mass_options').hide();
 }
 </script>
 
@@ -31,7 +31,7 @@ window.onload = function() {
 </header>
 
 <form action="{{me}}" method="post" enctype="multipart/form-data">
-<input type="hidden" name="editor" value="{{name}}" />
+<input type="hidden" name="editor" value="{{fn_name}}" />
 <input type="hidden" name="cf" value="{{cf}}" />
 
 <table>
@@ -43,7 +43,7 @@ window.onload = function() {
 			<table>
 			<!-- Mass Options -->
 			<tr><td>
-				<div id="{{name}}_mass_options">
+				<div id="{{fn_name}}_mass_options">
 				<p>With selected files...</p>
 				<input type="submit" name="ca" value="Move" /> to {{dirsel}}<br/>
 				<input type="submit" name="ca" value="Delete"
@@ -55,13 +55,13 @@ window.onload = function() {
 			<search>
 			<!-- Search -->
 			<tr><td class="opt_title">
-				<a href="#" onclick="$('#{{name}}_search').toggle('slow');return false;">Search</a>
+				<a href="#" onclick="$('#{{fn_name}}_search').toggle('slow');return false;">Search</a>
 			</td><td>
-				<img id="img{{name}}_search" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_search" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
-				<div id="{{name}}_search" style="display: none">
+				<div id="{{fn_name}}_search" style="display: none">
 					<form action="{{target}}" method="post">
-						<input type="hidden" name="editor" value="{{name}}" />
+						<input type="hidden" name="editor" value="{{fn_name}}" />
 						<input type="hidden" name="ca" value="search" />
 						<input type="hidden" name="cf" value="{{cf}}"/>
 						<table>
@@ -76,16 +76,16 @@ window.onload = function() {
 			<!-- Upload File -->
 			<behavior type="AllowUpload">
 			<tr><td>
-				<a href="#" onclick="$('#{{name}}_upload').slideToggle(500);return false;">Send Files</a>
+				<a href="#" onclick="$('#{{fn_name}}_upload').slideToggle(500);return false;">Send Files</a>
 			</td><td>
-				<img id="img{{name}}_upload" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_upload" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
-				<div id="{{name}}_upload" style="display: none">
+				<div id="{{fn_name}}_upload" style="display: none">
 					<applet codebase="{{relpath}}/java" code="uploadApplet.class"
 						archive="UploadApplet.jar,commons-codec-1.3.jar,commons-httpclient-3.0.1.jar,commons-logging-1.0.4.jar"
 						width="525" height="100">
 						<param name="host" value="http://{{host}}" />
-						<param name="pathToScript" value="{{target}}?editor={{name}}&amp;amp;PHPSESSID={{sid}}" />
+						<param name="pathToScript" value="{{target}}?editor={{fn_name}}&amp;amp;PHPSESSID={{sid}}" />
 						<param name="path" value="{{cf}}" />
 						<param name="uploadMax" value="2044304" />
 					</applet>
@@ -96,12 +96,12 @@ window.onload = function() {
 			<!-- Create Folder -->
 			<behavior type="AllowCreateDir">
 			<tr><td>
-				<a href="#" onclick="$('#{{name}}_create').slideToggle(500);return false;">Create Folder</a>
+				<a href="#" onclick="$('#{{fn_name}}_create').slideToggle(500);return false;">Create Folder</a>
 			</td><td>
-				<img id="img{{name}}_create" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_create" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
-				<div id="{{name}}_create" style="display: none">
-					<input type="text" name="name" />
+				<div id="{{fn_name}}_create" style="display: none">
+					<input type="text" name="cname" />
 					<input type="submit" name="ca" value="Create" /><br/>
 				</div>
 			</td></tr>
@@ -110,12 +110,12 @@ window.onload = function() {
 			<!-- Rename File / Folder -->
 			<behavior type="AllowRename">
 			<tr><td class="opt_title">
-				<a href="#" onclick="$('#{{name}}_rename').toggle('slow');return false;">Rename this file or folder</a>
+				<a href="#" onclick="$('#{{fn_name}}_rename').toggle('slow');return false;">Rename this file or folder</a>
 			</td><td>
-				<img id="img{{name}}_rename" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_rename" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td>
-				<div id="{{name}}_rename" style="display: none">
-				<input type="text" name="name" value="{{filename}}" />
+				<div id="{{fn_name}}_rename" style="display: none">
+				<input type="text" name="rname" value="{{filename}}" />
 				<input type="submit" name="ca" value="Rename" /><br/>
 				</div>
 			</td></tr>
@@ -124,11 +124,11 @@ window.onload = function() {
 			<!-- Additional Settings -->
 			<behavior type="AllowEdit">
 			<tr><td>
-				<a href="#" onclick="$('#{{name}}_add').slideToggle(500);return false;">Additional Settings</a>
+				<a href="#" onclick="$('#{{fn_name}}_add').slideToggle(500);return false;">Additional Settings</a>
 			</td><td>
-				<img id="img{{name}}_add" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_add" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
-				<div id="{{name}}_add" style="display: none">
+				<div id="{{fn_name}}_add" style="display: none">
 				<addopts>
 					<tr><td>{{text}}</td><td>{{field}}</td></tr>
 				</addopts>
@@ -154,10 +154,10 @@ window.onload = function() {
 							<input type="checkbox" id="sel_{{type}}_{{index}}"
 							name="sels[]" value="{{fipath}}"
 							onclick="toggleAny(['sel_files_', 'sel_folders_'],
-							'{{name}}_mass_options');" />
+							'{{fn_name}}_mass_options');" />
 						</td>
 					</check>
-					<td><a href="{{target}}?editor={{fn_name}}&amp;amp;cf={{cf}}{{filename}}/">{{filename}}</a>
+					<td><a href="{{target}}?editor={{fn_name}}&amp;amp;cf={{cf}}/{{filename}}">{{filename}}</a>
 					</td></tr>
 				</folder>
 			</table>
@@ -175,7 +175,7 @@ window.onload = function() {
 						<input type="checkbox" id="sel_{{type}}_{{index}}"
 						name="sels[]" value="{{fipath}}"
 						onclick="toggleAny(['sel_files_', 'sel_folders_'],
-						'{{name}}_mass_options');" />
+						'{{fn_name}}_mass_options');" />
 					</td>
 				</check>
 				<td><a href="{{target}}?editor={{fn_name}}&ampamp;cf={{cf}}/{{filename}}">{{filename}}</a></td>

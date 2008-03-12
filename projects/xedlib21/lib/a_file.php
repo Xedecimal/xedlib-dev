@@ -241,9 +241,9 @@ class FileManager
 		{
 			if (!$this->Behavior->AllowRename) return;
 			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
-			$name = GetVar('name');
+			$name = GetVar('rname');
 			$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
-			$f->Rename($fi, $name);
+			$f->Rename(&$fi, $name);
 			$this->cf = substr($fi->path, strlen($this->Root)).'/';
 			if (!empty($this->Behavior->Watcher))
 				RunCallbacks($this->Behavior->Watcher, FM_ACTION_RENAME,
@@ -269,7 +269,7 @@ class FileManager
 		else if ($action == 'Create')
 		{
 			if (!$this->Behavior->AllowCreateDir) return;
-			$p = $this->Root.$this->cf.GetVar("name");
+			$p = $this->Root.$this->cf.GetVar("cname");
 			mkdir($p);
 			chmod($p, 0755);
 			FilterDefault::UpdateMTime($p);
@@ -640,7 +640,7 @@ class FileManager
 
 		$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 
-		$t->Set('name', $this->Name);
+		$t->Set('fn_name', $this->Name);
 
 		//if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
 
@@ -1574,7 +1574,7 @@ class FilterDefault
 	 * @param FileInfo $fi Source file information.
 	 * @param FileInfo $newname Destination file information.
 	 */
-	function Rename($fi, $newname)
+	function Rename(&$fi, $newname)
 	{
 		$pinfo = pathinfo($newname);
 		$finfo = "{$fi->dir}/.{$fi->filename}";
@@ -1583,6 +1583,7 @@ class FilterDefault
 			rename($finfo, $ddir.'/.'.$pinfo['basename']);
 		rename($fi->path, $ddir.'/'.$pinfo['basename']);
 		$fi->path = $ddir.'/'.$newname;
+		$fi->filename = $newname;
 		$this->UpdateMTime($ddir.'/'.$pinfo['basename']);
 	}
 
