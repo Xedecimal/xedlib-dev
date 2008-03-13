@@ -1018,6 +1018,8 @@ EOF;
 		while ($file = readdir($dp))
 		{
 			if ($file[0] == '.') continue;
+			//TODO: Should handle this on a filter level.
+			if (substr($file, 0, 2) == 't_') continue;
 			$newfi = new FileInfo($this->Root.$this->cf.$file, $this->DefaultFilter);
 			if (!isset($newfi->info['index'])) $newfi->info['index'] = 0;
 			if (!$newfi->show) continue;
