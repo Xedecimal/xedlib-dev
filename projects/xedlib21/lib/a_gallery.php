@@ -99,6 +99,7 @@ class Gallery
 			$d['icon'] = $fi->icon;
 			if (!empty($d['icon']))
 				$d['icon'] = $vp->ParseVars($this->IconContent, $d);
+			else $d['icon'] = '';
 
 			$out .= $vp->ParseVars($guts, $d);
 		}
