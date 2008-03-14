@@ -1781,7 +1781,7 @@ class FilterGallery extends FilterDefault
 	 * @param FileInfo $fi Source file information.
 	 * @param string $newname Destination filename.
 	 */
-	function Rename($fi, $newname)
+	function Rename(&$fi, $newname)
 	{
 		parent::Rename($fi, $newname);
 		$thumb = $fi->dir.'/t_'.$fi->filename;
