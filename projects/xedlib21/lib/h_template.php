@@ -549,7 +549,7 @@ class Template
 		{
 			echo "XML Error: " . xml_error_string(xml_get_error_code($this->parser)) .
 			" on line " . xml_get_current_line_number($this->parser) .
-			" of file " . $template . "\n";
+			" of file " . $this->template . "\n";
 		}
 		xml_parser_free($this->parser);
 		array_pop($this->data['template.parsers']);
