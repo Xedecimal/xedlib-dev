@@ -122,7 +122,7 @@ class Gallery
 			$d['name'] = $this->GetCaption($fi);
 			$d['path'] = GetVar('galcf', '');
 			$d['icon'] = $fi->icon;
-			$d['desc'] = @$fi->info['title'];
+			$d['desc'] = $this->GetCaption($fi);
 
 			$out .= $vp->ParseVars($guts, $d);
 		}
@@ -170,7 +170,7 @@ EOF;
 		}
 		$body .= '</td>';
 	}
-  
+
 	function TagImage($guts)
 	{
 		global $me;
@@ -309,7 +309,7 @@ EOF;
 		if ($this->InfoCaption
 			&& !empty($file->info['title'])
 			&& $this->Display->Captions == CAPTION_TITLE)
-			return $file->info['title'];
+			return stripslashes($file->info['title']);
 		else if ($this->Display->Captions == CAPTION_FILE)
 			return str_replace('_', ' ', substr($file->filename, 0, strrpos($file->filename, '.')));
 		else if ($this->Display->Captions != CAPTION_TITLE)
