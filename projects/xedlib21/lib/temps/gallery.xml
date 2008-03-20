@@ -48,10 +48,10 @@ document.onmousedown = click;
 {
 	float: left;
 	text-align: center;
-	height: {{thumb_height}}px;
+	/*height: {{thumb_height}}px;*/
 	width: {{thumb_width}}px;
-	overflow: auto;
-	margin: 10px;
+	/*overflow: auto;*/
+	margin: 5px;
 }
 
 .gallery table
@@ -110,7 +110,7 @@ td { padding: 0; }
 	</td></tr><tr><td>
 		<file>
 			<div class="float">
-			<a href="{{me}}?galcf={{path}}&amp;view={{idx}}#fullview">
+			<a href="{{fullname}}" rel="shadowbox[main]">
 			<img src="{{icon}}" title="{{name}}" alt="{{name}}" /></a>
 			<p style="text-align: center;">{{name}}</p>
 			</div>

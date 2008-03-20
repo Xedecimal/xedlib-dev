@@ -117,6 +117,7 @@ class Gallery
 			$this->f->GetInfo($fi);
 			if (!$fi->show) continue;
 
+			$d['fullname'] = $fi->path;
 			$d['idx'] = $ix;
 			$d['name'] = $this->GetCaption($fi);
 			$d['path'] = GetVar('galcf', '');
@@ -169,7 +170,7 @@ EOF;
 		}
 		$body .= '</td>';
 	}
-
+  
 	function TagImage($guts)
 	{
 		global $me;
@@ -285,8 +286,8 @@ EOF;
 		//Gallery settings
 		$fig = new FileInfo($this->root);
 		FileInfo::GetFilter($fig, $this->root, array('Gallery'));
-		$t->Set('thumb_width', $fig->info['thumb_width']+10);
-		$t->Set('thumb_height', $fig->info['thumb_height']+50);
+		$t->Set('file_thumb_width', $fig->info['thumb_width']+10);
+		$t->Set('file_thumb_height', $fig->info['thumb_height']+50);
 
 		$fi = new FileInfo($this->root.$path);
 		if ($path != $this->root) $t->Set('name', $this->GetCaption($fi));

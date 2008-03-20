@@ -1712,7 +1712,7 @@ class EditorText
 		$frmRet->AddHidden('ca', 'update');
 
 		$frmRet->AddInput(new FormInput(null, 'area', 'body',
-			stripslashes(file_get_contents($this->item)), 'rows="30"'));
+			stripslashes(@file_get_contents($this->item)), 'rows="30"'));
 		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
 		return $frmRet->Get('method="post"');
