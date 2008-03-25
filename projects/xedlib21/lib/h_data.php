@@ -652,15 +652,15 @@ class DataSet
 	 * @param array $values eg: array('col1' => 'val1')
 	 * @return string Proper set.
 	 */
-	function GetSetString($values)
+	function GetSetString($values, $start = ' SET')
 	{
-		$ret = null;
+		$ret = $start;
 		if (!empty($values))
 		{
 			$x = 0;
 			foreach ($values as $key => $val)
 			{
-				if (empty($val)) continue;
+				if (!isset($val)) continue;
 				if ($x++ > 0) $ret .= ", ";
 				if (is_array($val))
 				{
@@ -972,8 +972,10 @@ class DataSet
 	 */
 	function Update($match, $values)
 	{
-		$query = "UPDATE {$this->table} SET ".$this->GetSetString($values);
-		$this->database->Query($query.$this->WhereClause($match));
+		$query = "UPDATE {$this->table}".
+			$this->GetSetString($values).
+			$this->WhereClause($match);
+		$this->database->Query($query);
 	}
 
 	/**
