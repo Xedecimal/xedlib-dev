@@ -124,6 +124,7 @@ class FileManager
 
 		$this->Behavior = new FileManagerBehavior();
 		$this->View = new FileManagerView();
+		$this->Template = dirname(__FILE__).'/temps/file.xml';
 
 		if (!file_exists($root))
 			Error("FileManager::FileManager(): Root ($root) directory does
@@ -421,6 +422,7 @@ class FileManager
 
 		$ret = '';
 		$ix = 0;
+		if (!empty($this->files['folders']))
 		foreach ($this->files['folders'] as $f)
 		{
 			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
@@ -450,10 +452,15 @@ class FileManager
 		$ret = '';
 		$ix = 0;
 
+		if (!empty($this->files['files']))
 		foreach ($this->files['files'] as $f)
 		{
 			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
 			if (!$f->show) continue;
+			if ($this->Behavior->UseInfo)
+				$this->vars['url'] = "{{target}}?editor={{fn_name}}&amp;amp;cf={{cf}}{{filename}}";
+			else
+				$this->vars['url'] = $this->Root."{{cf}}{{filename}}";
 			$this->vars['filename'] = $f->filename;
 			$this->vars['fipath'] = $f->path;
 			$this->vars['type'] = 'files';
@@ -646,7 +653,7 @@ class FileManager
 
 		$t->Set('options', $this->GetOptions($fi, $target, $action));
 
-		return $t->Get(dirname(__FILE__).'/temps/file.xml');
+		return $t->Get($this->Template);
 	}
 
 	/**
