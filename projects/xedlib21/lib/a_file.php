@@ -244,7 +244,7 @@ class FileManager
 			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
 			$name = GetVar('rname');
 			$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
-			$f->Rename(&$fi, $name);
+			$f->Rename($fi, $name);
 			$this->cf = substr($fi->path, strlen($this->Root)).'/';
 			if (!empty($this->Behavior->Watcher))
 				RunCallbacks($this->Behavior->Watcher, FM_ACTION_RENAME,

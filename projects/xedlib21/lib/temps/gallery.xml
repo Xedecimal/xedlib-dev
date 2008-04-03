@@ -101,7 +101,7 @@ td { padding: 0; }
 	<tr><td>
 		<folder>
 			<div class="float">
-			<a href="{{me}}?galcf={{path}}/{{name}}">
+			<a href="{{me}}?editor={{editor}}&amp;amp;galcf={{path}}/{{name}}">
 			{{icon}}
 			<p style="text-align: center;">{{name}}</p>
 			</a>
