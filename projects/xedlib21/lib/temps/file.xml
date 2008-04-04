@@ -60,15 +60,12 @@ window.onload = function() {
 				<img id="img{{fn_name}}_search" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
 				<div id="{{fn_name}}_search" style="display: none">
-					<form action="{{target}}" method="post">
-						<input type="hidden" name="editor" value="{{fn_name}}" />
-						<input type="hidden" name="ca" value="search" />
-						<input type="hidden" name="cf" value="{{cf}}"/>
-						<table>
-						<tr><td>Search for</td><td><input type="text" name="cq" /></td></tr>
-						<tr><td></td><td><input type="submit" value="Search" /></td></tr>
-						</table>
-					</form>
+					<input type="hidden" name="editor" value="{{fn_name}}" />
+					<input type="hidden" name="cf" value="{{cf}}"/>
+					<table>
+					<tr><td>Search for</td><td><input type="text" name="cq" /></td></tr>
+					<tr><td></td><td><input type="submit" name="ca" value="Search" /></td></tr>
+					</table>
 				</div>
 			</td></tr>
 			</search>

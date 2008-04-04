@@ -458,7 +458,7 @@ class FileManager
 			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
 			if (!$f->show) continue;
 			if ($this->Behavior->UseInfo)
-				$this->vars['url'] = "{{target}}?editor={{fn_name}}&amp;amp;cf={{cf}}{{filename}}";
+				$this->vars['url'] = "{{target}}?editor={{fn_name}}&amp;cf={{cf}}{$f->filename}";
 			else
 				$this->vars['url'] = $this->Root."{{cf}}{{filename}}";
 			$this->vars['filename'] = $f->filename;

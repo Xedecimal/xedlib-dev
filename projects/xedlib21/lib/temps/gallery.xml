@@ -46,15 +46,21 @@ document.onmousedown = click;
 <style type="text/css">
 .float
 {
-	float: left;
 	text-align: center;
-	/*height: {{thumb_height}}px;*/
-	width: {{thumb_width}}px;
-	/*overflow: auto;*/
-	margin: 5px;
+	display: inline;
 }
 
-.gallery table
+.item
+{
+	padding: 5px;
+	display: table-cell;
+	display: inline-block;
+	width: {{file_thumb_width}}px;
+	vertical-align: top;
+	text-align: center;
+}
+
+.gallery
 {
 	border-collapse: collapse;
 }
@@ -98,21 +104,28 @@ td { padding: 0; }
 </if>
 
 <table class="gallery">
+	<tr><td><h1>Folders</h1></td></tr>
 	<tr><td>
 		<folder>
 			<div class="float">
+			<span class="item">
 			<a href="{{me}}?editor={{editor}}&amp;amp;galcf={{path}}/{{name}}">
 			{{icon}}
 			<p style="text-align: center;">{{name}}</p>
 			</a>
+			</span>
 			</div>
 		</folder>
-	</td></tr><tr><td>
+	</td></tr><tr><td><h1>Files</h1></td></tr><tr><td valign="top">
 		<file>
 			<div class="float">
+			<span class="iewrap">
+			<span class="item">
 			<a href="{{fullname}}" rel="shadowbox[main]">
 			<img src="{{icon}}" title="{{name}}" alt="{{name}}" /></a>
-			<p style="text-align: center;">{{name}}</p>
+			<br/>{{name}}
+			</span>
+			</span>
 			</div>
 		</file>
 	</td></tr>
