@@ -119,12 +119,10 @@ td { padding: 0; }
 	</td></tr><tr><td><h1>Files</h1></td></tr><tr><td valign="top">
 		<file>
 			<div class="float">
-			<span class="iewrap">
 			<span class="item">
 			<a href="{{fullname}}" rel="shadowbox[main]">
 			<img src="{{icon}}" title="{{name}}" alt="{{name}}" /></a>
 			<br/>{{name}}
-			</span>
 			</span>
 			</div>
 		</file>
