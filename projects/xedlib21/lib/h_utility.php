@@ -21,6 +21,7 @@ if (!isset($__checked) && substr(phpversion(), 0, 1) != '5')
 {
 	echo "Library has not been synched, doing so now...<br/>\n";
 	$files = glob(dirname(__FILE__).'/*.php');
+	$files = array_merge($files, glob(dirname(__FILE__).'/3rd/*.php'));
 	foreach ($files as $file)
 	{
 		echo "Reformatting: {$file}<br/>\n";

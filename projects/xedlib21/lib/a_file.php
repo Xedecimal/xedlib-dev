@@ -1295,7 +1295,7 @@ class FileManagerBehavior
 	 */
 	function MassAvailable()
 	{
-		return $this->AllowMove || $this->AllowDelete;
+		return $this->AllowMove || $this->AllowDelete || $this->AllowDownloadZip;
 	}
 
 	/**
@@ -1305,6 +1305,8 @@ class FileManagerBehavior
 	{
 		$this->AllowCreateDir =
 		$this->AllowDelete =
+		$this->AllowMove =
+		$this->AllowDownloadZip =
 		$this->AllowEdit =
 		$this->AllowRename =
 		$this->AllowSort =

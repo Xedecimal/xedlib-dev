@@ -45,10 +45,10 @@ window.onload = function() {
 			<tr><td>
 				<div id="{{fn_name}}_mass_options">
 				<p>With selected files...</p>
-				<input type="submit" name="ca" value="Move" /> to {{dirsel}}<br/>
-				<input type="submit" name="ca" value="Delete"
-					onclick="return confirm('Are you sure you wish to delete these files?')" />
-				<input type="submit" name="ca" value="Download Selected" />
+				<behavior type="AllowMove"><input type="submit" name="ca" value="Move" /> to {{dirsel}}<br/></behavior>
+				<behavior type="AllowDelete"><input type="submit" name="ca" value="Delete"
+					onclick="return confirm('Are you sure you wish to delete these files?')" /></behavior>
+				<behavior type="AllowDownloadZip"><input type="submit" name="ca" value="Download Selected" /></behavior>
 				</div>
 			</td></tr>
 
@@ -143,6 +143,15 @@ window.onload = function() {
 		<folders>
 		<box title="Folders">
 			<table>
+				<tr>
+					<td>&nbsp;</td>
+					<td><check><input type="checkbox" id="sel_folders"
+						onclick="$('input').filter('[id^=sel_folders]').
+						attr('checked', this.checked ? 'checked' : '');
+						toggleAny(['sel_files_', 'sel_folders_'],
+						'{{fn_name}}_mass_options');" /></check></td>
+					<td><label for="sel_folders">Select All</label></td>
+				</tr>
 				<folder>
 					<tr>
 					<td><icon><img src="{{icon}}" /></icon></td>
@@ -151,7 +160,7 @@ window.onload = function() {
 							<input type="checkbox" id="sel_{{type}}_{{index}}"
 							name="sels[]" value="{{fipath}}"
 							onclick="toggleAny(['sel_files_', 'sel_folders_'],
-							'{{fn_name}}_mass_options');" />
+								'{{fn_name}}_mass_options');" />
 						</td>
 					</check>
 					<td><a href="{{target}}?editor={{fn_name}}&amp;amp;cf={{cf}}/{{filename}}">{{filename}}</a>
@@ -164,6 +173,15 @@ window.onload = function() {
 		<files>
 		<box title="Files">
 			<table>
+				<tr>
+					<td>&nbsp;</td>
+					<td><check><input type="checkbox" id="sel_files"
+						onclick="$('input').filter('[id^=sel_files]').
+						attr('checked', this.checked ? 'checked' : '');
+						toggleAny(['sel_files_', 'sel_folders_'],
+						'{{fn_name}}_mass_options');" /></check></td>
+					<td><label for="sel_files">Select All</label></td>
+				</tr>
 				<file>
 				<tr>
 				<td><icon><img src="{{icon}}" /></icon></td>

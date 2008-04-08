@@ -115,7 +115,7 @@ class Gallery
 		foreach ($this->files['files'] as $ix => $fi)
 		{
 			$this->f->GetInfo($fi);
-			if (!$fi->show) continue;
+			if (!$fi->show || empty($fi->icon)) continue;
 
 			$d['fullname'] = $fi->path;
 			$d['idx'] = $ix;
@@ -128,7 +128,7 @@ class Gallery
 		}
 		return $out;
 
-		if ($this->Behavior->PageCount != null)
+		/*if ($this->Behavior->PageCount != null)
 		{
 			$tot = GetFlatPage($files['files'], GetVar('cp'), $this->Behavior->PageCount);
 		}
@@ -168,7 +168,7 @@ EOF;
 				}
 			}
 		}
-		$body .= '</td>';
+		$body .= '</td>';*/
 	}
 
 	function TagImage($guts)
