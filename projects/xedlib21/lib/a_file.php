@@ -873,6 +873,7 @@ EOF;
 	 * @param string $type files or dirs
 	 * @param string $title Header
 	 * @return string
+	 * @depricated This is no longer used.
 	 */
 	function GetFiles($target, $type)
 	{
