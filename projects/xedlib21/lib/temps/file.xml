@@ -143,15 +143,15 @@ window.onload = function() {
 		<folders>
 		<box title="Folders">
 			<table>
-				<tr>
+				<check><tr>
 					<td>&nbsp;</td>
-					<td><check><input type="checkbox" id="sel_folders"
+					<td><input type="checkbox" id="sel_folders"
 						onclick="$('input').filter('[id^=sel_folders]').
 						attr('checked', this.checked ? 'checked' : '');
 						toggleAny(['sel_files_', 'sel_folders_'],
-						'{{fn_name}}_mass_options');" /></check></td>
+						'{{fn_name}}_mass_options');" /></td>
 					<td><label for="sel_folders">Select All</label></td>
-				</tr>
+				</tr></check>
 				<folder>
 					<tr>
 					<td><icon><img src="{{icon}}" /></icon></td>
@@ -173,15 +173,15 @@ window.onload = function() {
 		<files>
 		<box title="Files">
 			<table>
-				<tr>
+				<check><tr>
 					<td>&nbsp;</td>
-					<td><check><input type="checkbox" id="sel_files"
+					<td><input type="checkbox" id="sel_files"
 						onclick="$('input').filter('[id^=sel_files]').
 						attr('checked', this.checked ? 'checked' : '');
 						toggleAny(['sel_files_', 'sel_folders_'],
-						'{{fn_name}}_mass_options');" /></check></td>
+						'{{fn_name}}_mass_options');" /></td>
 					<td><label for="sel_files">Select All</label></td>
-				</tr>
+				</tr></check>
 				<file>
 				<tr>
 				<td><icon><img src="{{icon}}" /></icon></td>

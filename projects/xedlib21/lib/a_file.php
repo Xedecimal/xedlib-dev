@@ -1196,6 +1196,13 @@ class FileManagerBehavior
 	public $AllowMove = false;
 
 	/**
+	 * Allow downloading all packaged files as a zip file.
+	 *
+	 * @var bool
+	 */
+	public $AllowDownloadZip = false;
+
+	/**
 	 * Whether users are allowed to change directory filters.
 	 *
 	 * @var bool
