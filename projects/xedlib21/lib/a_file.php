@@ -149,50 +149,43 @@ class FileManager
 	{
 		//Don't allow renaming the root or the file manager will throw errors ever after.
 		if (empty($this->cf)) $this->Behavior->AllowRename = false;
+
 		//Actions
+
 		if ($action == 'upload' && $this->Behavior->AllowUpload)
 		{
+			$fi = new FileInfo($this->Root.$this->cf);
+			$filter = FileInfo::GetFilter($fi, $this->Root, $this->filters);
+
+			// Completed chunked upload.
 			if (GetVar('cm') == 'done')
 			{
-				$cu = GetVar('cu');
+				$target = GetVar('cu');
+				$ftarget = $this->Root.$this->cf.$target;
+				$count = GetVar('count'); // Amount of peices
 
-				$files = glob($this->Root.$this->cf.'.*');
-				natsort($files);
-
-				foreach ($files as $file)
+				if (file_exists($ftarget)) unlink($ftarget);
+				$fpt = fopen($ftarget, 'ab');
+				for ($ix = 0; $ix < $count+1; $ix++)
 				{
-					if (preg_match('#/\.\[([0-9]*)\]_'.$cu.'#', $file, $m))
-					{
-						$fp = fopen($this->Root.$this->cf.$cu, 'ab');
-						fwrite($fp, file_get_contents($file));
-						fclose($fp);
-						$fi = new FileInfo($file);
-						$f->Delete($fi, false);
-					}
+					$src = $this->Root.$this->cf.".[$ix]_".$target;
+					fwrite($fpt, file_get_contents($src));
+					unlink($src);
 				}
+				fclose($fpt);
+
+				$filter->Upload($target, $fi);
 			}
-			ini_set('upload_max_filesize', ini_get('post_max_size'));
 
-			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
-
-			$files = GetVar('cu');
-
-			if (!empty($files))
-			foreach ($files['name'] as $ix => $file)
+			// Actual upload, full or partial.
+			if (!empty($_FILES['cu']))
+			foreach ($_FILES['cu']['name'] as $ix => $name)
 			{
-				$newup = array(
-					'name' => $files['name'][$ix],
-					'type' => $files['type'][$ix],
-					'tmp_name' => $files['tmp_name'][$ix]
-				);
+				$tname = $_FILES['cu']['tmp_name'][$ix];
+				move_uploaded_file($tname, $this->Root.$this->cf.$name);
 
-				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
-
-				$f->Upload($newup, $fi);
-
-				if (!empty($this->Behavior->Watcher))
-					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
-					$this->Root.$this->cf.$newup['name']);
+				if (!preg_match('#^\.\[[0-9]+\]_.*#', $name))
+					$filter->Upload($name, $fi);
 			}
 		}
 		else if ($action == "Save")
@@ -1574,9 +1567,7 @@ class FilterDefault
 	 */
 	function Upload($file, $target)
 	{
-		$dest = "{$target->path}{$file['name']}";
-		move_uploaded_file($file['tmp_name'], $dest);
-		$this->UpdateMTime($dest);
+		$this->UpdateMTime($target->path.$file);
 	}
 
 	/**
@@ -1820,11 +1811,8 @@ class FilterGallery extends FilterDefault
 	function Upload($file, $target)
 	{
 		parent::Upload($file, $target);
-
-		$tdest = 't_'.substr(basename($file['name']), 0,
-			strrpos(basename($file['name']), '.'));
-
-		$this->ResizeFile($target->path.$file['name'], $target->path.$tdest,
+		$tdest = 't_'.substr($file, 0, strrpos($file, '.'));
+		$this->ResizeFile($target->path.$file, $target->path.$tdest,
 			$target->info['thumb_width'], $target->info['thumb_height']);
 	}
 

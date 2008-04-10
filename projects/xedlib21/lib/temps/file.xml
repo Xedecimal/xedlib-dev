@@ -84,7 +84,7 @@ window.onload = function() {
 						<param name="host" value="http://{{host}}" />
 						<param name="pathToScript" value="{{target}}?editor={{fn_name}}&amp;amp;PHPSESSID={{sid}}" />
 						<param name="path" value="{{cf}}" />
-						<param name="uploadMax" value="2044304" />
+						<param name="uploadMax" value="500000" />
 					</applet>
 				</div>
 			</td></tr>
