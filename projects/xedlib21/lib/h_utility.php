@@ -1019,4 +1019,18 @@ function dir_get($path = '.')
 	return $ret;
 }
 
+function Comb($path)
+{
+	if (is_file($path)) return array($path);
+	$ret = array();
+	$dp = opendir($path);
+	while ($f = readdir($dp))
+	{
+		if ($f[0] == '.') continue;
+		if (is_file($path.'/'.$f)) $ret[] = $path.'/'.$f;
+		else $ret = array_merge($ret, Comb($path.'/'.$f));
+	}
+	return $ret;
+}
+
 ?>

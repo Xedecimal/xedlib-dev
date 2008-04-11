@@ -371,6 +371,14 @@ class CodeReader
 	{
 	}
 
+	function PopValue($val)
+	{
+		$this->current->value = str_replace('"', '',
+			str_replace("'", '', $val));
+		$this->current = array_pop($this->tree);
+		$this->getting = CODE_GET_NONE;
+	}
+
 	/**
 	 * Processes a constant, mainly defines.
 	 * @param mixed $tok Token to be evaluated.
@@ -378,12 +386,7 @@ class CodeReader
 	function ProcConstant($tok)
 	{
 		if ($this->getting == CODE_GET_DEFINE_VALUE)
-		{
-			$this->current->value = str_replace('"', '',
-				str_replace("'", '', $tok[1]));
-			$this->current = array_pop($this->tree);
-			$this->getting = CODE_GET_NONE;
-		}
+			$this->PopValue($tok[1]);
 		if ($this->getting == CODE_GET_DEFINE_NAME)
 		{
 			array_push($this->tree, $this->current);
@@ -676,12 +679,7 @@ class CodeReader
 	function ProcNumber($tok)
 	{
 		if ($this->getting == CODE_GET_DEFINE_VALUE)
-		{
-			$this->current->value = str_replace('"', '',
-				str_replace("'", '', $tok[1]));
-			$this->current = array_pop($this->tree);
-			$this->getting = CODE_GET_NONE;
-		}
+			$this->PopValue($tok[1]);
 	}
 
 	/**

@@ -345,7 +345,7 @@ class Template
 		}
 
 		if ($tag == 'AMP') return;
-		else if ($tag == 'BOX')
+		else if ($tag == 'BOX' || $tag == 'XFORM')
 		{
 			$objc = &$this->GetCurrentObject();
 			$objd = &$this->GetDestinationObject();
@@ -370,13 +370,6 @@ class Template
 			if (!isset($objc)) Error("Current object doesn't exist.");
 			if (!isset($objd)) Error("Destination object doesn't exist.");
 			$objd->out .= $objc->Get($this->data);
-			array_pop($this->objs);
-		}
-		else if ($tag == 'XFORM')
-		{
-			$objc = &$this->GetCurrentObject();
-			$objd = &$this->GetDestinationObject();
-			$objd->out .= $objc->Get();
 			array_pop($this->objs);
 		}
 		else

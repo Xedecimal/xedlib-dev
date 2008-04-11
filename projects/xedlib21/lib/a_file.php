@@ -313,7 +313,11 @@ class FileManager
 		{
 			require_once('3rd/zipfile.php');
 			$zip = new zipfile();
-			$zip->AddFiles(GetVar('sels'));
+			$sels = GetVar('sels');
+			$total = array();
+			foreach ($sels as $s) $total = array_merge($total, Comb($s));
+
+			$zip->AddFiles($total);
 
 			$fname = pathinfo($this->Root.$this->cf);
 			$fname = $fname['basename'].'.zip';
@@ -343,16 +347,6 @@ class FileManager
 	 */
 	function TagHeader($guts, $attribs)
 	{
-		//$ret = null;
-		//$vp = new VarParser();
-
-		//$fi = new FileInfo($this->Root.$this->cf);
-		//$this->vars['path'] = $this->GetPath($this->vars['target'], $fi);
-
-		//if (is_dir($fi->path) && $this->Behavior->AllowSearch)
-		//	$ret .= $vp->ParseVars($this->SearchContent, $this->vars);
-		//if (is_file($fi->path))
-		//	$ret .= $vp->ParseVars($this->DownloadContent, $this->vars);
 		return $guts;
 	}
 
@@ -644,156 +638,9 @@ class FileManager
 
 		//if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
 
-		$t->Set('options', $this->GetOptions($fi, $target, $action));
+		//$t->Set('options', $this->GetOptions($fi, $target, $action));
 
 		return $t->Get($this->Template);
-	}
-
-	/**
-	 * Returns all specific and mass options for the current location.
-	 *
-	 * @param FileInfo $fi
-	 * @param string $target
-	 * @param string $action
-	 * @return string
-	 */
-	function GetOptions($fi, $target, $action)
-	{
-		$ret = null;
-		if ($this->Behavior->MassAvailable())
-		{
-			/*$ret .= "<div id=\"{$this->Name}_mass_options\">";
-			$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->Name}_mass_options').style.display = 'none';</script>";
-			$ret .= "<p>With selected files...</p>\n";
-			$ret .= '<input type="submit" name="ca" value="Move" /> to '.$this->GetDirectorySelect('ct')."<br/>\n";
-			$ret .= '<input type="submit" name="ca" value="Delete" onclick="return confirm(\'Are you sure you wish to delete'.
-				" these files?')\" />";
-			$ret .= '<input type="submit" name="ca" value="Download Selected" />';
-			$ret .= "</div></form>\n";*/
-		}
-		if ($this->Behavior->Available())
-		{
-			global $me;
-
-			$ret .= "<div id=\"{$this->Name}_options\">";
-			if ($this->Behavior->HideOptions)
-				$ret .= "<script type=\"text/javascript\">document.getElementById('{$this->Name}_options').style.display = 'none';</script>";
-
-			if ($this->Behavior->AllowUpload && is_dir($fi->path))
-			{
-				ini_set('max_input_time', 0);
-
-				if (!ini_get('file_uploads')) Error("File uploads are not
-					enabled on this server, you should disable this ability in
-					the FileManager::Behavior properties.");
-
-				$maxsize = GetSizeString(min(GetStringSize(ini_get('post_max_size')),
-							   GetStringSize(ini_get('upload_max_filesize'))));
-
-				$pname = GetRelativePath(dirname(__FILE__));
-				$sid = @$_COOKIE['PHPSESSID'];
-
-				//Java Uploader
-
-				$loc = GetRelativePath(dirname(__FILE__));
-
-				$sid = GetVar('PHPSESSID');
-
-				$out = <<<EOF
-		<applet codebase="{$loc}/java" code="uploadApplet.class" archive="UploadApplet.jar,commons-codec-1.3.jar,commons-httpclient-3.0.1.jar,commons-logging-1.0.4.jar" width="500" height="100">
-			<param name="host" value="http://{$_SERVER['HTTP_HOST']}" />
-			<param name="pathToScript" value="{$me}?editor={$this->Name}&amp;PHPSESSID={$sid}" />
-			<param name="path" value='{$this->cf}' />
-			<param name="uploadMax" value="5242880" />
-		</applet>
-EOF;
-				$ret .= GetBox('box_upload', $this->View->TitleUpload,
-					$out, 'template_box.html');
-			}
-
-			if ($this->Behavior->AllowCreateDir && is_dir($fi->path))
-			{
-				$out = <<<EOF
-<form action="{$target}" method="post">
-	<input type="hidden" name="editor" value="{$this->Name}" />
-	<input type="hidden" name="ca" value="createdir" />
-	<input type="hidden" name="cf" value="{$this->cf}" />
-	<input type="text" name="name" />
-	<input type="submit" value="Create" /><br/>
-	<small>Type folder name then click "create"</small>
-</form>
-EOF;
-				$ret .= GetBox('box_createdir', $this->View->TitleCreateFolder,
-					$out, 'template_box.html');
-			}
-
-			if ($this->Behavior->AllowRename && !empty($this->cf))
-			{
-				$form = new Form('rename');
-				$form->LabelStart = $form->LabelEnd = $form->FieldStart =
-				$form->FieldEnd = '';
-				$form->AddHidden('editor', $this->Name);
-				$form->AddHidden('ca', 'rename');
-				$form->AddHidden('ci', $fi->path);
-				$form->AddHidden('cf', $this->cf);
-				$form->AddInput(new FormInput('Current Name',
-					'text', 'name', $fi->filename, null));
-				if (is_file($this->Root.$this->cf))
-				$form->AddInput('<small>Don\'t forget to include
-					the correct file extension with the name (i.e. - .jpg, .zip,
-					.doc, etc.)</small>');
-				$form->AddInput(new FormInput('<br/>', 'submit', 'butSubmit', 'Rename'));
-				global $me;
-				$out = $form->Get('method="post" action="'.$me.'"');
-				$ret .= GetBox('box_rename', $this->View->RenameTitle, $out,
-					'template_box.html');
-			}
-
-			if ($this->Behavior->AllowEdit && !empty($this->cf))
-			{
-				//Filter options.
-				$form = new Form('formUpdate', null, false);
-				$form->AddHidden('editor', $this->Name);
-				$form->AddHidden('ca', 'update_info');
-				$form->AddHidden('cf', $this->cf);
-
-				if (isset($this->DefaultOptionHandler))
-				{
-					$handler = $this->DefaultOptionHandler;
-					$def = $handler($fi);
-				}
-				else $def = null;
-
-				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters, $fi->info);
-
-				if ($this->Behavior->AllowSetType && count($this->filters) > 1 && is_dir($fi->path))
-				{
-					$form->AddInput(new FormInput('Change Type', 'select',
-						'info[type]',
-						ArrayToSelOptions($this->filters, $f->Name,
-						false)));
-				}
-
-				$options = $f->GetOptions($this, $fi, $def);
-				$options = array_merge($options, $this->Behavior->GetOptions($fi));
-
-				if (!empty($options))
-				{
-					foreach ($options as $col => $field)
-					{
-						if (is_string($field)) $form->AddInput($field);
-						else $form->AddInput($field);
-					}
-					if ($this->Behavior->UpdateButton)
-						$form->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
-
-					$ret .= GetBox('box_settings', $this->View->TextAdditional,
-						$form->Get('method="post" enctype="multipart/form-data" action="'.$target.'"'), 'template_box.html');
-				}
-			}
-			$ret .= "</div>";
-		}
-		return $ret;
 	}
 
 	/**
@@ -830,39 +677,6 @@ EOF;
 			$ret .= $this->GetDirectorySelectRecurse($path.$file.'/', false);
 		}
 		closedir($dp);
-		return $ret;
-	}
-
-	/**
-	 * Returns a linked breadcrumb trail of the path back to the root of this
-	 * file manager.
-	 *
-	 * @param string $target Target filename of all links.
-	 * @param FileInfo $fi File / Folder to create path out of.
-	 * @return string
-	 * @see Get
-	 * @see GetHeader
-	 */
-	function GetPath($target, $fi)
-	{
-		$items = explode('/', substr($fi->path, strlen($this->Root)));
-		$ret = null;
-		$cpath = '';
-
-		if (isset($this->cf))
-		{
-			$uri = URL($target, array('editor' => $this->Name));
-			$ret .= "<a href=\"{$uri}\">Home</a> ";
-		}
-
-		for ($ix = 0; $ix < count($items); $ix++)
-		{
-			if (strlen($items[$ix]) < 1) continue;
-			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
-			$uri = URL($target, array('editor' => $this->Name,
-				'cf' => $cpath));
-			$ret .= " &raquo; <a href=\"{$uri}\">{$items[$ix]}</a>";
-		}
 		return $ret;
 	}
 
@@ -1579,7 +1393,8 @@ class FilterDefault
 	}
 
 	/**
-	 * Called when a file is requested to be renamed.
+	 * This will rename the info file and update the virtual modified time
+	 * accordingly, as well as handle moving files.
 	 *
 	 * @param FileInfo $fi Source file information.
 	 * @param FileInfo $newname Destination file information.
@@ -1784,7 +1599,8 @@ class FilterGallery extends FilterDefault
 	}
 
 	/**
-	 * Called when a file is requested to be renamed.
+	 * This will update the thumbnail properly, after the parent filter
+	 * handles the move.
 	 *
 	 * @param FileInfo $fi Source file information.
 	 * @param string $newname Destination filename.
