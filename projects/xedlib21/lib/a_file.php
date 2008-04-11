@@ -297,6 +297,7 @@ class FileManager
 		{
 			$sels = GetVar('sels');
 			$ct = GetVar('ct');
+			if (!empty($sels))
 			foreach ($sels as $file)
 			{
 				$fi = new FileInfo($file, $this->DefaultFilter);
@@ -566,7 +567,7 @@ class FileManager
 			{
 				$sub = new FormInput(null, 'submit', 'ca', 'Save');
 				$this->vars['text'] = '';
-				$this->vars['field'] = $sub->Get($this->Name);
+				$this->vars['field'] = $sub->Get($this->Name, false);
 				$ret .= $vp->ParseVars($guts, $this->vars);
 			}
 
@@ -1525,7 +1526,12 @@ class FilterGallery extends FilterDefault
 			rmdir("timg");
 		}
 
-		if (is_dir($fi->path)) $this->UpdateThumbs($fi, $newinfo);
+		if (is_dir($fi->path) && (
+			$fi->info['thumb_width'] != $newinfo['thumb_width'] ||
+			$fi->info['thumb_height'] != $newinfo['thumb_height']))
+		{
+			$this->UpdateThumbs($fi, $newinfo);
+		}
 
 		if (is_file($fi->path)) unset(
 			$newinfo['thumb_width'],
@@ -1544,14 +1550,13 @@ class FilterGallery extends FilterDefault
 
 			$fir = new FileInfo($fi->path.'/'.$file);
 
-			if (is_dir($fi->path.$file))
+			if (is_dir($fi->path.'/'.$file))
 			{
 				$g = glob("$fir->path/._image.*");
 				if (!empty($g))
-				{
-					echo "Target: ".$fir->path.'/'.filenoext('t_'.basename($g[0]))."<br/>\n";
-					$this->ResizeFile($g[0], $fir->path.'/.'.filenoext('t'.substr(basename($g[0]), 1)), $info['thumb_width'], $info['thumb_height']);
-				}
+					$this->ResizeFile($g[0], $fir->path.'/.'.
+						filenoext('t'.substr(basename($g[0]), 1)),
+						$info['thumb_width'], $info['thumb_height']);
 				$this->UpdateThumbs($fir, $info);
 			}
 			else
