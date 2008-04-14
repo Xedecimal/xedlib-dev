@@ -448,7 +448,7 @@ class FileManager
 			if ($this->Behavior->UseInfo)
 				$this->vars['url'] = "{{target}}?editor={{fn_name}}&amp;cf={{cf}}{$f->filename}";
 			else
-				$this->vars['url'] = $this->Root."{{cf}}{{filename}}";
+				$this->vars['url'] = $this->Root."{$this->cf}{$f->filename}";
 			$this->vars['filename'] = $f->filename;
 			$this->vars['fipath'] = $f->path;
 			$this->vars['type'] = 'files';
