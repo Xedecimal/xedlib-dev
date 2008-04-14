@@ -1019,7 +1019,7 @@ function dir_get($path = '.')
 	return $ret;
 }
 
-function Comb($path)
+function Comb($path, $exclude = null)
 {
 	if (is_file($path)) return array($path);
 	$ret = array();
@@ -1027,6 +1027,7 @@ function Comb($path)
 	while ($f = readdir($dp))
 	{
 		if ($f[0] == '.') continue;
+		if (!empty($exclude) && preg_match($exclude, $f)) continue;
 		if (is_file($path.'/'.$f)) $ret[] = $path.'/'.$f;
 		else $ret = array_merge($ret, Comb($path.'/'.$f));
 	}

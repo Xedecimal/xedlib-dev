@@ -69,7 +69,7 @@ if ($ed == 'user')
 }
 else
 {
-	$fm = new FileManager('fman', 'test', array('Gallery'));
+	$fm = new FileManager('fman', 'test', array('Default', 'Gallery'));
 	$fm->uid = $user['usr_id'];
 	//$fm->Behavior->Recycle = true;
 	$fm->Behavior->AllowSearch = true;

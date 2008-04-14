@@ -696,11 +696,15 @@ class FormInput
 		}
 		if ($this->type == 'select' || $this->type == 'selects')
 		{
+			$this->atrs['NAME'] = $this->name;
 			if (!isset($this->atrs['ID']))
 				$this->atrs['ID'] = CleanID($parent.'_'.$this->name);
-			if ($this->type == 'selects') $this->atrs['MULTIPLE'] = 'multiple';
+			if ($this->type == 'selects')
+			{
+				$this->atrs['MULTIPLE'] = 'multiple';
+				$this->atrs['NAME'] .= '[]';
+			}
 			if (!isset($this->attrs['CLASS'])) $this->atrs['CLASS'] = 'input_select';
-			$this->atrs['NAME'] = $this->name;
 
 			$ret = "<select".GetAttribs($this->atrs).'>';
 			if (!empty($this->valu))

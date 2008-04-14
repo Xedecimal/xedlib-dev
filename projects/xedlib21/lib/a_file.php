@@ -316,7 +316,7 @@ class FileManager
 			$zip = new zipfile();
 			$sels = GetVar('sels');
 			$total = array();
-			foreach ($sels as $s) $total = array_merge($total, Comb($s));
+			foreach ($sels as $s) $total = array_merge($total, Comb($s, '#^t_.*#'));
 
 			$zip->AddFiles($total);
 
@@ -538,7 +538,7 @@ class FileManager
 				false));
 			$this->vars['text'] = $in->text;
 			$this->vars['field'] = $in->Get($this->Name);
-			$ret .= $vp->ParseVars($this->ContentField, $this->vars);
+			$ret .= $vp->ParseVars($guts, $this->vars);
 		}
 
 		$options = $f->GetOptions($this, $fi, $def);
