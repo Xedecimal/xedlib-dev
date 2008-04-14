@@ -141,6 +141,17 @@ class Template
 		$this->data = &$data;
 		$this->use_getvar = false;
 		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
+
+		$this->ReWrite('template', array(&$this, 'TagTemplate'));
+	}
+
+	function TagTemplate($guts, $attribs)
+	{
+		if (isset($attribs["FILE"]))
+		{
+			$t = new Template($this->data);
+			return $t->Get($attribs["FILE"]);
+		}
 	}
 
 	function ReWrite($tag, $callback, $args = null)
@@ -264,12 +275,7 @@ class Template
 		}
 		else if ($tag == "TEMPLATE")
 		{
-			if (isset($attribs["FILE"]))
-			{
-				$t = new Template($this->data);
-				$obj = &$this->GetCurrentObject();
-				$obj->out .= $t->Get($attribs["FILE"]);
-			}
+
 		}
 		else if ($tag == "XFORM")
 		{
