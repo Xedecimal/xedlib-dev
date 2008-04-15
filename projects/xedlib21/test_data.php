@@ -20,11 +20,6 @@ require_once('lib/a_editor.php');
 $editor = GetVar('editor');
 
 $imgError = ' <img src="'.GetRelativePath(dirname(__FILE__)).'/lib/images/error.png" alt="Error" />';
-$v = new Validation('name', '.+', $imgError.' You must specify a name.');
-
-$ret = FormValidate('formtest', $v, $ret, isset($ca));
-
-$page_head = "<script type=\"text/javascript\">\n".$ret['js'].'</script>';
 
 $db = new Database();
 $db->Open('mysql://root:ransal@localhost/test');
@@ -53,8 +48,6 @@ $dsBoth->FieldInputs = array(
 	'name' => new FormInput('Name', 'text'),
 	'second' => new FormInput('Second Column', 'text')
 );
-$dsBoth->Validation = $v;
-$dsBoth->Errors = $ret['errors'];
 
 $dsBoth->AddChild(new Relation($dsChild, 'id', 'parent'));
 

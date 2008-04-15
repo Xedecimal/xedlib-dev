@@ -125,7 +125,7 @@ class Database
 		{
 			case 'mysql':
 				$this->ErrorHandler = array($this, 'CheckMyError');
-				$this->link = mysql_connect($m[4], $m[2], $m[3]);
+				$this->link = mysql_connect($m[4], $m[2], $m[3], true);
 				if (!$this->link)
 					Error("Unable to connect to mysql at {$m[4]}.<br/>\n");
 				mysql_select_db($m[5], $this->link);
@@ -142,7 +142,7 @@ class Database
 				$this->rq = ']';
 				break;
 			default:
-				Error("Invalid database on Database creation.");
+				Error("Invalid database type.");
 				break;
 		}
 		call_user_func($this->ErrorHandler, null, null);
