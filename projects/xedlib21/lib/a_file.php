@@ -224,7 +224,7 @@ class FileManager
 			if (!empty($caps))
 			foreach ($caps as $file => $cap)
 			{
-				$fi = new FileInfo($this->Root.$this->cf.'/'.$file, $this->DefaultFilter);
+				$fi = new FileInfo($this->Root.$this->cf.$file, $this->DefaultFilter);
 				$fi->info['title'] = $cap;
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
 				$f->Updated($fi, $fi->info);
@@ -455,7 +455,9 @@ class FileManager
 			$this->vars['index'] = $ix++;
 			if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
 			else $this->vars['icon'] = '';
-			$this->vars['title'] = @stripslashes($f->info['title']);
+			$this->vars['ftitle'] = isset($f->info['title']) ?
+				@stripslashes($f->info['title']) :
+				'';
 
 			//$ret .= $vp->ParseVars($guts, $this->vars);
 			$tfile = new Template($this->vars);

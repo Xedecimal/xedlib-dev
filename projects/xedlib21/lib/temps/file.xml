@@ -195,7 +195,7 @@ window.onload = function() {
 				</check>
 				<td><a href="{{url}}">{{filename}}</a></td>
 				<quickcap><td><textarea cols="30" rows="2"
-					name="titles[{{filename}}]">{{title}}</textarea></td></quickcap>
+					name="titles[{{filename}}]">{{ftitle}}</textarea></td></quickcap>
 				</tr>
 				</file>
 			</table>
