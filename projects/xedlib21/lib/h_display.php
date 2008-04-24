@@ -1533,9 +1533,10 @@ function SOCallback($ds, $item, $icol, $col = null)
 	return $item[$icol];
 }
 
-function TagInput($guts, $attribs, $tag, $args)
+function TagInput($t, $guts, $attribs, $tag, $args)
 {
-	$searchable = $attribs['TYPE'] != 'hidden' && $attribs['TYPE'] != 'radio';
+	$searchable = $attribs['TYPE'] != 'hidden' && $attribs['TYPE'] != 'radio'
+		&& $attribs['TYPE'] != 'checkbox' && $attribs['TYPE'] != 'submit';
 
 	if (!empty($attribs['TYPE']))
 	switch (strtolower($attribs['TYPE']))
@@ -1576,7 +1577,8 @@ function TagInput($guts, $attribs, $tag, $args)
 	{
 		if (!isset($attribs['ID'])) $attribs['ID'] = 'in'.$attribs['NAME'];
 
-		$ret .= "<input type=\"checkbox\" onclick=\"$('#div{$attribs['ID']}').toggle('slow');\" />";
+		$ret .= "<input name=\"search[{$attribs['NAME']}]\" type=\"checkbox\"
+			onclick=\"$('#div{$attribs['ID']}').toggle('slow');\" />";
 		$ret .= '<div id="div'.$attribs['ID'].'" style="display: none">';
 	}
 
@@ -1633,6 +1635,39 @@ function GetNav($links, $attribs = null)
 		else $ret .= "<li><a href=\"{{me}}?page=".urlencode($link)."\">$link</a></li>\n";
 	}
 	return $ret."</ul>\n";
+}
+
+function TagSum(&$t, $guts, $attribs)
+{
+	//Concatination with string based names.
+	if (!empty($attribs['NAMES']))
+	{
+		$names = $GLOBALS[$attribs['NAMES']];
+		$ret = '';
+		$ix = 0;
+		foreach ($t->vars as $n => $v)
+			if (!empty($v) && preg_match($attribs['VALUE'], $n, $m))
+			{
+				if ($ix++ > 0) $ret .= ', ';
+				$ret .= (count($m) > 1 ? $names[$m[1]]->text : $names[$v]->text);
+			}
+		return $ret;
+	}
+
+	//Collect total numeric sum.
+	else
+	{
+		$sum = null;
+		foreach ($t->vars as $n => $v)
+			if (preg_match($attribs['VALUE'], $n))
+				$sum += $v;
+		return $sum;
+	}
+}
+
+function AddResultTags(&$t)
+{
+	$t->ReWrite('sum', 'TagSum');
 }
 
 ?>

@@ -487,6 +487,7 @@ class DataSet
 		{
 			$ret = '';
 			$ix = 0;
+			if (is_array($cols))
 			foreach ($cols as $name => $val)
 			{
 				if ($ix++ > 0) $ret .= ",\n";
@@ -496,6 +497,8 @@ class DataSet
 					$ret .= ' '.$this->QuoteTable($val);
 				if (!is_numeric($name)) $ret .= ' AS '.$this->QuoteTable($name);
 			}
+			else
+				$ret .= ' '.$cols;
 			return $ret;
 		}
 		return ' *';
@@ -902,20 +905,33 @@ class DataSet
 	function GetSearch($columns, $phrase, $start = 0, $limit = null,
 		$sort = null, $filter = null)
 	{
-		$newphrase = str_replace("'", '%', stripslashes($phrase));
-		$newphrase = str_replace(' ', '%', $newphrase);
 		$query = "SELECT ".$this->ColsClause($columns)." FROM `{$this->table}`";
 		$ix = 0;
+
 		if (!empty($columns))
 		{
 			$query .=  ' WHERE (';
-			foreach ($columns as $col)
+
+			//Phrase is a series of columns => phrases
+			if (is_array($phrase))
+				foreach ($phrase as $c => $v)
+					$query .= ' '.$c." LIKE '%{$v}%'";
+			//Matching all selected columns to a single phrase.
+			else
 			{
-				if ($ix++ > 0) $query .= " OR";
-				$query .= ' '.$this->QuoteTable($col)." LIKE '%{$newphrase}%'";
+				$newphrase = str_replace("'", '%', stripslashes($phrase));
+				$newphrase = str_replace(' ', '%', $newphrase);
+				if (is_array($columns))
+				foreach ($columns as $col)
+				{
+					if ($ix++ > 0) $query .= " OR";
+					$query .= ' '.$this->QuoteTable($col)." LIKE '%{$newphrase}%'";
+				}
 			}
+
 			$query .= ')';
 		}
+
 		if ($filter != null) $query .= $this->WhereClause($filter, ' AND');
 		if ($sort != null) $query .= DataSet::OrderClause($sort);
 		if ($limit != null) $query .= " LIMIT {$start}, {$limit}";

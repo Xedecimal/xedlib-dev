@@ -342,9 +342,10 @@ class Template
 			$objd = &$this->GetDestinationObject();
 
 			$vp = new VarParser();
-			$objd->out .= RunCallbacks($this->rewrites[$tag], $obj->out,
-				$vp->ParseVars($obj->attribs, $this->vars), $obj->tag,
-				@$this->rewriteargs[$tag]);
+			foreach ($this->rewrites[$tag] as $rw)
+			$objd->out .= call_user_func($rw, &$this,
+				$obj->out, $vp->ParseVars($obj->attribs, $this->vars),
+				$obj->tag, @$this->rewriteargs[$tag]);
 
 			array_pop($this->objs);
 			return;
