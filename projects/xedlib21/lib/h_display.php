@@ -1589,6 +1589,7 @@ function TagInput($guts, $attribs, $tag, $args)
 function GetAttribs($attribs)
 {
 	$ret = '';
+	if (!empty($attribs))
 	foreach ($attribs as $n => $v) $ret .= ' '.strtolower($n).'="'.$v.'"';
 	return $ret;
 }
@@ -1616,6 +1617,22 @@ function TagInputData(&$atrs)
 		}
 	}
 	return $atrs;
+}
+
+function GetNav($links, $attribs = null)
+{
+	$ret = '<ul'.GetAttribs($attribs).">\n";
+	foreach ($links as $ix => $link)
+	{
+		if (is_array($link))
+		{
+			$ret .= "<li><a href=\"{{me}}?page=".urlencode($ix)."\">".$ix."</a>\n";
+			$ret .= GetNav($link);
+			$ret .= '</li>';
+		}
+		else $ret .= "<li><a href=\"{{me}}?page=".urlencode($link)."\">$link</a></li>\n";
+	}
+	return $ret."</ul>\n";
 }
 
 ?>
