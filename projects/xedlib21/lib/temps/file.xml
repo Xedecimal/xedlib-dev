@@ -5,23 +5,15 @@
 
 <null>
 
+<page_head>
 <script type="text/javascript" src="{{relpath}}/js/helper.js"></script>
-<script type="text/javascript" src="{{relpath}}/js/jquery.js"></script>
 
 <script type="text/javascript">
-var __sels = { 'files': false, 'dirs': false };
-
-function docmanSelAll(type)
-{
-	__sels[type] = !__sels[type];
-	sel_all(type, __sels[type]);
-	toggleAny(['sel_files_','sel_dirs_'],'{{fn_name}}_mass_options');
-}
-
 window.onload = function() {
 	$('#{{fn_name}}_mass_options').hide();
 }
 </script>
+</page_head>
 
 <header>
 <box title="Current Path Location">
@@ -163,7 +155,7 @@ window.onload = function() {
 								'{{fn_name}}_mass_options');" />
 						</td>
 					</check>
-					<td><a href="{{target}}?editor={{fn_name}}&amp;amp;cf={{cf}}/{{filename}}">{{filename}}</a>
+					<td><a href="{{target}}?editor={{fn_name}}&amp;amp;amp;cf={{cf}}/{{filename}}">{{filename}}</a>
 					</td></tr>
 				</folder>
 			</table>

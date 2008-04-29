@@ -344,7 +344,7 @@ class Template
 			$vp = new VarParser();
 			foreach ($this->rewrites[$tag] as $rw)
 			$objd->out .= call_user_func($rw, &$this,
-				$obj->out, $vp->ParseVars($obj->attribs, $this->vars),
+				$vp->ParseVars($obj->out, $this->vars), $vp->ParseVars($obj->attribs, $this->vars),
 				$obj->tag, @$this->rewriteargs[$tag]);
 
 			array_pop($this->objs);
@@ -540,7 +540,7 @@ class Template
 		$data = array();
 		$index = array();
 		xml_set_object($this->parser, $this);
-		xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'ISO-8859-1');
+		//xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'ISO-8859-1');
 		xml_set_element_handler($this->parser, 'Start_Tag', 'End_Tag');
 		xml_set_character_data_handler($this->parser, 'CData');
  		xml_set_processing_instruction_handler($this->parser, 'Process');
@@ -548,8 +548,14 @@ class Template
 		if (!xml_parse($this->parser, $str))
 		{
 			echo "XML Error: " . xml_error_string(xml_get_error_code($this->parser)) .
-			" on line " . xml_get_current_line_number($this->parser) .
-			" of file " . $this->template . "\n";
+			" on line " . xml_get_current_line_number($this->parser);
+			if (!empty($this->template)) echo " of file " . $this->template;
+			else
+			{
+				echo "<br/>Inside the following template ...<br/>\n";
+				varinfo($str);
+			}
+			echo "<br/>\n";
 		}
 		xml_parser_free($this->parser);
 		array_pop($this->data['template.parsers']);

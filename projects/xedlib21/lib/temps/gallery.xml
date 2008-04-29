@@ -5,40 +5,7 @@
 
 <null>
 
-<part type="IconContent"><img src="{{icon}}" /></part>
-
-<if check="{{disable_save}}">
-<script type="text/javascript">
-<!--
-var message = "Saving images is not allowed.";
-function click(e)
-{
-	if (document.all)
-	{
-		if (event.button == 2 || event.button == 3)
-		{
-			alert(message);
-			return false;
-		}
-	}
-	if (document.layers)
-	{
-		if (e.which == 3)
-		{
-			alert(message);
-			return false;
-		}
-	}
-}
-if (document.layers)
-{
-	document.captureEvents(Event.MOUSEDOWN);
-}
-document.onmousedown = click;
-// -->
-</script>
-</if>
-
+<header>
 <!--[if lt IE 7.]>
 <script defer type="text/javascript" src="js/pngfix.js"></script>
 <![endif]-->
@@ -99,6 +66,41 @@ document.onmousedown = click;
 td { padding: 0; }
 </style>
 
+<if check="{{disable_save}}">
+<script type="text/javascript">
+<!--
+var message = "Saving images is not allowed.";
+function click(e)
+{
+	if (document.all)
+	{
+		if (event.button == 2 || event.button == 3)
+		{
+			alert(message);
+			return false;
+		}
+	}
+	if (document.layers)
+	{
+		if (e.which == 3)
+		{
+			alert(message);
+			return false;
+		}
+	}
+}
+if (document.layers)
+{
+	document.captureEvents(Event.MOUSEDOWN);
+}
+document.onmousedown = click;
+// -->
+</script>
+</if>
+</header>
+
+<part type="IconContent"><img src="{{icon}}" /></part>
+
 <if check="!empty($this->vars['galcf'])">
 <a href="{{me}}">View Main Gallery</a> &raquo; {{name}}
 </if>
@@ -110,7 +112,7 @@ td { padding: 0; }
 			<span class="item">
 			<a href="{{me}}?editor={{editor}}&amp;amp;galcf={{path}}/{{name}}">
 			{{icon}}
-			<p style="text-align: center;">{{name}}</p>
+			<!-- <p style="text-align: center;">-->{{name}}<!-- </p> -->
 			</a>
 			</span>
 			</div>

@@ -1216,7 +1216,7 @@ class EditorData
 		return $ret;
 	}
 
-	function TagForms($guts)
+	function TagForms($t, $guts)
 	{
 		$out = '';
 		$forms = $this->GetForms($this->target, $this->ci);

@@ -51,14 +51,14 @@ class Calendar
 	*/
 	function AddItem($tsfrom, $tsto, $body)
 	{
-		$fromyear  = gmdate("Y", $tsfrom);
-		$frommonth = gmdate("n", $tsfrom);
-		$fromday   = gmdate("j", $tsfrom);
-		$toyear    = gmdate("Y", $tsto);
-		$tomonth   = gmdate("n", $tsto);
-		$today     = gmdate("j", $tsto);
-		$fromkey   = gmmktime(0, 0, 0, $frommonth, $fromday, $fromyear);
-		$tokey     = gmmktime(0, 0, 0, $tomonth, $today, $toyear);
+		$fromyear  = date("Y", $tsfrom);
+		$frommonth = date("n", $tsfrom);
+		$fromday   = date("j", $tsfrom);
+		$toyear    = date("Y", $tsto);
+		$tomonth   = date("n", $tsto);
+		$today     = date("j", $tsto);
+		$fromkey   = mktime(0, 0, 0, $frommonth, $fromday, $fromyear);
+		$tokey     = mktime(0, 0, 0, $tomonth, $today, $toyear);
 
 		$this->events[count($this->events)] = array($tsfrom, $tsto, $body);
 		$DaysSpanned = ($tokey - $fromkey) / 86400;
@@ -67,34 +67,33 @@ class Calendar
 		{
 			//Store reference to timestamp.
 			$key = $fromkey+(86400*$ix);
-			if (!isset($this->dates[$key])) $this->dates[$key] = array();
 			$this->dates[$key][] = count($this->events)-1;
 
 			//Store reference to day.
-			$keyday = gmdate("j-m-Y", $key);
-			if (!isset($this->datesbyday[$keyday])) $this->datesbyday[$keyday] = array();
+			$keyday = date("n-j-Y", $key);
 			$this->datesbyday[$keyday][] = count($this->events)-1;
 		}
 	}
 
-	function TagPart($guts, $attribs)
+	function TagMonth($t, $guts)
 	{
-		$this->$attribs['TYPE'] = $guts;
+		return $guts;
 	}
 
-	function TagPad($guts, $attribs)
+	function TagWeek($t, $guts, $attribs)
 	{
-		$vp = new VarParser();
-		if ($this->month->Pad > 0)
+		$ret = null;
+		$this->pad = $this->month->Pad;
+		foreach ($this->month->Weeks as $ix => $w)
 		{
-			$d['amount'] = $this->month->Pad;
-			return $vp->ParseVars($guts, $d);
+			$this->curweek = $ix;
+			$tweek = new Template();
+			$tweek->ReWrite('day',  array(&$this, 'TagDay'));
+			$tweek->ReWrite('pad',  array(&$this, 'TagPad'));
+			$ret .= $tweek->GetString($guts);
 		}
-		return null;
-	}
+		return $ret;
 
-	function TagDays($guts, $attribs)
-	{
 		$vp = new VarParser();
 		$ret = '';
 		foreach ($this->month->Days as $day)
@@ -111,7 +110,7 @@ class Calendar
 				foreach ($this->dates[$dayts] as $eventid)
 				{
 					$event = $this->events[$eventid];
-					$ret .= "\t\t\t<p class=\"CalendarDayBody\">\n";
+					$ret .= "\t\t\t\n";
 					$ret .= "\t\t\t{$event[2]}</p>\n";
 				}
 			}
@@ -120,6 +119,41 @@ class Calendar
 			if ($day->EndWeek) $ret .= "\t</tr>\n";
 		}
 		return $ret;
+	}
+
+	function TagPad($t, $guts, $attribs)
+	{
+		if (empty($this->pad)) return;
+		$vp = new VarParser();
+		$d['amount'] = $this->pad;
+		return $vp->ParseVars($guts, $d);
+	}
+
+	function TagDay($t, $guts)
+	{
+		$ret = null;
+		$tday = new Template();
+		$tday->ReWrite('event', array(&$this, 'TagEvent'));
+		foreach ($this->month->Weeks[$this->curweek] as $ix => $d)
+		{
+			$this->pad = $d->LastDay ? 6-$d->WeekDay : 0;
+			$this->curday = $d;
+			$tday->Set('day', $d->Day);
+			$ret .= $tday->GetString($guts);
+		}
+		return $ret;
+	}
+
+	function TagEvent($t, $guts)
+	{
+		$tevent = new Template();
+		$key = mktime(0, 0, 0, $this->month->Month, $this->curday->Day, $this->month->Year);
+		if (!empty($this->dates[$key]))
+		foreach ($this->dates[$key] as $k)
+		{
+			$tevent->Set('title', $this->events[$k][2]);
+			return $tevent->GetString($guts);
+		}
 	}
 
 	/**
@@ -137,18 +171,20 @@ class Calendar
 
 		$t = new Template();
 
-		$this->ts = $timestamp != null ? $timestamp : time();
-		$this->month = new CalendarMonth($this->ts);
+		$month = GetVar('calmonth', date("n", time()));
+		$year = GetVar('calyear', date("Y", time()));
+		$t->Set('month', $month);
+		$t->Set('year', $year);
 
-		$t->Set('month', GetVar('calmonth', gmdate("n", $this->ts)));
-		$t->Set('year', GetVar('calyear', gmdate("Y", $this->ts)));
+		$this->ts = $timestamp != null ? $timestamp : mktime(0, 0, 0, $month, 1, $year);
+		$this->month = new CalendarMonth($this->ts);
 
 		$t->Set('cs', $cs);
 
 		$t->ReWrite('input', 'TagInput');
-		$t->ReWrite('part', array($this, 'TagPart'));
-		$t->ReWrite('pad', array($this, 'TagPad'));
-		$t->ReWrite('days', array($this, 'TagDays'));
+		$t->ReWrite('form', 'TagForm');
+		$t->ReWrite('month', array(&$this, 'TagMonth'));
+		$t->ReWrite('week', array(&$this, 'TagWeek'));
 
 		return $t->Get(dirname(__FILE__).'/temps/calendar_horiz.xml');
 	}
@@ -183,9 +219,9 @@ class Calendar
 		if (!is_array($this->dates)) return null;
 		foreach ($this->dates as $key => $eventids)
 		{
-			$year  = gmdate("Y", $key);
-			$month = gmdate("n", $key);
-			$day   = gmdate("j", $key);
+			$year  = date("Y", $key);
+			$month = date("n", $key);
+			$day   = date("j", $key);
 
 			if ($year != $curyear || $month != $curmonth)
 			{
@@ -227,7 +263,7 @@ class Calendar
 				$ret .= "<table border=\"0\" class=\"{$class}\" cellspacing=\"2\" cellpadding=\"3\" width=\"100%\">\n";
 				$ret .= "\t<tr>\n";
 				$ret .= "\t\t<td colspan=\"7\">\n";
-				$ret .= "\t\t\t<b>" . gmdate("F", $key) . " $year</b>\n";
+				$ret .= "\t\t\t<b>" . date("F", $key) . " $year</b>\n";
 				$ret .= "\t\t</td>\n";
 				$ret .= "\t</tr>\n";
 				$curmonth = $month;
@@ -282,13 +318,13 @@ class CalendarMonth
 	 * Year this month is on.
 	 * @var int
 	 */
-	private $Year;
+	public $Year;
 	/**
 	 * Numeric month. 1 - 12
 	 *
 	 * @var int
 	 */
-	private $Month;
+	public $Month;
 	/**
 	 * Amount of blank days at start.
 	 *
@@ -309,14 +345,17 @@ class CalendarMonth
 	 */
 	function CalendarMonth($timestamp)
 	{
-		$this->Year = gmdate('Y', $timestamp);
-		$this->Month = gmdate('n', $timestamp);
-		$this->Pad = gmdate('w', mktime(0, 0, 0, $this->Month, 1, $this->Year));
-		$daycount = gmdate('t', $timestamp);
+		$this->Year = date('Y', $timestamp);
+		$this->Month = date('n', $timestamp);
+		$this->Pad = date('w', mktime(0, 0, 0, $this->Month, 1, $this->Year));
 
+		$daycount = date('t', $timestamp);
+		$week = 0;
 		for ($ix = 1; $ix < $daycount+1; $ix++)
 		{
-			$this->Days[] = new CalendarDay(gmmktime(0, 0, 0, $this->Month, $ix, $this->Year));
+			$d = new CalendarDay(mktime(0, 0, 0, $this->Month, $ix, $this->Year));
+			$this->Weeks[$week][] = $d;
+			if ($d->EndWeek) $week++;
 		}
 	}
 }
@@ -376,11 +415,11 @@ class CalendarDay
 	function CalendarDay($timestamp)
 	{
 		$this->TimeStamp = $timestamp;
-		if (gmdate('w', $timestamp) == 0) $this->StartWeek = true;
-		if (gmdate('w', $timestamp) == 6) $this->EndWeek = true;
-		$this->Day = gmdate('j', $timestamp);
-		$this->WeekDay = gmdate('w', $timestamp);
-		if (gmdate('t', $timestamp) == gmdate('j', $timestamp)) $this->LastDay = true;
+		if (date('w', $timestamp) == 0) $this->StartWeek = true;
+		if (date('w', $timestamp) == 6) $this->EndWeek = true;
+		$this->Day = date('j', $timestamp);
+		$this->WeekDay = date('w', $timestamp);
+		if (date('t', $timestamp) == date('j', $timestamp)) $this->LastDay = true;
 	}
 }
 

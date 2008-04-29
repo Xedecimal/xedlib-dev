@@ -3,13 +3,6 @@
 ]>
 
 <null>
-<style type="text/css">
-form { margin: 0; }
-</style>
-
-<part type="ContentWeek"><tr>{{days}}</tr></part>
-<part type="ContentPad"><td class="CalendarPadding" colspan="{{amount}}"></td></part>
-<part type="ContentDay"><td>Day!</td></part>
 
 <table class="CalendarTable">
 	<tr class="CalendarHead">
@@ -22,14 +15,26 @@ form { margin: 0; }
 			</form>
 		</td>
 	</tr><tr class="CalendarWeekTitle">
-		<td>Sunday</td>
-		<td>Monday</td>
-		<td>Tuesday</td>
-		<td>Wednesday</td>
-		<td>Thursday</td>
-		<td>Friday</td>
-		<td>Saturday</td>
+		<td>S</td>
+		<td>M</td>
+		<td>T</td>
+		<td>W</td>
+		<td>T</td>
+		<td>F</td>
+		<td>S</td>
 	</tr>
-	<days />
+	<month>
+	<week>
+		<tr>
+		<pad><td colspan="{{amount}}"></td></pad>
+		<day>
+			<td class="CalendarDay">{{day}}<br />
+				<event><span class="CalendarEvent">{{title}}<br /></span></event>
+			</td>
+		</day>
+		<pad><td colspan="{{amount}}"></td></pad>
+		</tr>
+	</week>
+	</month>
 </table>
 </null>

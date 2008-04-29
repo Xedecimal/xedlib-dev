@@ -494,7 +494,7 @@ class Form
 			($start ? $this->FirstEnd : $this->CellEnd);
 	}
 
-	function TagForm($guts)
+	function TagForm($t, $guts)
 	{
 		global $PERSISTS;
 		$ret = "<form {$this->formAttribs}";
@@ -517,7 +517,7 @@ class Form
 		return $ret.$guts.'</form>';
 	}
 
-	function TagField($guts)
+	function TagField($t, $guts)
 	{
 		$ret = '';
 		$vp = new VarParser();
@@ -669,6 +669,8 @@ class FormInput
 	 */
 	function Get($parent = null, $persist = true)
 	{
+		$id = CleanID((!empty($parent)) ? $parent.'_'.$this->name : $this->name);
+
 		if ($this->type == 'custom')
 			return call_user_func($this->valu, $this);
 		if ($this->type == 'mask')
@@ -679,15 +681,16 @@ class FormInput
 		}
 		if ($this->type == 'spamblock')
 		{
+			$this->atrs['TYPE'] = 'text';
+			$this->atrs['CLASS'] = 'input_generic';
+			$this->atrs['NAME'] = $this->name;
+			$this->atrs['VALUE'] = $this->GetValue($persist);
+			$this->atrs['ID'] = $id;
 			$this->labl = false;
+			$atrs = GetAttribs($this->atrs);
 			return '<label>To verify your request, please type the word <u>'.
 				$this->valu.'</u>:<br/>'.
-				'<input type="text"
-				class="input_generic"
-				name="'.$this->name.'"
-				value="'.$this->GetValue($persist).'"
-				id="'.CleanID($parent.'_'.$this->name).'"'.
-				$this->atrs.'/></label>';
+				"<input{$atrs} /></label>";
 		}
 		if ($this->type == 'yesno')
 		{
@@ -801,11 +804,13 @@ class FormInput
 		}
 		if ($this->type == 'area')
 		{
-			return "<textarea
-				class=\"input_area\"
-				name=\"{$this->name}\"
-				id=\"".CleanID($parent.'_'.$this->name)."\"
-				{$this->atrs}>".$this->GetValue($persist).'</textarea>';
+			if (empty($this->atrs['ROWS'])) $this->atrs['ROWS'] = 3;
+			if (empty($this->atrs['COLS'])) $this->atrs['COLS'] = 25;
+			if (empty($this->atrs['CLASS'])) $this->atrs['CLASS'] = 'input_area';
+			if (empty($this->atrs['NAME'])) $this->atrs['NAME'] = $this->name;
+			if (empty($this->atrs['ID'])) $this->atrs['ID'] = $id;
+			$atrs = GetAttribs($this->atrs);
+			return "<textarea$atrs>".$this->GetValue($persist).'</textarea>';
 		}
 		if ($this->type == 'checkbox')
 		{
@@ -1668,6 +1673,19 @@ function TagSum(&$t, $guts, $attribs)
 function AddResultTags(&$t)
 {
 	$t->ReWrite('sum', 'TagSum');
+}
+
+function TagForm($t, $guts, $attribs)
+{
+	global $PERSISTS;
+	$ret = '<form'.GetAttribs($attribs).'>';
+	foreach ($PERSISTS as $n => $v)
+	{
+		$ret .= '<input type="hidden" name="'.$n.'" value="'.$v.'" />';
+	}
+	$ret .= $guts;
+	$ret .= '</form>';
+	return $ret;
 }
 
 ?>

@@ -79,7 +79,13 @@ class Gallery
 		return $ret;
 	}
 
-	function TagFolder($guts)
+	function TagHeader($t, $guts)
+	{
+		global $page_head;
+		$page_head .= $guts;
+	}
+
+	function TagFolder($t, $guts)
 	{
 		$out = '';
 		$vp = new VarParser();
@@ -106,7 +112,7 @@ class Gallery
 		return $out;
 	}
 
-	function TagFile($guts)
+	function TagFile($t, $guts)
 	{
 		$out = '';
 		$vp = new VarParser();
@@ -171,7 +177,7 @@ EOF;
 		$body .= '</td>';*/
 	}
 
-	function TagImage($guts)
+	function TagImage($t, $guts)
 	{
 		global $me;
 
@@ -188,7 +194,7 @@ EOF;
 		return $guts;
 	}
 
-	function TagPage($guts)
+	function TagPage($t, $guts)
 	{
 		$vp = new VarParser();
 		if ($this->Behavior->PageCount != null)
@@ -200,7 +206,7 @@ EOF;
 		//else return '';
 	}
 
-	function TagPart($guts, $attribs)
+	function TagPart($t, $guts, $attribs)
 	{
 		$this->$attribs['TYPE'] = $guts;
 	}
@@ -224,6 +230,7 @@ EOF;
 
 		$t = new Template();
 		$this->path = $path;
+		$t->ReWrite('header', array(&$this, 'TagHeader'));
 		$t->ReWrite('folder', array(&$this, 'TagFolder'));
 		$t->ReWrite('file', array(&$this, 'TagFile'));
 		$t->ReWrite('image', array(&$this, 'TagImage'));
