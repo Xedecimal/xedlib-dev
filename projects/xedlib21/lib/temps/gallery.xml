@@ -15,6 +15,7 @@
 {
 	text-align: center;
 	display: inline;
+	text-align: center;
 }
 
 .item
@@ -24,7 +25,7 @@
 	display: inline-block;
 	width: {{file_thumb_width}}px;
 	vertical-align: top;
-	text-align: center;
+	/*text-align: center;*/
 }
 
 .gallery
@@ -110,9 +111,10 @@ document.onmousedown = click;
 		<folder>
 			<div class="float">
 			<span class="item">
-			<a href="{{me}}?editor={{editor}}&amp;amp;galcf={{path}}/{{name}}">
-			{{icon}}
-			<!-- <p style="text-align: center;">-->{{name}}<!-- </p> -->
+			<!-- <a href="{{me}}?editor={{editor}}&amp;amp;galcf={{path}}/{{name}}"> -->
+			<a href="{{url}}">
+			{{icon}}<br/>
+			{{name}}
 			</a>
 			</span>
 			</div>

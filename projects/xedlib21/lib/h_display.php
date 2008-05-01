@@ -1679,6 +1679,7 @@ function TagForm($t, $guts, $attribs)
 {
 	global $PERSISTS;
 	$ret = '<form'.GetAttribs($attribs).'>';
+	if (is_array($PERSISTS))
 	foreach ($PERSISTS as $n => $v)
 	{
 		$ret .= '<input type="hidden" name="'.$n.'" value="'.$v.'" />';

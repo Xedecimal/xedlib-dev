@@ -146,14 +146,16 @@ class Calendar
 
 	function TagEvent($t, $guts)
 	{
+		$ret = null;
 		$tevent = new Template();
 		$key = mktime(0, 0, 0, $this->month->Month, $this->curday->Day, $this->month->Year);
 		if (!empty($this->dates[$key]))
 		foreach ($this->dates[$key] as $k)
 		{
 			$tevent->Set('title', $this->events[$k][2]);
-			return $tevent->GetString($guts);
+			$ret .= $tevent->GetString($guts);
 		}
+		return $ret;
 	}
 
 	/**

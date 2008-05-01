@@ -1711,11 +1711,45 @@ class EditorText
 		$frmRet = new Form($this->Name);
 		$frmRet->AddHidden('ca', 'update');
 
-		$frmRet->AddInput(new FormInput(null, 'area', 'body',
-			stripslashes(@file_get_contents($this->item)), 'rows="30"'));
+		$content = file_exists($this->item) ?
+			stripslashes(file_get_contents($this->item)) : '';
+
+		$frmRet->AddInput(new FormInput(null, 'area', 'body', $content,
+			array('ROWS' => 30)));
 		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
-		return $frmRet->Get('method="post"');
+		return $frmRet->Get('method="post" action="'.$target.'"');
+	}
+}
+
+class EditorUpload
+{
+	public $Name;
+	private $item;
+
+	function EditorUpload($name, $item)
+	{
+		$this->Name = $name;
+		$this->item = $item;
+	}
+
+	function Prepare($action)
+	{
+		if ($action == 'update')
+		{
+			move_uploaded_file($_FILES['file']['tmp_name'], $this->item);
+		}
+	}
+
+	function Get($target)
+	{
+		$frmRet = new Form($this->Name);
+		$frmRet->AddHidden('ca', 'update');
+
+		$frmRet->AddInput(new FormInput(null, 'file', 'file'));
+		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
+
+		return $frmRet->Get('enctype="multipart/form-data" method="post" action="'.$target.'"');
 	}
 }
 

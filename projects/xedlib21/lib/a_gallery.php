@@ -87,6 +87,8 @@ class Gallery
 
 	function TagFolder($t, $guts)
 	{
+		global $me;
+
 		$out = '';
 		$vp = new VarParser();
 		$dp = opendir($this->root.$this->path);
@@ -100,9 +102,13 @@ class Gallery
 			$fi = new FileInfo($this->root.$this->path.'/'.$file);
 			$this->f->GetInfo($fi);
 
+			$du['editor'] = GetVar('editor');
+			$du['galcf'] = GetVar('galcf', '').'/'.$file;
+			$d['url'] = URL($me, $du);
+
 			$d['name'] = $file;
-			$d['path'] = GetVar('galcf', '');
 			$d['icon'] = $fi->icon;
+			$d['editor'] = GetVar('editor');
 			if (!empty($d['icon']))
 				$d['icon'] = $vp->ParseVars($this->IconContent, $d);
 			else $d['icon'] = '';

@@ -333,6 +333,12 @@ class FileManager
 		if (is_dir($this->Root.$this->cf)) $this->files = $this->GetDirectory();
 	}
 
+	function TagPageHead($t, $guts)
+	{
+		$vp = new VarParser();
+		$d['fn_name'] = $this->Name;
+		return $vp->ParseVars($guts, $d);
+	}
 
 	function TagPart($t, $guts, $attribs)
 	{
@@ -616,7 +622,7 @@ class FileManager
 		$t = new Template();
 		$t->Set($this->vars);
 
-		$t->ReWrite('page_head', create_function('$t, $g', '$GLOBALS["page_head"] .= $g;'));
+		$t->ReWrite('page_head', array(&$this, 'TagPageHead'));
 		$t->ReWrite('header', array(&$this, 'TagHeader'));
 		$t->ReWrite('path', array(&$this, 'TagPath'));
 		$t->ReWrite('download', array(&$this, 'TagDownload'));
