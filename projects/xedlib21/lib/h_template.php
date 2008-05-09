@@ -198,6 +198,7 @@ class Template
 		if ($tag == 'AMP') $output = '&amp;';
 		else if ($tag == 'BOX')
 		{
+			require_once('h_display.php');
 			if (isset($attribs["HANDLER"]))
 			{
 				$handler = $attribs["HANDLER"];
