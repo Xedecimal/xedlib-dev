@@ -149,8 +149,8 @@ class Template
 	{
 		if (isset($attribs["FILE"]))
 		{
-			$t = new Template($this->data);
-			return $t->Get($attribs["FILE"]);
+			$tn = new Template($this->data);
+			return $tn->Get($attribs["FILE"]);
 		}
 	}
 
@@ -535,12 +535,11 @@ class Template
 		}
 
 		$this->out = '';
-		$this->parser = xml_parser_create_ns();
+		$this->parser = xml_parser_create();
 		$this->data['template.parsers'][] = $this->parser;
 		$data = array();
 		$index = array();
 		xml_set_object($this->parser, $this);
-		//xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'ISO-8859-1');
 		xml_set_element_handler($this->parser, 'Start_Tag', 'End_Tag');
 		xml_set_character_data_handler($this->parser, 'CData');
  		xml_set_processing_instruction_handler($this->parser, 'Process');
@@ -557,7 +556,7 @@ class Template
 			}
 			echo "<br/>\n";
 		}
-		xml_parser_free($this->parser);
+		@xml_parser_free($this->parser);
 		array_pop($this->data['template.parsers']);
 		return preg_replace_callback("/\{{([^}]+)\}}/", array($this, "parse_vars"), $this->start.$this->out);
 	}

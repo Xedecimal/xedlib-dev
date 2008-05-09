@@ -869,7 +869,7 @@ class FormInput
 				return $persist && GetVar($this->name) ? ' checked="checked"' : null;
 			//May get a little more complicated if we don't know what it is...
 			default:
-				return htmlspecialchars($persist ? GetVars($this->name, $this->valu) : $this->valu);
+				return stripslashes(htmlspecialchars($persist ? GetVars($this->name, $this->valu) : $this->valu));
 		}
 	}
 

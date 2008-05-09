@@ -523,8 +523,7 @@ function Reformat($file)
  */
 function GetRelativePath($path)
 {
-	//Probably Apache situated
-	$dr = GetVar('DOCUMENT_ROOT');
+	$dr = GetVar('DOCUMENT_ROOT'); //Probably Apache situated
 
 	if (empty($dr)) //Probably IIS situated
 	{

@@ -989,10 +989,17 @@ class EditorData
 
 			if ($this->Behavior->AllowEdit)
 			{
-				$url_edit = URL($target, array_merge(array('ca' => $this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
-				$url_del = URL($target, array_merge(array('ca' => $this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
-				$row[] = "<a href=\"$url_edit#{$this->name}_editor\"><img src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit Item\" class=\"png\" /></a>";
-				$row[] = "<a href=\"$url_del#{$this->name}_table\" onclick=\"return confirm('Are you sure?')\"><img src=\"{$p}/images/delete.png\" alt=\"Delete\" title=\"Delete Item\" class=\"png\" /></a>";
+				$url_edit = URL($target, array_merge(array('ca' =>
+					$this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
+				$url_del = URL($target, array_merge(array('ca' =>
+					$this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
+				$row[] = "<a href=\"$url_edit#{$this->name}_editor\"><img
+					src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit
+					Item\" class=\"png\" /></a>";
+				$row[] = "<a href=\"$url_del#{$this->name}_table\"
+					onclick=\"return confirm('Are you sure?')\"><img
+					src=\"{$p}/images/delete.png\" alt=\"Delete\" title=\"Delete
+					Item\" class=\"png\" /></a>";
 			}
 
 			$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
@@ -1701,7 +1708,7 @@ class EditorText
 		if ($action == 'update')
 		{
 			$fp = fopen($this->item, 'w');
-			fwrite($fp, GetVar('body'));
+			fwrite($fp, stripslashes(GetVar('body')));
 			fclose($fp);
 		}
 	}
