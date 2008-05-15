@@ -146,7 +146,7 @@ window.onload = function() {
 				</tr></check>
 				<folder>
 					<tr>
-					<td><icon><img src="{{icon}}" /></icon></td>
+					<td><icon><img src="{{icon}}" alt="icon" /></icon></td>
 					<check>
 						<td>
 							<input type="checkbox" id="sel_{{type}}_{{index}}"
@@ -176,7 +176,7 @@ window.onload = function() {
 				</tr></check>
 				<file>
 				<tr>
-				<td><icon><img src="{{icon}}" /></icon></td>
+				<td><icon><img src="{{icon}}" alt="icon" /></icon></td>
 				<check>
 					<td>
 						<input type="checkbox" id="sel_{{type}}_{{index}}"

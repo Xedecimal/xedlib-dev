@@ -421,6 +421,7 @@ class FileManager
 		{
 			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
 			if (!$f->show) continue;
+			$this->curfile = $f;
 			$this->vars['filename'] = $f->filename;
 			$this->vars['fipath'] = $f->path;
 			$this->vars['type'] = 'folders';
@@ -451,6 +452,9 @@ class FileManager
 		{
 			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
 			if (!$f->show) continue;
+
+			$this->curfile = $f;
+
 			if ($this->Behavior->UseInfo)
 				$this->vars['url'] = "{{target}}?editor={{fn_name}}&amp;cf={{cf}}{$f->filename}";
 			else
@@ -462,10 +466,8 @@ class FileManager
 			if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
 			else $this->vars['icon'] = '';
 			$this->vars['ftitle'] = isset($f->info['title']) ?
-				@stripslashes($f->info['title']) :
-				'';
+				@stripslashes($f->info['title']) : '';
 
-			//$ret .= $vp->ParseVars($guts, $this->vars);
 			$tfile = new Template($this->vars);
 			$tfile->ReWrite('icon', array(&$this, 'TagIcon'));
 			$tfile->ReWrite('quickcap', array(&$this, 'TagQuickCap'));
@@ -476,8 +478,17 @@ class FileManager
 
 	function TagIcon($t, $guts)
 	{
-		if (empty($this->vars['icon'])) return;
-		return $guts;
+		$file = $this->curfile;
+
+		if (!empty($this->vars['icon'])) return $guts;
+		else if (isset($this->icons[$file->type]))
+		{
+			$this->vars['icon'] = $this->icons[$file->type];
+		}
+		else return null;
+
+		$vp = new VarParser();
+		return $vp->ParseVars($guts, $this->vars);
 	}
 
 	function TagQuickCap($t, $guts)
@@ -755,8 +766,7 @@ class FileManager
 		$types = $file->type ? 'folders' : 'files';
 		if (isset($file->icon))
 			$d['icon'] = "<img src=\"".URL($file->icon)."\" alt=\"Icon\" />";
-		else if (isset($this->icons[$file->type]))
-			$d['icon'] = '<img src="'.$this->icons[$file->type].'" alt="'.$file->type.'" />';
+
 		else
 			$d['icon'] = '';
 
@@ -1370,6 +1380,8 @@ class FilterDefault
 	 */
 	function GetInfo(&$fi)
 	{
+		if (is_dir($fi->path)) $fi->type = 'folder';
+		else $fi->type = fileext($fi->filename);
 		return $fi;
 	}
 

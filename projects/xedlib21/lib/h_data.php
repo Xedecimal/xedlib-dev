@@ -691,7 +691,7 @@ class DataSet
 		$query = "INSERT INTO {$lq}{$this->table}{$rq} (";
 		foreach (array_keys($columns) as $ix => $key)
 		{
-			if (!empty($columns[$key]))
+			if (isset($columns[$key]))
 			{
 				if ($ix != 0) $query .= ", ";
 				$query .= $this->QuoteTable($key);
@@ -702,7 +702,7 @@ class DataSet
 		foreach ($columns as $key => $val)
 		{
 			//destring('value') for functions and such.
-			if (empty($val)) continue;
+			if (!isset($val)) continue;
 			if ($ix > 0) $query .= ', ';
 			if (is_array($val))
 			{
