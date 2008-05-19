@@ -13,6 +13,7 @@ define('FM_SORT_TABLE', -2);
 define('FM_ACTION_UNKNOWN', 0);
 define('FM_ACTION_CREATE', 5);
 define('FM_ACTION_DELETE', 2);
+define('FM_ACTION_DOWNLOAD', 8);
 define('FM_ACTION_MOVE', 3);
 define('FM_ACTION_REORDER', 7);
 define('FM_ACTION_RENAME', 6);
@@ -138,6 +139,21 @@ class FileManager
 			&& strlen($this->cf) > 0
 			&& substr($this->cf, -1) != '/')
 			$this->cf .= '/';
+
+		$rp = GetRelativePath(dirname(__FILE__));
+
+		$this->icons = array(
+			'folder' => $rp.'/images/icons/folder.png',
+			'png' => $rp.'/images/icons/image.png',
+			'jpg' => $rp.'/images/icons/image.png',
+			'jpeg' => $rp.'/images/icons/image.png',
+			'gif' => $rp.'/images/icons/image.png',
+			'pdf' => $rp.'/images/icons/acrobat.png',
+			'sql' => $rp.'/images/icons/db.png',
+			'xls' => $rp.'/images/icons/excel.png',
+			'doc' => $rp.'/images/icons/word.png',
+			'docx' => $rp.'/images/icons/word.png'
+		);
 	}
 
 	/**
@@ -175,6 +191,9 @@ class FileManager
 				fclose($fpt);
 
 				$filter->Upload($target, $fi);
+				if (!empty($this->Behavior->Watcher))
+					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
+						$fi->path.$target);
 			}
 
 			// Actual upload, full or partial.
@@ -185,7 +204,12 @@ class FileManager
 				move_uploaded_file($tname, $this->Root.$this->cf.$name);
 
 				if (!preg_match('#^\.\[[0-9]+\]_.*#', $name))
+				{
 					$filter->Upload($name, $fi);
+					if (!empty($this->Behavior->Watcher))
+						RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
+							$this->Root.$this->cf.$name);
+				}
 			}
 		}
 		else if ($action == "Save")
@@ -455,7 +479,12 @@ class FileManager
 
 			$this->curfile = $f;
 
-			if ($this->Behavior->UseInfo)
+			if (isset($this->Behavior->FileCallback))
+			{
+				$cb = $this->Behavior->FileCallback;
+				$this->vars['url'] = $cb($f);
+			}
+			else if ($this->Behavior->UseInfo)
 				$this->vars['url'] = "{{target}}?editor={{fn_name}}&amp;cf={{cf}}{$f->filename}";
 			else
 				$this->vars['url'] = $this->Root."{$this->cf}{$f->filename}";

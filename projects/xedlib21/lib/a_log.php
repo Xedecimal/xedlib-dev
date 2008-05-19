@@ -4,7 +4,7 @@
  * @package Logging
  */
 
-class LoggerAuth
+class LoggerAuth extends EditorHandler
 {
 	/**
 	 * Enter description here...
@@ -25,19 +25,22 @@ class LoggerAuth
 	 */
 	private $actions;
 
+	public $name;
+
 	/**
 	 * Creates a new Logger.
 	 * @param DataSet $dsLog DataSet that holds log information.
 	 * @param DataSet $dsUser DataSet that holds identity information.
 	 * @param array $actions A series of possible actions to log.
 	 */
-	function LoggerAuth($dsLog, $dsUser, $actions = null)
+	function LoggerAuth($name, $dsLog, $dsUser, $actions = null)
 	{
 		if (!$dsLog instanceof DataSet) Error("LoggerAuth: Constructor requires
 			argument 1 to be a DataSet.");
 		if (!$dsUser instanceof DataSet) Error("LoggerAuth: Constructor requires
 			argument 2 to be a DataSet.");
 
+		$this->name = $name;
 		$this->dsLog = $dsLog;
 		$this->dsUser = $dsUser;
 		$this->actions = $actions;
@@ -75,24 +78,48 @@ class LoggerAuth
 			WHERE dt.log_id IS NULL;");
 	}
 
+	function TrimByDate($ts)
+	{
+		$this->dsLog->GetCustom("DELETE FROM {$this->dsLog->table}
+			WHERE log_date < '".TimestampToMySql($ts)."'");
+	}
+
 	/**
 	 * Return a table of actions that have been recorded.
 	 * @param int $count Amount of items to display per page.
 	 * @return string Rendered table of actions.
 	 */
-	function Get($count)
+	function Get($count = null, $user = null)
 	{
-		$items = $this->dsLog->Get(null, array('log_date' => 'DESC'),
-			array(0, $count), array(new Join($this->dsUser, 'log_user = usr_id', 'JOIN')));
+		$match = $user != null ? array('usr_id' => $user) : null;
+		$items = $this->dsLog->Get($match, array('log_date' => 'DESC'),
+			$count != null ? array(0, $count) : null,
+			array(new Join($this->dsUser, 'log_user = usr_id', 'JOIN')));
 
-		$tbl = new Table('tbl_logs', array('User', 'Action', 'Target'));
+		$tbl = new Table('tbl_logs', array('Date', 'User', 'Action', 'Target'));
 		if (!empty($items))
-		foreach ($items as $item)
+		foreach ($items as $ix => $item)
 		{
-			$tbl->AddRow(array($item['usr_name'],
-				isset($this->actions) ? $this->actions[$item['log_action']] : $item['log_action'], $item['log_target']));
+			$idlead = "{$this->name}_table:";
+			$idend = ":{$ix}";
+			$action = isset($this->actions) ?
+				$this->actions[$item['log_action']] : $item['log_action'];
+			$tbl->AddRow(array(
+				array($item['log_date'],   array('id' => "{$idlead}log_date{$idend}")),
+				array($item['usr_name'],   array('id' => "{$idlead}usr_name{$idend}")),
+				array($action,             array('id' => "{$idlead}log_action{$idend}")),
+				array($item['log_target'], array('id' => "{$idlead}log_target{$idend}"))
+			));
 		}
-		return $tbl->Get();
+		return $tbl->Get(array('class' => 'tablesorter', 'id' => $this->name.'_table'));
+	}
+
+	function GetFields(&$form, $id, $data)
+	{
+		if (!empty($id))
+		{
+			$form->AddInput(array('Actions' => $this->Get(null, $id)));
+		}
 	}
 }
 

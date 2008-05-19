@@ -159,28 +159,30 @@ class Table
 	 */
 	function Get($attributes = null)
 	{
-		if ($attributes != null) $attributes = " " . $attributes;
 		$ret = "<!-- Start Table: {$this->name} -->\n";
-		$ret .= "<table$attributes>\n";
+		$ret .= '<table';
+		$ret .= GetAttribs($attributes);
+		$ret .= ">\n";
 
 		$atrs = null;
 
 		if ($this->cols)
 		{
-			$ret .= "<tr>\n";
+			$ret .= "<thead><tr>\n";
 			$ix = 0;
 			foreach ($this->cols as $id => $col)
 			{
 				if (isset($this->atrs)) $atrs = " ".
 					$this->atrs[$ix++ % count($this->atrs)];
 				else $atrs = "";
-				$ret .= "<td$atrs>{$col}</td>\n";
+				$ret .= "<th width=\"100\" $atrs>{$col}</th>\n";
 			}
-			$ret .= "</tr>\n";
+			$ret .= "</tr></thead>\n";
 		}
 
 		if ($this->rows)
 		{
+			$ret .= "<tbody>\n";
 			if (!isset($this->cols))
 			{
 				$span = 0;
@@ -189,12 +191,15 @@ class Table
 			}
 			foreach ($this->rows as $ix => $row)
 			{
-				$ret .= "<tr>\n";
+				$ret .= '<tr';
+				if (!empty($this->rowattribs))
+					$ret .= GetAttribs($this->rowattribs[$ix]);
+				$ret .= ">\n";
 				if (count($row) < count($this->cols))
 					$span = " colspan=\"".
-						(count($this->cols) - count($row) + 1).
-						"\"{$this->rowattribs[$ix]}";
-				else $span = " {$this->rowattribs[$ix]}";
+						(count($this->cols) - count($row) + 1)
+						/*."\"{$this->rowattribs[$ix]}"*/;
+				else $span = '';
 				$x = 0;
 				$atrs = null;
 
@@ -202,8 +207,13 @@ class Table
 				{
 					foreach ($row as $val)
 					{
-						if (isset($this->atrs)) $atrs = ' '.$this->atrs[$x % count($this->atrs)];
-						else if (is_array($val)) { $atrs = ' '.$val[0]; $val = $val[1]; }
+						if (is_array($val))
+						{
+							$atrs = GetAttribs($val[1]);
+							$val = $val[0];
+						}
+						else if (isset($this->atrs))
+							$atrs = ' '.$this->atrs[$x % count($this->atrs)];
 						else $atrs = null;
 						$ret .= "<td$span$atrs>{$val}</td>\n";
 						$x++;
@@ -212,6 +222,7 @@ class Table
 				else $ret .= "<td{$span}{$atrs}>{$row}</td>\n";
 				$ret .= "</tr>\n";
 			}
+			$ret .= "</tbody>\n";
 		}
 		$ret .= "</table>\n";
 		$ret .= "<!-- End Table: {$this->name} -->\n";

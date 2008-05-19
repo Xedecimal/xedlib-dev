@@ -904,11 +904,11 @@ class EditorData
 
 			foreach ($rows as $ix => $row)
 			{
-				$class = $ix%2?'even':'odd';
-				$table->AddRow($row, "class=\"{$class}\"");
+				$class = $ix % 2 ? 'even' : 'odd';
+				$table->AddRow($row, array('class' => $class));
 			}
 
-			$ret .= $table->Get('class="editor"');
+			$ret .= $table->Get(array('class' => 'editor'));
 		}
 		return $ret;
 	}
@@ -976,7 +976,12 @@ class EditorData
 				else
 				{
 					if (isset($cnode->data[$disp_index]))
-						$row[$ix++] = htmlspecialchars(stripslashes($cnode->data[$disp_index]));
+					{
+						$row[$ix++] = array(
+							htmlspecialchars(stripslashes($cnode->data[$disp_index])),
+							array('class' => 'editor_cell', 'id' => "{$this->name}:{$col}:{$cnode->id}")
+						);
+					}
 				}
 			}
 
@@ -1002,7 +1007,10 @@ class EditorData
 					Item\" class=\"png\" /></a>";
 			}
 
-			$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
+			// @TODO Bring this tree system back to life!
+			//$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
+
+			//Sorting should be done by javascript.
 
 			/*if ($this->sorting == ED_SORT_MANUAL && count($node->children) > 1)
 			{
@@ -1259,8 +1267,8 @@ class EditorData
 		$this->target = $target;
 		$this->ci = $ci;
 
-		$editor_return = $this->Get($target, $ci);
-		$editor_return['table'] = $this->GetTable($target, $ci);
+		//$editor_return = $this->Get($target, $ci);
+		//$editor_return['table'] = $this->GetTable($target, $ci);
 
 		$t = new Template();
 		$t->ReWrite('forms', array($this, 'TagForms'));
@@ -1271,7 +1279,7 @@ class EditorData
 		if (!empty($this->ds))
 			$t->Set('table_title', Plural($this->ds->Description));
 
-		$t->Set('table', $editor_return['table']);
+		$t->Set('table', $this->GetTable($target, $ci));
 
 		if (!empty($editor_return['forms']))
 		{

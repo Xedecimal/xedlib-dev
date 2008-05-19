@@ -44,6 +44,7 @@ th { text-align: left; }
 .tab_inactive { background-color: #D0D0D0; }
 
 .error { color: #F00; }
+.debug { border: 1px solid #888; margin: 3px; }
 
 /* Calendar */
 
