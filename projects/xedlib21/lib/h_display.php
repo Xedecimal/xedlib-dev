@@ -831,6 +831,10 @@ class FormInput
 				value=\"1\" ".$this->GetValue($persist).
 				$this->atrs." />";
 		}
+		if ($this->type == 'state')
+		{
+			return GetInputState(@$this->name, @$this->valu, $this->atrs);
+		}
 
 		$val = $this->GetValue($persist && $this->type != 'radio');
 
@@ -952,9 +956,11 @@ class SelOption
  * @param mixed $selvalue default selected seloption id.
  * @return string rendered select form input.
  */
-function MakeSelect($name, $value = null, $attributes = null, $selvalue = null)
+function MakeSelect($atrs = null, $value = null)
 {
-	$strout = "<select name=\"$name\" $attributes>\n";
+	$strout = '<select';
+	$strout .= GetAttribs($atrs);
+	$strout .= ">\n";
 	$selid = 0;
 	foreach ($value as $id => $option)
 	{
@@ -1041,10 +1047,10 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 		$timestamp = MyDateTimestamp($timestamp, $include_time);
 	}
 	if (!isset($timestamp)) $timestamp = time();
-	$strout = $include_time ? GetInputTime($name.'[]', $timestamp) : null;
-	$strout .= '<label>'.GetMonthSelect("{$name}[]", date("n", $timestamp)).'</label>';
+	$strout = '<label>'.GetMonthSelect("{$name}[]", date("n", $timestamp)).'</label>';
 	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("d", $timestamp) . "\" alt=\"Day\" />\n";
 	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . date("Y", $timestamp) . "\" alt=\"Year\" />\n";
+	$strout .= $include_time ? GetInputTime($name.'[]', $timestamp) : null;
 	return $strout;
 }
 
@@ -1065,13 +1071,13 @@ function GetInputTime($name, $timestamp)
 /**
  * Returns two radio buttons for selecting yes or no (1 or 0).
  * @param string $parent Name of the parent form if one is available.
- * @param string $name Name of this field.
- * @param bool $value Whether we default to yes or no.
+ * @param array $atrs Array of HTML attributes.
  * @return string Rendered time input.
  */
 function GetInputYesNo($parent, $attribs)
 {
-	if (!isset($attribs['ID'])) $attribs['ID'] = CleanID($parent.'_'.$name);
+	$id = CleanID((isset($parent) ? $parent.'_' : null).$attribs['NAME']);
+	if (!isset($attribs['ID'])) $attribs['ID'] = $id;
 	if (!isset($attribs['VALUE'])) $attribs['VALUE'] = 0;
 	return '<label><input type="radio" id="'.$attribs['ID'].'"
 	name="'.$attribs['NAME'].'" value="0"'.
@@ -1423,10 +1429,10 @@ function GetYearSelect($name, $year)
  * @param int $state Default state number.
  * @return string Rendered <select> box.
  */
-function GetInputState($name, $state = -1)
+function GetInputState($attribs = null)
 {
 	global $__states;
-	return MakeSelect($name, $__states, null, $state);
+	return MakeSelect($attribs, $__states);
 }
 
 /**
@@ -1561,14 +1567,14 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 			$field = '<input type="hidden" name="type_'.$attribs['NAME'].'" value="'.$attribs['TYPE'].'" />';
 			$field .= GetInputDate($attribs['NAME'], @$attribs['VALUE']);
 			break;
+		case 'datetime':
+			$field = GetInputDate($attribs['NAME'], @$attribs['VALUE'], true);
+			break;
 		case 'year':
 			$field = GetYearSelect($attribs['NAME'], @$attribs['VALUE']);
 			break;
 		case 'month':
 			$field = GetMonthSelect($attribs['NAME'], @$attribs['VALUE']);
-			break;
-		case 'state':
-			$field = GetInputState($attribs['NAME'], @$attribs['VALUE']);
 			break;
 		case 'mask':
 			$in = new FormInput(null, 'mask', $attribs['NAME'], @$attribs['VALUE']);
@@ -1581,6 +1587,10 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 		case 'radio':
 			$attribs['TYPE'] = 'checkbox';
 			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
+			break;
+		case 'state':
+			unset($attribs['TYPE']);
+			$field = GetInputState($attribs);
 			break;
 		default:
 			$field = '<input'.GetAttribs($attribs).' />';
