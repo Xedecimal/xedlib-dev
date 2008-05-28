@@ -94,7 +94,7 @@ class LoggerAuth extends EditorHandler
 		$match = $user != null ? array('usr_id' => $user) : null;
 		$items = $this->dsLog->Get($match, array('log_date' => 'DESC'),
 			$count != null ? array(0, $count) : null,
-			array(new Join($this->dsUser, 'log_user = usr_id', 'JOIN')));
+			array(new Join($this->dsUser, 'log_user = '.$this->dsUser->id, 'JOIN')));
 
 		$tbl = new Table('tbl_logs', array('Date', 'User', 'Action', 'Target'));
 		if (!empty($items))
@@ -106,7 +106,7 @@ class LoggerAuth extends EditorHandler
 				$this->actions[$item['log_action']] : $item['log_action'];
 			$tbl->AddRow(array(
 				array($item['log_date'],   array('id' => "{$idlead}log_date{$idend}")),
-				array($item['usr_name'],   array('id' => "{$idlead}usr_name{$idend}")),
+				array($item['user'],   array('id' => "{$idlead}usr_name{$idend}")),
 				array($action,             array('id' => "{$idlead}log_action{$idend}")),
 				array($item['log_target'], array('id' => "{$idlead}log_target{$idend}"))
 			));
