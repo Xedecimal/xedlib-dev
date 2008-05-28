@@ -1700,4 +1700,53 @@ function TagForm($t, $guts, $attribs)
 	return $ret;
 }
 
+class DataDisplay
+{
+	function DataDisplay($name, $ds)
+	{
+		$this->Name = $name;
+		$this->ds = $ds;
+	}
+
+	function Get($temp)
+	{
+		$this->ci = GetVar($this->Name.'_ci');
+
+		$tg = new Template();
+		$tg->Set('name', $this->Name);
+		$tg->ReWrite('listitem', array(&$this, 'TagListItem'));
+		$tg->ReWrite('detailitem', array(&$this, 'TagDetailItem'));
+		return $tg->GetString($temp);
+	}
+
+	function TagListItem($t, $guts)
+	{
+		$ret = '';
+
+		if (empty($this->ci))
+		{
+			$vp = new VarParser();
+
+			foreach ($this->ds->Get() as $i)
+			{
+				$ret .= $vp->ParseVars($guts, $i);
+			}
+		}
+
+		return $ret;
+	}
+
+	function TagDetailItem($t, $guts)
+	{
+		$vp = new VarParser();
+
+		if (!empty($this->ci))
+		{
+			$item = $this->ds->GetOne(array($this->ds->id => $this->ci));
+
+			return $vp->ParseVars($guts, array_merge($item));
+		}
+	}
+}
+
 ?>

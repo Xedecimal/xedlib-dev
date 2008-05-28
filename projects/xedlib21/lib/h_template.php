@@ -344,7 +344,7 @@ class Template
 
 			$vp = new VarParser();
 			foreach ($this->rewrites[$tag] as $rw)
-			$objd->out .= call_user_func($rw, &$this,
+			$objd->out .= call_user_func($rw, $this,
 				$obj->out, $vp->ParseVars($obj->attribs, $this->vars),
 				$obj->tag, @$this->rewriteargs[$tag]);
 
