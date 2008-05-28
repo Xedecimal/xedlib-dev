@@ -11,7 +11,7 @@
 	</box>
 </part>
 
-<if check="isset($this->vars['table'])">
+<if check="isset($this->vars[&quot;table&quot;])">
 <box title="{{table_title}}">
 {{table}}
 </box>
