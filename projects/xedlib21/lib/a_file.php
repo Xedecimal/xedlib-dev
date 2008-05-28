@@ -271,6 +271,7 @@ class FileManager
 		{
 			if (!$this->Behavior->AllowDelete) return;
 			$sels = GetVar('sels');
+			if (!empty($sels))
 			foreach ($sels as $file)
 			{
 				$fi = new FileInfo($file, $this->DefaultFilter);

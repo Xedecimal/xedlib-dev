@@ -216,6 +216,16 @@ function GetVars($name, $default = null)
 	else return GetVar($name, $default);
 }
 
+function GetAssocPosts($match)
+{
+	$ret = array();
+	foreach ($_POST as $n => $v)
+	{
+		if (preg_match("/^$match/", $n)) $ret[$n] = FormInput::GetPostValue($n);
+	}
+	return $ret;
+}
+
 /**
  * @param string $name Name to retrieve.
  * @param mixed $default Default value if not available.

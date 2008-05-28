@@ -663,7 +663,7 @@ class DataSet
 			$x = 0;
 			foreach ($values as $key => $val)
 			{
-				if (!isset($val)) continue;
+				if (!is_numeric($val) && empty($val)) continue;
 				if ($x++ > 0) $ret .= ", ";
 				if (is_array($val))
 				{
@@ -689,20 +689,18 @@ class DataSet
 		$rq = $this->database->rq;
 
 		$query = "INSERT INTO {$lq}{$this->table}{$rq} (";
-		foreach (array_keys($columns) as $ix => $key)
+		$ix = 0;
+		foreach (array_keys($columns) as $key)
 		{
-			if (isset($columns[$key]))
-			{
-				if ($ix != 0) $query .= ", ";
-				$query .= $this->QuoteTable($key);
-			}
+			if (!is_numeric($columns[$key]) && empty($columns[$key])) continue;
+			if ($ix++ != 0) $query .= ", ";
+			$query .= $this->QuoteTable($key);
 		}
 		$query .= ") VALUES(";
 		$ix = 0;
 		foreach ($columns as $key => $val)
 		{
-			//destring('value') for functions and such.
-			if (!isset($val)) continue;
+			if (!is_numeric($val) && empty($val)) continue;
 			if ($ix > 0) $query .= ', ';
 			if (is_array($val))
 			{

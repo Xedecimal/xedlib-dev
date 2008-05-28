@@ -888,6 +888,21 @@ class FormInput
 		}
 	}
 
+	static function GetPostValue($name)
+	{
+		$v = $_POST[$name];
+		if (isset($_POST['type_'.$name]))
+		{
+			switch ($_POST['type_'.$name])
+			{
+				case 'date':
+					return sprintf('%04d-%02d-%02d', $v[2], $v[0], $v[1]);
+			}
+		}
+
+		return $v;
+	}
+
 	function GetData($val = null)
 	{
 		$val = GetVar($this->name, $val);
@@ -1042,13 +1057,13 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 		else
 			$timestamp = mktime(0, 0, 0, $timestamp[0], $timestamp[1], $timestamp[2]);
 	}
-	if (is_string($timestamp))
+	else if (!is_numeric($timestamp))
 	{
 		$timestamp = MyDateTimestamp($timestamp, $include_time);
 	}
 	if (!isset($timestamp)) $timestamp = time();
 	$strout = '<label>'.GetMonthSelect("{$name}[]", date("n", $timestamp)).'</label>';
-	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("d", $timestamp) . "\" alt=\"Day\" />\n";
+	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date('d', $timestamp) . "\" alt=\"Day\" />\n";
 	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . date("Y", $timestamp) . "\" alt=\"Year\" />\n";
 	$strout .= $include_time ? GetInputTime($name.'[]', $timestamp) : null;
 	return $strout;
@@ -1520,10 +1535,7 @@ function InputToString($field)
 	}
 	else if ($field->type == 'radios') return $field->valu[$val]->text;
 	else if ($field->type == 'yesno') return $val == 1 ? 'yes' : 'no';
-	else if ($field->type == 'select')
-	{
-		return $field->valu[$val]->text;
-	}
+	else if ($field->type == 'select') return $field->valu[$val]->text;
 	else Error("Unknown field type.");
 }
 
@@ -1628,23 +1640,48 @@ function TagInputData(&$atrs)
 
 	if (!empty($atrs['NAME']))
 	{
-		//Bound
-		if (preg_match('/db\.([^.]+)/', $atrs['NAME'], $ms))
+		if (!empty($binds[0][$atrs['NAME']]))
 		{
 			switch (strtolower($atrs['TYPE']))
 			{
-				case 'date': $atrs['VALUE'] = MyDateTimestamp($binds[$ms[1]]); break;
+				case 'password':
+					$atrs['VALUE'] = null; break;
+				case 'date':
+					$atrs['VALUE'] = MyDateTimestamp($binds[0][$atrs['NAME']]);
+					break;
 				case 'radio':
 				case 'checkbox':
 					if (!isset($atrs['VALUE'])) $atrs['VALUE'] = 1;
-					if ($atrs['VALUE'] == $binds[$ms[1]])
+					if ($atrs['VALUE'] == $binds[0][$atrs['NAME']])
 						$atrs['CHECKED'] = 'checked';
 					break;
-				default: $atrs['VALUE'] = $binds[$ms[1]];
+				default:
+					$atrs['VALUE'] = $binds[0][$atrs['NAME']];
 			}
 		}
 	}
 	return $atrs;
+}
+
+function TagInputDisplay($t, $tag)
+{
+	switch (strtolower($tag['TYPE']))
+	{
+		case 'hidden':
+		case 'submit':
+		case 'button':
+			break;
+		case 'password':
+			return '********';
+		case 'text':
+			return $tag['VALUE'];
+		case 'date':
+			return date('m/d/Y', $tag['VALUE']);
+		case 'checkbox':
+			return $tag['CHECKED'] == 'checked' ? 'Yes' : 'No';
+		default:
+			varinfo($tag);
+	}
 }
 
 function GetNav($links, $attribs = null)

@@ -514,11 +514,13 @@ class Template
 
 	function GetString($str)
 	{
+		$nstr = $this->ProcessCode($str);
+
 		if ($this->Behavior->MakeDynamic)
 		{
 			if (!file_exists('temp_cache')) mkdir('temp_cache');
 
-			$md5 = md5($str);
+			$md5 = md5($nstr);
 
 			if (file_exists('temp_cache/'.$md5))
 				$this->config = unserialize(file_get_contents('temp_cache/'.$md5));
@@ -545,7 +547,7 @@ class Template
 		xml_set_character_data_handler($this->parser, 'CData');
  		xml_set_processing_instruction_handler($this->parser, 'Process');
 
-		if (!xml_parse($this->parser, $str))
+		if (!xml_parse($this->parser, $nstr))
 		{
 			echo "XML Error: " . xml_error_string(xml_get_error_code($this->parser)) .
 			" on line " . xml_get_current_line_number($this->parser);
@@ -578,6 +580,18 @@ class Template
 		else if (isset($this->data[$tvar])) return $this->data[$tvar];
 		else if ($this->use_getvar) return GetVar($tvar);
 		return $this->Behavior->Bleed ? $match[0] : null;
+	}
+
+	function ProcessCode($str)
+	{
+		return preg_replace_callback('/(<\?php|<\?)(.+?)\?>/s', array(&$this, 'CodeCallback'), $str);
+	}
+
+	function CodeCallback($m)
+	{
+		ob_start();
+		eval($m[2]);
+		return ob_get_clean();
 	}
 }
 
