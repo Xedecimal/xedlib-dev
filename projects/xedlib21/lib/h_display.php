@@ -1663,7 +1663,7 @@ function TagInputData(&$atrs)
 	return $atrs;
 }
 
-function TagInputDisplay($t, $tag)
+function TagInputDisplay($t, $guts, $tag)
 {
 	switch (strtolower($tag['TYPE']))
 	{
@@ -1680,7 +1680,7 @@ function TagInputDisplay($t, $tag)
 		case 'checkbox':
 			return $tag['CHECKED'] == 'checked' ? 'Yes' : 'No';
 		default:
-			varinfo($tag);
+			echo "Unknown type: {$tag}<br/>\n";
 	}
 }
 

@@ -75,13 +75,6 @@ class FileManager
 	private $cf;
 
 	/**
-	 * Filter that new folders will begin with.
-	 *
-	 * @var FilterDefault
-	 */
-	private $DefaultFilter;
-
-	/**
 	 * Default options for any file.
 	 *
 	 * @var array
@@ -115,12 +108,11 @@ class FileManager
 	 * @param array $filters Directory filters allowed.
 	 * @param string $DefaultFilter Default selected filter.
 	 */
-	function FileManager($name, $root, $filters = null, $DefaultFilter = 'Default')
+	function FileManager($name, $root, $filters = null)
 	{
 		$this->filters = $filters;
 
 		$this->Name = $name;
-		$this->DefaultFilter = $DefaultFilter;
 		$this->Root = $root;
 
 		$this->Behavior = new FileManagerBehavior();
@@ -163,12 +155,17 @@ class FileManager
 	 */
 	function Prepare($action)
 	{
+		$cf = GetVar('cf');
+		if ($cf != $_SESSION['cf']) $_SESSION[$this->Name.'_cf'] = $cf;
+
+		$act = $_SESSION[$this->Name.'_action'];
+
 		//Don't allow renaming the root or the file manager will throw errors ever after.
 		if (empty($this->cf)) $this->Behavior->AllowRename = false;
 
 		//Actions
 
-		if ($action == 'upload' && $this->Behavior->AllowUpload)
+		if ($act == 'upload' && $this->Behavior->AllowUpload)
 		{
 			$fi = new FileInfo($this->Root.$this->cf);
 			$filter = FileInfo::GetFilter($fi, $this->Root, $this->filters);
@@ -212,7 +209,7 @@ class FileManager
 				}
 			}
 		}
-		else if ($action == "Save")
+		else if ($act == "Save")
 		{
 			if (!$this->Behavior->AllowEdit) return;
 			$info = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
@@ -240,7 +237,7 @@ class FileManager
 						$info->path);
 			}
 		}
-		else if ($action == 'Update Captions') //Mass Captions
+		else if ($act == 'Update Captions') //Mass Captions
 		{
 			if (!$this->Behavior->AllowEdit) return;
 			$caps = GetVar('titles');
@@ -255,7 +252,7 @@ class FileManager
 				$fi->SaveInfo();
 			}
 		}
-		else if ($action == 'Rename')
+		else if ($act == 'Rename')
 		{
 			if (!$this->Behavior->AllowRename) return;
 			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
@@ -267,7 +264,7 @@ class FileManager
 				RunCallbacks($this->Behavior->Watcher, FM_ACTION_RENAME,
 					$fi->path.' to '.$name);
 		}
-		else if ($action == "Delete")
+		else if ($act == "Delete")
 		{
 			if (!$this->Behavior->AllowDelete) return;
 			$sels = GetVar('sels');
@@ -285,7 +282,7 @@ class FileManager
 						$fi->path);
 			}
 		}
-		else if ($action == 'Create')
+		else if ($act == 'Create')
 		{
 			if (!$this->Behavior->AllowCreateDir) return;
 			$p = $this->Root.$this->cf.GetVar("cname");
@@ -296,7 +293,7 @@ class FileManager
 			if (!empty($this->Behavior->Watcher))
 				RunCallbacks($this->Behavior->Watcher, FM_ACTION_CREATE, $p);
 		}
-		else if ($action == 'swap')
+		else if ($act == 'swap')
 		{
 			$this->files = $this->GetDirectory();
 			$index = GetVar('index');
@@ -318,7 +315,7 @@ class FileManager
 				RunCallbacks($this->Behavior->Watcher, FM_ACTION_REORDER,
 					$sfile->path . ' ' . ($cd == 'up' ? 'up' : 'down'));
 		}
-		else if ($action == 'Move')
+		else if ($act == 'Move')
 		{
 			$sels = GetVar('sels');
 			$ct = GetVar('ct');
@@ -335,7 +332,7 @@ class FileManager
 			}
 		}
 
-		else if ($action == 'Download Selected')
+		else if ($act == 'Download Selected')
 		{
 			require_once('3rd/zipfile.php');
 			$zip = new zipfile();
@@ -427,7 +424,6 @@ class FileManager
 	{
 		if (!is_file($this->Root.$this->cf)) return;
 		return $guts;
-		//$this->DownloadContent = $guts;
 	}
 
 	function TagFolders($t, $guts, $attribs)
@@ -486,7 +482,8 @@ class FileManager
 				$this->vars['url'] = $cb($f);
 			}
 			else if ($this->Behavior->UseInfo)
-				$this->vars['url'] = "{{target}}?editor={{fn_name}}&amp;cf={{cf}}{$f->filename}";
+				$this->vars['url'] = URL($me,
+					array($this->Name.'_cf' => $this->cf.$f->filename));
 			else
 				$this->vars['url'] = $this->Root."{$this->cf}{$f->filename}";
 			$this->vars['filename'] = $f->filename;
@@ -633,7 +630,7 @@ class FileManager
 	* @param string $action Current action, usually stored in GetVar('ca').
 	* @return string Output.
 	*/
-	function Get($target, $action, $defaults = null)
+	function Get()
 	{
 		if (!file_exists($this->Root.$this->cf))
 			return "FileManager::Get(): File doesn't exist ({$this->Root}{$this->cf}).<br/>\n";
@@ -683,13 +680,9 @@ class FileManager
 		$t->ReWrite('options', array(&$this, 'TagOptions'));
 		$t->ReWrite('addopts', array(&$this, 'TagAddOpts'));
 
-		$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
+		$fi = new FileInfo($this->Root.$this->cf);
 
 		$t->Set('fn_name', $this->Name);
-
-		//if (!empty($this->filters)) $fi->DefaultFilter = $this->filters[0];
-
-		//$t->Set('options', $this->GetOptions($fi, $target, $action));
 
 		return $t->Get($this->Template);
 	}
