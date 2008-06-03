@@ -6,7 +6,7 @@
 <null>
 
 <page_head>
-<script type="text/javascript" src="xedlib/js/helper.js"></script>
+<script type="text/javascript" src="{{relpath}}/js/helper.js"></script>
 
 <script type="text/javascript">
 window.onload = function() {
@@ -23,8 +23,6 @@ window.onload = function() {
 </header>
 
 <form action="{{me}}" method="post" enctype="multipart/form-data">
-<input type="hidden" name="editor" value="{{fn_name}}" />
-<input type="hidden" name="cf" value="{{cf}}" />
 
 <table>
 	<tr>
@@ -37,27 +35,33 @@ window.onload = function() {
 			<tr><td>
 				<div id="{{fn_name}}_mass_options">
 				<p>With selected files...</p>
-				<behavior type="AllowMove"><input type="submit" name="ca" value="Move" /> to {{dirsel}}<br/></behavior>
-				<behavior type="AllowDelete"><input type="submit" name="ca" value="Delete"
-					onclick="return confirm('Are you sure you wish to delete these files?')" /></behavior>
-				<behavior type="AllowDownloadZip"><input type="submit" name="ca" value="Download Selected" /></behavior>
+				<behavior type="AllowMove"><input type="submit"
+					name="{{fn_name}}_action" value="Move" /> to
+					{{dirsel}}<br/></behavior>
+				<behavior type="AllowDelete"><input type="submit"
+					name="{{fn_name}}_action" value="Delete" onclick="return
+					confirm('Are you sure you wish to delete these files?')"/>
+				</behavior>
+				<behavior type="AllowDownloadZip"><input type="submit" name="ca"
+					value="Download Selected" /></behavior>
 				</div>
 			</td></tr>
 
 			<search>
 			<!-- Search -->
 			<tr><td class="opt_title">
-				<a href="#" onclick="$('#{{fn_name}}_search').toggle('slow');return false;">Search</a>
+				<a href="#"
+					onclick="$('#{{fn_name}}_search').toggle('slow'); return
+					false;">Search</a>
 			</td><td>
-				<img id="img{{fn_name}}_search" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_search"
+					src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
 				<div id="{{fn_name}}_search" style="display: none">
-					<input type="hidden" name="editor" value="{{fn_name}}" />
-					<input type="hidden" name="cf" value="{{cf}}"/>
-					<table>
-					<tr><td>Search for</td><td><input type="text" name="cq" /></td></tr>
-					<tr><td></td><td><input type="submit" name="ca" value="Search" /></td></tr>
-					</table>
+				<table>
+				<tr><td>Search for</td><td><input type="text" name="cq" /></td></tr>
+				<tr><td></td><td><input type="submit" name="ca" value="Search" /></td></tr>
+				</table>
 				</div>
 			</td></tr>
 			</search>
@@ -90,8 +94,8 @@ window.onload = function() {
 				<img id="img{{fn_name}}_create" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
 				<div id="{{fn_name}}_create" style="display: none">
-					<input type="text" name="cname" />
-					<input type="submit" name="ca" value="Create" /><br/>
+					<input type="text" name="{{fn_name}}_cname" />
+					<input type="submit" name="{{fn_name}}_action" value="Create" /><br/>
 				</div>
 			</td></tr>
 			</behavior>
@@ -104,8 +108,8 @@ window.onload = function() {
 				<img id="img{{fn_name}}_rename" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td>
 				<div id="{{fn_name}}_rename" style="display: none">
-				<input type="text" name="rname" value="{{filename}}" />
-				<input type="submit" name="ca" value="Rename" /><br/>
+				<input type="text" name="{{fn_name}}_rname" value="{{filename}}" />
+				<input type="submit" name="{{fn_name}}_action" value="Rename" /><br/>
 				</div>
 			</td></tr>
 			</behavior>
@@ -137,25 +141,25 @@ window.onload = function() {
 			<table>
 				<check><tr>
 					<td>&nbsp;</td>
-					<td><input type="checkbox" id="sel_folders"
-						onclick="$('input').filter('[id^=sel_folders]').
+					<td><input type="checkbox" id="{{fn_name}}_sel_folders"
+						onclick="$('input').filter('[id^={{fn_name}}_sel_folders]').
 						attr('checked', this.checked ? 'checked' : '');
-						toggleAny(['sel_files_', 'sel_folders_'],
+						toggleAny(['{{fn_name}}_sel_files_', '{{fn_name}}_sel_folders_'],
 						'{{fn_name}}_mass_options');" /></td>
-					<td><label for="sel_folders">Select All</label></td>
+					<td><label for="{{fn_name}}_sel_folders">Select All</label></td>
 				</tr></check>
 				<folder>
 					<tr>
-					<td><icon><img src="{{icon}}" alt="icon" /></icon></td>
+					<td align="right"><icon><img src="{{icon}}" alt="icon" /></icon></td>
 					<check>
 						<td>
-							<input type="checkbox" id="sel_{{type}}_{{index}}"
-							name="sels[]" value="{{fipath}}"
-							onclick="toggleAny(['sel_files_', 'sel_folders_'],
+							<input type="checkbox" id="{{fn_name}}_sel_{{type}}_{{index}}"
+							name="{{fn_name}}_sels[]" value="{{fipath}}"
+							onclick="toggleAny(['{{fn_name}}_sel_files_', '{{fn_name}}_sel_folders_'],
 								'{{fn_name}}_mass_options');" />
 						</td>
 					</check>
-					<td><a href="{{target}}?editor={{fn_name}}&amp;amp;amp;cf={{cf}}/{{filename}}">{{filename}}</a>
+					<td><a href="{{url}}">{{caption}}</a>
 					</td></tr>
 				</folder>
 			</table>
@@ -176,7 +180,7 @@ window.onload = function() {
 				</tr></check>
 				<file>
 				<tr>
-				<td><icon><img src="{{icon}}" alt="icon" /></icon></td>
+				<td align="right"><icon><img src="{{icon}}" alt="icon" /></icon></td>
 				<check>
 					<td>
 						<input type="checkbox" id="sel_{{type}}_{{index}}"

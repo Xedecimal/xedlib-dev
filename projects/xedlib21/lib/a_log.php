@@ -106,7 +106,7 @@ class LoggerAuth extends EditorHandler
 				$this->actions[$item['log_action']] : $item['log_action'];
 			$tbl->AddRow(array(
 				array($item['log_date'],   array('id' => "{$idlead}log_date{$idend}")),
-				array($item['user'],   array('id' => "{$idlead}usr_name{$idend}")),
+				array($item['usr_id'],     array('id' => "{$idlead}usr_name{$idend}")),
 				array($action,             array('id' => "{$idlead}log_action{$idend}")),
 				array($item['log_target'], array('id' => "{$idlead}log_target{$idend}"))
 			));

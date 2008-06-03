@@ -710,7 +710,7 @@ class FormInput
 		}
 		if ($this->type == 'select' || $this->type == 'selects')
 		{
-			$this->atrs['NAME'] = $this->name;
+			$this->atrs['NAME'] = $parent.'_'.$this->name;
 			if (!isset($this->atrs['ID']))
 				$this->atrs['ID'] = CleanID($parent.'_'.$this->name);
 			if ($this->type == 'selects')
@@ -839,7 +839,7 @@ class FormInput
 		$val = $this->GetValue($persist && $this->type != 'radio');
 
 		return "<input type=\"{$this->type}\"
-			name=\"{$this->name}\"
+			name=\"{$parent}_{$this->name}\"
 			id=\"".CleanID($parent.'_'.$this->name)."\"".
 			" value=\"{$val}\" {$this->atrs}/>";
 	}

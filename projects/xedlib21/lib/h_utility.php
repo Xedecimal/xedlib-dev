@@ -974,7 +974,8 @@ function preg_files($pattern, $path, $opts = 3)
  */
 function is_in($src, $dst)
 {
-	return substr(realpath($src), 0, strlen(realpath($dst))) == realpath($dst);
+	$rpdst = realpath($dst);
+	return substr(realpath($src), 0, strlen($rpdst)) == $rpdst;
 }
 
 function crypt_apr1_md5($plainpasswd)
@@ -1041,6 +1042,11 @@ function Comb($path, $exclude = null)
 		else $ret = array_merge($ret, Comb($path.'/'.$f));
 	}
 	return $ret;
+}
+
+function GetState($name)
+{
+	return SetVar($name, GetVar($name));
 }
 
 ?>

@@ -106,17 +106,16 @@ class FileManager
 	 * @param string $name Name of this instance.
 	 * @param string $root Highlest folder level allowed.
 	 * @param array $filters Directory filters allowed.
-	 * @param string $DefaultFilter Default selected filter.
 	 */
 	function FileManager($name, $root, $filters = null)
 	{
-		$this->filters = $filters;
-
 		$this->Name = $name;
 		$this->Root = $root;
+		$this->filters = $filters;
 
 		$this->Behavior = new FileManagerBehavior();
 		$this->View = new FileManagerView();
+
 		$this->Template = dirname(__FILE__).'/temps/file.xml';
 
 		if (!file_exists($root))
@@ -125,7 +124,8 @@ class FileManager
 
 		//Append trailing slash.
 		if (substr($this->Root, -1) != '/') $this->Root .= '/';
-		$this->cf = SecurePath(GetVar('cf'));
+		$this->cf = SecurePath(GetState($this->Name.'_cf'));
+		if (!file_exists($this->Root.$this->cf)) $this->cf = '';
 
 		if (is_dir($this->Root.$this->cf)
 			&& strlen($this->cf) > 0
@@ -153,12 +153,9 @@ class FileManager
 	 *
 	 * @param string $action Use GetVar('ca') usually.
 	 */
-	function Prepare($action)
+	function Prepare()
 	{
-		$cf = GetVar('cf');
-		if ($cf != $_SESSION['cf']) $_SESSION[$this->Name.'_cf'] = $cf;
-
-		$act = $_SESSION[$this->Name.'_action'];
+		$act = GetVar($this->Name.'_action');
 
 		//Don't allow renaming the root or the file manager will throw errors ever after.
 		if (empty($this->cf)) $this->Behavior->AllowRename = false;
@@ -212,8 +209,8 @@ class FileManager
 		else if ($act == "Save")
 		{
 			if (!$this->Behavior->AllowEdit) return;
-			$info = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
-			$newinfo = GetPost('info');
+			$info = new FileInfo($this->Root.$this->cf, $this->filters);
+			$newinfo = GetPost($this->Name.'_info');
 			$f = FileInfo::GetFilter($info, $this->Root, $this->filters);
 			$f->Updated($info, $newinfo);
 			$this->Behavior->Update($newinfo);
@@ -240,12 +237,12 @@ class FileManager
 		else if ($act == 'Update Captions') //Mass Captions
 		{
 			if (!$this->Behavior->AllowEdit) return;
-			$caps = GetVar('titles');
+			$caps = GetVar($this->Name.'_titles');
 
 			if (!empty($caps))
 			foreach ($caps as $file => $cap)
 			{
-				$fi = new FileInfo($this->Root.$this->cf.$file, $this->DefaultFilter);
+				$fi = new FileInfo($this->Root.$this->cf.$file, $this->filters);
 				$fi->info['title'] = $cap;
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
 				$f->Updated($fi, $fi->info);
@@ -255,8 +252,8 @@ class FileManager
 		else if ($act == 'Rename')
 		{
 			if (!$this->Behavior->AllowRename) return;
-			$fi = new FileInfo($this->Root.$this->cf, $this->DefaultFilter);
-			$name = GetVar('rname');
+			$fi = new FileInfo($this->Root.$this->cf, $this->filters);
+			$name = GetVar($this->Name.'_rname');
 			$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
 			$f->Rename($fi, $name);
 			$this->cf = substr($fi->path, strlen($this->Root)).'/';
@@ -267,14 +264,14 @@ class FileManager
 		else if ($act == "Delete")
 		{
 			if (!$this->Behavior->AllowDelete) return;
-			$sels = GetVar('sels');
+			$sels = GetVar($this->Name.'_sels');
 			if (!empty($sels))
 			foreach ($sels as $file)
 			{
-				$fi = new FileInfo($file, $this->DefaultFilter);
+				$fi = new FileInfo($file, $this->filters);
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
 				$f->Delete($fi, $this->Behavior->Recycle);
-				$types = GetVar('type');
+				$types = GetVar($this->Name.'_type');
 				$this->files = $this->GetDirectory();
 				$ix = 0;
 				if (!empty($this->Behavior->Watcher))
@@ -285,7 +282,7 @@ class FileManager
 		else if ($act == 'Create')
 		{
 			if (!$this->Behavior->AllowCreateDir) return;
-			$p = $this->Root.$this->cf.GetVar("cname");
+			$p = $this->Root.$this->cf.GetVar($this->Name."_cname");
 			mkdir($p);
 			chmod($p, 0755);
 			FilterDefault::UpdateMTime($p);
@@ -317,12 +314,12 @@ class FileManager
 		}
 		else if ($act == 'Move')
 		{
-			$sels = GetVar('sels');
-			$ct = GetVar('ct');
+			$sels = GetVar($this->Name.'_sels');
+			$ct = GetVar($this->Name.'_ct');
 			if (!empty($sels))
 			foreach ($sels as $file)
 			{
-				$fi = new FileInfo($file, $this->DefaultFilter);
+				$fi = new FileInfo($file, $this->filters);
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
 				$f->Rename($fi, $ct.$fi->filename);
 
@@ -336,7 +333,7 @@ class FileManager
 		{
 			require_once('3rd/zipfile.php');
 			$zip = new zipfile();
-			$sels = GetVar('sels');
+			$sels = GetVar($this->Name.'_sels');
 			$total = array();
 			foreach ($sels as $s) $total = array_merge($total, Comb($s, '#^t_.*#'));
 
@@ -388,18 +385,20 @@ class FileManager
 
 		if (isset($this->cf))
 		{
-			$d['uri'] = URL($this->vars['target'], array('editor' => $this->Name));
+			$d['uri'] = URL($this->vars['target'],
+				array($this->Name.'_cf' => '/'));
 			$d['name'] = $attribs['ROOT'];
 			$ret .= $vp->ParseVars($guts, $d);
 		}
 
 		$items = explode('/', substr($fi->path, strlen($this->Root)));
+
+		global $me;
 		for ($ix = 0; $ix < count($items); $ix++)
 		{
 			if (strlen($items[$ix]) < 1) continue;
 			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
-			$uri = URL($this->vars['target'], array('editor' => $this->Name,
-				'cf' => $cpath));
+			$uri = URL($me, array($this->Name.'_cf' => $cpath));
 			$ret .= ' '.$attribs['SEP'];
 			$d['name'] = $items[$ix];
 			$d['uri'] = $uri;
@@ -440,9 +439,28 @@ class FileManager
 		if (!empty($this->files['folders']))
 		foreach ($this->files['folders'] as $f)
 		{
-			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
+			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir);
 			if (!$f->show) continue;
+
+			global $me;
+			if (isset($this->Behavior->FolderCallback))
+			{
+				$cb = $this->Behavior->FolderCallback;
+				$vars = $cb($f);
+				foreach ($vars as $k => $v)
+				{
+					$vars["{$this->Name}_$k"] = $v;
+					unset($vars[$k]);
+				}
+				global $me;
+				$this->vars['url'] = URL($me, $vars);
+			}
+			else
+				$this->vars['url'] = URL($me, array($this->Name.'_cf' =>
+					"{$this->cf}{$f->filename}"));
+
 			$this->curfile = $f;
+			$this->vars['caption'] = $this->View->GetCaption($f);
 			$this->vars['filename'] = $f->filename;
 			$this->vars['fipath'] = $f->path;
 			$this->vars['type'] = 'folders';
@@ -471,7 +489,7 @@ class FileManager
 		if (!empty($this->files['files']))
 		foreach ($this->files['files'] as $f)
 		{
-			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir, $this->DefaultFilter);
+			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir);
 			if (!$f->show) continue;
 
 			$this->curfile = $f;
@@ -479,7 +497,14 @@ class FileManager
 			if (isset($this->Behavior->FileCallback))
 			{
 				$cb = $this->Behavior->FileCallback;
-				$this->vars['url'] = $cb($f);
+				$vars = $cb($f, $this->cf.$f->filename);
+				foreach ($vars as $k => $v)
+				{
+					$vars["{$this->Name}_$k"] = $v;
+					unset($vars[$k]);
+				}
+				global $me;
+				$this->vars['url'] = URL($me, $vars);
 			}
 			else if ($this->Behavior->UseInfo)
 				$this->vars['url'] = URL($me,
@@ -578,10 +603,8 @@ class FileManager
 
 		if ($this->Behavior->AllowSetType && count($this->filters) > 1 && is_dir($fi->path))
 		{
-			$in = new FormInput('Change Type', 'select',
-				'info[type]',
-				ArrayToSelOptions($this->filters, $f->Name,
-				false));
+			$in = new FormInput('Change Type', 'select', 'info[type]',
+				ArrayToSelOptions($this->filters, $f->Name, false));
 			$this->vars['text'] = $in->text;
 			$this->vars['field'] = $in->Get($this->Name);
 			$ret .= $vp->ParseVars($guts, $this->vars);
@@ -594,8 +617,6 @@ class FileManager
 		{
 			foreach ($options as $col => $field)
 			{
-				//if (is_string($field)) $form->AddInput($field);
-				//else $form->AddInput($field);
 				if (is_string($field))
 				{
 					$this->vars['text'] = '';
@@ -611,14 +632,11 @@ class FileManager
 			}
 			if ($this->Behavior->UpdateButton)
 			{
-				$sub = new FormInput(null, 'submit', 'ca', 'Save');
+				$sub = new FormInput(null, 'submit', 'action', 'Save');
 				$this->vars['text'] = '';
 				$this->vars['field'] = $sub->Get($this->Name, false);
 				$ret .= $vp->ParseVars($guts, $this->vars);
 			}
-
-			/*$ret .= $form->Get('method="post" enctype="multipart/form-data"
-				action="'.$this->vars['target'].'"');*/
 		}
 		return $ret.'</table>';
 	}
@@ -642,13 +660,14 @@ class FileManager
 		//TODO: Get rid of this.
 		$fi = new FileInfo($this->Root.$this->cf);
 
-		$this->vars['target'] = $target;
+		global $me;
+		$this->vars['target'] = $me;
 		$this->vars['root'] = $this->Root;
 		$this->vars['cf'] = $this->cf;
 
 		$this->vars['filename'] = $fi->filename;
 		$this->vars['path'] = $this->Root.$this->cf;
-		$this->vars['dirsel'] = $this->GetDirectorySelect('ct');
+		$this->vars['dirsel'] = $this->GetDirectorySelect($this->Name.'_ct');
 		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
 		$this->vars['host'] = GetVar('HTTP_HOST');
 		$this->vars['sid'] = GetVar('PHPSESSID');
@@ -878,7 +897,7 @@ class FileManager
 			if ($file[0] == '.') continue;
 			//TODO: Should handle this on a filter level.
 			if (substr($file, 0, 2) == 't_') continue;
-			$newfi = new FileInfo($this->Root.$this->cf.$file, $this->DefaultFilter);
+			$newfi = new FileInfo($this->Root.$this->cf.$file, $this->filters);
 			if (!isset($newfi->info['index'])) $newfi->info['index'] = 0;
 			if (!$newfi->show) continue;
 			if (is_dir($this->Root.$this->cf.'/'.$file))
@@ -903,10 +922,10 @@ class FileManager
 	 */
 	function cmp_file($f1, $f2)
 	{
-		if ($this->View->Sort == FM_SORT_MANUAL)
-			return $f1->info['index'] < $f2->info['index'] ? -1 : 1;
-		else
-			return strcasecmp($f1->filename, $f2->filename);
+		//if ($this->View->Sort == FM_SORT_MANUAL)
+		//	return $f1->info['index'] < $f2->info['index'] ? -1 : 1;
+		//else
+		return strnatcasecmp($f1->filename, $f2->filename);
 	}
 
 	/**
@@ -997,6 +1016,20 @@ class FileManagerView
 	public $TextAdditional = '<b>Additional Settings</b>';
 
 	public $RenameTitle = 'Rename File / Folder';
+
+	/**
+	 * Returns the caption of a given thumbnail depending on caption display
+	 * configuration.
+	 * @param FileInfo $file File to gather information from.
+	 * @return string Actual caption.
+	 */
+	function GetCaption($file)
+	{
+		if ($this->ShowTitle
+			&& !empty($file->info['title']))
+			return stripslashes($file->info['title']);
+		else return $file->filename;
+	}
 }
 
 class FileManagerBehavior
@@ -1282,9 +1315,9 @@ class FileInfo
 	 * information will be handled, manipulated or displayed.
 	 *
 	 * @param string $source Filename to gather information on.
-	 * @param string $DefaultFilter Associated directory filter.
+	 * @param array $filters Array of available filters.
 	 */
-	function FileInfo($source, $DefaultFilter = 'Default')
+	function FileInfo($source, $filters = null)
 	{
 		global $user_root;
 		if (!file_exists($source))
@@ -1307,11 +1340,6 @@ class FileInfo
 				Error("Failed to unserialize: {$finfo}<br/>\n");
 		}
 		else $this->info = array();
-		//$this->GetFilter($source, $DefaultFilter);
-		//if (is_dir($source)) $this->type = 'folder';
-
-		//$s = $this->Filter->GetInfo($this);
-		//if (!isset($s)) $this->show = false;
 	}
 
 	/**
