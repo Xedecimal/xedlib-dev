@@ -82,7 +82,9 @@ class Box
 			return $t->get($temp);
 		}
 		$ret  = '<!-- Start Box: '.$this->title.' -->';
-		$ret .= '<div class="box">';
+		$ret .= '<div ';
+		if (!empty($this->name)) $ret .= " id=\"{$this->name}\"";
+		$ret .= ' class="box">';
 		$ret .= '<div class="box_title">'.$this->title.'</div>';
 		$ret .= '<div class="box_body">'.$this->out.'</div>';
 		$ret .= '</div>';
@@ -520,7 +522,8 @@ class Form
 		foreach ($this->hiddens as $hidden)
 		{
 			$fname = $hidden[3] ? $hidden[0] : $this->name.'_'.$hidden[0];
-			$ret .= "<input type=\"hidden\" id=\"".CleanID($fname)."\" name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
+			$ret .= "<input type=\"hidden\" id=\"".CleanID($fname)."\"
+				name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
 			if (isset($hidden[2])) $ret .= ' '.$hidden[2];
 			$ret .= " />\n";
 		}
@@ -1179,6 +1182,8 @@ define('ACCESS_ADMIN', 1);
  */
 class LoginManager
 {
+	public $Name;
+
 	/**
 	 * Datasets that are associated with this LoginManager.
 	 *
@@ -1211,9 +1216,10 @@ class LoginManager
 	/**
 	 * Creates a new LoginManager.
 	 */
-	function LoginManager()
+	function LoginManager($name)
 	{
 		@session_start();
+		$this->Name = $name;
 		$this->type = CONTROL_SIMPLE;
 	}
 
@@ -1225,24 +1231,28 @@ class LoginManager
 	 * @param string $uservar Name of username session variable to manage.
 	 * @return mixed Array of user data or null if bound or true or false if not bound.
 	 */
-	function Prepare($ca, $passvar = 'sespass', $uservar = 'sesuser')
+	function Prepare($passvar = 'sespass', $uservar = 'sesuser')
 	{
+		$act = GetVar($this->Name.'_action');
+
 		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
 			? $_SESSION[$uservar] : null;
+
 		$check_pass = isset($_SESSION[$passvar]) ? $_SESSION[$passvar] : null;
 
-		if ($ca == 'login')
+		if ($act == 'login')
 		{
 			if ($this->type == CONTROL_BOUND)
 			{
-				$check_user = ($this->type == CONTROL_BOUND) ? $check_user = GetVar('auth_user') : null;
+				$check_user = ($this->type == CONTROL_BOUND) ? $check_user =
+					GetVar($this->Name.'_auth_user') : null;
 			 	SetVar($uservar, $check_user);
 			}
 
-			$check_pass = md5(GetVar('auth_pass'));
+			$check_pass = md5(GetVar($this->Name.'_auth_pass'));
 			SetVar($passvar, $check_pass);
 		}
-		if ($ca == 'logout')
+		if ($act == 'logout')
 		{
 			$check_pass = null;
 			UnsetVar($passvar);
@@ -1277,20 +1287,17 @@ class LoginManager
 	 * @param string $target Target script using this manager.
 	 * @return string
 	 */
-	function Get($target)
+	function Get()
 	{
-		global $errors, $_GET;
-		foreach ($_GET as $key => $val)
-			if ($key != 'ca' && $val != 'logout')
-				Persist($key, $val);
-		$f = new Form('login', array(null, 'width="100%"'));
-		$f->AddHidden('ca', 'login');
+		global $errors, $me;
+		$f = new Form($this->Name, array(null, 'width="100%"'));
+		$f->AddHidden($this->Name.'_action', 'login');
 		if ($this->type != CONTROL_SIMPLE)
 			$f->AddInput(new FormInput('Login', 'text', 'auth_user'));
 		$f->AddInput(new FormInput('Password', 'password', 'auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
 		$f->Template = dirname(__FILE__).'/temps/login_manager.xml';
-		return $f->Get('action="'.$target.'" method="post"');
+		return $f->Get('action="'.$me.'" method="post"');
 	}
 
 	/**
@@ -1629,8 +1636,9 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 function GetAttribs($attribs)
 {
 	$ret = '';
-	if (!empty($attribs))
+	if (is_array($attribs))
 	foreach ($attribs as $n => $v) $ret .= ' '.strtolower($n).'="'.$v.'"';
+	else return ' '.$attribs;
 	return $ret;
 }
 

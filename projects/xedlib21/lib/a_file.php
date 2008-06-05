@@ -482,6 +482,8 @@ class FileManager
 
 	function TagFile($t, $guts, $attribs)
 	{
+		global $me;
+
 		if (is_file($this->Root.$this->cf)) return;
 		$ret = '';
 		$ix = 0;
@@ -679,6 +681,7 @@ class FileManager
 		$t = new Template();
 		$t->Set($this->vars);
 
+		$t->ReWrite('form', 'TagForm');
 		$t->ReWrite('page_head', array(&$this, 'TagPageHead'));
 		$t->ReWrite('header', array(&$this, 'TagHeader'));
 		$t->ReWrite('path', array(&$this, 'TagPath'));

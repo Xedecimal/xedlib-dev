@@ -655,7 +655,7 @@ class DataSet
 	 * @param array $values eg: array('col1' => 'val1')
 	 * @return string Proper set.
 	 */
-	function GetSetString($values, $start = ' SET')
+	function GetSetString($values, $start = ' SET ')
 	{
 		$ret = $start;
 		if (!empty($values))
@@ -712,7 +712,7 @@ class DataSet
 		$query .= ")";
 		if ($update_existing)
 		{
-			$query .= " ON DUPLICATE KEY UPDATE ".$this->GetSetString($columns);
+			$query .= " ON DUPLICATE KEY UPDATE ".$this->GetSetString($columns, '');
 		}
 		$this->database->Query($query);
 		return $this->database->GetLastInsertID();

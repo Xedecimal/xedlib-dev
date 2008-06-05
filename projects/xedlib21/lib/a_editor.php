@@ -226,7 +226,7 @@ class EditorData
 	 *
 	 * @var string
 	 */
-	public $name;
+	public $Name;
 
 	/**
 	 * Dataset to interact with.
@@ -322,15 +322,17 @@ class EditorData
 	 * @param array $filter Array to constrain editing to a given expression.
 	 * @param array $sort Array of 'column' => 'desc/asc'.
 	 */
-	function EditorData($name, $ds = null, $filter = null, $sort = null)
+	function EditorData($name, &$ds, $filter = null, $sort = null)
 	{
-		$this->Behavior = new EditorDataBehavior();
 		require_once('h_utility.php');
 		require_once('h_display.php');
-		$this->name = $name;
+
+		$this->Name = $name;
 		$this->filter = $filter;
-		$this->handlers = array();
 		$this->ds = $ds;
+
+		$this->Behavior = new EditorDataBehavior();
+		$this->handlers = array();
 
 		if (strtolower(get_class($ds)) == 'dataset')
 		{
@@ -361,16 +363,15 @@ class EditorData
 	 * @param mixed $ci Current item, if bound use an identifier for the row, otherwise an unbound DataSet object.
 	 * @return null
 	 */
-	function Prepare($action, $ci = null)
+	function Prepare()
 	{
-		// Don't speak unless spoken to.
-		if (GetVar('editor') != $this->name) return;
+		$act = GetState($this->Name.'_action');
 
 		if ($this->sorting == ED_SORT_TABLE)
 			$this->sort = array(GetVar('sort', $this->ds->id) => GetVar('order', 'ASC'));
 
-		$this->state = $action == $this->name.'_edit' ? STATE_EDIT : STATE_CREATE;
-		if ($action == $this->name.'_create')
+		$this->state = $act == 'edit' ? STATE_EDIT : STATE_CREATE;
+		if ($act == 'Create')
 		{
 			$insert = array();
 			$child_id = GetVar('child');
@@ -381,7 +382,7 @@ class EditorData
 			{
 				if (is_object($in))
 				{
-					$value = GetVar($col);
+					$value = GetVar($this->Name.'_'.$col);
 					if ($in->type == 'date')
 					{
 						$insert[$col] = $value[2].'-'.$value[0].'-'.$value[1];
@@ -439,8 +440,10 @@ class EditorData
 			foreach ($this->handlers as $handler)
 				$handler->Created($id, $insert);
 		}
-		else if ($action == $this->name.'_update')
+		else if ($act == 'Update')
 		{
+			$ci = GetState($this->Name.'_ci');
+
 			if ($this->type == CONTROL_SIMPLE)
 			{
 				foreach ($this->ds->FieldInputs as $name => $i)
@@ -458,7 +461,8 @@ class EditorData
 			{
 				if (is_object($in))
 				{
-					$value = GetVar($col);
+					$value = GetVar($this->Name.'_'.$col);
+
 					if ($in->type == 'date')
 					{
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1];
@@ -486,7 +490,7 @@ class EditorData
 							$update[$col] = $ext;
 						}
 					}
-					else $update[$col] = GetVar($col);
+					else $update[$col] = $value;
 				}
 			}
 
@@ -500,7 +504,7 @@ class EditorData
 			}
 
 			if ($this->type == CONTROL_BOUND)
-				$context->ds->Update(array($context->ds->id => GetVar('ci')), $update);
+				$context->ds->Update(array($context->ds->id => $ci), $update);
 		}
 		/*else if ($action == $this->name.'_swap')
 		{
@@ -551,9 +555,9 @@ class EditorData
 
 			$context->ds->Swap(array($context->ds->id => $ci), array($context->ds->id => $ct), $context->ds->id);
 		}*/
-		else if ($action == $this->name.'_delete')
+		else if ($act == 'delete')
 		{
-			global $ci;
+			$ci = GetState($this->Name.'_ci');
 
 			$child_id = GetVar('child');
 			$context = isset($child_id) ? $this->ds->children[$child_id] : $this;
@@ -635,21 +639,23 @@ class EditorData
 	 * @param mixed $ci ID of current item (eg. GetVar('ci'))
 	 * @return string
 	 */
-	function Get($target, $ci)
+	function Get()
 	{
-		$ret['name'] = $this->name;
+		$act = GetVar($this->Name.'_action');
 
-		$ca = GetVar('ca');
-		$q = GetVar($this->name.'_q');
+		$ret['name'] = $this->Name;
 
-		if (isset($ci) && $ca == $this->name.'_edit') $this->state = STATE_EDIT;
+		$act = GetVar($this->Name.'_action');
+		$q = GetVar($this->Name.'_q');
+
+		if (isset($ci) && $act == 'edit') $this->state = STATE_EDIT;
 		$ret['ds'] = $this->ds;
-		if ($ca != $this->name.'_edit' && !empty($this->ds->DisplayColumns)
+		if ($act != 'edit' && !empty($this->ds->DisplayColumns)
 			&& ($this->Behavior->Search && isset($q)))
-			$ret['table'] = $this->GetTable($target, $ci, $q);
+			$ret['table'] = $this->GetTable($target, $act, $q);
 		else $ret['table'] = null;
-		$ret['forms'] = $this->GetForms($target, $ci,
-			GetVar('editor') == $this->name ? GetVar('child') : null);
+		$ret['forms'] = $this->GetForms($target, $act,
+			GetVar('editor') == $this->Name ? GetVar('child') : null);
 		return $ret;
 	}
 
@@ -861,7 +867,7 @@ class EditorData
 			/*$items = $this->ds->GetInternal($this->filter, $this->sort,
 				null, $joins, $cols);*/
 
-			$items = $this->ds->GetSearch($cols, GetVar($this->name.'_q'),
+			$items = $this->ds->GetSearch($cols, GetVar($this->Name.'_q'),
 				null, null, $this->sort, $this->filter);
 
 			$root = $this->BuildTree($items);
@@ -895,9 +901,9 @@ class EditorData
 			}
 
 			if ($this->sorting == ED_SORT_TABLE)
-				$table = new SortTable($this->name.'_table', $cols, $atrs);
+				$table = new SortTable($this->Name.'_table', $cols, $atrs);
 			else
-				$table = new Table($this->name.'_table', $cols, $atrs);
+				$table = new Table($this->Name.'_table', $cols, $atrs);
 
 			$rows = array();
 			$this->AddRows($rows, $target, $root, 0);
@@ -979,13 +985,13 @@ class EditorData
 					{
 						$row[$ix++] = array(
 							htmlspecialchars(stripslashes($cnode->data[$disp_index])),
-							array('class' => 'editor_cell', 'id' => "{$this->name}:{$col}:{$cnode->id}")
+							array('class' => 'editor_cell', 'id' => "{$this->Name}:{$col}:{$cnode->id}")
 						);
 					}
 				}
 			}
 
-			$url_defaults = array('editor' => $this->name);
+			$url_defaults = array('editor' => $this->Name);
 			if (isset($child_id)) $url_defaults['child'] = $child_id;
 
 			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
@@ -994,14 +1000,16 @@ class EditorData
 
 			if ($this->Behavior->AllowEdit)
 			{
-				$url_edit = URL($target, array_merge(array('ca' =>
-					$this->name.'_edit', 'ci' => $cnode->id), $url_defaults));
-				$url_del = URL($target, array_merge(array('ca' =>
-					$this->name.'_delete', 'ci' => $cnode->id), $url_defaults));
-				$row[] = "<a href=\"$url_edit#{$this->name}_editor\"><img
+				$url_edit = URL($target, array_merge(array(
+					$this->Name.'_action' => 'edit',
+					$this->Name.'_ci' => $cnode->id), $url_defaults));
+				$url_del = URL($target, array_merge(array(
+					$this->Name.'_action' => 'delete',
+					$this->Name.'_ci' => $cnode->id), $url_defaults));
+				$row[] = "<a href=\"$url_edit#box_{$this->Name}_forms\"><img
 					src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit
 					Item\" class=\"png\" /></a>";
-				$row[] = "<a href=\"$url_del#{$this->name}_table\"
+				$row[] = "<a href=\"$url_del#{$this->Name}_table\"
 					onclick=\"return confirm('Are you sure?')\"><img
 					src=\"{$p}/images/delete.png\" alt=\"Delete\" title=\"Delete
 					Item\" class=\"png\" /></a>";
@@ -1062,13 +1070,16 @@ class EditorData
 	 * @param int $curchild Current child by DataSet Relation.
 	 * @return string
 	 */
-	function GetForm($target, $ci, $state, $curchild = null)
+	function GetForm($state, $curchild = null)
 	{
-		$fullname = 'form_'.$state;
+		$fullname = $this->Name;
+		if ($curchild != null) $fullname .= '_'.$curchild;
+		$ci = GetState($this->Name.'_ci');
 
 		if ($this->type == CONTROL_BOUND)
 		{
-			$context = isset($curchild) ? $this->ds->children[$curchild] : $this;
+			$context = isset($curchild) ? $this->ds->children[$curchild] :
+				$this;
 
 			if (!isset($this->ds)) Error("<br />What: Dataset is not set.
 				<br />Where: EditorData({$this->name})::GetForm.
@@ -1093,7 +1104,8 @@ class EditorData
 			foreach ($ds->FieldInputs as $n => $i)
 			{
 				if (isset($this->values[$n]))
-					$ds->FieldInputs[$n]->valu = stripslashes($this->values[$n]);
+					$ds->FieldInputs[$n]->valu =
+						stripslashes($this->values[$n]);
 			}
 		}
 
@@ -1106,16 +1118,13 @@ class EditorData
 				$frm->Validation = $ds->Validation;
 				$frm->Errors = $ds->Errors;
 			}
-			$frm->AddHidden('editor', $this->name);
-			$frm->AddHidden('ca', $state == STATE_EDIT || $this->type != CONTROL_BOUND
-				? $this->name.'_update' : $this->name.'_create');
+
 			if ($state == STATE_EDIT || $this->type != CONTROL_BOUND)
-				$frm->AddHidden('ci', $ci);
+				$frm->AddHidden($this->Name.'_ci', $ci);
 
 			global $PERSISTS;
 			if (!empty($PERSISTS))
-			foreach ($PERSISTS as $key => $val)
-				$frm->AddHidden($key, $val);
+			foreach ($PERSISTS as $key => $val) $frm->AddHidden($key, $val);
 
 			if (isset($curchild))
 			{
@@ -1189,10 +1198,9 @@ class EditorData
 				? 'Update' : 'Create';
 			$frm->Description = $ds->Description;
 			$frm->AddInput(
-				$frm->GetSubmitButton('butSubmit', $frm->State).
+				$frm->GetSubmitButton($this->Name.'_action', $frm->State).
 				($state == STATE_EDIT && $this->type == CONTROL_BOUND ?
-				 '<input type="button" value="Cancel"
-				 onclick="javascript: document.location.href=\''.$target.'?editor='.$this->name.'\'"/>'
+				 '<input type="submit" name="'.$this->Name.'_action" value="Cancel" />'
 				 : null)
 			);
 
@@ -1209,22 +1217,25 @@ class EditorData
 	 * @param int $curchild Current child.
 	 * @return string
 	 */
-	function GetForms($target, $ci, $curchild = null)
+	function GetForms($curchild = null)
 	{
 		$ret = null;
 		$context = $curchild != null ? $this->ds->children[$curchild] : $this;
 
-		$frm = $this->GetForm($target, $ci, $this->state, $curchild);
+		$ci = GetState($this->Name.'_ci');
+		$ca = GetVar($this->Name.'_ca');
+
+		$frm = $this->GetForm($this->state, $curchild);
 		if ($frm != null) $ret[] = $frm;
 
-		if (isset($ci) && GetVar('ca') == $this->name.'_edit')
+		if (isset($ci) && $ca == 'edit')
 		{
 			if (!empty($context->ds->children))
 			foreach ($context->ds->children as $ix => $child)
 			{
 				if (isset($child->ds->FieldInputs))
 				{
-					$ret[] = $this->GetForm($target, $ci, STATE_CREATE, $ix);
+					$ret[] = $this->GetForm(STATE_CREATE, $ix);
 				}
 			}
 		}
@@ -1233,15 +1244,18 @@ class EditorData
 
 	function TagForms($t, $guts)
 	{
+		global $me;
+
 		$out = '';
-		$forms = $this->GetForms($this->target, $this->ci);
+		$ci = GetState($this->Name.'_ci');
+		$forms = $this->GetForms();
 		$vp = new VarParser();
 		if (!empty($forms))
 		foreach ($forms as $frm)
 		{
 			$d['form_title'] = "{$frm->State} {$frm->Description}";
 			$d['form_content'] = $frm->Get('method="post" action="'.
-				$this->target.'"'.(isset($form_atrs) ? ' '.$form_atrs : null),
+				$me.'"'.(isset($form_atrs) ? ' '.$form_atrs : null),
 				'class="form"');
 			$out .= $vp->ParseVars($guts, $d);
 		}
@@ -1260,26 +1274,23 @@ class EditorData
 	 * @param string $form_atrs Additional form attributes.
 	 * @return string Rendered html of associated objects.
 	 */
-	function GetUI($target, $ci)
+	function GetUI()
 	{
 		require_once('h_template.php');
 
-		$this->target = $target;
-		$this->ci = $ci;
-
 		//$editor_return = $this->Get($target, $ci);
-		//$editor_return['table'] = $this->GetTable($target, $ci);
 
 		$t = new Template();
 		$t->ReWrite('forms', array($this, 'TagForms'));
 		$t->ReWrite('part', array($this, 'TagPart'));
-		$t->Set('name', $this->name);
-		$t->Set('plural', Plural($this->name));
+		$t->Set('name', $this->Name);
+		$t->Set('plural', Plural($this->Name));
 
 		if (!empty($this->ds))
 			$t->Set('table_title', Plural($this->ds->Description));
 
-		$t->Set('table', $this->GetTable($target, $ci));
+		global $me;
+		$t->Set('table', $this->GetTable($me, GetState($this->Name.'_ci')));
 
 		if (!empty($editor_return['forms']))
 		{
