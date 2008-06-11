@@ -1172,6 +1172,12 @@ class TreeNode
 		$this->data = $data;
 		$this->children = array();
 	}
+
+	function AddChild(&$tn)
+	{
+		$this->children[] = $tn;
+		$tn->parent = $this;
+	}
 }
 
 define('ACCESS_GUEST', 0);
