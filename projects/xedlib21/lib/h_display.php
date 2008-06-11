@@ -804,24 +804,24 @@ class FormInput
 		if ($this->type == 'date')
 		{
 			$this->labl = false;
-			return GetInputDate($this->name, $this->valu);
+			return GetInputDate($parent.'_'.$this->name, $this->valu);
 		}
 		if ($this->type == 'time')
 		{
 			$this->labl = false;
-			return GetInputTime($this->name, $this->valu);
+			return GetInputTime($parent.'_'.$this->name, $this->valu);
 		}
 		if ($this->type == 'datetime')
 		{
 			$this->labl = false;
-			return GetInputDate($this->name, $this->valu, true);
+			return GetInputDate($parent.'_'.$this->name, $this->valu, true);
 		}
 		if ($this->type == 'area')
 		{
 			if (empty($this->atrs['ROWS'])) $this->atrs['ROWS'] = 3;
 			if (empty($this->atrs['COLS'])) $this->atrs['COLS'] = 25;
 			if (empty($this->atrs['CLASS'])) $this->atrs['CLASS'] = 'input_area';
-			if (empty($this->atrs['NAME'])) $this->atrs['NAME'] = $this->name;
+			if (empty($this->atrs['NAME'])) $this->atrs['NAME'] = $parent.'_'.$this->name;
 			if (empty($this->atrs['ID'])) $this->atrs['ID'] = $id;
 			$atrs = GetAttribs($this->atrs);
 			return "<textarea$atrs>".$this->GetValue($persist).'</textarea>';
@@ -829,14 +829,14 @@ class FormInput
 		if ($this->type == 'checkbox')
 		{
 			return "<input type=\"checkbox\"
-				name=\"{$this->name}\"
+				name=\"{$parent}_{$this->name}\"
 				id=\"".CleanID($parent.'_'.$this->name)."\"
 				value=\"1\" ".$this->GetValue($persist).
 				$this->atrs." />";
 		}
 		if ($this->type == 'state')
 		{
-			return GetInputState(@$this->name, @$this->valu, $this->atrs);
+			return GetInputState(@$parent.'_'.@$this->name, @$this->valu, $this->atrs);
 		}
 
 		$val = $this->GetValue($persist && $this->type != 'radio');
@@ -1698,20 +1698,38 @@ function TagInputDisplay($t, $guts, $tag)
 	}
 }
 
-function GetNav($links, $attribs = null)
+/**
+ * @param string $t Target page that this should link to.
+ */
+function GetNav($t, $links, $attribs = null, $curpage = null, &$pinfo = null, &$stack = null)
 {
 	$ret = '<ul'.GetAttribs($attribs).">\n";
-	foreach ($links as $ix => $link)
+	foreach ($links->children as $ix => $link)
 	{
-		if (is_array($link))
-		{
-			$ret .= "<li><a href=\"{{me}}?page=".urlencode($ix)."\">".$ix."</a>\n";
-			$ret .= GetNav($link);
-			$ret .= '</li>';
-		}
-		else $ret .= "<li><a href=\"{{me}}?page=".urlencode($link)."\">$link</a></li>\n";
+		$stack[] = $ix;
+		if ($curpage == $link->data) $pinfo = $stack;
+		$ret .= "<li><a href=\"{$t}?page=".urlencode($link->data).'"';
+		if (!empty($link->children)) $ret .= ' class="subitems"';
+		$ret .= ">{$link->data}</a>\n";
+		if (!empty($link->children))
+			$ret .= GetNav($t, $link, $attribs, $curpage, $pinfo, $stack);
+		$ret .= '</li>';
+		array_pop($stack);
 	}
 	return $ret."</ul>\n";
+}
+
+function GetNavPath($tree, $pinfo)
+{
+	$ret = '';
+	$tn = $tree;
+	if (!empty($pinfo))
+	foreach ($pinfo as $level => $idx)
+	{
+		$tn = $tn->children[$idx];
+		$ret .= ($level ? ' &raquo; ' : null)."<a href=\"index.php?page={$tn->data}\">{$tn->data}</a>";
+	}
+	return $ret;
 }
 
 function TagSum(&$t, $guts, $attribs)

@@ -109,7 +109,7 @@ class FileManager
 	 */
 	function FileManager($name, $root, $filters = null)
 	{
-		$this->Name = $name;
+		$this->Name = CleanID($name);
 		$this->Root = $root;
 		$this->filters = $filters;
 

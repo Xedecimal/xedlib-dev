@@ -667,7 +667,7 @@ function RunCallbacks()
  */
 function CleanID($id)
 {
-	return str_replace('[', '_', str_replace(']', '', $id));
+	return str_replace('[', '_', str_replace(']', '', str_replace(' ', '_', $id)));
 }
 
 /**
@@ -1047,6 +1047,18 @@ function Comb($path, $exclude = null)
 function GetState($name)
 {
 	return SetVar($name, GetVar($name));
+}
+
+function ArrayToTree($n, $arr)
+{
+	$root = new TreeNode($n);
+	foreach ($arr as $k => $v)
+	{
+		if (is_array($v)) $n = ArrayToTree($k, $v);
+		else $n = new TreeNode($v);
+		$root->AddChild($n);
+	}
+	return $root;
 }
 
 ?>
