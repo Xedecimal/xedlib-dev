@@ -1,4 +1,4 @@
-<!DOCTYPE null SYSTEM "/just/a/test.dtd" [
+<!DOCTYPE null [
 	<!ENTITY nbsp "&#160;">
 	<!ENTITY raquo "&#187;">
 ]>

@@ -1650,7 +1650,7 @@ function GetAttribs($attribs)
 
 function TagInputData(&$atrs)
 {
-	global $ci, $binds;
+	global $binds;
 
 	if (!empty($atrs['NAME']))
 	{
@@ -1719,7 +1719,7 @@ function GetNav($t, $links, $attribs = null, $curpage = null, &$pinfo = null, &$
 	return $ret."</ul>\n";
 }
 
-function GetNavPath($tree, $pinfo)
+function GetNavPath($t, $tree, $pinfo)
 {
 	$ret = '';
 	$tn = $tree;
@@ -1727,7 +1727,7 @@ function GetNavPath($tree, $pinfo)
 	foreach ($pinfo as $level => $idx)
 	{
 		$tn = $tn->children[$idx];
-		$ret .= ($level ? ' &raquo; ' : null)."<a href=\"index.php?page={$tn->data}\">{$tn->data}</a>";
+		$ret .= ($level ? ' &raquo; ' : null)."<a href=\"$t?page={$tn->data}\">{$tn->data}</a>";
 	}
 	return $ret;
 }

@@ -563,7 +563,7 @@ class Template
 		}
 		@xml_parser_free($this->parser);
 		array_pop($this->data['template.parsers']);
-		return preg_replace_callback("/\{{([^}]+)\}}/", array($this, "parse_vars"), $this->start.$this->out);
+		return preg_replace_callback('/\{{([^}]+)\}}/', array(&$this, "parse_vars"), $this->start.$this->out);
 	}
 
 	/**
@@ -625,7 +625,7 @@ class VarParser
 	function ParseVars($data, $vars)
 	{
 		$this->vars = $vars;
-		return preg_replace_callback("/\{{([^}]+)\}}/", array($this, 'var_parser'), $data);
+		return preg_replace_callback('/\{{([^}]+)\}}/', array(&$this, 'var_parser'), $data);
 	}
 
 	/**

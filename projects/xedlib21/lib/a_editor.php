@@ -641,7 +641,7 @@ class EditorData
 	 */
 	function Get()
 	{
-		$act = GetVar($this->Name.'_action');
+		$ci = GetVar($this->Name.'_item');
 
 		$ret['name'] = $this->Name;
 
@@ -1727,7 +1727,7 @@ class EditorText
 		if ($action == 'update')
 		{
 			$fp = fopen($this->item, 'w');
-			fwrite($fp, stripslashes(GetVar('body')));
+			fwrite($fp, stripslashes(GetVar($this->Name.'_body')));
 			fclose($fp);
 		}
 	}
