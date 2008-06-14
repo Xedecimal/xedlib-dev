@@ -2,7 +2,8 @@
 
 require_once('h_main.php');
 require_once('lib/h_template.php');
-require_once('lib/a_billderator.php');
+
+global $db, $me;
 
 $page_head = '';
 $page_body = '';

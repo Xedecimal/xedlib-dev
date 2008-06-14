@@ -2,6 +2,8 @@
 
 require_once('h_main.php');
 
+global $me;
+
 $items = $dsUser->GetCustom("DESCRIBE `{$dsUser->table}`");
 
 if (GetVar('ca') == 'unlock')

@@ -8,12 +8,14 @@ require_once('lib/h_template.php');
 require_once('lib/a_file.php');
 require_once('lib/a_log.php');
 
+global $db, $me;
+
+$ed = GetState('editor');
 $ca = GetVar('ca');
-$ed = GetVar('editor');
 $ci = GetVar('ci');
 
 $dsUser = new DataSet($db, 'user', 'usr_id');
-$lm = new LoginManager();
+$lm = new LoginManager('lm');
 $lm->AddDataset($dsUser, 'usr_pass', 'usr_name');
 $dsLogs = new DataSet($db, 'docmanlog');
 $logger = new LoggerAuth('logger', $dsLogs, $dsUser);
@@ -25,7 +27,7 @@ $t = new Template();
 if (!$user = $lm->Prepare($ca))
 {
 	$page_body = $lm->Get($me);
-	die($t->Get('template_text.html'));
+	die($t->Get('template_test.html'));
 }
 
 $fm_actions = array(
@@ -60,6 +62,7 @@ if ($ed == 'user')
 	if ($ca == 'ajupdate')
 	{
 		$nval = GetVar('update_value');
+		$res = null;
 		preg_match('/(.+):(.+):(.+)/', $_POST['element_id'], $res);
 		$dsUser->Update(array('usr_id' => $res[3]), array($res[2] => $nval));
 		die($nval);
@@ -138,10 +141,9 @@ EOF;
 	$page_body .= $logger->Get();
 }
 
-function fm_callback($file)
+function fm_callback($file, $path)
 {
-	global $me;
-	return "{$me}?ca=viewfile&amp;cf=".urlencode($file->path);
+	return array('ca' => 'viewfile', 'cf' => urlencode($path));
 }
 
 $fm = new FileManager('fman', 'test', array('Default', 'Gallery'));
@@ -213,13 +215,14 @@ if ($ed == 'fman')
 	$fm->Behavior->AllowSearch = true;
 	$fm->Behavior->ShowAllFiles = $user['usr_name'] == 'Admin';
 	$fm->Behavior->Watcher = array('fm_watcher');
+	//$fm->View->ShowTitle = true;
 	//$fm->Behavior->QuickCaptions = true;
 	$fm->View->Sort = FM_SORT_MANUAL;
 
 	$fm->Behavior->AllowAll();
 
-	$fm->Prepare($ca);
-	$page_body .= $fm->Get($me, $ca);
+	$fm->Prepare();
+	$page_body .= $fm->Get();
 
 	$logger->TrimByDate(mktime(0, 0, 0, date('m'), date('d'), date('y')-1));
 	$page_body .= $logger->Get();

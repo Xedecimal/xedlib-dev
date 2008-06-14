@@ -201,6 +201,7 @@ function GetVar($name, $default = null)
 
 function GetVars($name, $default = null)
 {
+	$m = null;
 	if (preg_match('#([^\[]+)\[([^\]]+)\]#', $name, $m))
 	{
 		$arg = GetVar($m[1]);
@@ -220,7 +221,7 @@ function GetVars($name, $default = null)
 function GetAssocPosts($match)
 {
 	$ret = array();
-	foreach ($_POST as $n => $v)
+	foreach (array_keys($_POST) as $n)
 	{
 		if (preg_match("/^$match/", $n)) $ret[$n] = FormInput::GetPostValue($n);
 	}
@@ -809,7 +810,7 @@ function GetSizeString($size)
  */
 function array_clone($arr)
 {
-	if (substr(phpversion(), 0, 1) != '5') return $copy = $arr;
+	if (substr(phpversion(), 0, 1) != '5') { $copy = $arr; return $copy; }
 	$ret = array();
 
 	foreach ($arr as $id => $val)
@@ -845,7 +846,7 @@ function linkup($tree, $target, $text)
 	$cur = null;
 	$reps = array();
 
-	$words = preg_split("/\s|\n/s", $text);
+	$words = preg_split('/\s|\n/s', $text);
 	$vp = new VarParser();
 
 	foreach ($words as $word)
@@ -855,12 +856,12 @@ function linkup($tree, $target, $text)
 			if (in_array($word, array_keys($cur)))
 			{
 				$p = $vp->ParseVars($target,
-					array('name' => $ct, 'word' => $word));
+					array('word' => $word));
 				$reps[$word] = $p;
 				if (isset($cur[$word]))
 				{
 					$cur = $cur[$word];
-					$ct = $cur[0];
+					//$ct = $cur[0];
 				}
 				else $cur = null;
 			}
@@ -871,9 +872,9 @@ function linkup($tree, $target, $text)
 				array('name' => $tree[$word][0], 'word' => $word));
 			$reps[$word] = $p;
 			$cur = $tree[$word];
-			$ct = $tree[$word][0];
+			//$ct = $tree[$word][0];
 		}
-		else $depth = array();
+		//else $depth = array();
 	}
 
 	$ret = $text;
@@ -929,7 +930,7 @@ function GetZips($ds, $zip, $range)
     $min_lon = number_format($details['lng'] - $lon_range, "4", ".", "");
     $max_lon = number_format($details['lng'] + $lon_range, "4", ".", "");
 
-    $ret = array();
+	//$ret = array();
 
 	$query = "SELECT zip, lat, lng, name FROM zips
 		WHERE lat BETWEEN '{$min_lat}' AND '{$max_lat}'
@@ -996,12 +997,13 @@ function crypt_apr1_md5($plainpasswd)
         $new .= ($i & 1) ? $bin : $plainpasswd;
         $bin = pack("H32", md5($new));
     }
+    $tmp = '';
     for ($i = 0; $i < 5; $i++)
 	{
         $k = $i + 6;
         $j = $i + 12;
         if ($j == 16) $j = 5;
-        $tmp = $bin[$i].$bin[$k].$bin[$j].@$tmp;
+        $tmp = $bin[$i].$bin[$k].$bin[$j].$tmp;
     }
     $tmp = chr(0).chr(0).$bin[11].$tmp;
     $tmp = strtr(strrev(substr(base64_encode($tmp), 2)),
@@ -1013,6 +1015,7 @@ function crypt_apr1_md5($plainpasswd)
 function get_htpasswd($path)
 {
 	$ret = array();
+	$m = null;
 	preg_match_all('/([^\n\r:]+):([^\r\n]+)/m', file_get_contents($path.'/.htpasswd'), $m);
 	foreach ($m[1] as $i => $v) $ret[$v] = $m[2][$i];
 	return $ret;

@@ -15,6 +15,8 @@ require_once('lib/h_template.php');
 
 require_once('lib/a_editor.php');
 
+global $me;
+
 // Data
 
 $editor = GetVar('editor');
@@ -116,6 +118,6 @@ actually can re-align if in the correct order, but you will destroy their tree
 if they cannot find their parents by their order (a part of manual sorting that
 cannot allow us to automatically sort).";
 
-echo $t->Get('template_test.html');
+echo $t->Get('template_test.xml');
 
 ?>

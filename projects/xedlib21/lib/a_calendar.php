@@ -84,7 +84,7 @@ class Calendar
 	{
 		$ret = null;
 		$this->pad = $this->month->Pad;
-		foreach ($this->month->Weeks as $ix => $w)
+		foreach (array_keys($this->month->Weeks) as $ix)
 		{
 			$this->curweek = $ix;
 			$tweek = new Template();
@@ -94,7 +94,7 @@ class Calendar
 		}
 		return $ret;
 
-		$vp = new VarParser();
+		/*$vp = new VarParser();
 		$ret = '';
 		foreach ($this->month->Days as $day)
 		{
@@ -118,12 +118,12 @@ class Calendar
 			if ($day->LastDay) $ret .= "\t\t<td class=\"CalendarPadding\" colspan=\"".(6 - $day->WeekDay)."\">&nbsp;</td></tr>\n";
 			if ($day->EndWeek) $ret .= "\t</tr>\n";
 		}
-		return $ret;
+		return $ret;*/
 	}
 
 	function TagPad($t, $guts, $attribs)
 	{
-		if (empty($this->pad)) return;
+		if (empty($this->pad)) return null;
 		$vp = new VarParser();
 		$d['amount'] = $this->pad;
 		return $vp->ParseVars($guts, $d);
@@ -134,7 +134,7 @@ class Calendar
 		$ret = null;
 		$tday = new Template();
 		$tday->ReWrite('event', array(&$this, 'TagEvent'));
-		foreach ($this->month->Weeks[$this->curweek] as $ix => $d)
+		foreach ($this->month->Weeks[$this->curweek] as $d)
 		{
 			$this->pad = $d->LastDay ? 6-$d->WeekDay : 0;
 			$this->curday = $d;
@@ -166,10 +166,10 @@ class Calendar
 	*/
 	function Get($timestamp = null)
 	{
-		global $me, $cs;
+		global $cs;
 		require_once('h_template.php');
 
-		$vp = new VarParser();
+		//$vp = new VarParser();
 
 		$t = new Template();
 
@@ -198,17 +198,15 @@ class Calendar
 	 */
 	function GetVert()
 	{
-		global $me;
-
-		$curdate = 0;
-		if (is_array($this->dates))
+		//$curdate = 0;
+		/*if (is_array($this->dates))
 		{
-			foreach ($this->dates as $key => $date)
+			foreach (array_keys($this->dates) as $key)
 			{
 				//if ($key < $curdate) echo "Date invalid? from ($curdate) to ($key)<br/>\n";
 				$curdate = $key;
 			}
-		}
+		}*/
 		//$thists = GetVar("ts", time());
 		//$ret = "<table class=\"CalendarYear\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n";
 		$ret = "";

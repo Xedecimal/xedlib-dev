@@ -119,6 +119,7 @@ class Database
 	 */
 	function Open($url)
 	{
+		$m = null;
 		if (!preg_match('#([^:]+)://([^:]*):(.*)@([^/]*)/(.*)#', $url, $m))
 			Error("Invalid url for database.");
 		switch ($m[1])
@@ -158,7 +159,7 @@ class Database
 	 * @param callback $handler Handler in case something goes wrong.
 	 * @return resource Query result object.
 	 */
-	function Query($query, $silent = false, $handler = null)
+	function Query($query, $handler = null)
 	{
 		if (!isset($this->type)) Error("Database has not been opened.");
 		if (isset($GLOBALS['debug'])) varinfo($query);
@@ -734,7 +735,7 @@ class DataSet
 
 		$query = "INSERT INTO {$lq}{$this->table}{$rq} VALUES(";
 		$ix = 0;
-		foreach ($columns as $key => $val)
+		foreach ($columns as $val)
 		{
 			//destring('value') for functions and such.
 			if (is_array($val))
@@ -747,6 +748,10 @@ class DataSet
 			$ix++;
 		}
 		$query .= ")";
+		if ($update_existing)
+		{
+			$query .= " ON DUPLICATE KEY UPDATE ".$this->GetSetString($columns, '');
+		}
 		$this->database->Query($query);
 		return $this->database->GetLastInsertID();
 	}
@@ -945,7 +950,7 @@ class DataSet
 	 * @param int $args Arguments to pass to the fetch.
 	 * @return array The serialized database rows.
 	 */
-	function GetCustom($query, $silent = false, $args = GET_BOTH)
+	function GetCustom($query, $silent = false)
 	{
 		$rows = $this->database->Query($query, $silent, $this->ErrorHandler);
 		if (!is_resource($rows)) return $rows;
@@ -1061,14 +1066,14 @@ class DataSet
 	*/
 	function Remove($match)
 	{
-		$matches = array();
+		//$matches = array();
 		$query = "DELETE FROM {$this->table}";
 		$query .= $this->WhereClause($match);
 		$this->database->Query($query);
 
 		//Prune off all children...
 		if (!empty($this->children))
-		foreach ($this->children as $ix => $child)
+		foreach ($this->children as $child)
 		{
 			$query = "DELETE c FROM {$child->ds->table} c LEFT JOIN {$this->table} p ON(c.{$child->child_key} = p.{$child->parent_key}) WHERE c.{$child->child_key} != 0 AND p.{$child->parent_key} IS NULL";
 			$this->database->Query($query);
@@ -1085,7 +1090,7 @@ function BuildTree($items, $parent, $assoc = null)
 {
 	$flats = LinkList($items, $parent, $assoc);
 
-	foreach ($flats as $id => $f)
+	foreach ($flats as $f)
 	{
 		$p = $f->data[$assoc];
 		if (isset($flats[$p]))

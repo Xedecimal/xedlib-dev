@@ -71,7 +71,7 @@ class Gallery
 		{
 			if (strlen($items[$ix]) < 1) continue;
 			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
-			$uri = URL($target, array('editor' => $this->name,
+			$uri = URL($me, array('editor' => $this->name,
 				$arg => $root.'/'.$cpath));
 			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
 			if ($ix < count($items)-1) $ret .= " $sep \n";
@@ -122,7 +122,7 @@ class Gallery
 	{
 		$out = '';
 		$vp = new VarParser();
-		$dp = opendir($this->root.$this->path);
+		//$dp = opendir($this->root.$this->path);
 
 		foreach ($this->files['files'] as $ix => $fi)
 		{
@@ -185,13 +185,11 @@ EOF;
 
 	function TagImage($t, $guts)
 	{
-		global $me;
-
 		$out = '';
 		$view = GetVar('view');
 		if (!isset($view)) return null;
-		$imgurl = $this->path.'/'.$this->files['files'][$view]->filename;
-		$vname = substr(strrchr($imgurl, '/'), 1);
+		//$imgurl = $this->path.'/'.$this->files['files'][$view]->filename;
+		//$vname = substr(strrchr($imgurl, '/'), 1);
 
 		$out .= '  ';
 
@@ -202,7 +200,7 @@ EOF;
 
 	function TagPage($t, $guts)
 	{
-		$vp = new VarParser();
+		//$vp = new VarParser();
 		if ($this->Behavior->PageCount != null)
 		{
 			$args = array('galcf' => $this->path);
@@ -309,7 +307,7 @@ EOF;
 
 		if ($temp == null) return $t->Get(dirname(__FILE__).'/temps/gallery.xml');
 		else return $t->Get($temp);
-		return $body;
+		//return $body;
 	}
 
 	/**
@@ -326,7 +324,7 @@ EOF;
 			return stripslashes($file->info['title']);
 		else if ($this->Display->Captions == CAPTION_FILE)
 			return str_replace('_', ' ', substr($file->filename, 0, strrpos($file->filename, '.')));
-		else if ($this->Display->Captions != CAPTION_TITLE)
+		else
 			return str_replace('_', ' ', $file->filename);
 	}
 }

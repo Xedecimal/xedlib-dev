@@ -131,8 +131,8 @@ class CodeReader
 		$this->tree = array();
 		$tokens = token_get_all(file_get_contents($filename));
 
-		$class = null;
-		$doc = null;
+		//$class = null;
+		//$doc = null;
 		$this->getting = CODE_GET_NONE;
 		$this->ret = null;
 		$this->current = null;
@@ -233,7 +233,7 @@ class CodeReader
 	 */
 	function Validate($data, $names)
 	{
-		foreach ($data->members as $name => $co)
+		foreach ($data->members as $co)
 		{
 			$this->ValidateRecurse($data, $names, $co);
 		}
@@ -248,8 +248,8 @@ class CodeReader
 	{
 		if ($member->type == T_FUNCTION)
 		{
-			$file = $member->file;
-			$line = $member->line;
+			//$file = $member->file;
+			//$line = $member->line;
 
 			//Check Return
 			if (!empty($member->doc->return))
@@ -270,8 +270,8 @@ class CodeReader
 						if (!empty($ol->doc->return))
 						{
 							$member->doc->return = $ol->doc->return;
-							$file = $ol->file;
-							$line = $ol->line;
+							//$file = $ol->file;
+							//$line = $ol->line;
 							break;
 						}
 					}
@@ -540,19 +540,19 @@ class CodeReader
 		for ($ix = 1; $ix < count($split); $ix++)
 		{
 			$clean = preg_replace('#\s*\*/*\n*#s', '', $split[$ix][0]);
+			$m = null;
 
 			if (preg_match('/example ([^\s]+)/', $clean, $m))
 			{
 					if (!file_exists($m[1]) || !is_file($m[1]))
 					{
-						Error("File does not exist for example tag: ".
-							"{$m[1]} (".$item->file.':'.$item->line.')');
+						Error("File does not exist for example tag: {$m[1]}");
 						continue;
 					}
 					$data = highlight_file($m[1], true);
 					$this->curdoc->example = $data;
 			}
-			else if (preg_match("/param ([^\s]+) ([^\s]+)(.*)/", $clean, $m))
+			else if (preg_match('/param ([^\s]+) ([^\s]+)(.*)/', $clean, $m))
 			{
 					$this->curdoc->params[$m[2]]['type'] = $m[1];
 					$this->curdoc->params[$m[2]]['desc'] = substr($m[3], 1);
@@ -580,8 +580,8 @@ class CodeReader
 			else if (preg_match('/([^\s]+)(.*)/', $clean, $m))
 			{
 				echo "Unknown doc tag: {$m[1]}\n";
-				$elTag = $this->current->doc->tags[$m[1]] =
-						isset($m[2]) ? $m[2] : null;
+				/*$elTag = $this->current->doc->tags[$m[1]] =
+						isset($m[2]) ? $m[2] : null;*/
 			}
 		}
 	}
@@ -614,7 +614,7 @@ class CodeReader
 	 */
 	function VerifyType($names, $type)
 	{
-		global $keywords;
+		//global $keywords;
 		if (defined($type)
 		|| in_array($type, $this->keywords)
 		|| in_array($type, $names)
@@ -690,7 +690,7 @@ class CodeReader
 	 */
 	function GetOverload($data, $obj)
 	{
-		if (!isset($obj)) return;
+		if (!isset($obj)) return null; 
 		if ($obj->type == T_FUNCTION)
 		{
 			//Method
@@ -706,6 +706,7 @@ class CodeReader
 				}
 			}
 		}
+		return null;
 	}
 }
 

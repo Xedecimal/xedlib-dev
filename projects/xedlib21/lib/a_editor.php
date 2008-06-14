@@ -446,7 +446,7 @@ class EditorData
 
 			if ($this->type == CONTROL_SIMPLE)
 			{
-				foreach ($this->ds->FieldInputs as $name => $i)
+				foreach (array_keys($this->ds->FieldInputs) as $name)
 				{
 					$vals[$name] = GetVar($name);
 				}
@@ -641,20 +641,21 @@ class EditorData
 	 */
 	function Get()
 	{
-		$ci = GetVar($this->Name.'_item');
+		global $me;
+		//$act = GetVar($this->Name.'_action');
 
 		$ret['name'] = $this->Name;
 
 		$act = GetVar($this->Name.'_action');
 		$q = GetVar($this->Name.'_q');
 
-		if (isset($ci) && $act == 'edit') $this->state = STATE_EDIT;
+		//if (isset($ci) && $act == 'edit') $this->state = STATE_EDIT;
 		$ret['ds'] = $this->ds;
 		if ($act != 'edit' && !empty($this->ds->DisplayColumns)
 			&& ($this->Behavior->Search && isset($q)))
-			$ret['table'] = $this->GetTable($target, $act, $q);
+			$ret['table'] = $this->GetTable($me, $act, $q);
 		else $ret['table'] = null;
-		$ret['forms'] = $this->GetForms($target, $act,
+		$ret['forms'] = $this->GetForms($me, $act,
 			GetVar('editor') == $this->Name ? GetVar('child') : null);
 		return $ret;
 	}
@@ -676,7 +677,7 @@ class EditorData
 			//* Map child names to child index.
 			$cols[$this->ds->table] = array($this->ds->id => 1);
 			if (!empty($this->ds->DisplayColumns))
-			foreach ($this->ds->DisplayColumns as $col => $disp)
+			foreach (array_keys($this->ds->DisplayColumns) as $col)
 				$cols[$this->ds->table][$col] = $this->ds->id == $col;
 
 			if (!empty($this->ds->children))
@@ -686,7 +687,7 @@ class EditorData
 				$cols[$child->ds->table][$child->parent_key] = 1;
 				$cols[$child->ds->table][$child->child_key] = 0;
 				if (!empty($child->ds->DisplayColumns))
-				foreach ($child->ds->DisplayColumns as $col => $disp)
+				foreach (array_keys($child->ds->DisplayColumns) as $col)
 				{
 					$cols[$child->ds->table][$col] = 0;
 				}
@@ -817,7 +818,7 @@ class EditorData
 	function GetTable($target, $ci)
 	{
 		$ret = null;
-		if (empty($this->ds->DisplayColumns)) return;
+		if (empty($this->ds->DisplayColumns)) return null;
 		if ($this->type == CONTROL_BOUND)
 		{
 			$cols = array();
@@ -872,7 +873,7 @@ class EditorData
 
 			$root = $this->BuildTree($items);
 		}
-		else { $sel = $ci; $this->state = STATE_EDIT; }
+		//else { $sel = $ci; $this->state = STATE_EDIT; }
 
 		if (isset($root))
 		{
@@ -933,7 +934,7 @@ class EditorData
 		global $PERSISTS;
 
 		if (!empty($node->children))
-		foreach ($node->children as $index => $cnode)
+		foreach ($node->children as $cnode)
 		{
 			$ix = 0;
 			$row = array();
@@ -1101,7 +1102,7 @@ class EditorData
 		{
 			$ds = $this->ds;
 			if (!empty($ds->FieldInputs))
-			foreach ($ds->FieldInputs as $n => $i)
+			foreach (array_keys($ds->FieldInputs) as $n)
 			{
 				if (isset($this->values[$n]))
 					$ds->FieldInputs[$n]->valu =
@@ -1147,13 +1148,6 @@ class EditorData
 						if (isset($sel) && isset($in->valu[$sel[0][$col]]))
 							$in->valu[$sel[0][$col]]->selected = true;
 					}
-					else if ($in->type == 'selects')
-					{
-						if (isset($sel) && isset($sel[0][$col]))
-							$value = $this->GetSelMask($in->valu, isset($sel) &&
-								strlen($col) > 0 ? $sel[0][$col] : null);
-						else $value = $in->valu;
-					}
 					else
 					{
 						if ($in->type == 'password') $in->valu = '';
@@ -1162,11 +1156,6 @@ class EditorData
 							if ($in->type == 'date')
 								$in->valu = MyDateTimestamp($sel[0][$col]);
 							else $in->valu = $sel[0][$col];
-						}
-						else if (isset($data[2]))
-						{
-							echo "Set it to data[2] so that broke it.<br/>\n";
-							$in->valu = $data[2];
 						}
 						//If we bring this back, make sure setting explicit
 						//values in DataSet::FormInputs still works.
@@ -1206,6 +1195,7 @@ class EditorData
 
 			return $frm;
 		}
+		return null;
 	}
 
 	/**
@@ -1247,15 +1237,13 @@ class EditorData
 		global $me;
 
 		$out = '';
-		$ci = GetState($this->Name.'_ci');
 		$forms = $this->GetForms();
 		$vp = new VarParser();
 		if (!empty($forms))
 		foreach ($forms as $frm)
 		{
 			$d['form_title'] = "{$frm->State} {$frm->Description}";
-			$d['form_content'] = $frm->Get('method="post" action="'.
-				$me.'"'.(isset($form_atrs) ? ' '.$form_atrs : null),
+			$d['form_content'] = $frm->Get("method=\"post\" action=\"{$me}\"",
 				'class="form"');
 			$out .= $vp->ParseVars($guts, $d);
 		}
@@ -1292,19 +1280,17 @@ class EditorData
 		global $me;
 		$t->Set('table', $this->GetTable($me, GetState($this->Name.'_ci')));
 
-		if (!empty($editor_return['forms']))
+		/*if (!empty($editor_return['forms']))
 		{
 			$forms = null;
 			foreach ($editor_return['forms'] as $frm)
 			{
 				$forms .= GetBox('box_user_form', "{$frm->State} {$frm->Description}",
-					$frm->Get('method="post" action="'.$target.'"'.
-						(isset($form_atrs) ? ' '.$form_atrs : null),
-						'class="form"'));
+					$frm->Get('method="post" action="'.$me.'"', 'class="form"'));
 			}
 			$t->Set('forms', $forms);
 		}
-		else $t->Set('forms', '');
+		else $t->Set('forms', '');*/
 		return $t->Get(dirname(__FILE__).'/temps/editor.xml');
 	}
 }
@@ -1361,6 +1347,7 @@ class DisplayData
 				$fi->name = $col;
 				// Sub table, we're going to need to clear and re-create the
 				// associated table rows.
+				$ms = null;
 				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
 				{
 					$join = $this->joins[$ms[1]];
@@ -1368,7 +1355,7 @@ class DisplayData
 					$join->DataSet->Remove(array($cond[0] => $ci));
 					$vals = GetVar($ms[2]);
 					if (!empty($vals))
-					foreach ($vals as $ix => $val)
+					foreach ($vals as $val)
 					{
 						$add = array($cond[0] => $ci);
 						$add[$ms[2]] = $val;
@@ -1396,10 +1383,11 @@ class DisplayData
 
 			if (!empty($this->ds->FieldInputs))
 			{
-				foreach ($this->ds->FieldInputs as $col => $in)
+				foreach (array_keys($this->ds->FieldInputs) as $col)
 				{
 					// This is a sub table, we GROUP_CONCAT these for
 					// finding later if need be.
+					$ms = null;
 					if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
 						$cols[$ms[2]] =
 							DeString("GROUP_CONCAT(DISTINCT {$ms[2]})");
@@ -1454,7 +1442,7 @@ class DisplayData
 
 			$query = "SELECT *";
 
-			foreach ($ss as $col => $set)
+			foreach (array_keys($ss) as $col)
 			{
 				$fi = $this->ds->FieldInputs[$col];
 				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
@@ -1470,7 +1458,7 @@ class DisplayData
 				$having = ' HAVING';
 
 				$ix = 0;
-				foreach ($ss as $col => $set)
+				foreach (array_keys($ss) as $col)
 				{
 					if (!isset($fs[$col])) continue;
 
@@ -1542,7 +1530,7 @@ EOD;
 	 */
 	function GetSearch($target)
 	{
-		if (empty($this->SearchFields)) { Error("You should specify a few SearchField items"); return; }
+		if (empty($this->SearchFields)) { Error("You should specify a few SearchField items"); return null; }
 		$frm = new Form('frmSearch');
 		$frm->AddHidden('ca', 'search');
 		if (isset($GLOBALS['editor'])) $frm->AddHidden('editor', $GLOBALS['editor']);

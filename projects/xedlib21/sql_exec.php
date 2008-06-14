@@ -7,6 +7,7 @@ $cf = GetVar('upfile');
 
 if (!isset($ca))
 {
+	global $me;
 	$frm = new Form('send');
 	$frm->AddHidden('ca', 'upload');
 	$frm->AddInput(new FormInput('File',     'file',     'upfile'));

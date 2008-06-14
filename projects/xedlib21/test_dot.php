@@ -15,7 +15,7 @@ function GetShape($t)
 
 function WalkMember($m)
 {
-	global $ix, $out;
+	global $out;
 
 	$id = @hexdec(crc32($m->file.$m->line.$m->name));
 	$pid = @hexdec(crc32($m->parent->file.$m->parent->line.$m->parent->name));
@@ -63,6 +63,6 @@ $fp = fopen('input.txt', 'w');
 fwrite($fp, $out);
 fclose($fp);
 
-passthru("c:\util\dot.exe -odiagram.svg -Tsvg < input.txt");
+passthru('c:\util\dot.exe -odiagram.svg -Tsvg < input.txt');
 
 ?>

@@ -6,7 +6,6 @@
 	<title>{{page_title}}</title>
 	<link href="main.css" type="text/css" rel="stylesheet" />
 	<script type="text/javascript" src="lib/js/jquery.js"></script>
-	<script type="text/javascript" src="lib/js/helper.js"></script>
 	{{page_head}}
 </head>
 <body>

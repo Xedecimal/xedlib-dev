@@ -592,14 +592,14 @@ class FileManager
 		$ret = '<table>';
 		$vp = new VarParser();
 
+		$fi = new FileInfo($this->Root.$this->cf);
+
 		if (isset($this->DefaultOptionHandler))
 		{
 			$handler = $this->DefaultOptionHandler;
 			$def = $handler($fi);
 		}
 		else $def = null;
-
-		$fi = new FileInfo($this->Root.$this->cf);
 
 		$f = FileInfo::GetFilter($fi, $this->Root, $this->filters, $fi->info);
 
@@ -617,7 +617,7 @@ class FileManager
 
 		if (!empty($options))
 		{
-			foreach ($options as $col => $field)
+			foreach ($options as $field)
 			{
 				if (is_string($field))
 				{
@@ -820,7 +820,7 @@ class FileManager
 
 		if (is_file($file->path))
 		{
-			if (isset($this->Behavior->FileCallback))
+			/*if (isset($this->Behavior->FileCallback))
 			{
 				$cb = $this->Behavior->FileCallback;
 				$url = $cb($file);
@@ -828,7 +828,7 @@ class FileManager
 			else if (!$this->Behavior->UseInfo)
 				$url = $this->Root.$this->cf.$file->filename.'" target="_new';
 			else
-				$url = $target.'?editor='.$this->Name.'&amp;cf='.urlencode($this->cf.$file->filename);
+				$url = $me.'?editor='.$this->Name.'&amp;cf='.urlencode($this->cf.$file->filename);*/
 		}
 		else
 			$uri = "?editor={$this->Name}&amp;cf=".urlencode($this->cf.$file->filename);
@@ -847,7 +847,7 @@ class FileManager
 		$common = "?cf={$this->cf}&amp;editor={$this->Name}&amp;type={$types}";
 		$uriUp = $common."&amp;ca=swap&amp;cd=up&amp;index={$index}";
 		$uriDown = $common."&amp;ca=swap&amp;cd=down&amp;index={$index}";
-		$uriDel = $common."&amp;ca=delete&amp;".urlencode($file->filename);
+		//$uriDel = $common."&amp;ca=delete&amp;".urlencode($file->filename);
 
 		//Move Up
 
@@ -875,7 +875,7 @@ class FileManager
 
 		if ($this->Behavior->QuickCaptions)
 		{
-			$id = $type.'_'.$index;
+			//$id = $type.'_'.$index;
 			$d['caption'] = '<textarea name="titles['.$file->filename.
 				']" rows="2" cols="30">'.
 				@htmlspecialchars(stripslashes($file->info['title'])).
@@ -1217,7 +1217,7 @@ class FileManagerBehavior
 	function GetOptions($fi)
 	{
 		if (!empty($fi->info['access']))
-		foreach ($fi->info['access'] as $id => $set)
+		foreach (array_keys($fi->info['access']) as $id)
 		{
 			if (isset($this->Access[$id]))
 				$this->Access[$id]->selected = true;
@@ -1238,7 +1238,7 @@ class FileManagerBehavior
 		if (!empty($info['access']))
 		{
 			$na = array();
-			foreach ($info['access'] as $ix => $id) $na[$id] = 1;
+			foreach ($info['access'] as $id) $na[$id] = 1;
 			$info['access'] = $na;
 		}
 	}
@@ -1320,7 +1320,7 @@ class FileInfo
 	 * @param string $source Filename to gather information on.
 	 * @param array $filters Array of available filters.
 	 */
-	function FileInfo($source, $filters = null)
+	function FileInfo($source)
 	{
 		global $user_root;
 		if (!file_exists($source))

@@ -1,5 +1,5 @@
 <?php
-require_once("lib/h_data_mysql.php");
+require_once("lib/h_data.php");
 require_once("lib/h_display.php");
 require_once("lib/h_utility.php");
 require_once("lib/h_template.php");
@@ -99,6 +99,7 @@ echo $form->Get();
 <br/><br/><b>Editor Data</b>
 
 <?php
+global $me;
 echo $edCats->Get($me, $ci);
 ?>
 

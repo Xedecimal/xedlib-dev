@@ -172,7 +172,7 @@ class Table
 		{
 			$ret .= "<thead><tr>\n";
 			$ix = 0;
-			foreach ($this->cols as $id => $col)
+			foreach ($this->cols as $col)
 			{
 				if (isset($this->atrs)) $atrs = " ".
 					$this->atrs[$ix++ % count($this->atrs)];
@@ -399,7 +399,7 @@ class Form
 	* @param array $colAttribs Array of table's column attributes.
 	* @param bool $persist Whether or not to persist the values in this form.
 	*/
-	function Form($name, $colAttribs = null, $persist = true)
+	function Form($name, $persist = true)
 	{
 		$this->name = $name;
 		$this->attribs = array();
@@ -555,7 +555,7 @@ class Form
 	* @param string $tblAttribs To be passed to Table::GetTable()
 	* @return string The complete html rendered form.
 	*/
-	function Get($formAttribs = null, $tblAttribs = null)
+	function Get($formAttribs = null)
 	{
 		require_once('h_template.php');
 		$this->formAttribs = $formAttribs;
@@ -730,10 +730,7 @@ class FormInput
 				$ogstarted = false;
 				foreach ($newsels as $id => $opt)
 				{
-					if (isset($svalu))
-						$selected = $svalu == $id ? ' selected="selected"' : null;
-					else
-						$selected = $opt->selected ? ' selected="selected"' : null;
+					$selected = $opt->selected ? ' selected="selected"' : null;
 					if ($opt->group)
 					{
 						if ($ogstarted) $ret .= "</optgroup>";
@@ -979,26 +976,10 @@ function MakeSelect($atrs = null, $value = null)
 	$strout = '<select';
 	$strout .= GetAttribs($atrs);
 	$strout .= ">\n";
-	$selid = 0;
 	foreach ($value as $id => $option)
 	{
 		$selected = null;
-		if (isset($selvalue))
-		{
-			if (is_array($selvalue)
-				&& isset($selvalue[$selid])
-				&& strlen($selvalue[$selid]) > 0
-				&& $selvalue[$selid] == $id)
-			{
-				$selected = ' selected="selected"';
-				$selid++;
-			}
-			else if ($selvalue == $id)
-			{
-				$selected = ' selected="selected"';
-			}
-		}
-		else if ($option->selected) $selected = ' selected="selected"';
+		if ($option->selected) $selected = ' selected="selected"';
 		$strout .= "<option value=\"{$id}\"$selected>{$option->text}</option>\n";
 		$selected = null;
 	}
@@ -1295,7 +1276,7 @@ class LoginManager
 	 */
 	function Get()
 	{
-		global $errors, $me;
+		global $me;
 		$f = new Form($this->Name, array(null, 'width="100%"'));
 		$f->AddHidden($this->Name.'_action', 'login');
 		if ($this->type != CONTROL_SIMPLE)
@@ -1543,7 +1524,8 @@ function InputToString($field)
 	{
 		$out = null;
 		if (!empty($val))
-		foreach ($val as $ix => $v) $out .= ($ix > 0?', ':'').$field->valu[$ix]->text;
+		foreach (array_keys($val) as $ix)
+			$out .= ($ix > 0?', ':'').$field->valu[$ix]->text;
 		return $out;
 	}
 	else if ($field->type == 'radios') return $field->valu[$val]->text;
@@ -1740,6 +1722,7 @@ function TagSum(&$t, $guts, $attribs)
 		$names = $GLOBALS[$attribs['NAMES']];
 		$ret = '';
 		$ix = 0;
+		$m = null;
 		foreach ($t->vars as $n => $v)
 			if (!empty($v) && preg_match($attribs['VALUE'], $n, $m))
 			{

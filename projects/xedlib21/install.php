@@ -1,9 +1,8 @@
 <?
 
-require_once("h_Data.php");
-require_once("h_Utility.php");
-require_once("h_Display.php");
-require_once("h_Module.php");
+require_once("lib/h_data.php");
+require_once("lib/h_utility.php");
+require_once("lib/h_display.php");
 
 $auth = LoadModule("Authentication");
 
@@ -11,7 +10,8 @@ $ca = GetVar("ca", "none");
 
 if (file_exists("config.php"))
 {
-	@mysql_select_db($g_db);
+	global $g_db;
+	mysql_select_db($g_db);
 	if (mysql_error())
 	{
 		echo "Database does not exist, creating it...<br/>\n";

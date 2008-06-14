@@ -457,7 +457,7 @@ class Template
 	function &GetDestinationObject()
 	{
 		if (count($this->objs) > 1) return $this->objs[count($this->objs)-2];
-		else return $tmp = &$this;
+		else { $tmp = &$this; return $tmp; }
 	}
 
 	/**
@@ -467,7 +467,7 @@ class Template
 	function &GetCurrentObject()
 	{
 		if (count($this->objs) > 0) return $this->objs[count($this->objs)-1];
-		else return $tmp = &$this;
+		else { $tmp = &$this; return $tmp; }
 	}
 
 	/**
@@ -540,8 +540,8 @@ class Template
 		$this->out = '';
 		$this->parser = xml_parser_create();
 		$this->data['template.parsers'][] = $this->parser;
-		$data = array();
-		$index = array();
+		//$data = array();
+		//$index = array();
 		xml_set_object($this->parser, $this);
 		xml_set_element_handler($this->parser, 'Start_Tag', 'End_Tag');
 		xml_set_character_data_handler($this->parser, 'CData');

@@ -4,6 +4,9 @@ require_once('lib/h_template.php');
 require_once('lib/h_utility.php');
 require_once('lib/h_display.php');
 require_once('lib/a_calendar.php');
+require_once('lib/a_validation.php');
+
+global $me;
 
 //An image to display next to all errors.
 $imgError = '<img src="lib/images/error.png" style="vertical-align: text-bottom" alt="Error" />';
@@ -44,8 +47,10 @@ $vContact->Add('mail', $vAddress);
 //Validation must be prepared. This generates nessecary spans and javascript to
 //use the generated spans, you must always display the error value whether it
 //has passed or not or the javascript will not work.
+$ArrayV = null;
 $array_passed = FormValidate('formArray', array($vEmail, $vPhone, $vAddress, $vChecks),
 	$ArrayV, GetVar('cav') == 'send');
+$RecurseV = null;
 $recurse_passed = FormValidate('formRecurse', $vContact, $RecurseV, GetVar('car') == 'send');
 
 //Array for a dropdown list, will be converted using ArrayToSelOptions().
