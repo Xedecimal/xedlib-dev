@@ -119,7 +119,7 @@ class FileManager
 		$this->Template = dirname(__FILE__).'/temps/file.xml';
 
 		if (!file_exists($root))
-			Error("FileManager::FileManager(): Root ($root) directory does
+			die("FileManager::FileManager(): Root ($root) directory does
 			not exist.");
 
 		//Append trailing slash.
@@ -1336,7 +1336,7 @@ class FileInfo
 		$this->show = true;
 
 		$finfo = $this->dir.'/.'.$this->filename;
-		if (file_exists($finfo))
+		if (is_file($finfo) && file_exists($finfo))
 		{
 			$this->info = unserialize(file_get_contents($finfo));
 			if (!isset($this->info))

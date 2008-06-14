@@ -65,7 +65,7 @@ class Gallery
 		$ret = null;
 		$cpath = '';
 
-		$ret .= "<a href=\"{$me}\">$rootname</a> $sep ";
+		$ret .= '<a href="'.URL($me)."\">$rootname</a> $sep ";
 
 		for ($ix = 0; $ix < count($items); $ix++)
 		{
@@ -246,6 +246,7 @@ EOF;
 		$t->Set('disable_save', $this->Behavior->DisableSave);
 		$t->Set('current', GetVar('view'));
 		$t->Set('galcf', GetVar('galcf'));
+		$t->Set('galme', URL($me));
 
 		$tot = 0;
 		foreach ($this->files['files'] as $f)

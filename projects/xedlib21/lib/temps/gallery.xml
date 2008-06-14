@@ -103,7 +103,7 @@ document.onmousedown = click;
 <part type="IconContent"><img src="{{icon}}" /></part>
 
 <if check="!empty($this->vars['galcf'])">
-<a href="{{me}}">View Main Gallery</a> &raquo; {{name}}
+<a href="{{galme}}">View Main Gallery</a> &raquo; {{name}}
 </if>
 
 <table class="gallery">
