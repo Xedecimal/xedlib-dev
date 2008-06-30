@@ -192,12 +192,12 @@ window.onload = function() {
 				</check>
 				<td><a href="{{url}}">{{filename}}</a></td>
 				<quickcap><td><textarea cols="30" rows="2"
-					name="titles[{{filename}}]">{{ftitle}}</textarea></td></quickcap>
+					name="{{fn_name}}_titles[{{filename}}]">{{ftitle}}</textarea></td></quickcap>
 				</tr>
 				</file>
 			</table>
 			<QuickCapButton>
-				<input type="submit" name="ca" value="Update Captions" />
+				<input type="submit" name="{{fn_name}}_action" value="Update Captions" />
 			</QuickCapButton>
 		</box>
 		</files>

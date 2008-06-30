@@ -690,7 +690,7 @@ class CodeReader
 	 */
 	function GetOverload($data, $obj)
 	{
-		if (!isset($obj)) return null; 
+		if (!isset($obj)) return null;
 		if ($obj->type == T_FUNCTION)
 		{
 			//Method

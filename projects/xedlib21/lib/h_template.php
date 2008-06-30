@@ -243,10 +243,13 @@ class Template
 		else if ($tag == 'INCLUDE')
 		{
 			$file = $attribs['FILE'];
-			$class = $attribs['CLASS'];
-
-			RequireModule($this->data, $file, $class);
-			$show = false;
+			if (!empty($attribs['CLASS']))
+			{
+				$class = $attribs['CLASS'];
+				RequireModule($this->data, $file, $class);
+				$show = false;
+			}
+			else $output = file_get_contents($file);
 		}
 		else if ($tag == 'INPUT')
 		{
