@@ -26,8 +26,9 @@ $t = new Template();
 
 if (!$user = $lm->Prepare($ca))
 {
+	$page_title = 'Login';
 	$page_body = $lm->Get($me);
-	die($t->Get('template_test.html'));
+	die($t->Get('template_test.xml'));
 }
 
 $fm_actions = array(
@@ -204,7 +205,7 @@ EOF;
 	}
 
 	$page_body .= "<p>Click <a href=\"{$me}?cf=".urlencode($rpath)."\">here</a> to return.</p>";
-	die($t->Get('template_test.html'));
+	die($t->Get('template_test.xml'));
 }
 
 if ($ed == 'fman')
@@ -228,6 +229,6 @@ if ($ed == 'fman')
 	$page_body .= $logger->Get();
 }
 
-echo $t->Get('template_test.html');
+echo $t->Get('template_test.xml');
 
 ?>

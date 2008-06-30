@@ -155,7 +155,6 @@ class Database
 	 * we will be moving to abstract database support so it'll be a load parsing the sql-like
 	 * query and translating.
 	 * @param string $query The actual SQL formatted query.
-	 * @param bool $silent Should we return an error?
 	 * @param callback $handler Handler in case something goes wrong.
 	 * @return resource Query result object.
 	 */
@@ -954,7 +953,7 @@ class DataSet
 	 */
 	function GetCustom($query, $silent = false)
 	{
-		$rows = $this->database->Query($query, $silent, $this->ErrorHandler);
+		$rows = $this->database->Query($query, $this->ErrorHandler);
 		if (!is_resource($rows)) return $rows;
 		$ret = array();
 		$f = $this->func_fetch;

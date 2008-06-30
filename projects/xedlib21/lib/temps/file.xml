@@ -5,7 +5,7 @@
 
 <null>
 
-<page_head>
+<head>
 <script type="text/javascript" src="{{relpath}}/js/helper.js"></script>
 
 <script type="text/javascript">
@@ -13,7 +13,7 @@ window.onload = function() {
 	$('#{{fn_name}}_mass_options').hide();
 }
 </script>
-</page_head>
+</head>
 
 <header>
 <box title="Current Path Location">
