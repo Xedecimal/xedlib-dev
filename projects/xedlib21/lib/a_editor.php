@@ -442,7 +442,7 @@ class EditorData
 		}
 		else if ($act == 'Update')
 		{
-			$ci = GetState($this->Name.'_ci');
+			$ci = GetVar($this->Name.'_ci');
 
 			if ($this->type == CONTROL_SIMPLE)
 			{
@@ -505,6 +505,8 @@ class EditorData
 
 			if ($this->type == CONTROL_BOUND)
 				$context->ds->Update(array($context->ds->id => $ci), $update);
+
+			$this->Reset();
 		}
 		/*else if ($action == $this->name.'_swap')
 		{
@@ -1292,6 +1294,12 @@ class EditorData
 		}
 		else $t->Set('forms', '');*/
 		return $t->Get(dirname(__FILE__).'/temps/editor.xml');
+	}
+
+	function Reset()
+	{
+		unset($_SESSION[$this->Name.'_action']);
+		unset($_SESSION[$this->Name.'_ci']);
 	}
 }
 

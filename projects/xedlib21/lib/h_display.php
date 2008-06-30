@@ -1670,11 +1670,11 @@ function TagInputDisplay($t, $guts, $tag)
 		case 'password':
 			return '********';
 		case 'text':
-			return $tag['VALUE'];
+			return @$tag['VALUE'];
 		case 'date':
 			return date('m/d/Y', $tag['VALUE']);
 		case 'checkbox':
-			return $tag['CHECKED'] == 'checked' ? 'Yes' : 'No';
+			return @$tag['CHECKED'] == 'checked' ? 'Yes' : 'No';
 		default:
 			echo "Unknown type: {$tag}<br/>\n";
 	}
