@@ -658,13 +658,15 @@ class DataSet
 	 */
 	function GetSetString($values, $start = ' SET ')
 	{
-		$ret = $start;
 		if (!empty($values))
 		{
+			$ret = $start;
 			$x = 0;
+			$found = false;
 			foreach ($values as $key => $val)
 			{
 				if (!is_numeric($val) && empty($val)) continue;
+				$found = true;
 				if ($x++ > 0) $ret .= ", ";
 				if (is_array($val))
 				{
@@ -673,8 +675,8 @@ class DataSet
 				}
 				else $ret .= $this->QuoteTable($key)." = '".mysql_real_escape_string($val)."'";
 			}
+			if ($found) return $ret;
 		}
-		return $ret;
 	}
 
 	/**
@@ -804,7 +806,7 @@ class DataSet
 			$this->ErrorHandler);
 
 		//Prepare Data
-		//if (mysql_affected_rows() < 1) return null;
+		if (mysql_affected_rows() < 1) return null;
 		$items = null;
 
 		$a = null;
@@ -991,9 +993,9 @@ class DataSet
 	 */
 	function Update($match, $values)
 	{
-		$query = "UPDATE {$this->table}".
-			$this->GetSetString($values).
-			$this->WhereClause($match);
+		$sets = $this->GetSetString($values);
+		if (empty($sets)) { Trace('Nothing to update.'); return; }
+		$query = "UPDATE {$this->table}".$sets.$this->WhereClause($match);
 		$this->database->Query($query);
 	}
 
@@ -1090,17 +1092,20 @@ function BuildTree($items, $parent, $assoc = null)
 {
 	$flats = LinkList($items, $parent, $assoc);
 
-	foreach ($flats as $f)
+	$root = new TreeNode();
+
+	foreach ($flats as $id => $f)
 	{
 		$p = $f->data[$assoc];
 		if (isset($flats[$p]))
 		{
-			$flats[$p]->children = $f;
+			$flats[$p]->children[] = $f;
 			$f->parents[$p] = $flats[$p];
 		}
-		else $tree[$f->id] = $f;
+		else $root->children[$f->id] = $f;
 	}
-	return $tree;
+
+	return $root;
 }
 
 function LinkList($items, $parent, $assoc = null)
@@ -1112,16 +1117,29 @@ function LinkList($items, $parent, $assoc = null)
 		$tn->id = $i[$parent];
 		$ret[$i[$parent]] = $tn;
 	}
+
 	foreach ($ret as $id => $i)
 	{
 		$p = $i->data[$assoc];
-		echo "Parent: {$p}<br/>\n";
+		//echo "Parent: {$p}<br/>\n";
 		if (isset($ret[$p]))
 		{
 			$ret[$p]->children[$id] = $i;
 			$i->parent = $ret[$p];
 		}
 	}
+	return $ret;
+}
+
+function TreeToUL($tree, $display = 'name')
+{
+	$ret = '<ul><li>'.$tree->data[$display];
+	if (!empty($tree->children))
+	foreach ($tree->children as $child)
+	{
+		$ret .= TreeToUL($child, $display);
+	}
+	$ret .= "</li></ul>\n";
 	return $ret;
 }
 

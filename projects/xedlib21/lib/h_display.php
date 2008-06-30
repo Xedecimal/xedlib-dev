@@ -472,7 +472,7 @@ class Form
 
 		if ($input->type == 'submit' && isset($this->Validation))
 		{
-			$input->atrs .= " onclick=\"return {$this->name}_check(1);\"";
+			$input->atrs['ONCLICK'] = "return {$this->name}_check(1);";
 		}
 		if ($input->type == 'file') $this->multipart = true;
 
@@ -652,7 +652,8 @@ class FormInput
 		$this->type = $type;
 		$this->name = $name;
 		$this->valu = $valu;
-		$this->atrs = $atrs;
+		if (is_array($atrs)) $this->atrs = $atrs;
+		else $this->atrs = ParseAtrs($atrs);
 		$this->help = $help;
 		if ($type == 'date' || $type == 'time' || $type == 'datetime')
 			$this->EndLabel = true;
@@ -683,7 +684,9 @@ class FormInput
 	 */
 	function Get($parent = null, $persist = true)
 	{
-		$id = CleanID((!empty($parent)) ? $parent.'_'.$this->name : $this->name);
+		$id = !empty($parent) ? $parent.'_' : null;
+		$id .= !empty($this->atrs['ID']) ? $this->atrs['ID'] : $this->name;
+		$id = CleanID($id);
 
 		if ($this->type == 'custom')
 			return call_user_func($this->valu, $this);
@@ -827,7 +830,7 @@ class FormInput
 		{
 			return "<input type=\"checkbox\"
 				name=\"{$parent}_{$this->name}\"
-				id=\"".CleanID($parent.'_'.$this->name)."\"
+				id=\"{$id}\"
 				value=\"1\" ".$this->GetValue($persist).
 				$this->atrs." />";
 		}
@@ -838,6 +841,7 @@ class FormInput
 
 		$val = $this->GetValue($persist && $this->type != 'radio');
 
+		$atrs = GetAttribs($this->atrs);
 		return "<input type=\"{$this->type}\"
 			name=\"{$parent}_{$this->name}\"
 			id=\"".CleanID($parent.'_'.$this->name)."\"".

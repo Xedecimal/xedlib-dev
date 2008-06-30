@@ -1048,6 +1048,14 @@ function Comb($path, $exclude = null)
 	return $ret;
 }
 
+function ParseAtrs($atrs)
+{
+	if (empty($atrs)) return;
+	preg_match_all('/([^= ]+)="([^"]+)"/', $atrs, $m);
+	for ($ix = 0; $ix < count($m[1]); $ix++) $ret[$m[1][$ix]] = $m[2][$ix];
+	return $ret;
+}
+
 function GetState($name)
 {
 	return SetVar($name, GetVar($name));

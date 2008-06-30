@@ -230,6 +230,17 @@ class Template
 		}
 		else if ($tag == 'FORM' && $this->Behavior->MakeDynamic)
 			$this->start .= $this->ProcessForm($parser, $tag, $attribs);
+		else if ($tag == 'HEAD') //Push the head as an object to store for later.
+		{
+			$show = false;
+
+			$obj = new stdClass();
+			$obj->out = '';
+			$obj->attribs = $attribs;
+			$obj->tag = $tag;
+			$this->objs[] = $obj;
+		}
+
 		if ($tag == 'IF')
 		{
 			$vp = new VarParser();
@@ -366,6 +377,21 @@ class Template
 		else if ($tag == 'BR') return;
 		else if ($tag == 'COPY') return;
 		else if ($tag == 'DOCTYPE') return;
+		else if ($tag == 'HEAD')
+		{
+			if (count($this->data['template.stack']) < 2)
+			{
+				$objc = &$this->GetCurrentObject();
+				$objd = &$this->GetDestinationObject();
+				$objd->out .= '<head>'.$objc->out.@$GLOBALS['__page.head'].'</head>';
+			}
+			else
+			{
+				$obj = &$this->GetCurrentObject();
+				@$GLOBALS['__page.head'] .= $obj->out;
+			}
+			array_pop($this->objs);
+		}
 		else if ($tag == 'IMG') return;
 		else if ($tag == 'INCLUDE') return;
 		else if ($tag == 'INPUT') return;
@@ -585,6 +611,11 @@ class Template
 		else if (isset($this->data[$tvar])) return $this->data[$tvar];
 		else if ($this->use_getvar) return GetVar($tvar);
 		return $this->Behavior->Bleed ? $match[0] : null;
+	}
+
+	function TagHead($t, $guts)
+	{
+		$this->heads .= $guts;
 	}
 
 	function ProcessCode($str)
