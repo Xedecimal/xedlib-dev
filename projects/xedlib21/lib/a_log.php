@@ -89,9 +89,9 @@ class LoggerAuth extends EditorHandler
 	 * @param int $count Amount of items to display per page.
 	 * @return string Rendered table of actions.
 	 */
-	function Get($count = null, $user = null)
+	function Get($count = null, $user = null, $idcol = 'usr_id')
 	{
-		$match = $user != null ? array('usr_id' => $user) : null;
+		$match = $user != null ? array($idcol => $user) : null;
 		$items = $this->dsLog->Get($match, array('log_date' => 'DESC'),
 			$count != null ? array(0, $count) : null,
 			array(new Join($this->dsUser, 'log_user = '.$this->dsUser->id, 'JOIN')));
