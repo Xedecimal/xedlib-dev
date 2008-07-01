@@ -951,7 +951,7 @@ class DataSet
 	 * @param int $args Arguments to pass to the fetch.
 	 * @return array The serialized database rows.
 	 */
-	function GetCustom($query, $silent = false)
+	function GetCustom($query)
 	{
 		$rows = $this->database->Query($query, $this->ErrorHandler);
 		if (!is_resource($rows)) return $rows;
@@ -1093,7 +1093,7 @@ function BuildTree($items, $parent, $assoc = null)
 
 	$root = new TreeNode();
 
-	foreach ($flats as $id => $f)
+	foreach ($flats as $f)
 	{
 		$p = $f->data[$assoc];
 		if (isset($flats[$p]))

@@ -5,16 +5,6 @@
 
 <null>
 
-<head>
-<script type="text/javascript" src="{{relpath}}/js/helper.js"></script>
-
-<script type="text/javascript">
-window.onload = function() {
-	$('#{{fn_name}}_mass_options').hide();
-}
-</script>
-</head>
-
 <header>
 <box title="Current Path Location">
 <path root="Home" sep="&raquo;"> <a href="{{uri}}">{{name}}</a></path>

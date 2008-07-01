@@ -650,6 +650,18 @@ class FileManager
 
 		require_once('h_template.php');
 
+		$relpath = GetRelativePath(dirname(__FILE__));
+
+		$GLOBALS['page_head'] .= <<<EOF
+<script type="text/javascript" src="{$relpath}/js/helper.js"></script>
+
+<script type="text/javascript">
+window.onload = function() {
+	$('#{$this->Name}_mass_options').hide();
+}
+</script>
+EOF;
+
 		$this->mass_avail = $this->Behavior->MassAvailable();
 
 		//TODO: Get rid of this.
@@ -663,7 +675,7 @@ class FileManager
 		$this->vars['filename'] = $fi->filename;
 		$this->vars['path'] = $this->Root.$this->cf;
 		$this->vars['dirsel'] = $this->GetDirectorySelect($this->Name.'_ct');
-		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
+		$this->vars['relpath'] = $relpath;
 		$this->vars['host'] = GetVar('HTTP_HOST');
 		$this->vars['sid'] = GetVar('PHPSESSID');
 		$this->vars['behavior'] = $this->Behavior;
@@ -893,7 +905,7 @@ class FileManager
 			//TODO: Should handle this on a filter level.
 			if (substr($file, 0, 2) == 't_') continue;
 			$newfi = new FileInfo($this->Root.$this->cf.$file, $this->filters);
-			if (!isset($newfi->info['index'])) $newfi->info['index'] = 0;
+			//if (!isset($newfi->info['index'])) $newfi->info['index'] = 0;
 			if (!$newfi->show) continue;
 			if (is_dir($this->Root.$this->cf.'/'.$file))
 			{
@@ -902,8 +914,10 @@ class FileManager
 			else $ret['files'][] = $newfi;
 		}
 
-		usort($ret['folders'], array($this, 'cmp_file'));
-		usort($ret['files'], array($this, 'cmp_file'));
+		//usort($ret['folders'], array($this, 'cmp_file'));
+		//usort($ret['files'], array($this, 'cmp_file'));
+		natcasesort($ret['folders']);
+		natcasesort($ret['files']);
 
 		return $ret;
 	}
@@ -1305,6 +1319,11 @@ class FileInfo
 	 */
 	public $show;
 
+	function __toString()
+	{
+		return $this->filename;
+	}
+
 	/**
 	 * Creates a new FileInfo from an existing file. Filter manages how this
 	 * information will be handled, manipulated or displayed.
@@ -1318,7 +1337,7 @@ class FileInfo
 		if (!file_exists($source))
 			Error("FileInfo: File/Directory does not exist. ({$source})<br/>\n");
 
-		if (strlen($user_root) > 0)
+		if (!empty($user_root) > 0)
 			$this->owned = strlen(strstr($source, $user_root)) > 0;
 
 		$this->bitpos = 0;

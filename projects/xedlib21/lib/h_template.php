@@ -569,14 +569,12 @@ class Template
 		$this->out = '';
 		$this->parser = xml_parser_create();
 		$this->data['template.parsers'][] = $this->parser;
-		//$data = array();
-		//$index = array();
+
 		xml_set_object($this->parser, $this);
 		xml_set_element_handler($this->parser, 'Start_Tag', 'End_Tag');
 		xml_set_character_data_handler($this->parser, 'CData');
  		xml_set_processing_instruction_handler($this->parser, 'Process');
  		xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'UTF-8');
-
 
 		if (!xml_parse($this->parser, $nstr))
 		{

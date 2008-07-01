@@ -1051,6 +1051,7 @@ function Comb($path, $exclude = null)
 function ParseAtrs($atrs)
 {
 	if (empty($atrs)) return;
+	$m = null;
 	preg_match_all('/([^= ]+)="([^"]+)"/', $atrs, $m);
 	for ($ix = 0; $ix < count($m[1]); $ix++) $ret[$m[1][$ix]] = $m[2][$ix];
 	return $ret;
@@ -1086,6 +1087,7 @@ if (!function_exists('money_format')) {
         }
         $locale = localeconv();
         $number = floatval($number);
+        $fmatch = $match = null;
         if (!preg_match($regex, $format, $fmatch)) {
             trigger_error("No format specified or invalid format",
 E_USER_WARNING);
