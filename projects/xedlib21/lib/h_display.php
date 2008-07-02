@@ -1687,7 +1687,7 @@ function TagInputDisplay($t, $guts, $tag)
 /**
  * @param string $t Target page that this should link to.
  */
-function GetNav($t, $links, $attribs = null, $curpage = null, &$pinfo = null, &$stack = null)
+function GetNav($t, $links, $attribs = null, $curpage = null, &$pinfo, &$stack)
 {
 	$ret = '<ul'.GetAttribs($attribs).">\n";
 	foreach ($links->children as $ix => $link)

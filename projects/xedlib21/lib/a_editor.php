@@ -121,12 +121,6 @@ class HandlerFile extends EditorHandler
 	 */
 	public $target;
 	/**
-	 * Database column associated with the items created.
-	 *
-	 * @var string
-	 */
-	public $column;
-	/**
 	 * Conditions that can exemplify the creation of certain items.
 	 * specified as conditions['column'] = 'match';
 	 *
@@ -141,11 +135,20 @@ class HandlerFile extends EditorHandler
 	 * @param string $column Data column to name new folders by.
 	 * @param array $conditions Conditions to consider managing folders.
 	 */
-	function HandlerFile($target, $column, $conditions = null)
+	function HandlerFile($target, $conditions = null)
 	{
 		$this->target = $target;
-		$this->column = $column;
 		$this->conditions = $conditions;
+	}
+
+	function Create(&$data)
+	{
+		$vp = new VarParser();
+		$dst = $vp->ParseVars($this->target, $data);
+		//If all variables are not satisfied, we can end up calling a deltree
+		//on a higher level folder, that could be disasterous.
+		if (strpos($dst, '//') > -1) return false;
+		else return true;
 	}
 
 	/**
@@ -155,11 +158,12 @@ class HandlerFile extends EditorHandler
 	 */
 	function Created($id, $inserted)
 	{
-		$target = "{$this->target}/{$inserted[$this->column]}";
-		if (!isset($this->conditions) && !file_exists($target))
+		$vp = new VarParser();
+		$vp->Bleed = false;
+		$dst = $vp->ParseVars($this->target, $inserted);
+		if (!isset($this->conditions) && !file_exists($dst))
 		{
-			mkdir($target);
-			chmod($target, 0777);
+			mkrdir($dst, 0777);
 		}
 		else if (!empty($this->conditions))
 		{
@@ -167,10 +171,9 @@ class HandlerFile extends EditorHandler
 			{
 				foreach ($cond as $val)
 				{
-					if ($inserted[$col] == $val && !file_exists($target))
+					if ($inserted[$col] == $val && !file_exists($dst))
 					{
-						mkdir($target);
-						chmod($target, 0777);
+						mkrdir($dst, 0777);
 						return true;
 					}
 				}
@@ -181,10 +184,31 @@ class HandlerFile extends EditorHandler
 
 	function Update($id, &$original, &$update)
 	{
-		$source = "{$this->target}/{$original[$this->column]}";
-		if (file_exists($source) && isset($update[$this->column]))
+		$vp = new VarParser();
+		$dst = $vp->ParseVars($this->target, $update);
+		if (strpos($dst, '//') > -1) return false;
+		$vp->Bleed = false;
+		$src = $vp->ParseVars($this->target, $original);
+		if (!isset($this->conditions) && file_exists($src))
 		{
-			rename($source, $this->target.'/'.$update[$this->column]);
+			if (!file_exists(dirname($dst))) mkrdir(dirname($dst), 0777);
+			rename($src, $dst);
+		}
+		else if (!empty($this->conditions))
+		{
+			foreach ($this->conditions as $col => $cond)
+			{
+				foreach ($cond as $val)
+				{
+					if ($update[$col] == $val)
+					{
+						if (!file_exists($dst)) mkrdir($dst, 0777);
+						return true;
+					}
+				}
+			}
+			DelTree($dst);
+			DelEmpty($dst);
 		}
 		return true;
 	}
@@ -198,22 +222,17 @@ class HandlerFile extends EditorHandler
 	 */
 	function Delete($id, &$data)
 	{
-		if (strlen($data[$this->column]) < 1) return true;
-		if (file_exists("{$this->target}/{$data[$this->column]}"))
-			DelTree("{$this->target}/{$data[$this->column]}");
-		return true;
+		$vp = new VarParser();
+		$dst = $vp->ParseVars($this->target, $data);
+		varinfo($dst);
+		if (!strpos($dst, '//') && file_exists($dst))
+		{
+			//echo "Deleting.<br/>\n";
+			//DelTree($dst);
+			DelEmpty($dst);
+		}
+		return false;
 	}
-
-	/*function Swap($idSrc, $idDst)
-	{
-		if (file_exists("{$this->target}/{$idSrc}"))
-			rename("{$this->target}/{$idSrc}", "{$this->target}/..{$idSrc}");
-		if (file_exists("{$this->target}/{$idDst}"))
-			rename("{$this->target}/{$idDst}", "{$this->target}/{$idSrc}");
-		if (file_exists("{$this->target}/..{$idSrc}"))
-			rename("{$this->target}/..{$idSrc}", "{$this->target}/{$idDst}");
-		return true;
-	}*/
 }
 
 /**
@@ -416,7 +435,7 @@ class EditorData
 
 			foreach ($this->handlers as $handler)
 			{
-				if (!$handler->Create($insert)) return;
+				if (!$handler->Create($insert)) { $this->Reset(); return; }
 			}
 
 			$parent = GetVar('parent');
@@ -426,6 +445,7 @@ class EditorData
 				$child = $this->ds->children[GetVar('child')];
 				$insert[$child->child_key] = $parent;
 			}
+
 			$id = $context->ds->Add($insert);
 			$insert[$context->ds->id] = $id;
 
@@ -439,6 +459,8 @@ class EditorData
 
 			foreach ($this->handlers as $handler)
 				$handler->Created($id, $insert);
+
+			$this->Reset();
 		}
 		else if ($act == 'Update')
 		{
@@ -1197,7 +1219,7 @@ class EditorData
 
 			return $frm;
 		}
-		return null;
+		return;
 	}
 
 	/**
@@ -1538,7 +1560,7 @@ EOD;
 	 */
 	function GetSearch($target)
 	{
-		if (empty($this->SearchFields)) { Error("You should specify a few SearchField items"); return null; }
+		if (empty($this->SearchFields)) { Error("You should specify a few SearchField items"); return; }
 		$frm = new Form('frmSearch');
 		$frm->AddHidden('ca', 'search');
 		if (isset($GLOBALS['editor'])) $frm->AddHidden('editor', $GLOBALS['editor']);

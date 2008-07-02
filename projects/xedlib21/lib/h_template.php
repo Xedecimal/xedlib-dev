@@ -647,6 +647,8 @@ class VarParser
 	 */
 	public $vars;
 
+	public $Bleed = true;
+
 	/**
 	 * Enter description here...
 	 *
@@ -682,7 +684,7 @@ class VarParser
 		}
 		else if (isset($$tvar)) return $$tvar;
 		else if (defined($tvar)) return constant($tvar);
-		return $match[0];
+		return ($this->Bleed ? $match[0] : null);
 	}
 }
 

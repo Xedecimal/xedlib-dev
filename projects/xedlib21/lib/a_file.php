@@ -652,6 +652,7 @@ class FileManager
 
 		$relpath = GetRelativePath(dirname(__FILE__));
 
+		if (!isset($GLOBALS['page_head'])) $GLOBALS['page_head'] = '';
 		$GLOBALS['page_head'] .= <<<EOF
 <script type="text/javascript" src="{$relpath}/js/helper.js"></script>
 
