@@ -1107,19 +1107,19 @@ function BoolCallback($ds, $val, $col) { return $val[$col] ? 'Yes' : 'No'; }
  * @param array $val Value array, usually a row from a dataset.
  * @param mixed $col Index of $val to test for a unix epoch timestamp.
  */
-function TSCallback($val, $col) { return date('m/d/Y', $val[$col]); }
+function TSCallback($ds, $val, $col) { return date('m/d/Y', $val[$col]); }
 
 /**
  * @param array $val Value array, usually a row from a dataset.
  * @param mixed $col Index of $val to test for a mysql formatted date.
  */
-function DateCallback($val, $col) { return date('m/d/Y', MyDateTimestamp($val[$col])); }
+function DateCallback($ds, $val, $col) { return date('m/d/Y', MyDateTimestamp($val[$col])); }
 
 /**
  * @param array $val Value array, usually a row from a dataset.
  * @param mixed $col Index of $val to test for a mysql formatted datetime.
  */
-function DateTimeCallback($val, $col) { return date('m/d/Y', MyDateTimestamp($val[$col], true)); }
+function DateTimeCallback($ds, $val, $col) { return date('m/d/Y', MyDateTimestamp($val[$col], true)); }
 
 /**
  * A node holds children.
