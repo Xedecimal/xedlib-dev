@@ -540,7 +540,9 @@ class DataSet
 					if ($ix++ > 0) $ret .= ' AND';
 					if (is_string($col)) //array('col' => 'value')
 					{
-						if (is_array($val) && $val[0] = 'destring')
+						if (is_array($val) && strtolower($val[0]) == 'custom')
+							$ret .= ' '.$this->QuoteTable($col)." {$val[1]}";
+						else if (is_array($val) && strtolower($val[0]) == 'destring')
 							$ret .= ' '.$this->QuoteTable($col)." = {$val[1]}";
 						else
 							$ret .= ' '.$this->QuoteTable($col)." = '{$val}'";
@@ -734,7 +736,7 @@ class DataSet
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 
-		$query = "INSERT INTO {$lq}{$this->table}{$rq} VALUES(";
+		$query = "INSERT INTO {$lq}{$this->table}{$rq} VALUES (";
 		$ix = 0;
 		foreach ($columns as $val)
 		{
