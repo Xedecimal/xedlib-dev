@@ -88,7 +88,7 @@ class Database
 	{
 		if (mysql_errno())
 		{
-			if (isset($handler))
+			if (!empty($handler))
 				if (call_user_func($handler, mysql_errno())) return;
 			if (isset($this->Handlers[mysql_errno()]))
 				if (call_user_func($this->Handlers[mysql_errno()])) return;
@@ -1122,7 +1122,6 @@ function LinkList($items, $parent, $assoc = null)
 	foreach ($ret as $id => $i)
 	{
 		$p = $i->data[$assoc];
-		//echo "Parent: {$p}<br/>\n";
 		if (isset($ret[$p]))
 		{
 			$ret[$p]->children[$id] = $i;
