@@ -123,7 +123,7 @@ class Calendar
 
 	function TagPad($t, $guts, $attribs)
 	{
-		if (empty($this->pad)) return null;
+		if (empty($this->pad)) return;
 		$vp = new VarParser();
 		$d['amount'] = $this->pad;
 		return $vp->ParseVars($guts, $d);
@@ -168,8 +168,6 @@ class Calendar
 	{
 		global $cs;
 		require_once('h_template.php');
-
-		//$vp = new VarParser();
 
 		$t = new Template();
 

@@ -225,12 +225,7 @@ class HandlerFile extends EditorHandler
 		$vp = new VarParser();
 		$dst = $vp->ParseVars($this->target, $data);
 		varinfo($dst);
-		if (!strpos($dst, '//') && file_exists($dst))
-		{
-			//echo "Deleting.<br/>\n";
-			//DelTree($dst);
-			DelEmpty($dst);
-		}
+		if (!strpos($dst, '//') && file_exists($dst)) DelEmpty($dst);
 		return false;
 	}
 }
@@ -1290,8 +1285,6 @@ class EditorData
 	{
 		require_once('h_template.php');
 
-		//$editor_return = $this->Get($target, $ci);
-
 		$t = new Template();
 		$t->ReWrite('forms', array($this, 'TagForms'));
 		$t->ReWrite('part', array($this, 'TagPart'));
@@ -1304,17 +1297,6 @@ class EditorData
 		global $me;
 		$t->Set('table', $this->GetTable($me, GetState($this->Name.'_ci')));
 
-		/*if (!empty($editor_return['forms']))
-		{
-			$forms = null;
-			foreach ($editor_return['forms'] as $frm)
-			{
-				$forms .= GetBox('box_user_form', "{$frm->State} {$frm->Description}",
-					$frm->Get('method="post" action="'.$me.'"', 'class="form"'));
-			}
-			$t->Set('forms', $forms);
-		}
-		else $t->Set('forms', '');*/
 		return $t->Get(dirname(__FILE__).'/temps/editor.xml');
 	}
 

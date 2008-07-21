@@ -33,8 +33,8 @@
 					confirm('Are you sure you wish to delete these files?')"/>
 				</behavior>
 				<behavior type="AllowDownloadZip"><input type="submit"
-					name="{{fn_name}}_action" value="Download Selected"
-				/></behavior>
+					name="{{fn_name}}_action" value="Download Selected" />
+				</behavior>
 				</div>
 			</td></tr>
 

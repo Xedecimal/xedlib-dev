@@ -131,8 +131,6 @@ class CodeReader
 		$this->tree = array();
 		$tokens = token_get_all(file_get_contents($filename));
 
-		//$class = null;
-		//$doc = null;
 		$this->getting = CODE_GET_NONE;
 		$this->ret = null;
 		$this->current = null;
@@ -248,8 +246,6 @@ class CodeReader
 	{
 		if ($member->type == T_FUNCTION)
 		{
-			//$file = $member->file;
-			//$line = $member->line;
 
 			//Check Return
 			if (!empty($member->doc->return))
@@ -270,8 +266,6 @@ class CodeReader
 						if (!empty($ol->doc->return))
 						{
 							$member->doc->return = $ol->doc->return;
-							//$file = $ol->file;
-							//$line = $ol->line;
 							break;
 						}
 					}
@@ -580,8 +574,6 @@ class CodeReader
 			else if (preg_match('/([^\s]+)(.*)/', $clean, $m))
 			{
 				echo "Unknown doc tag: {$m[1]}\n";
-				/*$elTag = $this->current->doc->tags[$m[1]] =
-						isset($m[2]) ? $m[2] : null;*/
 			}
 		}
 	}
@@ -614,7 +606,6 @@ class CodeReader
 	 */
 	function VerifyType($names, $type)
 	{
-		//global $keywords;
 		if (defined($type)
 		|| in_array($type, $this->keywords)
 		|| in_array($type, $names)
@@ -690,7 +681,7 @@ class CodeReader
 	 */
 	function GetOverload($data, $obj)
 	{
-		if (!isset($obj)) return null;
+		if (!isset($obj)) return;
 		if ($obj->type == T_FUNCTION)
 		{
 			//Method
@@ -706,7 +697,6 @@ class CodeReader
 				}
 			}
 		}
-		return null;
 	}
 }
 

@@ -150,7 +150,7 @@ class Template
 		if (isset($attribs["FILE"]))
 		{
 			$tn = new Template($this->data);
-			return $tn->Get($attribs["FILE"]);
+			return $tn->Get($attribs['FILE']);
 		}
 	}
 
@@ -573,8 +573,8 @@ class Template
 		xml_set_object($this->parser, $this);
 		xml_set_element_handler($this->parser, 'Start_Tag', 'End_Tag');
 		xml_set_character_data_handler($this->parser, 'CData');
- 		xml_set_processing_instruction_handler($this->parser, 'Process');
- 		xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'UTF-8');
+		xml_set_processing_instruction_handler($this->parser, 'Process');
+		xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'UTF-8');
 
 		if (!xml_parse($this->parser, $nstr))
 		{
