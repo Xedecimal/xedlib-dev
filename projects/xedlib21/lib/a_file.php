@@ -915,10 +915,8 @@ EOF;
 			else $ret['files'][] = $newfi;
 		}
 
-		//usort($ret['folders'], array($this, 'cmp_file'));
-		//usort($ret['files'], array($this, 'cmp_file'));
-		natcasesort($ret['folders']);
-		natcasesort($ret['files']);
+		usort($ret['folders'], array($this, 'cmp_file'));
+		usort($ret['files'], array($this, 'cmp_file'));
 
 		return $ret;
 	}

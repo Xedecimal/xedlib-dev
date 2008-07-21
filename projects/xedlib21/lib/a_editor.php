@@ -128,6 +128,8 @@ class HandlerFile extends EditorHandler
 	 */
 	public $conditions;
 
+	private $ownership;
+
 	/**
 	 * Creates a new file handler.
 	 *
@@ -135,10 +137,11 @@ class HandlerFile extends EditorHandler
 	 * @param string $column Data column to name new folders by.
 	 * @param array $conditions Conditions to consider managing folders.
 	 */
-	function HandlerFile($target, $conditions = null)
+	function HandlerFile($target, $conditions = null, $ownership = null)
 	{
 		$this->target = $target;
 		$this->conditions = $conditions;
+		$this->ownership = $ownership;
 	}
 
 	function Create(&$data)
@@ -174,6 +177,12 @@ class HandlerFile extends EditorHandler
 					if ($inserted[$col] == $val && !file_exists($dst))
 					{
 						mkrdir($dst, 0777);
+						if ($this->ownership)
+						{
+							$fi = new FileInfo($dst);
+							$fi->info['owner'] = $inserted[$this->ownership];
+							$fi->SaveInfo();
+						}
 						return true;
 					}
 				}
@@ -203,6 +212,12 @@ class HandlerFile extends EditorHandler
 					if ($update[$col] == $val)
 					{
 						if (!file_exists($dst)) mkrdir($dst, 0777);
+						if ($this->ownership)
+						{
+							$fi = new FileInfo($dst);
+							$fi->info['owner'] = $update[$this->ownership];
+							$fi->SaveInfo();
+						}
 						return true;
 					}
 				}
@@ -514,6 +529,7 @@ class EditorData
 			if (count($this->handlers) > 0)
 			{
 				$data = $this->ds->GetOne(array($this->ds->id => $ci));
+				$update[$this->ds->id] = $ci;
 				foreach ($this->handlers as $handler)
 				{
 					if (!$handler->Update($ci, $data, $update)) return;
