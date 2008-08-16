@@ -1030,7 +1030,25 @@ function crypt_apr1_md5($plainpasswd)
     $tmp = strtr(strrev(substr(base64_encode($tmp), 2)),
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
     "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-    return "$"."apr1"."$".$salt."$".$tmp;
+    return "\$apr1\$".$salt."$".$tmp;
+}
+
+function xlencrypt($key, $text)
+{
+	srand();
+	$iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
+	$iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
+	return array($iv, mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_CBC, $iv));
+}
+
+function xldecrypt($key, $text, $iv = null)
+{
+	if ($iv == null)
+	{
+		$ivsize = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
+		$iv = mcrypt_create_iv($ivsize, MCRYPT_RAND);
+	}
+	return mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_CBC, $iv);
 }
 
 function get_htpasswd($path)

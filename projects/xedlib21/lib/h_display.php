@@ -1101,7 +1101,9 @@ define('CONTROL_BOUND', 1);
  * @param mixed $col Index of $val to test for yes or no.
  * @return string 'Yes' or 'No'.
  */
-function BoolCallback($ds, $val, $col) { return $val[$col] ? 'Yes' : 'No'; }
+function DBoolCallback($ds, $val, $col) { return BoolCallback($val[$col]); }
+
+function BoolCallback($val) { return $val ? 'Yes' : 'No'; }
 
 /**
  * @param array $val Value array, usually a row from a dataset.
@@ -1222,8 +1224,11 @@ class LoginManager
 	 * @param string $uservar Name of username session variable to manage.
 	 * @return mixed Array of user data or null if bound or true or false if not bound.
 	 */
-	function Prepare($passvar = 'sespass', $uservar = 'sesuser')
+	function Prepare()
 	{
+		$passvar = $this->Name.'_sespass';
+		$uservar = $this->Name.'_sesuser';
+
 		$act = GetVar($this->Name.'_action');
 
 		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
@@ -1424,6 +1429,7 @@ function GetMonthSelect($name, $default, $attribs = null)
  */
 function GetYearSelect($name, $year)
 {
+	if ($year == null) $year = date('Y');
 	$ret = "<select name=\"$name\">";
 	$ret .= "<option value=\"" . ($year-6) . "\"> &laquo; </option>\n";
 	for ($ix = $year-5; $ix < $year+5; $ix++)

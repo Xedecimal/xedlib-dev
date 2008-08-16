@@ -663,10 +663,9 @@ class DataSet
 		{
 			$ret = $start;
 			$x = 0;
-			$found = false;
 			foreach ($values as $key => $val)
 			{
-				if (!is_numeric($val) && empty($val)) continue;
+				if (!is_numeric($val) && !isset($val)) continue;
 				$found = true;
 				if ($x++ > 0) $ret .= ", ";
 				if (is_array($val))
@@ -696,7 +695,7 @@ class DataSet
 		$ix = 0;
 		foreach (array_keys($columns) as $key)
 		{
-			if (!is_numeric($columns[$key]) && empty($columns[$key])) continue;
+			if (!is_numeric($columns[$key]) && !isset($columns[$key])) continue;
 			if ($ix++ != 0) $query .= ", ";
 			$query .= $this->QuoteTable($key);
 		}
@@ -704,7 +703,7 @@ class DataSet
 		$ix = 0;
 		foreach ($columns as $key => $val)
 		{
-			if (!is_numeric($val) && empty($val)) continue;
+			if (!is_numeric($val) && !isset($val)) continue;
 			if ($ix > 0) $query .= ', ';
 			if (is_array($val))
 			{

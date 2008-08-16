@@ -241,6 +241,20 @@ class Template
 			$this->objs[] = $obj;
 		}
 
+		if ($tag == 'HTML')
+		{
+			if (!empty($attribs['DOCTYPE']))
+			{
+				if ($attribs['DOCTYPE'] == 'strict')
+					$this->out .= '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+				if ($attribs['DOCTYPE'] == 'trans')
+					$this->out .= '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+			}
+			unset($attribs['DOCTYPE']);
+		}
+
 		if ($tag == 'IF')
 		{
 			$vp = new VarParser();
