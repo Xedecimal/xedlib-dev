@@ -268,7 +268,7 @@ class FileManager
 			if (!empty($sels))
 			foreach ($sels as $file)
 			{
-				$fi = new FileInfo($file, $this->filters);
+				$fi = new FileInfo(stripslashes($file), $this->filters);
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
 				$f->Delete($fi, $this->Behavior->Recycle);
 				$types = GetVar($this->Name.'_type');
@@ -429,6 +429,7 @@ class FileManager
 
 		$ret = '';
 		$ix = 0;
+
 		if (!empty($this->files['folders']))
 		foreach ($this->files['folders'] as $f)
 		{
@@ -457,13 +458,40 @@ class FileManager
 			$this->vars['filename'] = $f->filename;
 			$this->vars['fipath'] = $f->path;
 			$this->vars['type'] = 'folders';
-			$this->vars['index'] = $ix++;
+			$this->vars['index'] = $ix;
 			if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
 			else $this->vars['icon'] = '';
+
+			$common = "?cf={$this->cf}&amp;editor={$this->Name}&amp;type=folders";
+
+			//Move Up
+
+			if ($this->Behavior->AllowSort && $this->Behavior->Sort == FM_SORT_MANUAL && $ix > 0)
+			{
+				$uriUp = $common."&amp;{$this->Name}_action=swap&amp;cd=up&amp;index={$ix}";
+				$img = GetRelativePath(dirname(__FILE__)).'/images/up.png';
+				$this->vars['butup'] = "<a href=\"$uriUp\"><img src=\"{$img}\" ".
+				"alt=\"Move Up\" title=\"Move Up\" /></a>";
+			}
+			else $this->vars['butup'] = '';
+
+			//Move Down
+
+			if ($this->Behavior->AllowSort && $this->Behavior->Sort == FM_SORT_MANUAL
+				&& $ix < count($this->files['folders'])-1)
+			{
+				$uriDown = $common."&amp;{$this->Name}_action=swap&amp;cd=down&amp;index={$ix}";
+				$img = GetRelativePath(dirname(__FILE__)).'/images/down.png';
+				$this->vars['butdown'] = "<a href=\"$uriDown\"><img src=\"{$img}\" ".
+				"alt=\"Move Down\" title=\"Move Down\" /></a>";
+			}
+			else $this->vars['butdown'] = '';
 
 			$tfile = new Template($this->vars);
 			$tfile->ReWrite('icon', array(&$this, 'TagIcon'));
 			$ret .= $tfile->GetString($guts);
+
+			$ix++;
 		}
 		return $ret;
 	}
@@ -509,16 +537,43 @@ class FileManager
 			$this->vars['filename'] = $f->filename;
 			$this->vars['fipath'] = $f->path;
 			$this->vars['type'] = 'files';
-			$this->vars['index'] = $ix++;
+			$this->vars['index'] = $ix;
 			if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
 			else $this->vars['icon'] = '';
 			$this->vars['ftitle'] = isset($f->info['title']) ?
 				@stripslashes($f->info['title']) : '';
 
+			$common = "?cf={$this->cf}&amp;editor={$this->Name}&amp;type=files";
+
+			//Move Up
+
+			if ($this->Behavior->AllowSort && $this->Behavior->Sort == FM_SORT_MANUAL && $ix > 0)
+			{
+				$uriUp = $common."&amp;{$this->Name}_action=swap&amp;cd=up&amp;index={$ix}";
+				$img = GetRelativePath(dirname(__FILE__)).'/images/up.png';
+				$this->vars['butup'] = "<a href=\"$uriUp\"><img src=\"{$img}\" ".
+				"alt=\"Move Up\" title=\"Move Up\" /></a>";
+			}
+			else $this->vars['butup'] = '';
+
+			//Move Down
+
+			if ($this->Behavior->AllowSort && $this->Behavior->Sort == FM_SORT_MANUAL
+				&& $ix < count($this->files['files'])-1)
+			{
+				$uriDown = $common."&amp;{$this->Name}_action=swap&amp;cd=down&amp;index={$ix}";
+				$img = GetRelativePath(dirname(__FILE__)).'/images/down.png';
+				$this->vars['butdown'] = "<a href=\"$uriDown\"><img src=\"{$img}\" ".
+				"alt=\"Move Down\" title=\"Move Down\" /></a>";
+			}
+			else $this->vars['butdown'] = '';
+
 			$tfile = new Template($this->vars);
 			$tfile->ReWrite('icon', array(&$this, 'TagIcon'));
 			$tfile->ReWrite('quickcap', array(&$this, 'TagQuickCap'));
 			$ret .= $tfile->GetString($guts);
+
+			$ix++;
 		}
 		return $ret;
 	}
@@ -852,7 +907,6 @@ EOF;
 		$common = "?cf={$this->cf}&amp;editor={$this->Name}&amp;type={$types}";
 		$uriUp = $common."&amp;ca=swap&amp;cd=up&amp;index={$index}";
 		$uriDown = $common."&amp;ca=swap&amp;cd=down&amp;index={$index}";
-		//$uriDel = $common."&amp;ca=delete&amp;".urlencode($file->filename);
 
 		//Move Up
 
@@ -880,7 +934,6 @@ EOF;
 
 		if ($this->Behavior->QuickCaptions)
 		{
-			//$id = $type.'_'.$index;
 			$d['caption'] = '<textarea name="titles['.$file->filename.
 				']" rows="2" cols="30">'.
 				@htmlspecialchars(stripslashes($file->info['title'])).
@@ -900,19 +953,27 @@ EOF;
 		$dp = opendir($this->Root.$this->cf);
 		$ret['files'] = array();
 		$ret['folders'] = array();
+
+		$foidx = $fiidx = 0;
+
 		while ($file = readdir($dp))
 		{
 			if ($file[0] == '.') continue;
 			//TODO: Should handle this on a filter level.
 			if (substr($file, 0, 2) == 't_') continue;
 			$newfi = new FileInfo($this->Root.$this->cf.$file, $this->filters);
-			//if (!isset($newfi->info['index'])) $newfi->info['index'] = 0;
 			if (!$newfi->show) continue;
 			if (is_dir($this->Root.$this->cf.'/'.$file))
 			{
 				if ($this->Behavior->ShowFolders) $ret['folders'][] = $newfi;
+				let($newfi->info['index'], $foidx++);
+				$newfi->SaveInfo();
 			}
-			else $ret['files'][] = $newfi;
+			else
+			{
+				$ret['files'][] = $newfi;
+				let($newfi->info['index'], $fiidx++);
+			}
 		}
 
 		usort($ret['folders'], array($this, 'cmp_file'));
@@ -930,10 +991,9 @@ EOF;
 	 */
 	function cmp_file($f1, $f2)
 	{
-		//if ($this->View->Sort == FM_SORT_MANUAL)
-		//	return $f1->info['index'] < $f2->info['index'] ? -1 : 1;
-		//else
-		return strnatcasecmp($f1->filename, $f2->filename);
+		if ($this->Behavior->Sort == FM_SORT_MANUAL)
+			return $f1->info['index'] < $f2->info['index'] ? -1 : 1;
+		else return strnatcasecmp($f1->filename, $f2->filename);
 	}
 
 	/**
@@ -970,47 +1030,48 @@ class FileManagerView
 	 * @var bool
 	 */
 	public $ShowTitle;
+
 	/**
 	 * Text of the header that comes before files.
 	 *
 	 * @var string
 	 */
 	public $FilesHeader = 'Files';
+
 	/**
 	 * Text of the header that comes before folders.
 	 *
 	 * @var string
 	 */
 	public $FoldersHeader = 'Folders';
+
 	/**
 	 * Whether files or folders come first.
 	 *
 	 * @var bool
 	 */
 	public $ShowFilesFirst = false;
-	/**
-	 * Sorting method used for files.
-	 *
-	 * @var int
-	 */
-	public $Sort = FM_SORT_TABLE;
+
 	/**
 	 * Whether or not to show the date next to files.
 	 *
 	 * @var bool
 	 */
 	public $ShowDate = true;
+
 	/**
 	 * Whether to float items instead of displaying them in a table.
 	 *
 	 * @var bool
 	 */
 	public $FloatItems = false;
+
 	/**
 	 * Create folder text to be displayed.
 	 * @var string
 	 */
 	public $TitleCreateFolder = 'Create New Folder';
+
 	/**
 	 * Title message for the upload box.
 	 * @var string
@@ -1071,6 +1132,8 @@ class FileManagerBehavior
 	 *
 	 * @var bool
 	 */
+	public $Sort = FM_SORT_TABLE;
+
 	public $AllowSort = false;
 
 	/**

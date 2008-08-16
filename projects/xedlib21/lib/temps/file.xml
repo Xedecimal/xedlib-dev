@@ -150,8 +150,10 @@
 								'{{fn_name}}_mass_options');" />
 						</td>
 					</check>
-					<td><a href="{{url}}">{{caption}}</a>
-					</td></tr>
+					<td><a href="{{url}}">{{caption}}</a></td>
+					<td>{{butup}}</td>
+					<td>{{butdown}}</td>
+				</tr>
 				</folder>
 			</table>
 		</box>
@@ -171,18 +173,20 @@
 				</tr></check>
 				<file>
 				<tr>
-				<td align="right"><icon><img src="{{icon}}" alt="icon" /></icon></td>
-				<check>
+					<td align="right"><icon><img src="{{icon}}" alt="icon" /></icon></td>
+					<check>
 					<td>
 						<input type="checkbox" id="sel_{{type}}_{{index}}"
 						name="{{fn_name}}_sels[]" value="{{fipath}}"
 						onclick="toggleAny(['sel_files_', 'sel_folders_'],
 						'{{fn_name}}_mass_options');" />
 					</td>
-				</check>
-				<td><a href="{{url}}">{{filename}}</a></td>
-				<quickcap><td><textarea cols="30" rows="2"
+					</check>
+					<td><a href="{{url}}">{{filename}}</a></td>
+					<quickcap><td><textarea cols="30" rows="2"
 					name="{{fn_name}}_titles[{{filename}}]">{{ftitle}}</textarea></td></quickcap>
+					<td>{{butup}}</td>
+					<td>{{butdown}}</td>
 				</tr>
 				</file>
 			</table>

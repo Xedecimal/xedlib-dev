@@ -122,7 +122,6 @@ class Gallery
 	{
 		$out = '';
 		$vp = new VarParser();
-		//$dp = opendir($this->root.$this->path);
 
 		foreach ($this->files['files'] as $ix => $fi)
 		{
@@ -188,8 +187,6 @@ EOF;
 		$out = '';
 		$view = GetVar('view');
 		if (!isset($view)) return null;
-		//$imgurl = $this->path.'/'.$this->files['files'][$view]->filename;
-		//$vname = substr(strrchr($imgurl, '/'), 1);
 
 		$out .= '  ';
 
@@ -200,7 +197,6 @@ EOF;
 
 	function TagPage($t, $guts)
 	{
-		//$vp = new VarParser();
 		if ($this->Behavior->PageCount != null)
 		{
 			$args = array('galcf' => $this->path);
@@ -307,7 +303,6 @@ EOF;
 
 		if ($temp == null) return $t->Get(dirname(__FILE__).'/temps/gallery.xml');
 		else return $t->Get($temp);
-		//return $body;
 	}
 
 	/**

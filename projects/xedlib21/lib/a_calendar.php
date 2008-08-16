@@ -93,32 +93,6 @@ class Calendar
 			$ret .= $tweek->GetString($guts);
 		}
 		return $ret;
-
-		/*$vp = new VarParser();
-		$ret = '';
-		foreach ($this->month->Days as $day)
-		{
-			$dayts = $day->TimeStamp;
-			if ($day->StartWeek) $ret .= "\t<tr>\n";
-			$ret .= "\t\t<td valign=\"top\" class=\"CalendarDay\">\n";
-			$ret .= "\t\t\t<div class=\"CalendarDayTitle\">\n";
-			$ret .= "\t\t\t{$day->Day}</div>\n";
-			$ret .= $vp->ParseVars($this->daybody, array('ts' => $dayts));
-
-			if (isset($this->dates[$dayts]))
-			{
-				foreach ($this->dates[$dayts] as $eventid)
-				{
-					$event = $this->events[$eventid];
-					$ret .= "\t\t\t\n";
-					$ret .= "\t\t\t{$event[2]}</p>\n";
-				}
-			}
-			$ret .= "\t\t</td>\n";
-			if ($day->LastDay) $ret .= "\t\t<td class=\"CalendarPadding\" colspan=\"".(6 - $day->WeekDay)."\">&nbsp;</td></tr>\n";
-			if ($day->EndWeek) $ret .= "\t</tr>\n";
-		}
-		return $ret;*/
 	}
 
 	function TagPad($t, $guts, $attribs)
@@ -196,17 +170,6 @@ class Calendar
 	 */
 	function GetVert()
 	{
-		//$curdate = 0;
-		/*if (is_array($this->dates))
-		{
-			foreach (array_keys($this->dates) as $key)
-			{
-				//if ($key < $curdate) echo "Date invalid? from ($curdate) to ($key)<br/>\n";
-				$curdate = $key;
-			}
-		}*/
-		//$thists = GetVar("ts", time());
-		//$ret = "<table class=\"CalendarYear\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">\n";
 		$ret = "";
 		$yearx = 0;
 		$curyear = -1;

@@ -1213,4 +1213,9 @@ if (!function_exists('money_format')) {
 	}
 }
 
+function Let(&$var, $val)
+{
+	if (!isset($var)) $var = $val;
+}
+
 ?>

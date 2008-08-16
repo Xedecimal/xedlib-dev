@@ -938,7 +938,6 @@ class EditorData
 
 			$root = $this->BuildTree($items);
 		}
-		//else { $sel = $ci; $this->state = STATE_EDIT; }
 
 		if (isset($root))
 		{
@@ -1774,7 +1773,8 @@ class EditorText
 	{
 		if ($action == 'update')
 		{
-			$fp = fopen(stripslashes($this->item), 'w');
+			$this->item = SecurePath(GetVar($this->Name.'_ci'));
+			$fp = fopen($this->item, 'w');
 			fwrite($fp, stripslashes(GetVar($this->Name.'_body')));
 			fclose($fp);
 		}
@@ -1784,6 +1784,7 @@ class EditorText
 	{
 		$frmRet = new Form($this->Name);
 		$frmRet->AddHidden('ca', 'update');
+		$frmRet->AddHidden($this->Name.'_ci', $this->item);
 
 		$content = file_exists(stripslashes($this->item)) ?
 			stripslashes(file_get_contents(stripslashes($this->item))) : '';
