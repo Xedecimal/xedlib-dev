@@ -177,7 +177,7 @@ class Table
 				if (isset($this->atrs)) $atrs = " ".
 					$this->atrs[$ix++ % count($this->atrs)];
 				else $atrs = "";
-				$ret .= "<th width=\"100\" $atrs>{$col}</th>\n";
+				$ret .= "<th $atrs>{$col}</th>\n";
 			}
 			$ret .= "</tr></thead>\n";
 		}
@@ -965,6 +965,8 @@ class SelOption
 		$this->group = $group;
 		$this->selected = $selected;
 	}
+
+	function __tostring() { return $this->text; }
 }
 
 /**
@@ -1125,13 +1127,11 @@ function TSCallback($ds, $val, $col) { return date('m/d/Y', $val[$col]); }
  * @param array $val Value array, usually a row from a dataset.
  * @param mixed $col Index of $val to test for a mysql formatted date.
  */
-function DateCallback($ds, $val, $col) { return date('m/d/Y', MyDateTimestamp($val[$col])); }
+function DateCallbackD($ds, $val, $col) { return DateCallback($val[$col]); }
+function DateCallback($val) { return date('m/d/Y', MyDateTimestamp($val)); }
 
-/**
- * @param array $val Value array, usually a row from a dataset.
- * @param mixed $col Index of $val to test for a mysql formatted datetime.
- */
-function DateTimeCallback($ds, $val, $col) { return date('m/d/Y', MyDateTimestamp($val[$col], true)); }
+function DateTimeCallbackD($ds, $val, $col) { return DateTimeCallback($val[$col]); }
+function DateTimeCallback($val) { return date('m/d/Y h:i:s a', $val); }
 
 /**
  * A node holds children.

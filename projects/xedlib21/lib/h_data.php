@@ -1068,7 +1068,6 @@ class DataSet
 	*/
 	function Remove($match)
 	{
-		//$matches = array();
 		$query = "DELETE FROM {$this->table}";
 		$query .= $this->WhereClause($match);
 		$this->database->Query($query);
@@ -1104,7 +1103,6 @@ function BuildTree($items, $parent, $assoc = null)
 		}
 		else $root->children[$f->id] = $f;
 	}
-
 	return $root;
 }
 

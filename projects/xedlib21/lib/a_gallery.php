@@ -202,8 +202,6 @@ EOF;
 			$args = array('galcf' => $this->path);
 			return GetPages($this->files['files'], $this->Behavior->PageCount, $args);
 		}
-		//return $vp->ParseVars($guts, $d);
-		//else return '';
 	}
 
 	function TagPart($t, $guts, $attribs)

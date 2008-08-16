@@ -882,7 +882,7 @@ class EditorData
 	function GetTable($target, $ci)
 	{
 		$ret = null;
-		if (empty($this->ds->DisplayColumns)) return null;
+		if (empty($this->ds->DisplayColumns)) return;
 		if ($this->type == CONTROL_BOUND)
 		{
 			$cols = array();
@@ -1644,9 +1644,10 @@ class FileAccessHandler extends EditorHandler
 	 * Constructor for this object, sets required properties.
 	 * @param string $root Top level directory to allow access.
 	 */
-	function FileAccessHandler($root)
+	function FileAccessHandler($root, $depth = 0)
 	{
 		require_once('a_file.php');
+		$this->depth = $depth;
 		$this->root = $root;
 	}
 
@@ -1657,9 +1658,10 @@ class FileAccessHandler extends EditorHandler
 	 * @param int $id Identifier of the object we are looking for access to.
 	 * @return array Array of SelOption objects.
 	 */
-	static function PathToSelOption($root, $id, $level)
+	static function PathToSelOption($root, $id, $level, $depth)
 	{
 		$ret = array();
+		if ($level > $depth) return $ret;
 
 		//Get information on this item.
 		$so = new SelOption($root);
@@ -1675,8 +1677,10 @@ class FileAccessHandler extends EditorHandler
 			if ($file[0] == '.') continue;
 			$fp = $root.'/'.$file;
 			if (is_dir($fp)) $ret = array_merge($ret,
-				FileAccessHandler::PathToSelOption($fp, $id, $level+1));
+				FileAccessHandler::PathToSelOption($fp, $id, $level+1, $depth));
 		}
+
+		natcasesort($ret);
 
 		return $ret;
 	}

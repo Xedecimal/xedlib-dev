@@ -91,6 +91,7 @@ class LoggerAuth extends EditorHandler
 	 */
 	function Get($count = null, $user = null, $idcol = 'usr_id')
 	{
+		global $me;
 		$match = $user != null ? array($idcol => $user) : null;
 		$items = $this->dsLog->Get($match, array('log_date' => 'DESC'),
 			$count != null ? array(0, $count) : null,
@@ -102,13 +103,18 @@ class LoggerAuth extends EditorHandler
 		{
 			$idlead = "{$this->name}_table:";
 			$idend = ":{$ix}";
-			$action = isset($this->actions) ?
+
+			$colDate = DateTimeCallback(MyDateTimestamp($item['log_date'], true));
+			$colUser = '<a href="'.$me.'?editor=user&amp;ci='.$item['usr_id'].'">'.$item['usr_name'].'</a>';
+			$colActn = isset($this->actions) ?
 				$this->actions[$item['log_action']] : $item['log_action'];
+			$colTrgt = $item['log_target'];
+
 			$tbl->AddRow(array(
-				array($item['log_date'],   array('id' => "{$idlead}log_date{$idend}")),
-				array($item['usr_id'],     array('id' => "{$idlead}usr_name{$idend}")),
-				array($action,             array('id' => "{$idlead}log_action{$idend}")),
-				array($item['log_target'], array('id' => "{$idlead}log_target{$idend}"))
+				array($colDate, array('id' => "{$idlead}log_date{$idend}")),
+				array($colUser, array('id' => "{$idlead}usr_name{$idend}")),
+				array($colActn, array('id' => "{$idlead}log_action{$idend}")),
+				array($colTrgt, array('id' => "{$idlead}log_target{$idend}"))
 			));
 		}
 		return $tbl->Get(array('class' => 'tablesorter', 'id' => $this->name.'_table'));

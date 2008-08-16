@@ -185,8 +185,8 @@ class FileManager
 				fclose($fpt);
 
 				$filter->Upload($target, $fi);
-				if (!empty($this->Behavior->Watcher))
-					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
+				if (!empty($this->Behavior->Watchers))
+					RunCallbacks($this->Behavior->Watchers, FM_ACTION_UPLOAD,
 						$fi->path.$target);
 			}
 
@@ -200,13 +200,13 @@ class FileManager
 				if (!preg_match('#^\.\[[0-9]+\]_.*#', $name))
 				{
 					$filter->Upload($name, $fi);
-					if (!empty($this->Behavior->Watcher))
-						RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPLOAD,
+					if (!empty($this->Behavior->Watchers))
+						RunCallbacks($this->Behavior->Watchers, FM_ACTION_UPLOAD,
 							$this->Root.$this->cf.$name);
 				}
 			}
 		}
-		else if ($act == "Save")
+		else if ($act == 'Save')
 		{
 			if (!$this->Behavior->AllowEdit) return;
 			$info = new FileInfo($this->Root.$this->cf, $this->filters);
@@ -229,8 +229,8 @@ class FileManager
 				$info->info = array_merge($info->info, $newinfo);
 				$info->SaveInfo();
 
-				if (!empty($this->Behavior->Watcher))
-					RunCallbacks($this->Behavior->Watcher, FM_ACTION_UPDATE,
+				if (!empty($this->Behavior->Watchers))
+					RunCallbacks($this->Behavior->Watchers, FM_ACTION_UPDATE,
 						$info->path);
 			}
 		}
@@ -257,11 +257,11 @@ class FileManager
 			$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
 			$f->Rename($fi, $name);
 			$this->cf = substr($fi->path, strlen($this->Root)).'/';
-			if (!empty($this->Behavior->Watcher))
-				RunCallbacks($this->Behavior->Watcher, FM_ACTION_RENAME,
+			if (!empty($this->Behavior->Watchers))
+				RunCallbacks($this->Behavior->Watchers, FM_ACTION_RENAME,
 					$fi->path.' to '.$name);
 		}
-		else if ($act == "Delete")
+		else if ($act == 'Delete')
 		{
 			if (!$this->Behavior->AllowDelete) return;
 			$sels = GetVar($this->Name.'_sels');
@@ -274,21 +274,21 @@ class FileManager
 				$types = GetVar($this->Name.'_type');
 				$this->files = $this->GetDirectory();
 				$ix = 0;
-				if (!empty($this->Behavior->Watcher))
-					RunCallbacks($this->Behavior->Watcher, FM_ACTION_DELETE,
+				if (!empty($this->Behavior->Watchers))
+					RunCallbacks($this->Behavior->Watchers, FM_ACTION_DELETE,
 						$fi->path);
 			}
 		}
 		else if ($act == 'Create')
 		{
 			if (!$this->Behavior->AllowCreateDir) return;
-			$p = $this->Root.$this->cf.GetVar($this->Name."_cname");
+			$p = $this->Root.$this->cf.GetVar($this->Name.'_cname');
 			mkdir($p);
 			chmod($p, 0755);
 			FilterDefault::UpdateMTime($p);
 
-			if (!empty($this->Behavior->Watcher))
-				RunCallbacks($this->Behavior->Watcher, FM_ACTION_CREATE, $p);
+			if (!empty($this->Behavior->Watchers))
+				RunCallbacks($this->Behavior->Watchers, FM_ACTION_CREATE, $p);
 		}
 		else if ($act == 'swap')
 		{
@@ -308,8 +308,8 @@ class FileManager
 				$file->info['index'] = $ix;
 				$file->SaveInfo();
 			}
-			if (!empty($this->Behavior->Watcher))
-				RunCallbacks($this->Behavior->Watcher, FM_ACTION_REORDER,
+			if (!empty($this->Behavior->Watchers))
+				RunCallbacks($this->Behavior->Watchers, FM_ACTION_REORDER,
 					$sfile->path . ' ' . ($cd == 'up' ? 'up' : 'down'));
 		}
 		else if ($act == 'Move')
@@ -323,8 +323,8 @@ class FileManager
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
 				$f->Rename($fi, $ct.$fi->filename);
 
-				if (!empty($this->Behavior->Watcher))
-					RunCallbacks($this->Behavior->Watcher, FM_ACTION_MOVE,
+				if (!empty($this->Behavior->Watchers))
+					RunCallbacks($this->Behavior->Watchers, FM_ACTION_MOVE,
 						$fi->path . ' to ' . $ct);
 			}
 		}
@@ -653,8 +653,10 @@ class FileManager
 
 		if ($this->Behavior->AllowSetType && count($this->filters) > 1 && is_dir($fi->path))
 		{
-			$in = new FormInput('Change Type', 'select', 'info[type]',
-				ArrayToSelOptions($this->filters, $f->Name, false));
+			$in = new FormInput('Change Type', 'select',
+				'info[type]',
+				ArrayToSelOptions($this->filters, $f->Name,
+				false));
 			$this->vars['text'] = $in->text;
 			$this->vars['field'] = $in->Get($this->Name);
 			$ret .= $vp->ParseVars($guts, $this->vars);
@@ -1014,7 +1016,7 @@ EOF;
 		//we'll need another solution. -- Xed
 
 		if (!empty($file->info['access']))
-			if (isset($file->info['access'][$this->uid]))
+			if (!empty($file->info['access'][$this->uid]))
 				return true;
 
 		return false;
@@ -1399,7 +1401,7 @@ class FileInfo
 		if (!file_exists($source))
 			Error("FileInfo: File/Directory does not exist. ({$source})<br/>\n");
 
-		if (!empty($user_root) > 0)
+		if (!empty($user_root))
 			$this->owned = strlen(strstr($source, $user_root)) > 0;
 
 		$this->bitpos = 0;

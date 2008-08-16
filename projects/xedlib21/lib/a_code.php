@@ -246,7 +246,6 @@ class CodeReader
 	{
 		if ($member->type == T_FUNCTION)
 		{
-
 			//Check Return
 			if (!empty($member->doc->return))
 			{

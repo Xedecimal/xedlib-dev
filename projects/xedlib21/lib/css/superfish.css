@@ -201,11 +201,6 @@ embed, object {
 	 * have width 100% of their ul parent (see .nav ul rules above) */
 }
 .nav a {
-	/*color: #13a;*/
-	/*padding: .75em 0;*/ /* note that the top and bottom padding will affect the
-					   * 'top' value (marked with the word "VARIABLE") of the
-					   * second tier of nav (see "essential rules" above and
-					   * alter accordingly) */
 	text-decoration:none;
 	text-indent: 2em;
 }
