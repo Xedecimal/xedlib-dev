@@ -692,7 +692,7 @@ class DataSet
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 
-		$query = "INSERT INTO {$lq}{$this->table}{$rq} (";
+		$query = 'INSERT INTO '.QuoteTable($this->table).' (';
 		$ix = 0;
 		foreach (array_keys($columns) as $key)
 		{
