@@ -416,6 +416,20 @@ class EditorData
 					{
 						$insert[$col] = $value[2].'-'.$value[0].'-'.$value[1];
 					}
+					else if($in->type == 'datetime')
+					{
+						$time = $value[3][0];
+						if($value[5][0] == 1)
+						{
+							//time is in PM
+							if($value[3][0] != 12)
+							{
+								$value[3][0] += 12;
+							}
+						}
+						$time_portion = " {$value[3][0]}:{$value[4][0]}:00";
+						$insert[$col] = $value[2].'-'.$value[0].'-'.$value[1].$time_portion;
+					}
 					else if ($in->type == 'password' && strlen($value) > 0)
 					{
 						$insert[$col] = md5($value);
@@ -498,6 +512,22 @@ class EditorData
 					if ($in->type == 'date')
 					{
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1];
+					}
+					else if($in->type == 'datetime')
+					{
+						$time = $value[3][0];
+						if($value[5][0] == 1)
+						{
+							//time is in PM
+							if($value[3][0] != 12)
+							{
+								$value[3][0] += 12;
+							}
+						}
+						//echo mktime(12,30,0,1,12,2008);
+						$time_portion = " {$value[3][0]}:{$value[4][0]}:00";
+						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1].$time_portion;
+						//varinfo($update[$col]);	
 					}
 					else if ($in->type == 'password')
 					{
@@ -1068,7 +1098,7 @@ class EditorData
 						$args = array(
 							'ci' => $cnode->id,
 							'ct' => $node->children[$index-1]->id,
-							'ca' => $this->name.'_swap'
+							$this->Name.'_action' => 'swap'
 						);
 						if (isset($PERSISTS)) $args = array_merge($PERSISTS, $args);
 						$url = URL($target, $args);
@@ -1081,7 +1111,7 @@ class EditorData
 					$args = array(
 						'ci' => $cnode->id,
 						'ct' => $node->children[$index+1]->id,
-						'ca' => $this->name.'_swap'
+						$this->Name.'_action' => 'swap'
 					);
 					if (isset($PERSISTS)) $args = array_merge($PERSISTS, $args);
 					$url = URL($target, $args);
@@ -1190,6 +1220,8 @@ class EditorData
 						{
 							if ($in->type == 'date')
 								$in->valu = MyDateTimestamp($sel[0][$col]);
+							else if ($in->type == 'datetime')
+								$in->valu = MyDateTimestamp($sel[0][$col], true);
 							else $in->valu = $sel[0][$col];
 						}
 						//If we bring this back, make sure setting explicit
@@ -1735,14 +1767,14 @@ class EditorText
 	function EditorText($name, $item)
 	{
 		$this->Name = $name;
-		$this->item = $item;
+		$this->item = str_replace('\\', '', $item);
 	}
 
 	function Prepare($action)
 	{
 		if ($action == 'update')
 		{
-			$fp = fopen($this->item, 'w');
+			$fp = fopen(stripslashes($this->item), 'w');
 			fwrite($fp, stripslashes(GetVar($this->Name.'_body')));
 			fclose($fp);
 		}
@@ -1753,8 +1785,8 @@ class EditorText
 		$frmRet = new Form($this->Name);
 		$frmRet->AddHidden('ca', 'update');
 
-		$content = file_exists($this->item) ?
-			stripslashes(file_get_contents($this->item)) : '';
+		$content = file_exists(stripslashes($this->item)) ?
+			stripslashes(file_get_contents(stripslashes($this->item))) : '';
 
 		$frmRet->AddInput(new FormInput(null, 'area', 'body', $content,
 			array('ROWS' => 30)));

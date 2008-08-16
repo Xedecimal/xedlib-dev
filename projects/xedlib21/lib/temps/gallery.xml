@@ -32,7 +32,7 @@
 	border-collapse: collapse;
 }
 
-.float img { border: 1px solid #bd0b3d; }
+.float img { border: 1px solid #000; }
 
 .shadow_tr
 {

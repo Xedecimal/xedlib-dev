@@ -1041,18 +1041,23 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 	if (is_array($timestamp))
 	{
 		if (isset($timestamp[5]))
-			$timestamp = mktime($timestamp[3], $timestamp[4], $timestamp[5], $timestamp[0], $timestamp[1], $timestamp[2]);
+			$timestamp = mktime($timestamp[3], $timestamp[4], $timestamp[5],
+				$timestamp[0], $timestamp[1], $timestamp[2]);
 		else
-			$timestamp = mktime(0, 0, 0, $timestamp[0], $timestamp[1], $timestamp[2]);
+			$timestamp = mktime(0, 0, 0, $timestamp[0], $timestamp[1],
+				$timestamp[2]);
 	}
-	else if (!is_numeric($timestamp))
+	else if (!is_numeric($timestamp) && !empty($timestamp))
 	{
 		$timestamp = MyDateTimestamp($timestamp, $include_time);
 	}
 	if (!isset($timestamp)) $timestamp = time();
-	$strout = '<label>'.GetMonthSelect("{$name}[]", date("n", $timestamp)).'</label>';
-	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date('d', $timestamp) . "\" alt=\"Day\" />\n";
-	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"" . date("Y", $timestamp) . "\" alt=\"Year\" />\n";
+	$strout = '<label>'.GetMonthSelect("{$name}[]", date("n", $timestamp)).
+		'</label>';
+	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"".
+		date('d', $timestamp)."\" alt=\"Day\" />\n";
+	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"".
+		date("Y", $timestamp)."\" alt=\"Year\" />\n";
 	$strout .= $include_time ? GetInputTime($name.'[]', $timestamp) : null;
 	return $strout;
 }
@@ -1065,9 +1070,14 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
  */
 function GetInputTime($name, $timestamp)
 {
-	$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("g", $timestamp) . "\" alt=\"Hour\" />\n";
-	$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"" . date("i", $timestamp) . "\" alt=\"Minute\" />\n";
-	$strout .= "<select name=\"{$name}[]\"><option value=\"0\">AM</option><option value=\"1\">PM</option></select>";
+	$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"".
+		date("g", $timestamp)."\" alt=\"Hour\" />\n";
+	$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"".
+		date("i", $timestamp)."\" alt=\"Minute\" />\n";
+	$strout .= "<select name=\"{$name}[]\">
+		<option value=\"0\">AM</option>
+		<option value=\"1\">PM</option>
+		</select>";
 	return $strout;
 }
 
