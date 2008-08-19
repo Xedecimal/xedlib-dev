@@ -80,12 +80,16 @@
 	<table>
 	<tr><th>Name</th><th>Filename</th><th>Line</th></tr>
 	<xsl:for-each select="./variable">
-		<a>
-			<xsl:attribute name="href">
-				variable_<xsl:value-of select="@name"/>.xml
-			</xsl:attribute>
-			<xsl:value-of select="@name" /><br />
-		</a>
+		<tr>
+			<td><a>
+				<xsl:attribute name="href">
+					variable_<xsl:value-of select="@name"/>.xml
+				</xsl:attribute>
+				<xsl:value-of select="@name" /><br />
+			</a></td>
+			<td><xsl:value-of select="@file" /></td>
+			<td><xsl:value-of select="@line" /></td>
+		</tr>
 	</xsl:for-each>
 	</table>
 	</p>

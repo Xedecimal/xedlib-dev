@@ -4,7 +4,7 @@
  * Processes validation on a form by means of regular expressions in javascript
  * and server-side php.
  * @see Form
- * @example test_present.php
+ * @example test_display.php
  */
 class Validation
 {

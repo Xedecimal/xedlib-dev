@@ -10,7 +10,7 @@
  * @param string $title Title of the returned box.
  * @param string $body Raw text contents of the returned box.
  * @param string $template Template file to use for the returned box.
- * @example test_present.php
+ * @example test_display.php
  * @return string Rendered box.
  */
 function GetBox($name, $title, $body, $template = null)
@@ -1818,6 +1818,9 @@ class DataDisplay
 		return $ret;
 	}
 
+	/**
+	 * This is called for a detail tag in the template.
+	 */
 	function TagDetailItem($t, $guts)
 	{
 		$vp = new VarParser();

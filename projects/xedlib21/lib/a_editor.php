@@ -120,6 +120,7 @@ class HandlerFile extends EditorHandler
 	 * @var string
 	 */
 	public $target;
+
 	/**
 	 * Conditions that can exemplify the creation of certain items.
 	 * specified as conditions['column'] = 'match';
@@ -128,14 +129,20 @@ class HandlerFile extends EditorHandler
 	 */
 	public $conditions;
 
+	/**
+	 * Identification of the owner for the associated target.
+	 * @var mixed
+	 */
 	private $ownership;
 
 	/**
 	 * Creates a new file handler.
 	 *
-	 * @param string $target Target folder that will hold information.
-	 * @param string $column Data column to name new folders by.
-	 * @param array $conditions Conditions to consider managing folders.
+	 * @param string $target VarParsed string of associated database columns.
+	 * @param array $conditions Conditions to consider enabling folder
+	 * management.
+	 * @param mixed $ownership Identification of the owner for the associated
+	 * target.
 	 */
 	function HandlerFile($target, $conditions = null, $ownership = null)
 	{
@@ -386,9 +393,6 @@ class EditorData
 	/**
 	 * To be called before presentation, will process, verify and calculate any
 	 * data to be used in the Get function.
-	 *
-	 * @param string $action Current action, usually stored in POST['ca']
-	 * @param mixed $ci Current item, if bound use an identifier for the row, otherwise an unbound DataSet object.
 	 * @return null
 	 */
 	function Prepare()
@@ -526,7 +530,7 @@ class EditorData
 						//echo mktime(12,30,0,1,12,2008);
 						$time_portion = " {$value[3][0]}:{$value[4][0]}:00";
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1].$time_portion;
-						//varinfo($update[$col]);	
+						//varinfo($update[$col]);
 					}
 					else if ($in->type == 'password')
 					{
@@ -699,8 +703,6 @@ class EditorData
 	/**
 	 * Gets the rendered HTML for this editor.
 	 *
-	 * @param string $target Filename that uses this editor.
-	 * @param mixed $ci ID of current item (eg. GetVar('ci'))
 	 * @return string
 	 */
 	function Get()
@@ -1128,8 +1130,6 @@ class EditorData
 	/**
 	 * Gets the form portion of this editor.
 	 *
-	 * @param string $target Filename of script that uses this editor.
-	 * @param mixed $ci Current Item (eg. GetVar('ci')).
 	 * @param int $state Current state of the editor.
 	 * @param int $curchild Current child by DataSet Relation.
 	 * @return string
@@ -1267,8 +1267,6 @@ class EditorData
 	 * Get update and possibly children's create forms for the lower
 	 * section of this editor.
 	 *
-	 * @param string $target Target script asking for this information.
-	 * @param mixed $ci Identifier of current object.
 	 * @param int $curchild Current child.
 	 * @return string
 	 */
@@ -1297,6 +1295,12 @@ class EditorData
 		return $ret;
 	}
 
+	/**
+	 * Prepare forms tags with their information.
+	 *
+	 * @param Template $t Associated template.
+	 * @param string $guts Contents of the tag.
+	 */
 	function TagForms($t, $guts)
 	{
 		global $me;
@@ -1315,16 +1319,22 @@ class EditorData
 		return $out;
 	}
 
-	function TagPart($guts, $attribs)
+	/**
+	 * This should not actually exist anymore, there should be a specific
+	 * tag for each individual part. But for now it works.
+	 *
+	 * @param Template $t Associated template.
+	 * @param string $guts Contents of the tag.
+	 * @param array $attribs Attributes for this tag.
+	 */
+	function TagPart($t, $guts, $attribs)
 	{
 		$this->parts[$attribs['TYPE']] = $guts;
 	}
 
 	/**
 	 * Gets a standard user interface for a single editor's Get() method.
-	 * @param string $target Target script to post to.
-	 * @param array $editor_return Return value of EditorData::Get().
-	 * @param string $form_atrs Additional form attributes.
+	 *
 	 * @return string Rendered html of associated objects.
 	 */
 	function GetUI()
@@ -1355,8 +1365,25 @@ class EditorData
 
 class EditorDataBehavior
 {
+	/**
+	 * Allows users to edit items in this editor.
+	 *
+	 * @var bool
+	 */
 	public $AllowEdit = true;
+
+	/**
+	 * Whether or not to use search functions.
+	 *
+	 * @var bool
+	 */
 	public $Search = true;
+
+	/**
+	 * How to group items if they are to be grouped.
+	 *
+	 * @var array
+	 */
 	public $Group;
 }
 
@@ -1372,8 +1399,18 @@ class DisplayData
 	 */
 	public $ds;
 
+	/**
+	 * Array of Join objects associated with this data display.
+	 *
+	 * @var array
+	 */
 	public $joins;
 
+	/**
+	 * Behavior that will affect this data display.
+	 *
+	 * @var DisplayDataBehavior
+	 */
 	public $Behavior;
 
 	/**

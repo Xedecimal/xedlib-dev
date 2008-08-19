@@ -31,8 +31,9 @@ if (!isset($__checked) && substr(phpversion(), 0, 1) != '5')
 }
 
 /**
- * Enter description here...
+ * Handles errors and tries to open them up more to strictly find problems.
  *
+ * @param string $file Filename to output to silently.
  */
 function HandleErrors($file = null)
 {
@@ -63,12 +64,16 @@ function Trace($msg)
 }
 
 /**
+ * Triggers an error.
+ *
  * @param string $msg Message to the user.
  * @param int $level How critical this error is.
  */
 function Error($msg, $level = E_USER_ERROR) { trigger_error($msg, $level); }
 
 /**
+ * Callback for HandleErrors, used internally.
+ *
  * @param int $errno Error number.
  * @param string $errmsg Error message.
  * @param string $filename Source filename of the problem.
@@ -113,6 +118,8 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 }
 
 /**
+ * Returns a human readable callstack in html format.
+ *
  * @param string $file Source of caller.
  * @param int $line Line of caller.
  * @return string Rendered callstack.
@@ -146,6 +153,8 @@ function GetCallstack($file, $line)
 //
 
 /**
+ * Attempts to set a variable using sessions.
+ *
  * @param string $name Name of the value to set.
  * @param string $value Value to set.
  * @return mixed Passed $value
@@ -162,6 +171,7 @@ function SetVar($name, $value)
 /**
  * Returns a value from files, post, get, session, cookie and finally
  * server in that order.
+ *
  * @param string $name Name of the value to get.
  * @param mixed $default Default value to return if not available.
  * @return mixed
@@ -199,6 +209,13 @@ function GetVar($name, $default = null)
 	return $default;
 }
 
+/**
+ * Returns a series of values specified in array form, otherwise $default
+ *
+ * @param string $name Name example: 'posts[]'
+ * @param string $default Default value alternatively.
+ * @return mixed
+ */
 function GetVars($name, $default = null)
 {
 	$m = null;
@@ -218,6 +235,12 @@ function GetVars($name, $default = null)
 	else return GetVar($name, $default);
 }
 
+/**
+ * Returns a series of posted values that match $match.
+ *
+ * @param string $match Regular Expression
+ * @return array [name] => value
+ */
 function GetAssocPosts($match)
 {
 	$ret = array();
@@ -229,6 +252,8 @@ function GetAssocPosts($match)
 }
 
 /**
+ * Just like GetVar but returns only post values.
+ *
  * @param string $name Name to retrieve.
  * @param mixed $default Default value if not available.
  * @return mixed Value of $name post variable.
@@ -237,7 +262,11 @@ function GetPost($name, $default = null)
 {
 	global $HTTP_POST_VARS;
 
-	if (!empty($_POST[$name]))    { Trace("GetVar(): $name (Post)    -> {$_POST[$name]}<br/>\n"); return $_POST[$name]; }
+	if (!empty($_POST[$name]))
+	{
+		Trace("GetVar(): $name (Post)    -> {$_POST[$name]}<br/>\n");
+		return $_POST[$name];
+	}
 
 	if (isset($HTTP_POST_VARS[$name]) && strlen($HTTP_POST_VARS[$name]) > 0)
 		return $HTTP_POST_VARS[$name];
@@ -246,6 +275,9 @@ function GetPost($name, $default = null)
 }
 
 /**
+ * Unsets a var that was possibly set using SetVar or other methods of session
+ * setting.
+ *
  * @param string $name Name of variable to get rid of.
  */
 function UnsetVar($name)
@@ -263,6 +295,8 @@ function UnsetVar($name)
 }
 
 /**
+ * Returns information on a given variable in human readable form.
+ *
  * @param mixed $var Variable to return information on.
  */
 function VarInfo($var)
@@ -275,9 +309,12 @@ function VarInfo($var)
 }
 
 /**
+ * Attempts to keep a value persistant across all xedlib editors.
+ *
  * @param string $name Name of value to persist.
  * @param mixed $value Value to be persisted.
  * @return mixed The passed $value.
+ * @todo This is probably not needed in place of sessions.
  */
 function Persist($name, $value)
 {
@@ -319,9 +356,11 @@ function URL($url, $uri = null)
 
 /**
  * Parses an object or array for serialization to a uri.
+ *
  * @param string $key Parent key for the current series to iterate.
  * @param mixed $val Object or array to iterate.
  * @param bool $start Whether or not this is the first item being parsed.
+ * @return string Rendered url string.
  */
 function URLParse($key, $val, $start = false)
 {
@@ -379,8 +418,12 @@ function ChompString($text, $length)
 //
 
 /**
+ * Converts an integer unix epoch timestamp to a mysql equivalent.
+ *
  * @param int $ts Epoch timestamp.
+ * @param bool $time Whether or not to include time.
  * @return string MySql formatted date.
+ * @todo Move to data.
  */
 function TimestampToMySql($ts, $time = true)
 {
@@ -388,8 +431,11 @@ function TimestampToMySql($ts, $time = true)
 }
 
 /**
+ * Converts an integer unix epoch timestamp to a mssql equivalent.
+ *
  * @param string $ts MySql time stamp.
  * @return int Timestamp.
+ * @todo Move to data.
  */
 function TimestampToMsSql($ts)
 {
@@ -429,6 +475,9 @@ function MyDateTimestamp($date, $include_time = false)
 
 /**
  * Returns timestamp from a GetDateInput style GetVar value.
+ *
+ * @param array $value Array of 3 elements for a date returned from a GetVar.
+ * @return int Timestamp result from mktime.
  */
 function DateInputToTS($value)
 {
@@ -436,6 +485,8 @@ function DateInputToTS($value)
 }
 
 /**
+ * Returns a string representation of time from $ts to now. Eg. '5 days'
+ *
  * @param int $ts Timestamp.
  * @return string English offset.
  */
@@ -466,6 +517,8 @@ function GetDateOffset($ts)
 //
 
 /**
+ * Returns the filename portion of path without the extension applied.
+ *
  * @param string $name Name of the file to return the extension from.
  * @return string File extension.
  */
@@ -475,18 +528,20 @@ function fileext($name)
 }
 
 /**
+ * Returns a filename without the extension.
+ *
  * @param string $name Name to strip the extension off.
  * @return string Stripped filename.
  */
 function filenoext($name)
 {
-	$v = strrchr($name, '.');
-	if ($v) return substr($name, 0, -strlen($v));
+	if (strpos($name, '.')) return substr($name, 0, strrpos($name, '.'));
 	return $name;
 }
 
 /**
  * Careful with this sucker.
+ *
  * @param string $dir Directory to obliterate.
  */
 function DelTree($dir)
@@ -505,6 +560,11 @@ function DelTree($dir)
 	@rmdir($dir);
 }
 
+/**
+ * Recursively upwardly deletes empty folders.
+ *
+ * @param string $dir Top level directory to empty.
+ */
 function DelEmpty($dir)
 {
 	$files = glob($dir.'/*');
@@ -512,6 +572,8 @@ function DelEmpty($dir)
 }
 
 /**
+ * Reformats a file to be compatible with the current installation of php.
+ *
  * @param string $file Filename to reformat.
  */
 function Reformat($file)
@@ -556,6 +618,8 @@ function GetRelativePath($path)
 }
 
 /**
+ * Returns an image from the RelativePath location.
+ *
  * @param string $img Image filename.
  * @param string $title For the alt/title/alttitle attributes.
  * @param string $attribs Additional attributes.
@@ -606,6 +670,8 @@ function DataToArray($rows, $idcol)
 }
 
 /**
+ * Returns the last item on the array, without popping it.
+ *
  * @param array $array Array to grab the last item off from.
  * @return mixed Last item on the array.
  */
@@ -644,6 +710,8 @@ function ResizeImage($image, $newWidth, $newHeight)
 }
 
 /**
+ * Runs multiple callbacks with given arguments.
+ *
  * @return mixed Returns whatever the callbacks do.
  */
 function RunCallbacks()
@@ -679,6 +747,8 @@ function CleanID($id)
 }
 
 /**
+ * Pluralizes a string, eg User -> Users
+ *
  * @param string $str String to pluralize.
  * @return string Properly pluralized string.
  */
@@ -691,6 +761,9 @@ function Plural($str)
 }
 
 /**
+ * Attempts to disable the ability to inject different paths to gain higher
+ * level directories in urls or posts.
+ *
  * @param string $path Path to secure from url hacks.
  * @return string Properly secured path.
  */
@@ -702,6 +775,8 @@ function SecurePath($path)
 }
 
 /**
+ * Returns a single flat page.
+ *
  * @param array $data Data to trim.
  * @param int $page Page number we are currently on.
  * @param int $count Count of items per page.
@@ -712,16 +787,27 @@ function GetFlatPage($data, $page, $count)
 	return array_splice($data, $count*$page, $count);
 }
 
+/**
+ * Returns a database related page filter.
+ *
+ * @todo Move this to Data package.
+ * @param int $page Current page.
+ * @param int $count Count of items per page.
+ * @return array DataSet usable 'filter' argument.
+ */
 function GetPageFilter($page, $count)
 {
 	return array(($page-1)*$count, $count);
 }
 
 /**
+ * Gets html rendered series of pages.
+ *
  * @param array $data Data to use for the pages.
  * @param int $count Number of items per page.
  * @param array $args Additional uri args.
  * @return string Rendered html page display.
+ * @todo Template this.
  */
 function GetPages($data, $count, $args)
 {
@@ -779,6 +865,8 @@ function paslash($str)
 }
 
 /**
+ * Converts a data size string to proper digits.
+ *
  * @param string $str String to convert into proper size.
  * @return int String converted to proper size.
  */
@@ -800,6 +888,8 @@ function GetStringSize($str)
 }
 
 /**
+ * Converts a string from digits to proper data size string.
+ *
  * @param int $size Size to convert into proper string.
  * @return string Size converted to a string.
  */
@@ -811,6 +901,8 @@ function GetSizeString($size)
 }
 
 /**
+ * PHP4 compatible array clone.
+ *
  * @param mixed $arr Item to properly clone in php5 without references.
  * @return mixed Cloned copy of whatever you throw at it.
  */
@@ -829,6 +921,13 @@ function array_clone($arr)
 	return $ret;
 }
 
+/**
+ * Create a directory recursively supporting php4.
+ *
+ * @param string $path Complete path to recursively create.
+ * @param int $mode Initial mode for linux based filesystems.
+ * @return bool Whether the directory creation was successful.
+ */
 function mkrdir($path, $mode = 0755)
 {
 	$path = rtrim(preg_replace(array('/\\/', '/\/{2,}/'), "/", $path), '/');
@@ -848,6 +947,7 @@ function mkrdir($path, $mode = 0755)
  * Returns var if it is set, otherwise def.
  * @param mixed $var Variable to check and return if exists.
  * @param mixed $def Default to return if $var is not set.
+ * @return mixed $var if it is set, otherwise $def.
  */
 function ifset($var, $def)
 {
@@ -859,6 +959,7 @@ function ifset($var, $def)
  * @param array $tree Stack of linkable items.
  * @param string $target Target script of interaction.
  * @param string $text Text to test.
+ * @return string Text with words anchored in maybe html?
  */
 function linkup($tree, $target, $text)
 {
@@ -906,6 +1007,8 @@ function linkup($tree, $target, $text)
 }
 
 /**
+ * Converts an array to a BitMask.
+ *
  * @param array $array Array to bitmask.
  * @return int Bitwise combined values.
  */
@@ -916,11 +1019,27 @@ function GetMask($array)
 	return $ret;
 }
 
+/**
+ * Get a single result of a zip code location and information.
+ *
+ * @param DataSet $ds Location of zip code data.
+ * @param int $zip Zip code to location information on.
+ * @return array Single database result of the specified zip code.
+ */
 function GetZipLocation($ds, $zip)
 {
 	return $ds->GetOne(array('zip' => $zip));
 }
 
+/**
+ * Locate the amount of miles between two latitudes and longitudes.
+ *
+ * @param float $lat1 Latitude Source
+ * @param float $lat2 Latitude Destination
+ * @param float $lon1 Longitude Source
+ * @param float $lon2 Longitude Destination
+ * @return float Distance.
+ */
 function GetMiles($lat1, $lat2, $lon1, $lon2)
 {
 	$lat1 = deg2rad($lat1);
@@ -937,7 +1056,13 @@ function GetMiles($lat1, $lat2, $lon1, $lon2)
 }
 
 /**
- * Zip code lookup to collect zip codes by mileage.
+ * Zip code lookup to collect zip codes by mileage using the Great Circle
+ * algorithm.
+ *
+ * @param DataSet $ds Location of zip code data.
+ * @param int $zip Source zip code.
+ * @param int $range Miles to search for other zip codes.
+ * @return array ['dists'][zip] => distance, ['zips'] => zip
  */
 function GetZips($ds, $zip, $range)
 {
@@ -978,6 +1103,14 @@ function GetZips($ds, $zip, $range)
 define('PREG_FILES', 1);
 define('PREG_DIRS', 2);
 
+/**
+ * Regular expression matches files located in $path using $pattern and $opts.
+ *
+ * @param string $pattern Used by preg_match.
+ * @param string $path Location to search.
+ * @param int $opts Bitwise combination of PREG_FILES and PREG_DIRS.
+ * @return array index => filename
+ */
 function preg_files($pattern, $path, $opts = 3)
 {
 	echo "Opts: ".($opts & PREG_DIRS)."<br/>\n";
@@ -993,7 +1126,11 @@ function preg_files($pattern, $path, $opts = 3)
 }
 
 /**
- * Returns true if $src directory is inside directory $dst.
+ * Returns true if $src path is inside $dst path.
+ *
+ * @param string $src Source pathname.
+ * @param string $dst Destination pathname.
+ * @return bool True if the source exists inside the destination.
  */
 function is_in($src, $dst)
 {
@@ -1001,6 +1138,13 @@ function is_in($src, $dst)
 	return substr(realpath($src), 0, strlen($rpdst)) == $rpdst;
 }
 
+/**
+ * Encrypts strings formatted for htaccess files for windows based Apache
+ * installations as they work a bit differently than linux.
+ *
+ * @param string $plainpasswd Password to encrypt.
+ * @return string Encrypted string that can be placed in an htaccess file.
+ */
 function crypt_apr1_md5($plainpasswd)
 {
     $salt = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"), 0, 8);
@@ -1033,6 +1177,13 @@ function crypt_apr1_md5($plainpasswd)
     return "\$apr1\$".$salt."$".$tmp;
 }
 
+/**
+ * Encrypts $text using $key as a passphrase using RIJNDAEL algorithm.
+ *
+ * @param string $key Key used to encrypt.
+ * @param string $text Text to encrypt.
+ * @return string Encrypted text.
+ */
 function xlencrypt($key, $text)
 {
 	srand();
@@ -1041,6 +1192,14 @@ function xlencrypt($key, $text)
 	return array($iv, mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_CBC, $iv));
 }
 
+/**
+ * Decrypts $text using $key and $iv using RIJNDAEL algorithm.
+ *
+ * @param string $key Used to decrypt $text.
+ * @param string $text Ecrypted text.
+ * @param string $iv Initialization Vector.
+ * @return string Decrypted text.
+ */
 function xldecrypt($key, $text, $iv = null)
 {
 	if ($iv == null)
@@ -1051,6 +1210,12 @@ function xldecrypt($key, $text, $iv = null)
 	return mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_CBC, $iv);
 }
 
+/**
+ * Returns every entry located in a given Apache style .htpasswd file.
+ *
+ * @param string $path Location without filename of the .htaccess file.
+ * @return array username => password
+ */
 function get_htpasswd($path)
 {
 	$ret = array();
@@ -1060,6 +1225,12 @@ function get_htpasswd($path)
 	return $ret;
 }
 
+/**
+ * Returns all directories for a given path but not recursively.
+ *
+ * @param string $path Directory to search.
+ * @return array Single level array of directories located.
+ */
 function dir_get($path = '.')
 {
 	$ret = array();
@@ -1072,6 +1243,14 @@ function dir_get($path = '.')
 	return $ret;
 }
 
+/**
+ * Returns an array of all files located recursively in a given path, excluding
+ * anything matching the regular expression of $exclude.
+ *
+ * @param string $path Path to recurse.
+ * @param string $exclude Passed to preg_match to blacklist files.
+ * @return array Series of non-directories that were not excluded.
+ */
 function Comb($path, $exclude = null)
 {
 	if (is_file($path)) return array($path);
@@ -1087,6 +1266,12 @@ function Comb($path, $exclude = null)
 	return $ret;
 }
 
+/**
+ * Converts html style tag attributes into an xml array style.
+ *
+ * @param string $atrs Attributes to process.
+ * @return array String indexed array of attributes.
+ */
 function ParseAtrs($atrs)
 {
 	if (empty($atrs)) return;
@@ -1096,11 +1281,24 @@ function ParseAtrs($atrs)
 	return $ret;
 }
 
+/**
+ * Will set a session variable to $name with the value of GetVar and return it.
+ *
+ * @param string $name Name of our state object.
+ * @return mixed The GetVar value of $name.
+ */
 function GetState($name)
 {
 	return SetVar($name, GetVar($name));
 }
 
+/**
+ * Converts an array to a tree using TreeNode objects.
+ *
+ * @param TreeNode $n Node we are working with.
+ * @param array $arr Array items to add to $n.
+ * @return TreeNode Root of the tree.
+ */
 function ArrayToTree($n, $arr)
 {
 	$root = new TreeNode($n);
@@ -1113,7 +1311,8 @@ function ArrayToTree($n, $arr)
 	return $root;
 }
 
-if (!function_exists('money_format')) {
+if (!function_exists('money_format'))
+{
 	function money_format($format, $number)
 	{
 		$regex  = array(
@@ -1213,6 +1412,12 @@ if (!function_exists('money_format')) {
 	}
 }
 
+/**
+ * Will let a variable be set only if it's not already set.
+ *
+ * @param mixed $var Variable to Let.
+ * @param mixed $val Value to set to $var.
+ */
 function Let(&$var, $val)
 {
 	if (!isset($var)) $var = $val;

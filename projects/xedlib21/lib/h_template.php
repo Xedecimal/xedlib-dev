@@ -27,6 +27,9 @@ function GetTemplateStack(&$data)
 }
 
 /**
+ * Requires $file and creates a new $class of type DisplayObject to prepare and
+ * present.
+ *
  * @param array $data Context information.
  * @param string $file Filename to require.
  * @param string $class Class to prepare.
@@ -119,12 +122,26 @@ class Template
 	 */
 	private $parser;
 
+	/**
+	 * If true, we're the parser is not processing the normal things.
+	 *
+	 * @var bool
 	private $skip;
 
+	/**
+	 * Behavioral configuration for this template reader.
+	 *
+	 * @var TemplateBehavior
+	 */
 	public $Behavior;
 
-	private $config;
+	//private $config;
 
+	/**
+	 * Output that will be sent before the contents of this template.
+	 *
+	 * @var string
+	 */
 	private $start = '';
 
 	/**
@@ -145,6 +162,14 @@ class Template
 		$this->ReWrite('template', array(&$this, 'TagTemplate'));
 	}
 
+	/**
+	 * Internal use for rewriting <template> tags and mainly fixing headers.
+	 *
+	 * @param Template $t Associated template.
+	 * @param string $guts Guts of the tag not including the actual tag.
+	 * @param array $attribs Attributes of the rewritten tag.
+	 * @return string Rendered html output of the target template.
+	 */
 	function TagTemplate($t, $guts, $attribs)
 	{
 		if (isset($attribs["FILE"]))
@@ -154,12 +179,27 @@ class Template
 		}
 	}
 
+	/**
+	 * Rewrites a tag including opening and closing tags based on one or more
+	 * callbacks.
+	 *
+	 * @param string $tag Tag to rewrite.
+	 * @param mixed $callback Callback(s) to be called.
+	 * @param array $args Arguments that will be passed to the callback.
+	 */
 	function ReWrite($tag, $callback, $args = null)
 	{
 		$this->rewrites[strtoupper($tag)][] = $callback;
 		$this->rewriteargs[strtoupper($tag)] = $args;
 	}
 
+	/**
+	 * This function will transform an existing tag and/or attributes into
+	 * another one.
+	 *
+	 * @param string $tag Tag to translate.
+	 * @param mixed $callback The callback to be called on this tag.
+	 */
 	function Transform($tag, $callback)
 	{
 		$this->transforms[strtoupper($tag)][] = $callback;
@@ -459,40 +499,6 @@ class Template
 		ob_end_clean();
 	}
 
-	function ProcessForm($parser, $tag, $attribs)
-	{
-		if (!isset($this->config)) return $this->GetConfig();
-	}
-
-	function ProcessInput($parser, $tag, $attribs)
-	{
-		if (!isset($this->config['fields'][$attribs['NAME']]))
-		{
-			$this->configured = false;
-
-			$frm = new Form('formConfig');
-			$frm->AddHidden('ca', 'template_config');
-			$frm->AddInput(new FormInput('Data Column:', 'text', 'host'));
-			$frm->AddInput(new FormInput('Data Type:', 'text', 'user'));
-			$frm->AddInput(new FormInput('Data Length:', 'password', 'pass'));
-			$frm->AddInput(new FormInput(null, 'submit', null, 'Configure'));
-			return GetBox('box_field', "Field {$attribs['NAME']}",
-				$frm->Get('method="post" action="{{me}}"'));
-		}
-	}
-
-	function GetConfig()
-	{
-		$frm = new Form('formConfig');
-		$frm->AddHidden('ca', 'template_config');
-		$frm->AddInput(new FormInput('Database Host:', 'text', 'host'));
-		$frm->AddInput(new FormInput('Database User:', 'text', 'user'));
-		$frm->AddInput(new FormInput('Database Pass:', 'password', 'pass'));
-		$frm->AddInput(new FormInput('Database:', 'text', 'data'));
-		$frm->AddInput(new FormInput(null, 'submit', null, 'Configure'));
-		return GetBox('box_config', 'Template Configuration', $frm->Get('method="post" action="{{me}}"'));
-	}
-
 	/**
 	 * Gets the object before the last object on the stack.
 	 * @return DisplayObject Destination for the last item.
@@ -555,6 +561,12 @@ class Template
 		return $ret;
 	}
 
+	/**
+	 * Processes an entire template as string, good for file_get_contents().
+	 *
+	 * @param string $str Data to be processed.
+	 * @return string Processed end result.
+	 */
 	function GetString($str)
 	{
 		$nstr = $this->ProcessCode($str);
@@ -625,16 +637,34 @@ class Template
 		return $this->Behavior->Bleed ? $match[0] : null;
 	}
 
+	/**
+	 * Header tag to combine all head tags into the topmost tag.
+	 *
+	 * @param Template $t Associated Template.
+	 * @param string $guts Contents of the associated tag.
+	 */
 	function TagHead($t, $guts)
 	{
 		$this->heads .= $guts;
 	}
 
+	/**
+	 * Processes possible php code in a template.
+	 *
+	 * @param string $str String to process php code in.
+	 * @return string Replaced information.
+	 */
 	function ProcessCode($str)
 	{
 		return preg_replace_callback('/(<\?php|<\?)(.+?)\?>/s', array(&$this, 'CodeCallback'), $str);
 	}
 
+	/**
+	 * Internal Use
+	 *
+	 * @param array $m preg_replace_callback default argument.
+	 * @return string Replacement string.
+	 */
 	function CodeCallback($m)
 	{
 		ob_start();
@@ -645,7 +675,17 @@ class Template
 
 class TemplateBehavior
 {
+	/**
+	 * I forgot what this does.
+	 * @var bool
+	 */
 	public $MakeDynamic = false;
+
+	/**
+	 * Whether variables in the data {{example}} will bleed through if null.
+	 *
+	 * @var bool
+	 */
 	public $Bleed = true;
 }
 
@@ -661,10 +701,17 @@ class VarParser
 	 */
 	public $vars;
 
+	/**
+	 * Whether variables in the template {{example}} will bleed through if not
+	 * set.
+	 *
+	 * @var bool
+	 */
 	public $Bleed = true;
 
 	/**
-	 * Enter description here...
+	 * Processes variables in the given string $data for variables named as keys
+	 * in the array $vars.
 	 *
 	 * @param string $data Data to search for variables.
 	 * @param array $vars Override existing names with these.

@@ -26,13 +26,14 @@ function GetTypeName($type)
 {
 	switch ($type)
 	{
-		case T_FUNCTION: return 'function';
 		case T_CLASS: return 'class';
-		case T_VARIABLE: return 'variable';
 		case T_DEFINE: return 'define';
-		case T_PUBLIC: return 'public';
+		case T_FUNCTION: return 'function';
 		case T_PRIVATE: return 'private';
 		case T_PROTECTED: return 'protected';
+		case T_PUBLIC: return 'public';
+		case T_RETURN: return 'return';
+		case T_VARIABLE: return 'variable';
 		default: return 'unknown';
 	}
 }
@@ -110,6 +111,8 @@ class CodeReader
 		'mixed',
 		'resource',
 		'string',
+		'float',
+		'double'
 	);
 
 	/**
@@ -141,16 +144,16 @@ class CodeReader
 
 		foreach ($tokens as $tok)
 		{
-			//This is something getting returned.
-			if ($this->getting == CODE_GET_VERIFY_RETURN && is_string($tok) && $tok == ';')
+			//We're verifying that something is actually getting returned.
+			if ($this->getting == CODE_GET_VERIFY_RETURN)
 			{
-				$this->curfunction->returning = true;
-				$this->getting = $this->oget;
-			}
-			else if ($this->getting == CODE_GET_VERIFY_RETURN &&
-				!isset($this->curfunction->doc->return))
-			{
-				$this->getting = $this->oget;
+				if (is_string($tok) && $tok == ';')
+					$this->getting = $this->oget;
+				else
+				{
+					$this->curfunction->returning = true;
+					$this->getting = $this->oget;
+				}
 			}
 
 			if (!is_array($tok))
@@ -246,13 +249,27 @@ class CodeReader
 	{
 		if ($member->type == T_FUNCTION)
 		{
+			if (empty($member->doc->body))
+			{
+				$this->Issue('[DOC]: No documentation specified', $member);
+			}
+
 			//Check Return
-			if (!empty($member->doc->return))
+			if (!empty($member->doc->return)) //Return documented.
 			{
 				if (!$member->returning)
-					echo "[DOC]: Return tag specified without".
-					" returning a value for ".$this->GetName($member)."\n";
+				{
+					$this->Issue("[DOC]: Return tag specified without returning a value", $member);
+				}
 			}
+			else //Return is not documented
+			{
+				if ($member->returning)
+				{
+					$this->Issue("[DOC]: No return tag specified when returning a value.", $member);
+				}
+			}
+
 			if (@$member->doc->return == 0)
 			{
 				//Method, may be overloaded.
@@ -276,15 +293,15 @@ class CodeReader
 			{
 				if ($member->doc->return == 0)
 				{
-					echo "[DOC]: Missing @return tag for ".
-					$this->GetName($member)."\n";
+					$this->Issue("[DOC]: Missing @return tag for ".
+					$this->GetName($member)."\n");
 				}
 
 				$t = $member->doc->return['type'];
 				if (!$this->VerifyType($names, $t))
 				{
-					echo "[DOC]: Invalid return type '{$t}' for ".
-					$this->GetName($member)."\n";
+					$this->Issue("[DOC]: Invalid return type '{$t}' for ".
+					$this->GetName($member)."\n");
 				}
 			}
 
@@ -310,32 +327,28 @@ class CodeReader
 					}
 
 					if (empty($param))
-						echo "[DOC]: Argument '$name' not documented for ".
-						$this->GetName($member)."\n";
+						$this->Issue("[DOC]: Argument '$name' not documented",
+							$member);
 				}
 
 				if (!empty($param))
 				{
 					if (!isset($member->members[$name]))
-						echo "[DOC]: No such argument '{$name}' ".
-						$this->GetName($member)."\n";
+						$this->Issue("[DOC]: No such argument '{$name}'", $member);
 					$t = $member->doc->params[$name]['type'];
 					if (!$this->VerifyType($names, $t))
-						echo "[DOC]: No such type '{$t}' ".
-						$this->GetName($member)."\n";
+						$this->Issue("[DOC]: No such type '{$t}'", $member);
 				}
 			}
 		}
 		else if ($member->type == T_VARIABLE)
 		{
 			if (!isset($member->doc->type))
-				echo "[DOC]: Missing @var tag for ".
-				$this->GetName($member)."\n";
+				$this->Issue("[DOC]: Missing @var tag for ", $member);
 
 			$t = @$member->doc->type;
 			if (!$this->VerifyType($names, $t))
-				echo "[DOC]: No such type '{$t}' for ".
-				$this->GetName($member)."\n";
+				$this->Issue("[DOC]: No such type '{$t}' for", $member);
 		}
 		else if ($member->type == T_CLASS)
 		{
@@ -362,8 +375,13 @@ class CodeReader
 	 */
 	function ProcEndFunction()
 	{
+		echo "Ending function: {$this->curfunc}<br/>\n";
 	}
 
+	/**
+	 * Makes argument $val the current object and pops it off the tree.
+	 * @param string $val Value to pop.
+	 */
 	function PopValue($val)
 	{
 		$this->current->value = str_replace('"', '',
@@ -472,6 +490,11 @@ class CodeReader
 				unset($this->setnext);
 			}
 
+			if (isset($this->nextproblem))
+			{
+				$this->Issue($this->nextproblem, $this->current);
+			}
+
 			if ($this->current->type == T_FUNCTION)
 			{
 				if (count($this->tree) == 1) //Method
@@ -497,6 +520,8 @@ class CodeReader
 	 */
 	function ProcDocComment($tok)
 	{
+		unset($this->nextproblem);
+
 		$this->curdoc = new stdClass();
 
 		//I have no clue how the hell I pulled this off, but it works amazingly.
@@ -513,9 +538,6 @@ class CodeReader
 				$this->ret->misc['longest']['name'] = '';
 				$this->setnext = &$this->ret->misc['longest']['name'];
 			}
-		}
-		if (!empty($this->curdoc->body))
-		{
 			if (!isset($this->ret->misc['shortest']['len']))
 			{
 				$this->ret->misc['shortest']['len'] = strlen($this->curdoc->body);
@@ -529,6 +551,10 @@ class CodeReader
 				$this->setnext = &$this->ret->misc['shortest']['name'];
 			}
 		}
+		//else
+		//{
+		//	$this->nextproblem = "Documentation body is empty!";
+		//}
 
 		for ($ix = 1; $ix < count($split); $ix++)
 		{
@@ -539,7 +565,7 @@ class CodeReader
 			{
 					if (!file_exists($m[1]) || !is_file($m[1]))
 					{
-						Error("File does not exist for example tag: {$m[1]}");
+						$this->Issue("File does not exist for example tag: {$m[1]}");
 						continue;
 					}
 					$data = highlight_file($m[1], true);
@@ -572,7 +598,7 @@ class CodeReader
 				$this->curdoc->since = $m[1];
 			else if (preg_match('/([^\s]+)(.*)/', $clean, $m))
 			{
-				echo "Unknown doc tag: {$m[1]}\n";
+				$this->Issue("Unknown doc tag: {$m[1]}");
 			}
 		}
 	}
@@ -584,16 +610,13 @@ class CodeReader
 	function GetName($member)
 	{
 		$ret = null;
-		if (isset($member))
-		{
-			if (@$member->parent->type == T_CLASS)
-				$ret =  "{$member->parent->name}::";
-			else if ($member->type == T_CLASS) $ret = 'class ';
-			else if ($member->type == T_FUNCTION) $ret = 'function ';
-			else if ($member->type == T_VARIABLE) $ret = 'variable ';
-			else echo "What're you trying to GetName on? {$member->name}\n";
-			$ret .= "{$member->name} at <b>{$member->file}:{$member->line}</b>";
-		}
+		if (@$member->parent->type == T_CLASS)
+			$ret =  "{$member->parent->name}::";
+		else if ($member->type == T_CLASS) $ret = 'class ';
+		else if ($member->type == T_FUNCTION) $ret = 'function ';
+		else if ($member->type == T_VARIABLE) $ret = 'variable ';
+		else echo "What're you trying to GetName on? {$member->name}\n";
+		$ret .= "{$member->name} at <b>{$member->file}:{$member->line}</b>";
 		return $ret;
 	}
 
@@ -696,6 +719,19 @@ class CodeReader
 				}
 			}
 		}
+	}
+
+	/**
+	 * Output an issue located in the processed code.
+	 * @param string $str Issue description.
+	 * @param CodeObject $member Associated conflicting member.
+	 */
+	function Issue($str, $member = null)
+	{
+		$ret = "<b>ISSUE</b>: {$str} at ";
+		if (isset($member)) $ret .= $this->GetName($member);
+		else $ret .= "{$this->file}:{$this->line}";
+		echo $ret."\n";
 	}
 }
 

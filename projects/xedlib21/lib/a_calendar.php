@@ -42,13 +42,13 @@ class Calendar
 	public $daybody;
 
 	/**
-	* Adds an item to the calendar to be displayed in a given period of time
-	*
-	* @access public
-	* @param int $tsfrom Item beginning time.
-	* @param int $tsto Item end time.
-	* @param string $body Body of this cell.
-	*/
+	 * Adds an item to the calendar to be displayed in a given period of time
+	 *
+	 * @access public
+	 * @param int $tsfrom Item beginning time.
+	 * @param int $tsto Item end time.
+	 * @param string $body Body of this cell.
+	 */
 	function AddItem($tsfrom, $tsto, $body)
 	{
 		$fromyear  = date("Y", $tsfrom);
@@ -75,11 +75,24 @@ class Calendar
 		}
 	}
 
+	/**
+	 * This is generally just a placeholder to avoid looping on some common
+	 * monthly variables.
+	 *
+	 * @param Template $t Associated template.
+	 * @param string $guts Contents of the tag.
+	 */
 	function TagMonth($t, $guts)
 	{
 		return $guts;
 	}
 
+	/**
+	 * The contents of this tag are repeated for each week of the current month.
+	 * @param Template $t Associated template.
+	 * @param string $guts Contents of the tag.
+	 * @param array $attribs Attributes for current tag.
+	 */
 	function TagWeek($t, $guts, $attribs)
 	{
 		$ret = null;
@@ -95,6 +108,12 @@ class Calendar
 		return $ret;
 	}
 
+	/**
+	 * Blank start days for each month are handled by this tag.
+	 * @param Template $t Associated template.
+	 * @param string $guts Contents of the tag.
+	 * @param array $attribs Attributes for current tag.
+	 */
 	function TagPad($t, $guts, $attribs)
 	{
 		if (empty($this->pad)) return;
@@ -103,6 +122,11 @@ class Calendar
 		return $vp->ParseVars($guts, $d);
 	}
 
+	/**
+	 * Callback for each day of the current week.
+	 * @param Template $t Associated template.
+	 * @param string $guts Contents of the tag.
+	 */
 	function TagDay($t, $guts)
 	{
 		$ret = null;
@@ -118,6 +142,11 @@ class Calendar
 		return $ret;
 	}
 
+	/**
+	 * Callback for each event on the current day.
+	 * @param Template $t Associated template.
+	 * @param string $guts Contents of the tag.
+	 */
 	function TagEvent($t, $guts)
 	{
 		$ret = null;
