@@ -157,7 +157,8 @@ class FileManager
 	{
 		$act = GetVar($this->Name.'_action');
 
-		//Don't allow renaming the root or the file manager will throw errors ever after.
+		//Don't allow renaming the root or the file manager will throw errors
+		//ever after.
 		if (empty($this->cf)) $this->Behavior->AllowRename = false;
 
 		//Actions
