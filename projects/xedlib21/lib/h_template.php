@@ -126,6 +126,7 @@ class Template
 	 * If true, we're the parser is not processing the normal things.
 	 *
 	 * @var bool
+	 */
 	private $skip;
 
 	/**
