@@ -39,7 +39,7 @@
 	};
 	
 	$.ifixpng.getPixel = function() {
-		return $.ifixpng.pixel || 'images/pixel.gif';
+		return $.ifixpng.pixel || 'xedlib/images/pixel.gif';
 	};
 	
 	var hack = {
