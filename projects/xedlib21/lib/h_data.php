@@ -657,7 +657,7 @@ class DataSet
 	 * @param array $values eg: array('col1' => 'val1')
 	 * @return string Proper set.
 	 */
-	function GetSetString($values, $start = ' SET ')
+	function GetSetString($values, $start = ' SET')
 	{
 		if (!empty($values))
 		{

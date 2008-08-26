@@ -111,7 +111,7 @@ document.onmousedown = click;
 			<div class="float">
 			<span class="item">
 			<a href="{{url}}">
-			{{icon}}<br/>
+			{{icon}}<br />
 			{{name}}
 			</a>
 			</span>

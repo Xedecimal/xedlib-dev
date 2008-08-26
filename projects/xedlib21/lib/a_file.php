@@ -881,20 +881,7 @@ EOF;
 		$name = ($this->View->ShowTitle && isset($file->info['title'])) ?
 			$file->info['title'] : $file->filename;
 
-		if (is_file($file->path))
-		{
-			/*if (isset($this->Behavior->FileCallback))
-			{
-				$cb = $this->Behavior->FileCallback;
-				$url = $cb($file);
-			}
-			else if (!$this->Behavior->UseInfo)
-				$url = $this->Root.$this->cf.$file->filename.'" target="_new';
-			else
-				$url = $me.'?editor='.$this->Name.'&amp;cf='.urlencode($this->cf.$file->filename);*/
-		}
-		else
-			$uri = "?editor={$this->Name}&amp;cf=".urlencode($this->cf.$file->filename);
+		$uri = "?editor={$this->Name}&amp;cf=".urlencode($this->cf.$file->filename);
 
 		if ($this->mass_avail)
 			$d['check'] = "\t\t<input type=\"checkbox\"

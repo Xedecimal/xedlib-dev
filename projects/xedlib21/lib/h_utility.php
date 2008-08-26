@@ -580,7 +580,7 @@ function Reformat($file)
 {
 	$c = file_get_contents($file);
 	$c = preg_replace("/\tprivate|\tprotected|\tpublic/", "\tvar", $c);
-	$c = preg_replace("/\tstatic/", "\t", $c);
+	$c = preg_replace("/\tstatic /", "\t", $c);
 	$c = "<?php \$__checked = true; ?>\n".$c;
 	if (!$fp = fopen($file, 'w+'))
 	{
@@ -983,7 +983,6 @@ function linkup($tree, $target, $text)
 				if (isset($cur[$word]))
 				{
 					$cur = $cur[$word];
-					//$ct = $cur[0];
 				}
 				else $cur = null;
 			}
@@ -994,9 +993,7 @@ function linkup($tree, $target, $text)
 				array('name' => $tree[$word][0], 'word' => $word));
 			$reps[$word] = $p;
 			$cur = $tree[$word];
-			//$ct = $tree[$word][0];
 		}
-		//else $depth = array();
 	}
 
 	$ret = $text;
@@ -1075,8 +1072,6 @@ function GetZips($ds, $zip, $range)
     $max_lat = number_format($details['lat'] + $lat_range, "4", ".", "");
     $min_lon = number_format($details['lng'] - $lon_range, "4", ".", "");
     $max_lon = number_format($details['lng'] + $lon_range, "4", ".", "");
-
-	//$ret = array();
 
 	$query = "SELECT zip, lat, lng, name FROM zips
 		WHERE lat BETWEEN '{$min_lat}' AND '{$max_lat}'

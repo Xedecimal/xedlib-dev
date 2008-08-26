@@ -708,14 +708,11 @@ class EditorData
 	function Get()
 	{
 		global $me;
-		//$act = GetVar($this->Name.'_action');
-
 		$ret['name'] = $this->Name;
 
 		$act = GetVar($this->Name.'_action');
 		$q = GetVar($this->Name.'_q');
 
-		//if (isset($ci) && $act == 'edit') $this->state = STATE_EDIT;
 		$ret['ds'] = $this->ds;
 		if ($act != 'edit' && !empty($this->ds->DisplayColumns)
 			&& ($this->Behavior->Search && isset($q)))
@@ -977,10 +974,10 @@ class EditorData
 			foreach ($rows as $ix => $row)
 			{
 				$class = $ix % 2 ? 'even' : 'odd';
-				$table->AddRow($row, array('class' => $class));
+				$table->AddRow($row, array('CLASS' => $class));
 			}
 
-			$ret .= $table->Get(array('class' => 'editor'));
+			$ret .= $table->Get(array('CLASS' => 'editor'));
 		}
 		return $ret;
 	}
@@ -1260,7 +1257,6 @@ class EditorData
 
 			return $frm;
 		}
-		return;
 	}
 
 	/**
