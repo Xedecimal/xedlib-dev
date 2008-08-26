@@ -206,6 +206,7 @@
 	<tr><td align="right">Modified:</td><td>{{date}}</td></tr>
 	<tr><td align="right">Size:</td><td>{{size}}</td></tr>
 </table>
+<b><a href="{{me}}?editor={{fn_name}}&amp;{{fn_name}}_action=getfile&amp;{{fn_name}}_cf={{cf}}">Download</a></b>
 </box>
 </td>
 </details>

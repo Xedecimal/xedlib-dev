@@ -350,6 +350,25 @@ class FileManager
 			die();
 		}
 
+		else if ($act == 'getfile')
+		{
+			$finfo = new FileInfo($this->Root.$this->cf);
+			$size = filesize($finfo->path);
+
+			header("Pragma: public");
+			header("Expires: 0");
+			header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+			header("Cache-Control: private", false);
+			header("Content-Transfer-Encoding: binary");
+			header("Content-Type: application/octet-stream");
+			header("Content-Length: {$size}");
+			header("Content-Disposition: attachment; filename=\"{$finfo->filename}\";" );
+			set_time_limit(0);
+			$fp = fopen($finfo->path, 'r');
+			while ($out = fread($fp, 4096))	echo $out;
+			die();
+		}
+
 		if (is_dir($this->Root.$this->cf)) $this->files = $this->GetDirectory();
 	}
 
