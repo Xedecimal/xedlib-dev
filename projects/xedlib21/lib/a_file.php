@@ -676,6 +676,16 @@ class FileManager
 					$this->vars['field'] = $field;
 					$ret .= $vp->ParseVars($guts, $this->vars);
 				}
+				else if (is_array($field))
+				{
+					//This is a series of fields, only the first text matters
+					//the rest can just be appended.
+					$this->vars['text'] = $field[0]->text;
+					$this->vars['field'] = '';
+					foreach ($field as $f)
+						$this->vars['field'] .= $f->Get($this->Name);
+					$ret .= $vp->ParseVars($guts, $this->vars);
+				}
 				else
 				{
 					$this->vars['text'] = $field->text;
