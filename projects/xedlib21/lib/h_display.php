@@ -1799,6 +1799,12 @@ class DataDisplay
 		return $tg->GetString($temp);
 	}
 
+	/**
+	 * This is repeated for each item in the associated dataset.
+	 *
+	 * @param Template $t Associated template.
+	 * @param string $guts Contents of the tag.
+	 */
 	function TagListItem($t, $guts)
 	{
 		$ret = '';
@@ -1818,6 +1824,9 @@ class DataDisplay
 
 	/**
 	 * This is called for a detail tag in the template.
+	 *
+	 * @param Template $t Associated template.
+	 * @param string $guts Contents of the tag.
 	 */
 	function TagDetailItem($t, $guts)
 	{

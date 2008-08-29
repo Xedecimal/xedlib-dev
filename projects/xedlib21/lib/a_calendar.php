@@ -89,6 +89,7 @@ class Calendar
 
 	/**
 	 * The contents of this tag are repeated for each week of the current month.
+	 *
 	 * @param Template $t Associated template.
 	 * @param string $guts Contents of the tag.
 	 * @param array $attribs Attributes for current tag.
