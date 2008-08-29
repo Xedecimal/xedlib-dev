@@ -527,10 +527,8 @@ class EditorData
 								$value[3][0] += 12;
 							}
 						}
-						//echo mktime(12,30,0,1,12,2008);
 						$time_portion = " {$value[3][0]}:{$value[4][0]}:00";
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1].$time_portion;
-						//varinfo($update[$col]);
 					}
 					else if ($in->type == 'password')
 					{

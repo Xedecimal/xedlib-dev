@@ -144,7 +144,7 @@ class CodeReader
 
 		foreach ($tokens as $tok)
 		{
-			//We're verifying that something is actually getting returned.
+			// We're verifying that something is actually getting returned.
 			if ($this->getting == CODE_GET_VERIFY_RETURN)
 			{
 				if (is_string($tok) && $tok == ';')
@@ -551,10 +551,6 @@ class CodeReader
 				$this->setnext = &$this->ret->misc['shortest']['name'];
 			}
 		}
-		//else
-		//{
-		//	$this->nextproblem = "Documentation body is empty!";
-		//}
 
 		for ($ix = 1; $ix < count($split); $ix++)
 		{

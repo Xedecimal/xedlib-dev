@@ -153,12 +153,18 @@ class Calendar
 		$tevent = new Template();
 		$key = mktime(0, 0, 0, $this->month->Month, $this->curday->Day, $this->month->Year);
 		if (!empty($this->dates[$key]))
-		foreach ($this->dates[$key] as $k)
 		{
-			$tevent->Set('title', $this->events[$k][2]);
-			$ret .= $tevent->GetString($guts);
+			foreach ($this->dates[$key] as $k) $evts[] = $this->events[$k];
+
+			usort($evts, 'event_sort');
+
+			foreach ($evts as $e)
+			{
+				$tevent->Set('title', $e[2]);
+				$ret .= $tevent->GetString($guts);
+			}
+			return $ret;
 		}
-		return $ret;
 	}
 
 	/**
@@ -412,5 +418,7 @@ class CalendarDay
 		if (date('t', $timestamp) == date('j', $timestamp)) $this->LastDay = true;
 	}
 }
+
+function event_sort(&$x, &$y) { return $x[0] > $y[0]; }
 
 ?>
