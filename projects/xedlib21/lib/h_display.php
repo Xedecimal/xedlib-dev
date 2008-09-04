@@ -498,7 +498,7 @@ class Form
 			$helptext .= $this->Errors[$input->name];
 
 		return ($start ? $this->FirstStart : $this->CellStart).
-			($input->labl ? '<label for="'.CleanID($this->name.'_'.$input->name)
+			($input->labl ? '<label for="'.CleanID($this->name, $input)
 			.'">' : null).
 			($right ? null : $out).
 			($input->labl ? '</label>' : null).$this->CellEnd.
@@ -843,9 +843,8 @@ class FormInput
 
 		$atrs = GetAttribs($this->atrs);
 		return "<input type=\"{$this->type}\"
-			name=\"{$parent}_{$this->name}\"
-			id=\"".CleanID($parent.'_'.$this->name)."\"".
-			" value=\"{$val}\" {$this->atrs}/>";
+			name=\"{$parent}_{$this->name}\"".
+			" value=\"{$val}\" {$atrs}/>";
 	}
 
 	/**

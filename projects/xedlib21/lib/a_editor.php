@@ -1689,10 +1689,10 @@ class FileAccessHandler extends EditorHandler
 	 * @param int $id Identifier of the object we are looking for access to.
 	 * @return array Array of SelOption objects.
 	 */
-	static function PathToSelOption($root, $id, $level, $depth)
+	static function PathToSelOption($root, $id, $level, $depth = 0)
 	{
 		$ret = array();
-		if ($level > $depth) return $ret;
+		if (!empty($depth) && $level > $depth) return $ret;
 
 		//Get information on this item.
 		$so = new SelOption($root);
@@ -1788,7 +1788,8 @@ class FileAccessHandler extends EditorHandler
 	function GetFields(&$form, $id, $data)
 	{
 		$form->AddInput(new FormInput('Accessable Folders', 'selects',
-			'accesses', $this->PathToSelOption($this->root, $id, 0), array('SIZE' => 8)));
+			'accesses', $this->PathToSelOption($this->root, $id, 0),
+			array('SIZE' => 8)));
 	}
 }
 

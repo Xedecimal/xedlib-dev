@@ -271,13 +271,19 @@ class FileManager
 			{
 				$fi = new FileInfo(stripslashes($file), $this->filters);
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
-				$f->Delete($fi, $this->Behavior->Recycle);
-				$types = GetVar($this->Name.'_type');
-				$this->files = $this->GetDirectory();
-				$ix = 0;
+				$break = false;
 				if (!empty($this->Behavior->Watchers))
-					RunCallbacks($this->Behavior->Watchers, FM_ACTION_DELETE,
-						$fi->path);
+				{
+					if (!RunCallbacks($this->Behavior->Watchers, FM_ACTION_DELETE,
+						$fi->path)) $break = true;
+				}
+				if (!$break)
+				{
+					$f->Delete($fi, $this->Behavior->Recycle);
+					$types = GetVar($this->Name.'_type');
+					$this->files = $this->GetDirectory();
+					$ix = 0;
+				}
 			}
 		}
 		else if ($act == 'Create')
