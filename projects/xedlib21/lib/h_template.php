@@ -69,7 +69,7 @@ function RequireModule(&$data, $file, $class)
 /**
  * A template
  */
-class Template
+class Template extends LayeredOutput
 {
 	/**
 	 * Variables that have been set with set().
@@ -77,50 +77,41 @@ class Template
 	 * @var array
 	 */
 	public $vars;
-	/**
-	 * Raw output to be rendered.
-	 *
-	 * @var string
-	 */
-	public $out;
+
 	/**
 	 * Set of objects to output to.
 	 *
 	 * @var array
 	 */
 	public $objs;
+
 	/**
 	 * Whether or not to use GetVar() for {{vars}}
 	 *
 	 * @var bool
 	 */
 	public $use_getvar;
+
 	/**
 	 * Handlers for specific features.
 	 *
 	 * @var array
 	 */
 	public $handlers;
+
 	/**
 	 * Current data.
 	 *
 	 * @var mixed
 	 */
 	public $data;
+
 	/**
 	 * Files that will be included.
 	 *
 	 * @var array
 	 */
 	public $includes;
-
-	/**
-	 * The local parser that this template
-	 * is using to process XML files.
-	 *
-	 * @var resource
-	 */
-	private $parser;
 
 	/**
 	 * If true, we're the parser is not processing the normal things.
@@ -153,7 +144,6 @@ class Template
 		$this->Behavior = new TemplateBehavior();
 		$args = func_get_args();
 		if (isset($args[0])) $data = &$args[0];
-		$this->out = '';
 		$this->objs = array();
 		$this->vars = array();
 		$this->data = &$data;
@@ -161,6 +151,7 @@ class Template
 		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
 
 		$this->ReWrite('template', array(&$this, 'TagTemplate'));
+		parent::LayeredOutput();
 	}
 
 	/**
@@ -171,12 +162,11 @@ class Template
 	 * @param array $attribs Attributes of the rewritten tag.
 	 * @return string Rendered html output of the target template.
 	 */
-	function TagTemplate($t, $guts, $attribs)
+	function TagTemplate($t, $g, $a)
 	{
-		if (isset($attribs["FILE"]))
+		if (isset($a["FILE"]))
 		{
-			$tn = new Template($this->data);
-			return $tn->Get($attribs['FILE']);
+			return $t->ParseFile($a['FILE']);
 		}
 	}
 
@@ -224,11 +214,10 @@ class Template
 
 		if (isset($this->rewrites[$tag]))
 		{
-			$obj = new stdClass();
+			$obj = new LayeredOutput();
 			$obj->attribs = $attribs;
 			$obj->tag = $tag;
-			$obj->out = '';
-			$this->objs[] = $obj;
+			$this->Push($obj);
 			$show = false;
 		}
 		else $show = true;
@@ -251,7 +240,7 @@ class Template
 			if (isset($attribs['TITLE'])) $box->title = $attribs['TITLE'];
 			if (isset($attribs['TEMPLATE'])) $box->template = $attribs['TEMPLATE'];
 			if (isset($attribs['ID'])) $box->name = $attribs['ID'];
-			$this->objs[] = $box;
+			$this->Push($box);
 			$show = false;
 		}
 		else if ($tag == 'BR') $close = ' /';
@@ -262,36 +251,26 @@ class Template
 			if (isset($attribs['TYPE']))
 			{
 				if ($attribs['TYPE'] == 'strict')
-					$this->start .= '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+					$this->Out('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">');
 				if ($attribs['TYPE'] == 'trans')
-					$this->start .= '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+					$this->Out('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">');
 			}
 		}
 		else if ($tag == 'FORM' && $this->Behavior->MakeDynamic)
 			$this->start .= $this->ProcessForm($parser, $tag, $attribs);
-		else if ($tag == 'HEAD') //Push the head as an object to store for later.
-		{
-			$show = false;
-
-			$obj = new stdClass();
-			$obj->out = '';
-			$obj->attribs = $attribs;
-			$obj->tag = $tag;
-			$this->objs[] = $obj;
-		}
 
 		if ($tag == 'HTML')
 		{
 			if (!empty($attribs['DOCTYPE']))
 			{
 				if ($attribs['DOCTYPE'] == 'strict')
-					$this->out .= '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">';
+					$this->Out('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">');
 				if ($attribs['DOCTYPE'] == 'trans')
-					$this->out .= '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">';
+					$this->Out('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">');
 			}
 			unset($attribs['DOCTYPE']);
 		}
@@ -320,7 +299,7 @@ class Template
 		else if ($tag == 'INPUT')
 		{
 			if ($this->Behavior->MakeDynamic)
-				$this->out .= $this->ProcessInput($parser, $tag, $attribs);
+				$this->Out($this->ProcessInput($parser, $tag, $attribs));
 			$close = ' /';
 		}
 		else if ($tag == 'LINK') $close = ' /';
@@ -340,12 +319,8 @@ class Template
 				xml_get_current_line_number($parser)."
 				\nWhy: Data variable has possibly been altered.");
 			}
-			$this->objs[] = $this->data['includes'][$name];
+			$this->Push($this->data['includes'][$name]);
 			$show = false;
-		}
-		else if ($tag == "TEMPLATE")
-		{
-
 		}
 		else if ($tag == "XFORM")
 		{
@@ -353,7 +328,7 @@ class Template
 			else $name = "formUnnamed";
 			$form = new Form($name);
 			foreach ($attribs as $name => $val) $form->attribs[$name] = $val;
-			$this->objs[] = $form;
+			$this->Push($form);
 		}
 		else if ($tag == "XINPUT")
 		{
@@ -383,13 +358,13 @@ class Template
 		if ($show)
 		{
 			$obj = &$this->GetCurrentObject();
-			if (strlen($output) > 0) $obj->out .= "{$output}";
+			if (strlen($output) > 0) $obj->Out($output);
 			else
 			{
-				$obj->out .= '<'.strtolower($tag);
+				$obj->Out('<'.strtolower($tag));
 				foreach ($attribs as $name => $val)
-					$obj->out .= ' '.strtolower($name).'="'.$val.'"';
-				$obj->out .= "{$close}>";
+					$obj->Out(' '.strtolower($name).'="'.$val.'"');
+				$obj->Out("{$close}>");
 			}
 		}
 	}
@@ -408,16 +383,16 @@ class Template
 		if ($this->skip) return;
 		if (!empty($this->rewrites[$tag]))
 		{
-			$obj = &$this->GetCurrentObject();
-			$objd = &$this->GetDestinationObject();
+			$obj = $this->Pop();
+			$objd = &$this->GetCurrentObject();
 
 			$vp = new VarParser();
 			foreach ($this->rewrites[$tag] as $rw)
-			$objd->out .= call_user_func($rw, $this,
-				$obj->out, $vp->ParseVars($obj->attribs, $this->vars),
-				$obj->tag, @$this->rewriteargs[$tag]);
 
-			array_pop($this->objs);
+			$objd->Out(call_user_func($rw, &$this,
+				$obj->Get(), $vp->ParseVars($obj->attribs, $this->vars),
+				$obj->tag, @$this->rewriteargs[$tag]));
+
 			return;
 		}
 
@@ -426,27 +401,12 @@ class Template
 		{
 			$objc = &$this->GetCurrentObject();
 			$objd = &$this->GetDestinationObject();
-			$objd->out .= $objc->Get();
-			array_pop($this->objs);
+			$objd->Out($objc->Get());
+			$this->Pop();
 		}
 		else if ($tag == 'BR') return;
 		else if ($tag == 'COPY') return;
 		else if ($tag == 'DOCTYPE') return;
-		else if ($tag == 'HEAD')
-		{
-			if (count($this->data['template.stack']) < 2)
-			{
-				$objc = &$this->GetCurrentObject();
-				$objd = &$this->GetDestinationObject();
-				$objd->out .= '<head>'.$objc->out.@$GLOBALS['__page.head'].'</head>';
-			}
-			else
-			{
-				$obj = &$this->GetCurrentObject();
-				@$GLOBALS['__page.head'] .= $obj->out;
-			}
-			array_pop($this->objs);
-		}
 		else if ($tag == 'IMG') return;
 		else if ($tag == 'INCLUDE') return;
 		else if ($tag == 'INPUT') return;
@@ -461,15 +421,17 @@ class Template
 			$objd = &$this->GetDestinationObject();
 			if (!isset($objc)) Error("Current object doesn't exist.");
 			if (!isset($objd)) Error("Destination object doesn't exist.");
-			$objd->out .= $objc->Get($this->data);
-			array_pop($this->objs);
+			$objd->Out($this->Pop());
 		}
 		else
 		{
 			$obj = &$this->GetCurrentObject();
-			$obj->out .= '</'.strtolower($tag).'>';
+			$obj->Out('</'.strtolower($tag).'>');
 		}
 	}
+
+	function Push(&$obj) { $this->objs[] = $obj; }
+	function Pop() { return array_pop($this->objs); }
 
 	/**
 	 * Parse Character Data for an xml parser.
@@ -480,7 +442,7 @@ class Template
 	{
 		if ($this->skip) return;
 		$obj = &$this->GetCurrentObject();
-		$obj->out .= $text;
+		$obj->Out($text);
 	}
 
 	/**
@@ -496,7 +458,7 @@ class Template
 		ob_start();
 		eval($data);
 		$obj = &$this->GetCurrentObject();
-		$obj->out .= ob_get_contents();
+		$obj->Out(ob_get_contents());
 		ob_end_clean();
 	}
 
@@ -516,7 +478,7 @@ class Template
 	 */
 	function &GetCurrentObject()
 	{
-		if (count($this->objs) > 0) return $this->objs[count($this->objs)-1];
+		if (count($this->objs) > 0) { return $this->objs[count($this->objs)-1]; }
 		else { $tmp = &$this; return $tmp; }
 	}
 
@@ -547,7 +509,7 @@ class Template
 	 * @param string $template The template file.
 	 * @return string Rendered template.
 	 */
-	function Get($template)
+	function ParseFile($template)
 	{
 		if (!file_exists($template))
 		{
@@ -593,20 +555,21 @@ class Template
 			}
 		}
 
-		$this->out = '';
-		$this->parser = xml_parser_create();
-		$this->data['template.parsers'][] = $this->parser;
+		$this->CreateBuffer(); //Create a layer of output.
 
-		xml_set_object($this->parser, $this);
-		xml_set_element_handler($this->parser, 'Start_Tag', 'End_Tag');
-		xml_set_character_data_handler($this->parser, 'CData');
-		xml_set_processing_instruction_handler($this->parser, 'Process');
-		xml_parser_set_option($this->parser, XML_OPTION_TARGET_ENCODING, 'UTF-8');
+		$p = xml_parser_create();
+		$this->data['template.parsers'][] = &$p;
 
-		if (!xml_parse($this->parser, $nstr))
+		xml_set_object($p, &$this);
+		xml_set_element_handler($p, 'Start_Tag', 'End_Tag');
+		xml_set_character_data_handler($p, 'CData');
+		xml_set_processing_instruction_handler($p, 'Process');
+		xml_parser_set_option($p, XML_OPTION_TARGET_ENCODING, 'UTF-8');
+
+		if (!xml_parse($p, $nstr))
 		{
-			echo "XML Error: " . xml_error_string(xml_get_error_code($this->parser)) .
-			" on line " . xml_get_current_line_number($this->parser);
+			echo "XML Error: " . xml_error_string(xml_get_error_code($p)) .
+			" on line " . xml_get_current_line_number($p);
 			if (!empty($this->template)) echo " of file " . $this->template;
 			else
 			{
@@ -615,9 +578,12 @@ class Template
 			}
 			echo "<br/>\n";
 		}
-		@xml_parser_free($this->parser);
+		xml_parser_free($p);
+
 		array_pop($this->data['template.parsers']);
-		return preg_replace_callback('/\{{([^}]+)\}}/', array(&$this, "parse_vars"), $this->start.$this->out);
+
+		return preg_replace_callback('/\{{([^}]+)\}}/',
+			array(&$this, "parse_vars"), $this->FlushBuffer());
 	}
 
 	/**
@@ -748,6 +714,18 @@ class VarParser
 		else if (defined($tvar)) return constant($tvar);
 		return ($this->Bleed ? $match[0] : null);
 	}
+}
+
+class LayeredOutput
+{
+	public $layer = -1;
+	public $outs;
+
+	function LayeredOutput() { $this->CreateBuffer(); }
+	function CreateBuffer() { $this->outs[++$this->layer] = ''; }
+	function Out($data) { $this->outs[$this->layer] .= $data; }
+	function Get() { return $this->outs[$this->layer]; }
+	function FlushBuffer() { return $this->outs[$this->layer--]; }
 }
 
 ?>

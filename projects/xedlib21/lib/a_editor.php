@@ -1347,7 +1347,7 @@ class EditorData
 		global $me;
 		$t->Set('table', $this->GetTable($me, GetState($this->Name.'_ci')));
 
-		return $t->Get(dirname(__FILE__).'/temps/editor.xml');
+		return $t->ParseFile(dirname(__FILE__).'/temps/editor.xml');
 	}
 
 	function Reset()

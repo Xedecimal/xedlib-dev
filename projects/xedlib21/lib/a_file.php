@@ -804,7 +804,7 @@ EOF;
 
 		$t->Set('fn_name', $this->Name);
 
-		return $t->Get($this->Template);
+		return $t->ParseFile($this->Template);
 	}
 
 	/**

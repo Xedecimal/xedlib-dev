@@ -299,8 +299,8 @@ EOF;
 		if ($path != $this->root) $t->Set('name', $this->GetCaption($fi));
 		else $t->Set('name', '');
 
-		if ($temp == null) return $t->Get(dirname(__FILE__).'/temps/gallery.xml');
-		else return $t->Get($temp);
+		if ($temp == null) return $t->ParseFile(dirname(__FILE__).'/temps/gallery.xml');
+		else return $t->ParseFile($temp);
 	}
 
 	/**

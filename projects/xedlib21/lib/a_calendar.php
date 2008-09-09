@@ -196,7 +196,7 @@ class Calendar
 		$t->ReWrite('month', array(&$this, 'TagMonth'));
 		$t->ReWrite('week', array(&$this, 'TagWeek'));
 
-		return $t->Get(dirname(__FILE__).'/temps/calendar_horiz.xml');
+		return $t->ParseFile(dirname(__FILE__).'/temps/calendar_horiz.xml');
 	}
 
 	/**

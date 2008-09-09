@@ -675,7 +675,7 @@ function DataToArray($rows, $idcol)
  * @param array $array Array to grab the last item off from.
  * @return mixed Last item on the array.
  */
-function array_get($array)
+function &array_get($array)
 {
 	return $array[count($array)-1];
 }

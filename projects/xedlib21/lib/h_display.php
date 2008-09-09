@@ -18,7 +18,7 @@ function GetBox($name, $title, $body, $template = null)
 	$box = new Box();
 	$box->name = $name;
 	$box->title = $title;
-	$box->out = $body;
+	$box->Out($body);
 	return $box->Get($template);
 }
 
@@ -64,6 +64,8 @@ class Box
 			'template_box.html');
 	}
 
+	function Out($t) { $this->out .= $t; }
+
 	/**
 	* Returns the rendered html output of this Box.
 	* @param string $template Filename of template to use for display.
@@ -79,7 +81,7 @@ class Box
 			$t->set("box_name", $this->name);
 			$t->set("box_title", $this->title);
 			$t->set("box_body", $this->out);
-			return $t->get($temp);
+			return $t->ParseFile($temp);
 		}
 		$ret  = '<!-- Start Box: '.$this->title.' -->';
 		$ret .= '<div ';
@@ -531,7 +533,7 @@ class Form
 		return $ret.$guts.'</form>';
 	}
 
-	function TagField($t, $guts)
+	function TagField($t, $g)
 	{
 		$ret = '';
 		$vp = new VarParser();
@@ -544,7 +546,7 @@ class Form
 			if (strtolower(get_class($in)) == 'forminput')
 				$d['field'] = $in->Get($this->name);
 			else $d['field'] = $in;
-			$ret .= $vp->ParseVars($guts, $d);
+			$ret .= $vp->ParseVars($g, $d);
 		}
 		return $ret;
 	}
@@ -563,7 +565,7 @@ class Form
 		$t->Set('form_name', $this->name);
 		$t->ReWrite('form', array($this, 'TagForm'));
 		$t->ReWrite('field', array($this, 'TagField'));
-		return $t->Get($this->Template);
+		return $t->ParseFile($this->Template);
 	}
 
 	/**
