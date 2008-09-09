@@ -96,7 +96,7 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 		E_USER_NOTICE     => "User Notice",
 	);
 	$ver = phpversion();
-	if ($ver[0] > 4)  $errortype[E_STRICT] = 'Strict Error';
+	if ($ver[0] > 4) $errortype[E_STRICT] = 'Strict Error';
 	if ($ver[0] > 4 && $ver[2] > 1)
 		$errortype[E_RECOVERABLE_ERROR] = 'Recoverable Error';
 
@@ -107,6 +107,9 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 		$err .= '<p>Template Trace</p><p>'.$GLOBALS['_trace'].'</p>';
 
 	$err .= GetCallstack($filename, $linenum);
+
+	if (isset($GLOBALS['__err_callback']))
+		call_user_func($GLOBALS['__err_callback'], $err);
 
 	if (!empty($GLOBALS['__err_file']))
 	{
