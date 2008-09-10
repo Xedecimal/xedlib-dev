@@ -439,15 +439,14 @@ class EditorData
 					}
 					else if ($in->type == 'file' && $value != null)
 					{
-						$ext = substr(strrchr($value['name'], '.'), 1);
+						$ext = strrchr($value['name'], '.');
+						$vp = new VarParser();
 
 						$moves[] = array(
-							'tmp' => $value['tmp_name'], //Source
-							'dst' => $in->valu, //Destination folder
-							'col' => $col,
-							'ext' => $ext
+							'src' => $value['tmp_name'],
+							'dst' => $vp->ParseVars($in->valu, $insert).$ext
 						);
-						$insert[$col] = $ext;
+						//$insert[$col] = $ext;
 					}
 					else if ($in->type == 'selects') $insert[$col] = $value;
 					else $insert[$col] = $value;
@@ -479,9 +478,8 @@ class EditorData
 			if (!empty($moves))
 			foreach ($moves as $move)
 			{
-				$target = "{$move['dst']}/{$id}_{$move['col']}.{$move['ext']}";
-				move_uploaded_file($move['tmp'], $target);
-				chmod($target, 0777);
+				move_uploaded_file($move['src'], $move['dst']);
+				chmod($move['dst'], 0777);
 			}
 
 			foreach ($this->handlers as $handler)
@@ -544,11 +542,12 @@ class EditorData
 					{
 						if (strlen($value['tmp_name']) > 0)
 						{
-							$files = glob("{$in->valu}/{$ci}_{$col}.*");
+							$vp = new VarParser();
+							$files = glob($vp->ParseVars($in->valu, $update).".*");
 							foreach ($files as $file) unlink($file);
-							$ext = substr(strrchr($value['name'], '.'), 1);
+							$ext = strrchr($value['name'], '.');
 							$src = $value['tmp_name'];
-							$dst = "{$in->valu}/{$ci}_{$col}.{$ext}";
+							$dst = $vp->ParseVars($in->valu.$ext, $update);
 							move_uploaded_file($src, $dst);
 							$update[$col] = $ext;
 						}
@@ -628,9 +627,10 @@ class EditorData
 			$child_id = GetVar('child');
 			$context = isset($child_id) ? $this->ds->children[$child_id] : $this;
 
+			$data = $context->ds->GetOne(array($context->ds->id => $ci));
+
 			if (count($this->handlers) > 0)
 			{
-				$data = $context->ds->GetOne(array($context->ds->id => $ci));
 				foreach ($this->handlers as $handler)
 				{
 					if (!$handler->Delete($ci, $data)) return;
@@ -643,7 +643,8 @@ class EditorData
 				{
 					if ($in->type == 'file')
 					{
-						$files = glob("{$in->valu}/{$ci}_{$name}.*");
+						$vp = new VarParser();
+						$files = glob($vp->ParseVars($in->valu, $data).".*");
 						foreach ($files as $file) unlink($file);
 					}
 				}

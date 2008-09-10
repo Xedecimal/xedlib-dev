@@ -421,7 +421,8 @@ class Template extends LayeredOutput
 			$objd = &$this->GetDestinationObject();
 			if (!isset($objc)) Error("Current object doesn't exist.");
 			if (!isset($objd)) Error("Destination object doesn't exist.");
-			$objd->Out($this->Pop());
+			$objd->Out($objc->Get($this->data));
+			$this->Pop();
 		}
 		else
 		{

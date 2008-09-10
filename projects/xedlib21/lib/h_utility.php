@@ -1111,7 +1111,6 @@ define('PREG_DIRS', 2);
  */
 function preg_files($pattern, $path, $opts = 3)
 {
-	echo "Opts: ".($opts & PREG_DIRS)."<br/>\n";
 	$ret = array();
 	$dp = opendir($path);
 	while ($file = readdir($dp))
@@ -1121,6 +1120,12 @@ function preg_files($pattern, $path, $opts = 3)
 		if (preg_match($pattern, $file)) $ret[] = $file;
 	}
 	return $ret;
+}
+
+function preg_file($pattern, $path, $opts = 3)
+{
+	$ret = preg_files($pattern, $path, $opts);
+	return $ret[0];
 }
 
 /**

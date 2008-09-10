@@ -637,6 +637,8 @@ class FormInput
 	 */
 	public $EndLabel;
 
+	public $append;
+
 	/**
 	 * Creates a new input object with many properties pre-set.
 	 *
@@ -756,9 +758,11 @@ class FormInput
 			$this->labl = false;
 
 			$ret = null;
+			$vp = new VarParser();
 			if (!empty($this->valu))
 			{
-				$ret .= "<div {$this->atrs}>";
+				$atrs = GetAttribs($this->atrs);
+				$ret .= "<div {$atrs}>";
 				$newsels = $this->GetValue($persist);
 				foreach ($newsels as $id => $val)
 				{
@@ -770,7 +774,14 @@ class FormInput
 							type=\"checkbox\"
 							name=\"{$this->name}[]\" value=\"{$id}\"
 							id=\"".CleanID($this->name.'_'.$id)."\"{$selected} />
-							{$val->text}</label><br/>";
+							{$val->text}</label>";
+					if (!empty($this->append))
+					{
+						$dat = $this;
+						$dat->valu = $id;
+						$ret .= $vp->ParseVars($this->append, $dat);
+					}
+					$ret .= "<br />\n";
 				}
 				$ret .= '</div>';
 			}
@@ -886,7 +897,7 @@ class FormInput
 				return $newsels;
 			//Simple Checked...
 			case 'checkbox':
-				return $persist && GetVar($this->name) ? ' checked="checked"' : null;
+				return $persist && $this->valu ? ' checked="checked"' : null;
 			//May get a little more complicated if we don't know what it is...
 			default:
 				return stripslashes(htmlspecialchars($persist ? GetVars($this->name, $this->valu) : $this->valu));
@@ -1009,7 +1020,8 @@ function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 	if (isset($none)) $ret[0] = new SelOption($none, false, $default == 0);
 	if (!empty($result)) foreach ($result as $res)
 	{
-		$ret[$res[$col_id]] = new SelOption($res[$col_disp], false, $default == $res[$col_id]);
+		$ret[$res[$col_id]] = new SelOption($res[$col_disp], false,
+			strcmp($default, $res[$col_id]) == 0);
 	}
 	return $ret;
 }
@@ -1230,12 +1242,9 @@ class LoginManager
 	/**
 	 * Processes the current login.
 	 *
-	 * @param string $ca Current persistant action.
-	 * @param string $passvar Name of password session variable to manage.
-	 * @param string $uservar Name of username session variable to manage.
 	 * @return mixed Array of user data or null if bound or true or false if not bound.
 	 */
-	function Prepare()
+	function Prepare($conditions = null)
 	{
 		$passvar = $this->Name.'_sespass';
 		$uservar = $this->Name.'_sesuser';
@@ -1277,10 +1286,13 @@ class LoginManager
 					<br />Who: LoginManager::Prepare()
 					<br />Why: You may have set an incorrect dataset in the
 					creation of this LoginManager.");
-				$item = $ds[0]->GetOne(array(
+				$match = array(
 					$ds[1] => $check_pass,
 					$ds[2] => $check_user
-				));
+				);
+				if (!empty($conditions))
+					$match = array_merge($match, $conditions);
+				$item = $ds[0]->GetOne($match);
 				if ($item != null) return $item;
 			}
 		}
