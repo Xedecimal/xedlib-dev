@@ -1426,4 +1426,40 @@ function Let(&$var, $val)
 	if (!isset($var)) $var = $val;
 }
 
+function Soap($host, $ns, $method, $args)
+{
+	$xml = <<<EOF
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<$method xmlns="$ns">\n
+EOF;
+	foreach ($args as $f => $v) $xml .= "\t\t\t<$f>$v</$f>\n";
+	$xml .= <<<EOF
+		</$method>
+	</soap:Body>
+</soap:Envelope>
+EOF;
+
+	$ch = curl_init($host);
+	$opts = array(
+		CURLOPT_HTTPHEADER => array(
+			'SOAPAction: "'.$ns.'/'.$method.'"',
+			'Content-Type: text/xml; charset=utf-8',
+			'Content-Length: '.strlen($xml)
+		),
+		CURLOPT_POST => 1,
+		CURLOPT_POSTFIELDS => $xml,
+		CURLOPT_RETURNTRANSFER => 1,
+		CURLOPT_NOPROGRESS => false,
+		CURLOPT_SSL_VERIFYPEER => false
+	);
+	curl_setopt_array($ch, $opts);
+	$ret = curl_exec($ch);
+	curl_close($ch);
+	return $ret;
+}
+
 ?>
