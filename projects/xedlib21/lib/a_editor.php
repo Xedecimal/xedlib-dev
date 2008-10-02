@@ -57,7 +57,7 @@ class EditorHandler
 	 * @param array $data Context
 	 * @return bool true by default
 	 */
-	function Create(&$data) { return true; }
+	function Create($s, &$data) { return true; }
 
 	/**
 	 * After an item is created, this contains the id of the new item. You
@@ -67,7 +67,7 @@ class EditorHandler
 	 * @param array $inserted Data that has been inserted (including the id).
 	 * @return bool true by default
 	 */
-	function Created($id, $inserted) { return true; }
+	function Created($s, $id, $inserted) { return true; }
 
 	/**
 	 * Before an item is updated, this function is called. If you extend this
@@ -78,7 +78,7 @@ class EditorHandler
 	 * @param array $update Columns suggested to get updated.
 	 * @return bool true by default
 	 */
-	function Update($id, &$original, &$update) { return true; }
+	function Update($s, $id, &$original, &$update) { return true; }
 
 	/**
 	 * Called before and item is deleted. If you extend this object and return
@@ -88,7 +88,7 @@ class EditorHandler
 	 * @param array $data Context
 	 * @return bool true by default (meant to be overridden)
 	 */
-	function Delete($id, &$data) { return true; }
+	function Delete($s, $id, &$data) { return true; }
 
 	/**
 	 * Called to retrieve additional fields for the editor form object.
@@ -96,7 +96,7 @@ class EditorHandler
 	 * @param mixed $id Unique id of this row.
 	 * @param array $data Data related to the action (update/insert).
 	 */
-	function GetFields(&$form, $id, $data) {}
+	function GetFields($s, &$form, $id, $data) {}
 
 	/**
 	 * Returns an array of joins to be passed as an argument to DataSet->Get()
@@ -151,7 +151,7 @@ class HandlerFile extends EditorHandler
 		$this->ownership = $ownership;
 	}
 
-	function Create(&$data)
+	function Create($s, &$data)
 	{
 		$vp = new VarParser();
 		$dst = $vp->ParseVars($this->target, $data);
@@ -166,7 +166,7 @@ class HandlerFile extends EditorHandler
 	 * Example: array('usr_access' => array(1, 3, 5));
 	 * This will manage files for the user if the column usr_access is 1, 3 or 5.
 	 */
-	function Created($id, $inserted)
+	function Created($s, $id, $inserted)
 	{
 		$vp = new VarParser();
 		$vp->Bleed = false;
@@ -198,7 +198,7 @@ class HandlerFile extends EditorHandler
 		return true;
 	}
 
-	function Update($id, &$original, &$update)
+	function Update($s, $id, &$original, &$update)
 	{
 		$vp = new VarParser();
 		$dst = $vp->ParseVars($this->target, $update);
@@ -242,7 +242,7 @@ class HandlerFile extends EditorHandler
 	 * @param array $data
 	 * @return bool
 	 */
-	function Delete($id, &$data)
+	function Delete($s, $id, &$data)
 	{
 		$vp = new VarParser();
 		$dst = $vp->ParseVars($this->target, $data);
@@ -367,6 +367,7 @@ class EditorData
 		$this->ds = $ds;
 
 		$this->Behavior = new EditorDataBehavior();
+		$this->View = new EditorDataView();
 		$this->handlers = array();
 
 		if (strtolower(get_class($ds)) == 'dataset')
@@ -461,7 +462,7 @@ class EditorData
 
 			foreach ($this->handlers as $handler)
 			{
-				if (!$handler->Create($insert)) { $this->Reset(); return; }
+				if (!$handler->Create($this, $insert)) { $this->Reset(); return; }
 			}
 
 			$parent = GetVar('parent');
@@ -562,7 +563,7 @@ class EditorData
 				$update[$this->ds->id] = $ci;
 				foreach ($this->handlers as $handler)
 				{
-					if (!$handler->Update($ci, $data, $update)) return;
+					if (!$handler->Update($this, $ci, $data, $update)) return;
 				}
 			}
 
@@ -633,7 +634,7 @@ class EditorData
 			{
 				foreach ($this->handlers as $handler)
 				{
-					if (!$handler->Delete($ci, $data)) return;
+					if (!$handler->Delete($this, $ci, $data)) return;
 				}
 			}
 			if (!empty($context->ds->FieldInputs))
@@ -1239,7 +1240,7 @@ class EditorData
 				//For some reason I change this to a single item when
 				//it can be multiple.
 
-				$handler->GetFields($frm,
+				$handler->GetFields($this, $frm,
 				isset($sel) ? $sel[0][$this->ds->id] : null,
 				isset($sel) ? $sel : null);
 			}
@@ -1347,6 +1348,7 @@ class EditorData
 
 		global $me;
 		$t->Set('table', $this->GetTable($me, GetState($this->Name.'_ci')));
+		$t->Set('table_head', $this->View->TableHeader);
 
 		return $t->ParseFile(dirname(__FILE__).'/temps/editor.xml');
 	}
@@ -1356,6 +1358,11 @@ class EditorData
 		unset($_SESSION[$this->Name.'_action']);
 		unset($_SESSION[$this->Name.'_ci']);
 	}
+}
+
+class EditorDataView
+{
+	public $TableHeader = '';
 }
 
 class EditorDataBehavior
@@ -1698,6 +1705,7 @@ class FileAccessHandler extends EditorHandler
 		//Get information on this item.
 		$so = new SelOption($root);
 		$fi = new FileInfo($root);
+
 		if (!empty($fi->info['access']) && isset($fi->info['access'][$id]))
 			$so->selected = true;
 		$ret[$root] = $so;
@@ -1729,7 +1737,9 @@ class FileAccessHandler extends EditorHandler
 		$fi = new FileInfo($root);
 
 		if (!empty($accesses) && in_array($root, $accesses))
+		{
 			$fi->info['access'][$id] = 1;
+		}
 		else if (isset($fi->info['access']))
 			unset($fi->info['access'][$id]);
 		$fi->SaveInfo();
@@ -1769,16 +1779,16 @@ class FileAccessHandler extends EditorHandler
 	/**
 	 * Called when a file or folder gets updated.
 	 */
-	function Update($id, &$original, &$update)
+	function Update($s, $id, &$original, &$update)
 	{
-		$accesses = GetVar('accesses');
+		$accesses = GetVar($s->Name.'_accesses');
 		$this->RecurseSetPerm($this->root, $id, $accesses);
 		return true;
 	}
 
-	function Created($id, $inserted)
+	function Created($s, $id, $inserted)
 	{
-		$accesses = GetVar('accesses');
+		$accesses = GetVar($s->Name.'_accesses');
 		$this->RecurseSetPerm($this->root, $id, $accesses);
 	}
 
@@ -1786,7 +1796,7 @@ class FileAccessHandler extends EditorHandler
 	 * Adds a series of options to the form associated with the given file.
 	 * @todo Rename to AddFields
 	 */
-	function GetFields(&$form, $id, $data)
+	function GetFields($s, &$form, $id, $data)
 	{
 		$form->AddInput(new FormInput('Accessable Folders', 'selects',
 			'accesses', $this->PathToSelOption($this->root, $id, 0),

@@ -13,6 +13,7 @@
 
 <if check="isset($this->vars[&quot;table&quot;])">
 <box title="{{table_title}}">
+{{table_head}}
 {{table}}
 </box>
 </if>

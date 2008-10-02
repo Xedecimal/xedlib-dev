@@ -1177,9 +1177,10 @@ class TreeNode
 	 *
 	 * @param mixed $data Data to associate with this node.
 	 */
-	function TreeNode($data = null)
+	function TreeNode($data = null, $id = null)
 	{
 		$this->data = $data;
+		$this->id = $id;
 		$this->children = array();
 	}
 
@@ -1187,6 +1188,19 @@ class TreeNode
 	{
 		$this->children[] = $tn;
 		$tn->parent = $this;
+	}
+
+	function Find($id)
+	{
+		foreach ($this->children as $c)
+		{
+			if ($c->id == $id) return $c;
+			else
+			{
+				$ret = $c->Find($id);
+				if (isset($ret)) return $ret;
+			}
+		}
 	}
 }
 
@@ -1407,7 +1421,7 @@ class DisplayObject
 	 * @param array $data Context data.
 	 * @return string The name of this page for the browser's titlebar.
 	 */
-	function Get(&$data)
+	function Get()
 	{
 		return "Class " . get_class($this) . " does not overload Get().";
 	}
@@ -1416,7 +1430,7 @@ class DisplayObject
 	 * Prepare this object for output.
 	 * @param array $data Context data.
 	 */
-	function Prepare(&$data) { }
+	function Prepare() { }
 }
 
 //Form Functions

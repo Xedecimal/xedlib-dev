@@ -80,7 +80,7 @@
 			<!-- Create Folder -->
 			<behavior type="AllowCreateDir">
 			<tr><td>
-				<a href="#" onclick="$('#{{fn_name}}_create').slideToggle(500);return false;">Create Folder</a>
+				<a href="#" onclick="$('#{{fn_name}}_create').slideToggle(500);return false;">{{TextCreateFolder}}</a>
 			</td><td>
 				<img id="img{{fn_name}}_create" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">

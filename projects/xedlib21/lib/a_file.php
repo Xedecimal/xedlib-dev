@@ -405,7 +405,7 @@ class FileManager
 		if (isset($this->cf))
 		{
 			$d['uri'] = URL($this->vars['target'],
-				array($this->Name.'_cf' => '/'));
+				array($this->Name.'_cf' => ''));
 			$d['name'] = $attribs['ROOT'];
 			$ret .= $vp->ParseVars($guts, $d);
 		}
@@ -803,6 +803,7 @@ EOF;
 		$fi = new FileInfo($this->Root.$this->cf);
 
 		$t->Set('fn_name', $this->Name);
+		$t->Set($this->View);
 
 		return $t->ParseFile($this->Template);
 	}

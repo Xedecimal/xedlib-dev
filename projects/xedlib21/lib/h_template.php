@@ -491,7 +491,7 @@ class Template extends LayeredOutput
 	 */
 	function Set($var, $val = null)
 	{
-		if (is_array($var) && !empty($var))
+		if (is_array($var))
 		{
 			$this->vars = array_merge($this->vars, $var);
 		}
@@ -534,7 +534,7 @@ class Template extends LayeredOutput
 	 */
 	function GetString($str)
 	{
-		$nstr = $this->ProcessCode($str);
+		$nstr = $this->PreProcess($str);
 
 		if ($this->Behavior->MakeDynamic)
 		{
@@ -633,9 +633,10 @@ class Template extends LayeredOutput
 	 * @param string $str String to process php code in.
 	 * @return string Replaced information.
 	 */
-	function ProcessCode($str)
+	function PreProcess($str)
 	{
-		return preg_replace_callback('/(<\?php|<\?)(.+?)\?>/s', array(&$this, 'CodeCallback'), $str);
+		$nret = preg_replace_callback('/(<\?php|<\?)(.+?)\?>/s', array(&$this, 'CodeCallback'), $str);
+		return str_replace('&', '&amp;', $nret);
 	}
 
 	/**

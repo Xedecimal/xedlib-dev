@@ -672,6 +672,30 @@ function DataToArray($rows, $idcol)
 	return $ret;
 }
 
+function DataToTree($rows, $iCol, $pCol)
+{
+	// Build Flats
+
+	$flats = array();
+	if (!empty($rows))
+	foreach ($rows as $row)
+		$flats[$row[$iCol]] = new TreeNode($row, $row[$iCol]);
+
+	// Build Tree
+
+	$tnRoot = new TreeNode();
+
+	if (!empty($flats))
+	foreach ($flats as $id => $tn)
+	{
+		if (isset($flats[$tn->data[$pCol]]))
+			$flats[$tn->data[$pCol]]->AddChild($tn);
+		else $tnRoot->AddChild($tn);
+	}
+
+	return $tnRoot;
+}
+
 /**
  * Returns the last item on the array, without popping it.
  *
@@ -1294,9 +1318,9 @@ function ParseAtrs($atrs)
  * @param string $name Name of our state object.
  * @return mixed The GetVar value of $name.
  */
-function GetState($name)
+function GetState($name, $def = null)
 {
-	return SetVar($name, GetVar($name));
+	return SetVar($name, GetVar($name, $def));
 }
 
 /**
