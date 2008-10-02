@@ -273,6 +273,7 @@ class Template extends LayeredOutput
 						"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">');
 			}
 			unset($attribs['DOCTYPE']);
+			$attribs['XMLNS'] = 'http://www.w3.org/1999/xhtml';
 		}
 
 		if ($tag == 'IF')
@@ -564,6 +565,7 @@ class Template extends LayeredOutput
 		xml_set_object($p, &$this);
 		xml_set_element_handler($p, 'Start_Tag', 'End_Tag');
 		xml_set_character_data_handler($p, 'CData');
+		xml_set_default_handler($p, 'def');
 		xml_set_processing_instruction_handler($p, 'Process');
 		xml_parser_set_option($p, XML_OPTION_TARGET_ENCODING, 'UTF-8');
 
@@ -585,6 +587,15 @@ class Template extends LayeredOutput
 
 		return preg_replace_callback('/\{{([^}]+)\}}/',
 			array(&$this, "parse_vars"), $this->FlushBuffer());
+	}
+
+	function def($p, $g)
+	{
+		if (substr($g, 0, 4) == '<!--')
+		{
+			$obj = &$this->GetCurrentObject();
+			$obj->Out($g);
+		}
 	}
 
 	/**

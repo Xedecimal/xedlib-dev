@@ -902,7 +902,6 @@ class DataSet
 	 *
 	 * @param array $columns
 	 * @param string $phrase
-	 * @param int $args
 	 * @param int $start Where to start results for pagination.
 	 * @param int $limit Limit of items to return for pagination.
 	 * @return array
@@ -910,7 +909,8 @@ class DataSet
 	function GetSearch($columns, $phrase, $start = 0, $limit = null,
 		$sort = null, $filter = null)
 	{
-		$query = "SELECT ".$this->ColsClause($columns)." FROM `{$this->table}`";
+		$query = "SELECT ".$this->ColsClause($columns).' FROM '.
+			$this->QuoteTable($this->table);
 		$ix = 0;
 
 		if (!empty($columns))
@@ -919,8 +919,14 @@ class DataSet
 
 			//Phrase is a series of columns => phrases
 			if (is_array($phrase))
+			{
+				$ix = 0;
 				foreach ($phrase as $c => $v)
+				{
+					if ($ix++ > 0) $query .= ' OR';
 					$query .= ' '.$c." LIKE '%{$v}%'";
+				}
+			}
 			//Matching all selected columns to a single phrase.
 			else
 			{
