@@ -461,6 +461,7 @@ class FileManager
 		{
 			FileInfo::GetFilter($f, $this->Root, $this->filters, $f->dir);
 			if (!$f->show) continue;
+			if (!$this->GetVisible($f)) continue;
 
 			global $me;
 			if (isset($this->Behavior->FolderCallback))
@@ -547,6 +548,7 @@ class FileManager
 			{
 				$cb = $this->Behavior->FileCallback;
 				$vars = $cb($f, $this->cf.$f->filename);
+				if (!empty($vars))
 				foreach ($vars as $k => $v)
 				{
 					$vars["{$this->Name}_$k"] = $v;
@@ -1029,7 +1031,11 @@ EOF;
 	 */
 	function GetVisible($file)
 	{
-		if (!isset($this->uid) || is_file($file->path)) return true;
+		if (!isset($this->uid) || is_file($file->path)
+			|| $this->Behavior->ShowAllFiles)
+			return true;
+
+		// If there is no ACL assigned, check the parent folder for it.
 
 		if (!isset($file->info['access']) &&
 			dirname($file->path) != dirname($this->Root))
@@ -1039,7 +1045,7 @@ EOF;
 		//if there is a specific reason for them to be stored as values then
 		//we'll need another solution. -- Xed
 
-		if (!empty($file->info['access']))
+		if (isset($file->info['access']))
 			if (!empty($file->info['access'][$this->uid]))
 				return true;
 
@@ -1102,7 +1108,8 @@ class FileManagerView
 	 * Title message for the upload box.
 	 * @var string
 	 */
-	public $TitleUpload = '<b>Upload Files to Current Folder</b> - <i>Browse hard drive then click "upload"</i>';
+	public $TitleUpload = '<b>Upload Files to Current Folder</b> -
+		<i>Browse hard drive then click "upload"</i>';
 
 	/**
 	 * Test displayed as collapsable link from the main view.

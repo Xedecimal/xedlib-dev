@@ -144,8 +144,9 @@ class HandlerFile extends EditorHandler
 	 * @param mixed $ownership Identification of the owner for the associated
 	 * target.
 	 */
-	function HandlerFile($target, $conditions = null, $ownership = null)
+	function HandlerFile($fm, $target, $conditions = null, $ownership = null)
 	{
+		$this->fm = $fm;
 		$this->target = $target;
 		$this->conditions = $conditions;
 		$this->ownership = $ownership;
@@ -218,7 +219,9 @@ class HandlerFile extends EditorHandler
 				{
 					if ($update[$col] == $val)
 					{
-						if (!file_exists($dst)) mkrdir($dst, 0777);
+						if (file_exists($src)) rename($src, $dst);
+						else mkrdir($dst, 0777);
+
 						if ($this->ownership)
 						{
 							$fi = new FileInfo($dst);
@@ -228,9 +231,11 @@ class HandlerFile extends EditorHandler
 						return true;
 					}
 				}
+
+				//A condition has been met by now, cleanup time.
+				if (file_exists($src) && realpath($this->fm->Root) != realpath($src))
+					DelTree($src);
 			}
-			DelTree($dst);
-			DelEmpty($dst);
 		}
 		return true;
 	}
@@ -1679,13 +1684,16 @@ class FileAccessHandler extends EditorHandler
 	 */
 	private $root;
 
+	private $ed;
+
 	/**
 	 * Constructor for this object, sets required properties.
 	 * @param string $root Top level directory to allow access.
 	 */
-	function FileAccessHandler($root, $depth = 0)
+	function FileAccessHandler($ed, $root, $depth = 0)
 	{
 		require_once('a_file.php');
+		$this->ed = $ed;
 		$this->depth = $depth;
 		$this->root = $root;
 	}
@@ -1706,7 +1714,7 @@ class FileAccessHandler extends EditorHandler
 		$so = new SelOption($root);
 		$fi = new FileInfo($root);
 
-		if (!empty($fi->info['access']) && isset($fi->info['access'][$id]))
+		if (!empty($id) && !empty($fi->info['access'][$id]))
 			$so->selected = true;
 		$ret[$root] = $so;
 
@@ -1739,8 +1747,7 @@ class FileAccessHandler extends EditorHandler
 		if (!empty($accesses) && in_array($root, $accesses))
 		{
 			$fi->info['access'][$id] = 1;
-		}
-		else if (isset($fi->info['access']))
+		else if (isset($fi->info['access'][$id]))
 			unset($fi->info['access'][$id]);
 		$fi->SaveInfo();
 
@@ -1781,14 +1788,14 @@ class FileAccessHandler extends EditorHandler
 	 */
 	function Update($s, $id, &$original, &$update)
 	{
-		$accesses = GetVar($s->Name.'_accesses');
+		$accesses = GetVar($this->ed->Name.'_accesses');
 		$this->RecurseSetPerm($this->root, $id, $accesses);
 		return true;
 	}
 
 	function Created($s, $id, $inserted)
 	{
-		$accesses = GetVar($s->Name.'_accesses');
+		$accesses = GetVar($this->ed->Name.'_accesses');
 		$this->RecurseSetPerm($this->root, $id, $accesses);
 	}
 
@@ -1799,8 +1806,7 @@ class FileAccessHandler extends EditorHandler
 	function GetFields($s, &$form, $id, $data)
 	{
 		$form->AddInput(new FormInput('Accessable Folders', 'selects',
-			'accesses', $this->PathToSelOption($this->root, $id, 0),
-			array('SIZE' => 8)));
+			'accesses', $this->PathToSelOption($this->root, $id, 0, 2), array('SIZE' => 8)));
 	}
 }
 

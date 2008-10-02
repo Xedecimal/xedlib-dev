@@ -755,8 +755,7 @@ function RunCallbacks()
 			if (!isset($ret)) $ret = array();
 			$ret = array_merge($ret, $item);
 		}
-		if (is_string($item))
-			$ret .= $item;
+		else $ret .= $item;
 	}
 	return $ret;
 }
@@ -961,7 +960,7 @@ function array_clone($arr)
  */
 function mkrdir($path, $mode = 0755)
 {
-	$path = rtrim(preg_replace(array('/\\/', '/\/{2,}/'), "/", $path), '/');
+	//$path = rtrim(preg_replace(array('#\\#', '#/{2,}#'), '/', $path), '/');
 	$e = explode("/", ltrim($path, "/"));
 	if (substr($path, 0, 1) == "/") $e[0] = "/".$e[0];
 	$c = count($e);
