@@ -26,8 +26,9 @@ define("GET_ASSOC", 1);
  */
 define("GET_BOTH", 3);
 
-define('DB_MY', 0);
-define('DB_OD', 1);
+define('DB_MY', 0); //MySQL
+define('DB_OD', 1); //ODBC
+define('DB_SL', 2); //SQLite
 
 define('ER_NO_SUCH_TABLE', 1146);
 
@@ -106,6 +107,14 @@ class Database
 	{
 	}
 
+	function CheckSQLiteError($query, $handler)
+	{
+		if (sqlite_last_error($this->link))
+		{
+			echo "Sqlite Error on: {$query}";
+		}
+	}
+
 	/**
 	 * Instantiates a new Database object.
 	 */
@@ -120,15 +129,14 @@ class Database
 	function Open($url)
 	{
 		$m = null;
-		if (!preg_match('#([^:]+)://([^:]*):(.*)@([^/]*)/(.*)#', $url, $m))
+		if (!preg_match('#([^:]+)://([^:]*):*(.*)@*([^/]*)/*(.*)#', $url, $m))
 			Error("Invalid url for database.");
 		switch ($m[1])
 		{
 			case 'mysql':
 				$this->ErrorHandler = array($this, 'CheckMyError');
+				$this->func_aff = 'mysql_affected_rows';
 				$this->link = mysql_connect($m[4], $m[2], $m[3], true);
-				if (!$this->link)
-					Error("Unable to connect to mysql at {$m[4]}.<br/>\n");
 				mysql_select_db($m[5], $this->link);
 				$this->type = DB_MY;
 				$this->lq = $this->rq = '`';
@@ -136,11 +144,15 @@ class Database
 			case 'odbc':
 				$this->ErrorHandler = array($this, 'CheckODBCError');
 				$this->link = odbc_connect($m[5], $m[2], $m[3]);
-				if (!$this->link) die("ODBC Error on connect: ".
-					odbc_errormsg($this->link));
 				$this->type = DB_OD;
 				$this->lq = '[';
 				$this->rq = ']';
+				break;
+			case 'sqlite':
+				$this->ErrorHandler = array($this, 'CheckSQLiteError');
+				$this->func_aff = 'sqlite_num_rows';
+				$this->link = sqlite_open($m[2]);
+				$this->type = DB_SL;
 				break;
 			default:
 				Error("Invalid database type.");
@@ -166,14 +178,15 @@ class Database
 		{
 			case DB_MY:
 				$res = mysql_query($query, $this->link);
-				call_user_func($this->ErrorHandler, $query, $handler);
 				break;
 			case DB_OD:
 				$res = odbc_exec($this->link, $query);
-				if (odbc_error())
-					Error("Query: $query<br/>\nODBC Error: ".odbc_error());
+				break;
+			case DB_SL:
+				$res = sqlite_query($this->link, $query);
 				break;
 		}
+		call_user_func($this->ErrorHandler, $query, $handler);
 		return $res;
 	}
 
@@ -227,6 +240,7 @@ class Database
 	function GetLastInsertID()
 	{
 		if ($this->type == DB_MY) return mysql_insert_id($this->link);
+		if ($this->type == DB_SL) return sqlite_last_insert_rowid($this->link);
 		return 0;
 	}
 }
@@ -457,6 +471,9 @@ class DataSet
 				$this->func_fetch = 'mysql_fetch_array';
 				$this->func_rows = 'mysql_affected_rows';
 				break;
+			case DB_SL:
+				$this->func_fetch = 'sqlite_fetch_array';
+				$this->func_rows = 'sqlite_num_rows';
 		}
 		$this->database = $db;
 		$this->table = $table;
@@ -657,7 +674,7 @@ class DataSet
 	 * @param array $values eg: array('col1' => 'val1')
 	 * @return string Proper set.
 	 */
-	function GetSetString($values, $start = ' SET')
+	function GetSetString($values, $start = ' SET ')
 	{
 		if (!empty($values))
 		{
@@ -673,7 +690,19 @@ class DataSet
 					if ($val[0] == "destring")
 						$ret .= $this->QuoteTable($key)." = {$val[1]}";
 				}
-				else $ret .= $this->QuoteTable($key)." = '".mysql_real_escape_string($val)."'";
+				else $ret .= $this->QuoteTable($key)." = '";
+				switch ($this->database->type)
+				{
+					case DB_MY:
+						$ret .= mysql_real_escape_string($val);
+						break;
+					case DB_SL:
+						$ret .= sqlite_escape_string($val);
+						break;
+					default:
+						$ret .= addslashes($val);
+				}
+				$ret .= "'";
 			}
 			if ($found) return $ret;
 		}
@@ -691,7 +720,9 @@ class DataSet
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 
-		$query = 'INSERT INTO '.$this->QuoteTable($this->table).' (';
+		if ($update_existing) $query = 'REPLACE';
+		else $query = 'INSERT';
+		$query .= ' INTO '.$this->QuoteTable($this->table).' (';
 		$ix = 0;
 		foreach (array_keys($columns) as $key)
 		{
@@ -713,10 +744,10 @@ class DataSet
 			$ix++;
 		}
 		$query .= ")";
-		if ($update_existing)
-		{
-			$query .= " ON DUPLICATE KEY UPDATE ".$this->GetSetString($columns, '');
-		}
+		//if ($update_existing && $this->database->type == DB_MY)
+		//{
+		//	$query .= " ON DUPLICATE KEY UPDATE ".$this->GetSetString($columns, '');
+		//}
 		$this->database->Query($query);
 		return $this->database->GetLastInsertID();
 	}
@@ -806,14 +837,23 @@ class DataSet
 			$this->ErrorHandler);
 
 		//Prepare Data
-		if (mysql_affected_rows() < 1) return null;
+		$f = $this->func_rows;
+		switch ($this->database->type)
+		{
+			case DB_SL:
+				if ($f($rows) < 1) return null;
+				break;
+			default:
+				if ($f($this->database->link) < 1) return null;
+
+		}
 		$items = null;
 
 		$a = null;
-		if ($this->database->type == 'mysql')
+		if ($this->database->type == DB_MY)
 		{
-			$a = MYSQL_BOTH;
-			if ($args == GET_ASSOC) $a = MYSQL_ASSOC;
+				$a = MYSQL_BOTH;
+				if ($args == GET_ASSOC) $a = MYSQL_ASSOC;
 		}
 
 		while (($row = call_user_func($this->func_fetch, $rows, $a)))
