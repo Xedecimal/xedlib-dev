@@ -21,6 +21,6 @@ $page_title = 'Gallery Test';
 $page_body = $g->Get(GetVar('galcf'));
 
 $t = new Template();
-echo $t->Get('template_test.html');
+echo $t->Get('template_test.xml');
 
 ?>

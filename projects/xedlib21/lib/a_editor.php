@@ -1075,12 +1075,12 @@ class EditorData
 					$this->Name.'_action' => 'delete',
 					$this->Name.'_ci' => $cnode->id), $url_defaults));
 				$row[] = "<a href=\"$url_edit#box_{$this->Name}_forms\"><img
-					src=\"{$p}/images/edit.png\" alt=\"Edit\" title=\"Edit
-					Item\" class=\"png\" /></a>";
+					src=\"{$p}/images/edit.png\" alt=\"Edit\"
+					title=\"Edit Item\" class=\"png\" /></a>";
 				$row[] = "<a href=\"$url_del#{$this->Name}_table\"
 					onclick=\"return confirm('Are you sure?')\"><img
-					src=\"{$p}/images/delete.png\" alt=\"Delete\" title=\"Delete
-					Item\" class=\"png\" /></a>";
+					src=\"{$p}/images/delete.png\" alt=\"Delete\"
+					title=\"Delete Item\" class=\"png\" /></a>";
 			}
 
 			// @TODO Bring this tree system back to life!
@@ -1745,7 +1745,6 @@ class FileAccessHandler extends EditorHandler
 		$fi = new FileInfo($root);
 
 		if (!empty($accesses) && in_array($root, $accesses))
-		{
 			$fi->info['access'][$id] = 1;
 		else if (isset($fi->info['access'][$id]))
 			unset($fi->info['access'][$id]);

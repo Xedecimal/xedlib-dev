@@ -12,4 +12,6 @@ $page_head = '';
 $db = new Database();
 $db->Open('mysql://root:ransal@localhost/test');
 
+$dsUser = new DataSet($db, 'user');
+
 ?>
