@@ -120,7 +120,7 @@ class LoggerAuth extends EditorHandler
 		return $tbl->Get(array('class' => 'tablesorter', 'id' => $this->name.'_table'));
 	}
 
-	function GetFields(&$form, $id, $data)
+	function GetFields($s, &$form, $id, $data)
 	{
 		if (!empty($id))
 		{

@@ -129,21 +129,21 @@ class Database
 	function Open($url)
 	{
 		$m = null;
-		if (!preg_match('#([^:]+)://([^:]*):*(.*)@*([^/]*)/*(.*)#', $url, $m))
+		if (!preg_match('#([^:]+)://(([^:]*):*(.*)@|)([^/]*)/*(.*)#', $url, $m))
 			Error("Invalid url for database.");
 		switch ($m[1])
 		{
 			case 'mysql':
 				$this->ErrorHandler = array($this, 'CheckMyError');
 				$this->func_aff = 'mysql_affected_rows';
-				$this->link = mysql_connect($m[4], $m[2], $m[3], true);
-				mysql_select_db($m[5], $this->link);
+				$this->link = mysql_connect($m[5], $m[3], $m[4], true);
+				mysql_select_db($m[6], $this->link);
 				$this->type = DB_MY;
 				$this->lq = $this->rq = '`';
 				break;
 			case 'odbc':
 				$this->ErrorHandler = array($this, 'CheckODBCError');
-				$this->link = odbc_connect($m[5], $m[2], $m[3]);
+				$this->link = odbc_connect($m[5], $m[3], $m[4]);
 				$this->type = DB_OD;
 				$this->lq = '[';
 				$this->rq = ']';
@@ -151,7 +151,7 @@ class Database
 			case 'sqlite':
 				$this->ErrorHandler = array($this, 'CheckSQLiteError');
 				$this->func_aff = 'sqlite_num_rows';
-				$this->link = sqlite_open($m[2]);
+				$this->link = sqlite_open($m[5]);
 				$this->type = DB_SL;
 				break;
 			default:
@@ -159,7 +159,7 @@ class Database
 				break;
 		}
 		call_user_func($this->ErrorHandler, null, null);
-		$this->name = $m[5];
+		$this->name = $m[6];
 	}
 
 	/**
