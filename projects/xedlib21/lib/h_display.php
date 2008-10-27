@@ -849,7 +849,8 @@ class FormInput
 		}
 		if ($this->type == 'state')
 		{
-			return GetInputState(@$parent.'_'.@$this->name, @$this->valu, $this->atrs);
+			$this->atrs['NAME'] = @$parent.'_'.$this->name;
+			return GetInputState($this->atrs, @$this->valu);
 		}
 
 		$val = $this->GetValue($persist && $this->type != 'radio');
@@ -983,20 +984,24 @@ class SelOption
 
 /**
  * Returns a rendered <select> form input.
- * @param string $name Name of this input.
- * @param array $value eg: array('id' => new SelOption(etc))
- * @param string $attributes eg: 'size="5" multiple="multiple"'
+ * @param array $atrs eg: 'SIZE' => '5', 'MULTIPLE' => 'multiple'
+ * @param array $value array of SelOption objects.
  * @param mixed $selvalue default selected seloption id.
  * @return string rendered select form input.
  */
-function MakeSelect($atrs = null, $value = null)
+function MakeSelect($atrs = null, $value = null, $selvalue = null)
 {
+	if (isset($atrs['VALUE'])) $selvalue = $atrs['VALUE'];
+	unset($atrs['VALUE']);
+
 	$strout = '<select';
 	$strout .= GetAttribs($atrs);
 	$strout .= ">\n";
+
 	foreach ($value as $id => $option)
 	{
 		$selected = null;
+		if ($id == $selvalue) $selected = ' selected="selected"';
 		if ($option->selected) $selected = ' selected="selected"';
 		$strout .= "<option value=\"{$id}\"$selected>{$option->text}</option>\n";
 		$selected = null;
@@ -1067,12 +1072,12 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 		$timestamp = MyDateTimestamp($timestamp, $include_time);
 	}
 	if (!isset($timestamp)) $timestamp = time();
-	$strout = '<label>'.GetMonthSelect("{$name}[]", date("n", $timestamp)).
+	$strout = '<label>'.GetMonthSelect("{$name}[]", date('n', $timestamp)).
 		'</label>';
 	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"".
 		date('d', $timestamp)."\" alt=\"Day\" />\n";
 	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"".
-		date("Y", $timestamp)."\" alt=\"Year\" />\n";
+		date('Y', $timestamp)."\" alt=\"Year\" />\n";
 	$strout .= $include_time ? GetInputTime($name.'[]', $timestamp) : null;
 	return $strout;
 }
@@ -1086,9 +1091,9 @@ function GetInputDate($name = "", $timestamp = null, $include_time = false)
 function GetInputTime($name, $timestamp)
 {
 	$strout = "<input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"".
-		date("g", $timestamp)."\" alt=\"Hour\" />\n";
+		date('g', $timestamp)."\" alt=\"Hour\" />\n";
 	$strout .= ": <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"".
-		date("i", $timestamp)."\" alt=\"Minute\" />\n";
+		date('i', $timestamp)."\" alt=\"Minute\" />\n";
 	$strout .= "<select name=\"{$name}[]\">
 		<option value=\"0\">AM</option>
 		<option value=\"1\">PM</option>
@@ -1452,7 +1457,7 @@ function GetMonthSelect($name, $default, $attribs = null)
 		$ts = mktime(0, 0, 0, $ix, 1);
 		if ($ix == $default) $sel = " selected=\"selected\"";
 		else $sel = "";
-		$ret .= "<option value=\"$ix\"$sel> " . date("F", $ts) . "</option>\n";
+		$ret .= "<option value=\"$ix\"$sel> " . date('F', $ts) . "</option>\n";
 	}
 	$ret .= "</select>\n";
 	return $ret;
@@ -1464,94 +1469,167 @@ function GetMonthSelect($name, $default, $attribs = null)
  * @param int $year Default selection.
  * @return string Rendered year selection.
  */
-function GetYearSelect($name, $year)
+function GetYearSelect($name, $attribs)
 {
-	if ($year == null) $year = date('Y');
+	// Handle Attributes
+
+	$year = strtoval(@$attribs['VALUE'], date('Y'));
+	$shownav = strtoval(@$attribs['SHOWNAV'], true);
+	$step = strtoval(@$attribs['STEP'], 5);
+	$shownext = strtoval(@$attribs['SHOWNEXT'], true);
+	$showprev = strtoval(@$attribs['SHOWPREV'], true);
+
+	$from = $showprev ? $year-$step : $year;
+	$next = $shownext ? $year+$step : $year;
+
 	$ret = "<select name=\"$name\">";
-	$ret .= "<option value=\"" . ($year-6) . "\"> &laquo; </option>\n";
-	for ($ix = $year-5; $ix < $year+5; $ix++)
+	if ($shownav)
+		$ret .= "<option value=\"".($from-1)."\"> &laquo; </option>\n";
+
+	for ($ix = $from; $ix < $next; $ix++)
 	{
 		if ($ix == $year) $sel = " selected=\"selected\"";
 		else $sel = "";
 		$ret .= "<option value=\"$ix\"$sel>$ix</option>\n";
 	}
-	$ret .= "<option value=\"" . ($year+6) . "\"> &raquo; </option>\n";
+	if ($shownav)
+		$ret .= "<option value=\"".($next+1)."\"> &raquo; </option>\n";
 	$ret .= "</select>\n";
 	return $ret;
 }
 
 /**
- * @param string $name Name of this input.
- * @param int $state Default state number.
+ * @param array $atrs Default state number.
  * @return string Rendered <select> box.
  */
-function GetInputState($attribs = null)
+function GetInputState($atrs = null)
 {
-	global $__states;
-	return MakeSelect($attribs, $__states);
+	global $StateNames;
+	return MakeSelect($atrs, ArrayToSelOptions($StateNames));
 }
 
-/**
- * @var array Good for a FormInput of type 'select'.
- */
-$__states = array(
-	50 => new SelOption('None'),
-	0 => new SelOption('Alabama'),
-	1 => new SelOption('Alaska'),
-	2 => new SelOption('Arizona'),
-	3 => new SelOption('Arkansas'),
-	4 => new SelOption('California'),
-	5 => new SelOption('Colorado'),
-	6 => new SelOption('Connecticut'),
-	7 => new SelOption('Delaware'),
-	8 => new SelOption('Florida'),
-	9 => new SelOption('Georgia'),
-	10 => new SelOption('Hawaii'),
-	11 => new SelOption('Idaho'),
-	12 => new SelOption('Illinois'),
-	13 => new SelOption('Indiana'),
-	14 => new SelOption('Iowa'),
-	15 => new SelOption('Kansas'),
-	16 => new SelOption('Kentucky'),
-	17 => new SelOption('Louisiana'),
-	18 => new SelOption('Maine'),
-	19 => new SelOption('Maryland'),
-	20 => new SelOption('Massachusetts'),
-	21 => new SelOption('Michigan'),
-	22 => new SelOption('Minnesota'),
-	23 => new SelOption('Mississippi'),
-	24 => new SelOption('Missouri'),
-	25 => new SelOption('Montana'),
-	26 => new SelOption('Nebraska'),
-	27 => new SelOption('Nevada'),
-	28 => new SelOption('New Hampshire'),
-	29 => new SelOption('New Jersey'),
-	30 => new SelOption('New Mexico'),
-	31 => new SelOption('New York'),
-	32 => new SelOption('North Carolina'),
-	33 => new SelOption('North Dakota'),
-	34 => new SelOption('Ohio'),
-	35 => new SelOption('Oklahoma'),
-	36 => new SelOption('Oregon'),
-	37 => new SelOption('Pennsylvania'),
-	38 => new SelOption('Rhode Island'),
-	39 => new SelOption('South Carolina'),
-	40 => new SelOption('South Dakota'),
-	41 => new SelOption('Tennessee'),
-	42 => new SelOption('Texas'),
-	43 => new SelOption('Utah'),
-	44 => new SelOption('Vermont'),
-	45 => new SelOption('Virginia'),
-	46 => new SelOption('Washington'),
-	47 => new SelOption('West Virginia'),
-	48 => new SelOption('Wisconsin'),
-	49 => new SelOption('Wyoming'),
+$StateNames = array(
+	0 => 'None',
+	1 => 'Alabama',
+	2 => 'Alaska',
+	3 => 'Arizona',
+	4 => 'Arkansas',
+	5 => 'California',
+	6 => 'Colorado',
+	7 => 'Connecticut',
+	8 => 'Delaware',
+	9 => 'Florida',
+	10 => 'Georgia',
+	11 => 'Hawaii',
+	12 => 'Idaho',
+	13 => 'Illinois',
+	14 => 'Indiana',
+	15 => 'Iowa',
+	16 => 'Kansas',
+	17 => 'Kentucky',
+	18 => 'Louisiana',
+	19 => 'Maine',
+	20 => 'Maryland',
+	21 => 'Massachusetts',
+	22 => 'Michigan',
+	23 => 'Minnesota',
+	24 => 'Mississippi',
+	25 => 'Missouri',
+	26 => 'Montana',
+	27 => 'Nebraska',
+	28 => 'Nevada',
+	29 => 'New Hampshire',
+	30 => 'New Jersey',
+	31 => 'New Mexico',
+	32 => 'New York',
+	33 => 'North Carolina',
+	34 => 'North Dakota',
+	35 => 'Ohio',
+	36 => 'Oklahoma',
+	37 => 'Oregon',
+	38 => 'Pennsylvania',
+	39 => 'Rhode Island',
+	40 => 'South Carolina',
+	41 => 'South Dakota',
+	42 => 'Tennessee',
+	43 => 'Texas',
+	44 => 'Utah',
+	45 => 'Vermont',
+	46 => 'Virginia',
+	47 => 'Washington',
+	48 => 'West Virginia',
+	49 => 'Wisconsin',
+	50 => 'Wyoming',
+);
+
+$StateSNames = array(
+	0 => 'None',
+	1 => 'AL',
+	2 => 'AK',
+	3 => 'AZ',
+	4 => 'AR',
+	5 => 'CA',
+	6 => 'CO',
+	7 => 'CT',
+	8 => 'DE',
+	9 => 'FL',
+	10 => 'GA',
+	11 => 'HI',
+	12 => 'ID',
+	13 => 'IL',
+	14 => 'IN',
+	15 => 'IA',
+	16 => 'KS',
+	17 => 'KY',
+	18 => 'LA',
+	19 => 'ME',
+	20 => 'MD',
+	21 => 'MA',
+	22 => 'MI',
+	23 => 'MN',
+	24 => 'MS',
+	25 => 'MO',
+	26 => 'MT',
+	27 => 'NE',
+	28 => 'NV',
+	29 => 'NH',
+	30 => 'NJ',
+	31 => 'NM',
+	32 => 'NY',
+	33 => 'NC',
+	34 => 'ND',
+	35 => 'OH',
+	36 => 'OK',
+	37 => 'OR',
+	38 => 'PA',
+	39 => 'RI',
+	40 => 'SC',
+	41 => 'SD',
+	42 => 'TN',
+	43 => 'TX',
+	44 => 'UT',
+	45 => 'VT',
+	46 => 'VA',
+	47 => 'WA',
+	48 => 'WV',
+	49 => 'WI',
+	50 => 'WY',
 );
 
 function StateCallback($ds, $data, $col)
 {
 	global $__states;
 	return $__states[$data[$col]]->text;
+}
+
+function TagIToState($t, $g, $a)
+{
+	global $StateNames;
+	return @$StateNames[$a['STATE']];
+}
+function TagIToSState($t, $g, $a)
+{
+	global $StateSNames; return $StateSNames[$a['STATE']];
 }
 
 /**
@@ -1625,7 +1703,7 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 			$field = GetInputDate($attribs['NAME'], @$attribs['VALUE'], true);
 			break;
 		case 'year':
-			$field = GetYearSelect($attribs['NAME'], @$attribs['VALUE']);
+			$field = GetYearSelect($attribs['NAME'], $attribs);
 			break;
 		case 'month':
 			$field = GetMonthSelect($attribs['NAME'], @$attribs['VALUE']);
@@ -1640,6 +1718,11 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 			break;
 		case 'radio':
 			$attribs['TYPE'] = 'checkbox';
+			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
+			break;
+		case 'checkbox':
+			if ($attribs['VALUE']) $attribs['CHECKED'] = 'checked';
+			$attribs['VALUE'] = '1';
 			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
 			break;
 		case 'state':

@@ -1,6 +1,6 @@
 <null>
 
-<part type="ContentSearch">
+<search>
 	<box title="Locate and Edit {{plural}}">
 	<form action="{{me}}">
 	<input type="hidden" name="editor" value="{{name}}" />
@@ -9,9 +9,9 @@
 	<input type="submit" value="Retrieve All" id="ssub" />
 	</form>
 	</box>
-</part>
+</search>
 
-<if check="isset($this->vars[&quot;table&quot;])">
+<if check="isset($this->vars['table'])">
 <box title="{{table_title}}">
 {{table_head}}
 {{table}}

@@ -491,6 +491,11 @@ class DataSet
 		$this->children[] = $relation;
 	}
 
+	function AddJoin($join)
+	{
+		$this->joins[] = $join;
+	}
+
 	/**
 	 * Gets associated SQL text for a clause naming specific columns.
 	 *
@@ -582,11 +587,19 @@ class DataSet
 	 * @param array $joining
 	 * @return string
 	 */
-	static function JoinClause($joining)
+	static function JoinClause($joining, $add = null)
 	{
-		if (isset($joining))
+		if (isset($joining) || !empty($add))
 		{
 			$ret = '';
+
+			if (!empty($add))
+			{
+				if (is_array($joining))
+					$joining = array_merge($add, $joining);
+				else $joining = $add;
+			}
+
 			if (is_array($joining))
 			{
 				foreach ($joining as $table => $on)
@@ -678,6 +691,7 @@ class DataSet
 	{
 		if (!empty($values))
 		{
+			$found = false;
 			$ret = $start;
 			$x = 0;
 			foreach ($values as $key => $val)
@@ -715,7 +729,7 @@ class DataSet
 	 * by unique keys, or just to add ignoring keys otherwise.
 	 * @return int ID of added row.
 	 */
-	function Add($columns, $update_existing = false)
+	function Add($columns, $update_existing = false, $delay = false)
 	{
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
@@ -740,7 +754,7 @@ class DataSet
 			{
 				if ($val[0] == "destring") $query .= $val[1];
 			}
-			else $query .= "'".addslashes($val)."'";
+			else $query .= "'".mysql_real_escape_string($val)."'";
 			$ix++;
 		}
 		$query .= ")";
@@ -861,7 +875,8 @@ class DataSet
 			$newrow = array();
 			foreach ($row as $key => $val)
 			{
-				$newrow[$key] = psslash($val);
+				//TODO: Do not strip slashes at this level.
+				$newrow[$key] = $val;
 			}
 			$items[] = $newrow;
 		}
@@ -944,13 +959,19 @@ class DataSet
 	 * @param string $phrase
 	 * @param int $start Where to start results for pagination.
 	 * @param int $limit Limit of items to return for pagination.
+	 * @param array $sort array('col' => 'ASC'|'DESC')
+	 * @param mixed $filter array('col' => 'value') or 'col = value'
+	 * @param mixed $joins array(new Join(dataset, condition, type))
 	 * @return array
 	 */
 	function GetSearch($columns, $phrase, $start = 0, $limit = null,
-		$sort = null, $filter = null)
+		$sort = null, $filter = null, $joins = null)
 	{
 		$query = "SELECT ".$this->ColsClause($columns).' FROM '.
 			$this->QuoteTable($this->table);
+
+		$query .= DataSet::JoinClause($joins, $this->joins);
+
 		$ix = 0;
 
 		if (!empty($columns))
@@ -975,6 +996,7 @@ class DataSet
 				if (is_array($columns))
 				foreach ($columns as $col)
 				{
+					if (is_array($col)) continue;
 					if ($ix++ > 0) $query .= " OR";
 					$query .= ' '.$this->QuoteTable($col)." LIKE '%{$newphrase}%'";
 				}
@@ -1009,7 +1031,7 @@ class DataSet
 			$newrow = array();
 			foreach ($row as $key => $val)
 			{
-				$newrow[$key] = stripslashes($val);
+				$newrow[$key] = $val;
 			}
 			$ret[] = $newrow;
 		}
@@ -1190,6 +1212,12 @@ function MySqlDate($ds, $data, $col, $dbcol)
 {
 	$ts = MyDateTimestamp($data[$col]);
 	return date('m/d/y', $ts);
+}
+
+function StripTable($name)
+{
+	if (!strpos($name, '.')) return $name;
+	return substr($name, strpos($name, '.')+1);
 }
 
 ?>

@@ -799,7 +799,7 @@ class EditorData
 							}
 							$idcol = $colname;
 						}
-						$data[$colname] = $item[$colname];
+						$data[StripTable($colname)] = $item[StripTable($colname)];
 					}
 					if (!$skip)
 					{
@@ -885,6 +885,13 @@ class EditorData
 	 */
 	function GetTable($target, $ci)
 	{
+
+		if ($this->Behavior->Search)
+		{
+			$q = GetVar($this->Name.'_q');
+			if (!isset($q)) return;
+		}
+
 		$ret = null;
 		if (empty($this->ds->DisplayColumns)) return;
 		if ($this->type == CONTROL_BOUND)
@@ -900,8 +907,12 @@ class EditorData
 			foreach ($this->ds->DisplayColumns as $col => $disp)
 			{
 				if (is_numeric($col)) continue;
-				$cols["{$this->ds->table}_{$col}"] =
-					$this->ds->table.'.'.$col;
+
+				if (strpos($col, '.')) // Referencing a joined table.
+					$cols[StripTable($col)] = $col;
+				else // A table from this dataset.
+					$cols["{$this->ds->table}_{$col}"] =
+						$this->ds->table.'.'.$col;
 			}
 
 			$joins = null;
@@ -932,9 +943,6 @@ class EditorData
 					}
 				}
 			}
-
-			/*$items = $this->ds->GetInternal($this->filter, $this->sort,
-				null, $joins, $cols);*/
 
 			$items = $this->ds->GetSearch($cols, GetVar($this->Name.'_q'),
 				null, null, $this->sort, $this->filter);
@@ -1038,7 +1046,10 @@ class EditorData
 			if (!empty($context->ds->DisplayColumns))
 			foreach ($context->ds->DisplayColumns as $col => $disp)
 			{
-				$disp_index = $context->ds->table.'_'.$col;
+				if (strpos($col, '.'))
+					$disp_index = StripTable($col);
+				else
+					$disp_index = $context->ds->table.'_'.$col;
 
 				//Callback mapped
 				if (isset($disp->callback))
@@ -1320,17 +1331,9 @@ class EditorData
 		return $out;
 	}
 
-	/**
-	 * This should not actually exist anymore, there should be a specific
-	 * tag for each individual part. But for now it works.
-	 *
-	 * @param Template $t Associated template.
-	 * @param string $guts Contents of the tag.
-	 * @param array $attribs Attributes for this tag.
-	 */
-	function TagPart($t, $guts, $attribs)
+	function TagSearch($t, $g, $a)
 	{
-		$this->parts[$attribs['TYPE']] = $guts;
+		if ($this->Behavior->Search) return $g;
 	}
 
 	/**
@@ -1343,8 +1346,8 @@ class EditorData
 		require_once('h_template.php');
 
 		$t = new Template();
-		$t->ReWrite('forms', array($this, 'TagForms'));
-		$t->ReWrite('part', array($this, 'TagPart'));
+		$t->ReWrite('forms', array(&$this, 'TagForms'));
+		$t->ReWrite('search', array(&$this, 'TagSearch'));
 		$t->Set('name', $this->Name);
 		$t->Set('plural', Plural($this->Name));
 

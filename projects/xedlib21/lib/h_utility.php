@@ -1214,12 +1214,14 @@ function crypt_apr1_md5($plainpasswd)
  * @param string $text Text to encrypt.
  * @return string Encrypted text.
  */
-function xlencrypt($key, $text)
+function RIJ_Encrypt($key, $text)
 {
 	srand();
 	$iv_size = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
 	$iv = mcrypt_create_iv($iv_size, MCRYPT_RAND);
-	return array($iv, mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_CBC, $iv));
+	$enc = mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $text,
+		MCRYPT_MODE_CBC, $iv);
+	return array($iv, $enc);
 }
 
 /**
@@ -1230,14 +1232,16 @@ function xlencrypt($key, $text)
  * @param string $iv Initialization Vector.
  * @return string Decrypted text.
  */
-function xldecrypt($key, $text, $iv = null)
+function RIJ_Decrypt($key, $text, $iv = null)
 {
+	srand();
 	if ($iv == null)
 	{
 		$ivsize = mcrypt_get_iv_size(MCRYPT_RIJNDAEL_256, MCRYPT_MODE_ECB);
 		$iv = mcrypt_create_iv($ivsize, MCRYPT_RAND);
 	}
-	return mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, $text, MCRYPT_MODE_CBC, $iv);
+	return rtrim(mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key,
+		$text, MCRYPT_MODE_CBC, $iv), "\0");
 }
 
 /**
@@ -1474,7 +1478,7 @@ EOF;
 	$opts = array(
 		CURLOPT_HTTPHEADER => array(
 			'SOAPAction: "'.$ns.'/'.$method.'"',
-			'Content-Type: text/xml; charset=utf-8',
+			'Content-Type: text/xml',
 			'Content-Length: '.strlen($xml)
 		),
 		CURLOPT_POST => 1,
@@ -1486,6 +1490,19 @@ EOF;
 	curl_setopt_array($ch, $opts);
 	$ret = curl_exec($ch);
 	curl_close($ch);
+	return htmlspecialchars_decode($ret);
+}
+
+function GetMonthName($month)
+{
+	return date('F', mktime(1, 1, 1, $month));
+}
+
+function strtoval($val, $def)
+{
+	if (is_numeric($val)) $ret = (int)$val;
+	else $ret = @eval('return '.$val.';');
+	if (!isset($ret)) return $def;
 	return $ret;
 }
 
