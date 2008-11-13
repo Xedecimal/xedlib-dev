@@ -1152,7 +1152,7 @@ function preg_files($pattern, $path, $opts = 3)
 function preg_file($pattern, $path, $opts = 3)
 {
 	$ret = preg_files($pattern, $path, $opts);
-	return $ret[0];
+	return !empty($ret) ? $ret[0] : null;
 }
 
 /**
