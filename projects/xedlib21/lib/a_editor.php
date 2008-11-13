@@ -354,6 +354,8 @@ class EditorData
 	 */
 	public $Behavior;
 
+	public $Error;
+
 	/**
 	 * Default constructor.
 	 *
@@ -409,6 +411,9 @@ class EditorData
 			$this->sort = array(GetVar('sort', $this->ds->id) => GetVar('order', 'ASC'));
 
 		$this->state = $act == 'edit' ? STATE_EDIT : STATE_CREATE;
+
+		if ($act == 'Cancel') $this->Reset();
+
 		if ($act == 'Create')
 		{
 			$insert = array();
@@ -493,6 +498,7 @@ class EditorData
 
 			$this->Reset();
 		}
+
 		else if ($act == 'Update')
 		{
 			$ci = GetVar($this->Name.'_ci');
@@ -568,7 +574,16 @@ class EditorData
 				$update[$this->ds->id] = $ci;
 				foreach ($this->handlers as $handler)
 				{
-					if (!$handler->Update($this, $ci, $data, $update)) return;
+					$res = $handler->Update($this, $ci, $data, $update);
+					// Returns false, simple failure.
+					if (!$res) { $this->Reset(); return; }
+					// Returns an array of errors.
+					if (is_array($res))
+					{
+						$this->state = STATE_EDIT;
+						$this->Errors = $res;
+						return;
+					}
 				}
 			}
 
@@ -624,7 +639,8 @@ class EditorData
 				}
 			}
 
-			$context->ds->Swap(array($context->ds->id => $ci), array($context->ds->id => $ct), $context->ds->id);
+			$context->ds->Swap(array($context->ds->id => $ci),
+				array($context->ds->id => $ct), $context->ds->id);
 		}*/
 		else if ($act == 'delete')
 		{
@@ -885,7 +901,6 @@ class EditorData
 	 */
 	function GetTable($target, $ci)
 	{
-
 		if ($this->Behavior->Search)
 		{
 			$q = GetVar($this->Name.'_q');
@@ -923,7 +938,7 @@ class EditorData
 
 				//Parent column of the child...
 				$cols["{$child->ds->table}_{$child->child_key}"] =
-					$child->ds->table.'.'.$child->child_key;
+					"{$child->ds->table}.{$child->child_key}";
 
 				//Coming from another table, we gotta join it in.
 				if ($child->ds->table != $this->ds->table)
@@ -939,7 +954,7 @@ class EditorData
 					foreach ($child->ds->DisplayColumns as $col => $disp)
 					{
 						$cols["{$child->ds->table}_{$col}"] =
-							$child->ds->table.'.'.$col;
+							"{$child->ds->table}.{$col}";
 					}
 				}
 			}
@@ -1087,11 +1102,11 @@ class EditorData
 					$this->Name.'_ci' => $cnode->id), $url_defaults));
 				$row[] = "<a href=\"$url_edit#box_{$this->Name}_forms\"><img
 					src=\"{$p}/images/edit.png\" alt=\"Edit\"
-					title=\"Edit Item\" class=\"png\" /></a>";
+					title=\"".$this->View->TextEdit."\" class=\"png\" /></a>";
 				$row[] = "<a href=\"$url_del#{$this->Name}_table\"
 					onclick=\"return confirm('Are you sure?')\"><img
 					src=\"{$p}/images/delete.png\" alt=\"Delete\"
-					title=\"Delete Item\" class=\"png\" /></a>";
+					title=\"".$this->View->TextDelete."\" class=\"png\" /></a>";
 			}
 
 			// @TODO Bring this tree system back to life!
@@ -1216,7 +1231,7 @@ class EditorData
 					if ($in->type == 'custom') //Callback
 					{
 						$cb = $in->valu;
-						call_user_func($cb, isset($sel) ? $sel : null, $frm);
+						call_user_func($cb, isset($sel) ? $sel : null, $frm, $col);
 						continue;
 					}
 					else if ($in->type == 'select')
@@ -1241,6 +1256,11 @@ class EditorData
 					}
 
 					$in->name = $col;
+
+					if (isset($this->Errors[$in->name]))
+					{
+						$in->help = $this->Errors[$in->name];
+					}
 
 					$frm->AddInput($in);
 				}
@@ -1349,7 +1369,7 @@ class EditorData
 		$t->ReWrite('forms', array(&$this, 'TagForms'));
 		$t->ReWrite('search', array(&$this, 'TagSearch'));
 		$t->Set('name', $this->Name);
-		$t->Set('plural', Plural($this->Name));
+		$t->Set('plural', Plural($this->ds->Description));
 
 		if (!empty($this->ds))
 			$t->Set('table_title', Plural($this->ds->Description));
@@ -1371,6 +1391,8 @@ class EditorData
 class EditorDataView
 {
 	public $TableHeader = '';
+	public $TextEdit = 'Edit Item';
+	public $TextDelete = 'Delete Item';
 }
 
 class EditorDataBehavior
@@ -1862,18 +1884,19 @@ class EditorUpload
 		$this->item = $item;
 	}
 
-	function Prepare($action)
+	function Prepare()
 	{
+		$action = GetVar($this->Name.'_action');
 		if ($action == 'update')
 		{
-			move_uploaded_file($_FILES['file']['tmp_name'], $this->item);
+			move_uploaded_file($_FILES[$this->Name.'file']['tmp_name'], $this->item);
 		}
 	}
 
 	function Get($target)
 	{
 		$frmRet = new Form($this->Name);
-		$frmRet->AddHidden('ca', 'update');
+		$frmRet->AddHidden('action', 'update');
 
 		$frmRet->AddInput(new FormInput(null, 'file', 'file'));
 		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));

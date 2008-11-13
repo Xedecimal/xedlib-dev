@@ -1457,7 +1457,7 @@ function Let(&$var, $val)
 	if (!isset($var)) $var = $val;
 }
 
-function Soap($host, $ns, $method, $args)
+function SoapCurlInit($host, $ns, $method, $args)
 {
 	$xml = <<<EOF
 <?xml version="1.0" encoding="utf-8"?>
@@ -1488,9 +1488,32 @@ EOF;
 		CURLOPT_SSL_VERIFYPEER => false
 	);
 	curl_setopt_array($ch, $opts);
+	return $ch;
+}
+
+function Soap($host, $ns, $method, $args)
+{
+	$ch = SoapCurlInit($host, $ns, $method, $args);
 	$ret = curl_exec($ch);
 	curl_close($ch);
 	return htmlspecialchars_decode($ret);
+}
+
+function MultiSoap($host, $ns, $method, $args)
+{
+	$mh = curl_multi_init();
+	foreach ($args as $arg)
+		curl_multi_add_handle($mh,
+			$handles[] = SoapCurlInit($host, $ns, $method, $arg));
+	$active = 1;
+
+	do { $mrc = curl_multi_exec($mh, $active); } while ($active);
+
+	foreach ($handles as $ix => $h) $ret[$ix] = curl_multi_getcontent($h);
+
+	curl_multi_close($mh);
+
+	return $ret;
 }
 
 function GetMonthName($month)

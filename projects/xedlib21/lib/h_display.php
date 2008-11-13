@@ -544,8 +544,16 @@ class Form
 			$d['even_odd'] = ($ix++ % 2) ? 'even' : 'odd';
 			$d['text'] = !empty($in->text) ? $in->text : '';
 			if (strtolower(get_class($in)) == 'forminput')
+			{
 				$d['field'] = $in->Get($this->name);
-			else $d['field'] = $in;
+				$d['help'] = $in->help;
+			}
+			else
+			{
+				$d['field'] = $in;
+				$d['help'] = '';
+			}
+
 			$ret .= $vp->ParseVars($g, $d);
 		}
 		return $ret;
@@ -650,7 +658,7 @@ class FormInput
 	 * @param string $help
 	 */
 	function FormInput($text, $type = 'text', $name = null, $valu = null, $atrs = null,
-		$help = null)
+		$help = '')
 	{
 		$this->text = $text;
 		$this->type = $type;
@@ -1254,8 +1262,11 @@ class LoginManager
 	function LoginManager($name)
 	{
 		@session_start();
+
 		$this->Name = $name;
 		$this->type = CONTROL_SIMPLE;
+
+		$this->View = new LoginManagerView();
 	}
 
 	/**
@@ -1325,16 +1336,18 @@ class LoginManager
 	 * @param string $target Target script using this manager.
 	 * @return string
 	 */
-	function Get()
+	function Get($template = null)
 	{
 		global $me;
+		if ($template == null)
+			$template = dirname(__FILE__).'/temps/login_manager.xml';
 		$f = new Form($this->Name, array(null, 'width="100%"'));
 		$f->AddHidden($this->Name.'_action', 'login');
 		if ($this->type != CONTROL_SIMPLE)
-			$f->AddInput(new FormInput('Login', 'text', 'auth_user'));
-		$f->AddInput(new FormInput('Password', 'password', 'auth_pass'));
+			$f->AddInput(new FormInput($this->View->TextLogin, 'text', 'auth_user'));
+		$f->AddInput(new FormInput($this->View->TextPassword, 'password', 'auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
-		$f->Template = dirname(__FILE__).'/temps/login_manager.xml';
+		$f->Template = $template;
 		return $f->Get('action="'.$me.'" method="post"');
 	}
 
@@ -1364,6 +1377,12 @@ class LoginManager
 		if (strlen($pass) != 32) die('Plaintext password! Use '.md5($pass)." instead.<br/>\n");
 		$this->pass = $pass;
 	}
+}
+
+class LoginManagerView
+{
+	public $TextLogin = 'Login';
+	public $TextPassword = 'Password';
 }
 
 /**

@@ -2,7 +2,11 @@
 	<!-- Begin Form: {{form_name}} -->
 	<form>
 	<table>
-		<field><tr class="{{even_odd}}"><td class="field_text">{{text}}</td><td>{{field}}</td></tr></field>
+		<field><tr class="{{even_odd}}">
+			<td class="field_text">{{text}}</td>
+			<td>{{field}}</td>
+			<td><span class="error">{{help}}</span></td>
+		</tr></field>
 	</table>
 	</form>
 	<!-- End Form: {{form_name}} -->

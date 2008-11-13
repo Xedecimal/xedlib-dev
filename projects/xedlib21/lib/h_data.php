@@ -453,6 +453,8 @@ class DataSet
 	 */
 	private $func_fetch;
 
+	private $joins;
+
 	/**
 	 * Initialize a new CDataSet binded to $table in $db.
 	 * @param Database $db Database A Database object to bind to.
@@ -758,10 +760,6 @@ class DataSet
 			$ix++;
 		}
 		$query .= ")";
-		//if ($update_existing && $this->database->type == DB_MY)
-		//{
-		//	$query .= " ON DUPLICATE KEY UPDATE ".$this->GetSetString($columns, '');
-		//}
 		$this->database->Query($query);
 		return $this->database->GetLastInsertID();
 	}
@@ -780,7 +778,9 @@ class DataSet
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 
-		$query = "INSERT INTO {$lq}{$this->table}{$rq} VALUES (";
+		if ($update_existing) $query = 'REPLACE';
+		else $query = 'INSERT';
+		$query .= " INTO {$lq}{$this->table}{$rq} VALUES (";
 		$ix = 0;
 		foreach ($columns as $val)
 		{
@@ -840,7 +840,7 @@ class DataSet
 		$query .= $this->ColsClause($columns);
 		$query .= "\n FROM {$lq}{$this->table}{$rq}";
 		if (isset($this->Shortcut)) $query .= " `{$this->Shortcut}`";
-		$query .= $this->JoinClause($joins);
+		$query .= $this->JoinClause($joins, $this->joins);
 		$query .= $this->WhereClause($match);
 		$query .= $this->GroupClause($group);
 		$query .= $this->OrderClause($sort);
@@ -1063,7 +1063,12 @@ class DataSet
 	{
 		$sets = $this->GetSetString($values);
 		if (empty($sets)) { Trace('Nothing to update.'); return; }
-		$query = "UPDATE {$this->table}".$sets.$this->WhereClause($match);
+		$query = "UPDATE {$this->table}";
+		if (!empty($this->joins))
+		foreach ($this->joins as $j) $query .= ', '.$j->DataSet->table;
+		$query .= $sets.$this->WhereClause($match);
+		if (!empty($this->joins))
+		foreach ($this->joins as $j) $query .= ' AND '.$j->Condition;
 		$this->database->Query($query);
 	}
 

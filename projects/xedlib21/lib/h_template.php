@@ -320,6 +320,7 @@ class Template extends LayeredOutput
 				xml_get_current_line_number($parser)."
 				\nWhy: Data variable has possibly been altered.");
 			}
+			$this->data['includes'][$name]->attribs = $attribs;
 			$this->Push($this->data['includes'][$name]);
 			$show = false;
 		}
