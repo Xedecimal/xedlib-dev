@@ -520,12 +520,12 @@ class EditorData
 			{
 				if (is_object($in))
 				{
+					if ($in->type == 'label') continue;
+
 					$value = GetVar($this->Name.'_'.$col);
 
 					if ($in->type == 'date')
-					{
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1];
-					}
 					else if($in->type == 'datetime')
 					{
 						$time = $value[3][0];
@@ -1075,11 +1075,12 @@ class EditorData
 				//Regular field
 				else
 				{
-					if (isset($cnode->data[$disp_index]))
+					if (array_key_exists($disp_index, $cnode->data))
 					{
 						$row[$ix++] = array(
 							htmlspecialchars(stripslashes($cnode->data[$disp_index])),
-							array('class' => 'editor_cell', 'id' => "{$this->Name}:{$col}:{$cnode->id}")
+							array('class' => 'editor_cell',
+								'id' => "{$this->Name}:{$col}:{$cnode->id}")
 						);
 					}
 				}
@@ -1158,12 +1159,20 @@ class EditorData
 	/**
 	 * Gets the form portion of this editor.
 	 *
+	 * Field input types...
+	 * 'column' => object, //This will be processed as a FormInput
+	 * # => anything, //This will be a newline.
+	 * 'column' => 'string', // This will be processed destringed to mysql, eg. NOW().
+	 *
 	 * @param int $state Current state of the editor.
 	 * @param int $curchild Current child by DataSet Relation.
 	 * @return string
 	 */
 	function GetForm($state, $curchild = null)
 	{
+		if ($this->state == STATE_CREATE && !$this->Behavior->AllowCreate)
+			return;
+
 		$fullname = $this->Name;
 		if ($curchild != null) $fullname .= '_'.$curchild;
 		$ci = GetState($this->Name.'_ci');
@@ -1231,7 +1240,8 @@ class EditorData
 					if ($in->type == 'custom') //Callback
 					{
 						$cb = $in->valu;
-						call_user_func($cb, isset($sel) ? $sel : null, $frm, $col);
+						$ret = call_user_func($cb, isset($sel) ? $sel : null,
+							$frm, $col);
 						continue;
 					}
 					else if ($in->type == 'select')
@@ -1264,9 +1274,6 @@ class EditorData
 
 					$frm->AddInput($in);
 				}
-				//This ends up disabling static columns eg. 'colname' => 'NOW()';
-				//if we're going to insert text, just use a numeric column.
-				//else if (is_string($in)) $frm->AddInput($in);
 				else if (is_numeric($col)) $frm->AddInput('&nbsp;');
 			}
 
@@ -1397,6 +1404,8 @@ class EditorDataView
 
 class EditorDataBehavior
 {
+	public $AllowCreate = true;
+
 	/**
 	 * Allows users to edit items in this editor.
 	 *

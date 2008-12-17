@@ -1064,11 +1064,8 @@ class DataSet
 		$sets = $this->GetSetString($values);
 		if (empty($sets)) { Trace('Nothing to update.'); return; }
 		$query = "UPDATE {$this->table}";
-		if (!empty($this->joins))
-		foreach ($this->joins as $j) $query .= ', '.$j->DataSet->table;
+		$query .= $this->JoinClause($this->joins);
 		$query .= $sets.$this->WhereClause($match);
-		if (!empty($this->joins))
-		foreach ($this->joins as $j) $query .= ' AND '.$j->Condition;
 		$this->database->Query($query);
 	}
 
@@ -1084,12 +1081,8 @@ class DataSet
 		//Grab all the source items that are going to be swapped.
 		$sitems = $this->Get($smatch, null, null, null, null, null, GET_ASSOC);
 		$sitem = $sitems[0];
-		//$sitems = $this->database->query("SELECT * FROM {$this->table}".$this->WhereClause($smatch));
-		//$sitem = call_user_func($this->func_fetch, $sitems);
 
 		//Grab all the destination items that are going to be swapped.
-		//$ditems = $this->database->query("SELECT * FROM {$this->table}".$this->WhereClause($dmatch));
-		//$ditem = call_user_func($this->func_fetch, $ditems);
 		$ditems = $this->Get($dmatch, null, null, null, null, null, GET_ASSOC);
 		$ditem = $ditems[0];
 

@@ -60,7 +60,7 @@ function HandleErrors($file = null)
  */
 function Trace($msg)
 {
-	if (!empty($GLOBALS['debug'])) echo $msg;
+	if (!empty($GLOBALS['debug'])) var_dump($msg);
 }
 
 /**
@@ -1136,7 +1136,7 @@ define('PREG_DIRS', 2);
  * @param int $opts Bitwise combination of PREG_FILES and PREG_DIRS.
  * @return array index => filename
  */
-function preg_files($pattern, $path, $opts = 3)
+function preg_files($pattern, $path = '.', $opts = 3, &$subs = null)
 {
 	$ret = array();
 	$dp = opendir($path);
@@ -1144,7 +1144,11 @@ function preg_files($pattern, $path, $opts = 3)
 	{
 		if (is_file("$path/$file") && $opts & PREG_FILES != PREG_FILES) continue;
 		if (is_dir("$path/$file") && $opts & PREG_DIRS != PREG_DIRS) continue;
-		if (preg_match($pattern, $file)) $ret[] = $file;
+		if (preg_match($pattern, $file, $s))
+		{
+			$subs[$file] = $s;
+			$ret[] = $file;
+		}
 	}
 	return $ret;
 }
@@ -1446,6 +1450,13 @@ if (!function_exists('money_format'))
 	}
 }
 
+function get_csv($str)
+{
+	$arr = preg_split('/,(?=(?:[^"]*"[^"]*")*(?![^"]*"))/', trim($str));
+	foreach ($arr as $k => $v) $arr[$k] = trim($v, '"');
+	return $arr;
+}
+
 /**
  * Will let a variable be set only if it's not already set.
  *
@@ -1455,65 +1466,6 @@ if (!function_exists('money_format'))
 function Let(&$var, $val)
 {
 	if (!isset($var)) $var = $val;
-}
-
-function SoapCurlInit($host, $ns, $method, $args)
-{
-	$xml = <<<EOF
-<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-	<soap:Body>
-		<$method xmlns="$ns">\n
-EOF;
-	foreach ($args as $f => $v) $xml .= "\t\t\t<$f>$v</$f>\n";
-	$xml .= <<<EOF
-		</$method>
-	</soap:Body>
-</soap:Envelope>
-EOF;
-
-	$ch = curl_init($host);
-	$opts = array(
-		CURLOPT_HTTPHEADER => array(
-			'SOAPAction: "'.$ns.'/'.$method.'"',
-			'Content-Type: text/xml',
-			'Content-Length: '.strlen($xml)
-		),
-		CURLOPT_POST => 1,
-		CURLOPT_POSTFIELDS => $xml,
-		CURLOPT_RETURNTRANSFER => 1,
-		CURLOPT_NOPROGRESS => false,
-		CURLOPT_SSL_VERIFYPEER => false
-	);
-	curl_setopt_array($ch, $opts);
-	return $ch;
-}
-
-function Soap($host, $ns, $method, $args)
-{
-	$ch = SoapCurlInit($host, $ns, $method, $args);
-	$ret = curl_exec($ch);
-	curl_close($ch);
-	return htmlspecialchars_decode($ret);
-}
-
-function MultiSoap($host, $ns, $method, $args)
-{
-	$mh = curl_multi_init();
-	foreach ($args as $arg)
-		curl_multi_add_handle($mh,
-			$handles[] = SoapCurlInit($host, $ns, $method, $arg));
-	$active = 1;
-
-	do { $mrc = curl_multi_exec($mh, $active); } while ($active);
-
-	foreach ($handles as $ix => $h) $ret[$ix] = curl_multi_getcontent($h);
-
-	curl_multi_close($mh);
-
-	return $ret;
 }
 
 function GetMonthName($month)
@@ -1527,6 +1479,22 @@ function strtoval($val, $def)
 	else $ret = @eval('return '.$val.';');
 	if (!isset($ret)) return $def;
 	return $ret;
+}
+
+function SendDownloadStart($filename, $size = null)
+{
+	//Caching
+	header("Pragma: public");
+	header("Expires: 0");
+	header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+
+	//Ensure we get a download dialog
+	header("Content-Type: application/force-download");
+	header("Content-Type: application/octet-stream");
+	header("Content-Type: application/download");
+	header("Content-Disposition: attachment; filename=\"$filename\";");
+	header("Content-Transfer-Encoding: binary");
+	if (isset($size)) header("Content-Length: {$size}");
 }
 
 ?>

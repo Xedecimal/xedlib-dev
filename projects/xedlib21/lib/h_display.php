@@ -702,6 +702,7 @@ class FormInput
 
 		if ($this->type == 'custom')
 			return call_user_func($this->valu, $this);
+		if ($this->type == 'label') return $this->valu;
 		if ($this->type == 'mask')
 		{
 			$this->mask_walk = 0;
@@ -1643,12 +1644,11 @@ function StateCallback($ds, $data, $col)
 
 function TagIToState($t, $g, $a)
 {
-	global $StateNames;
-	return @$StateNames[$a['STATE']];
+	global $StateNames; return @$StateNames[$a['STATE']];
 }
 function TagIToSState($t, $g, $a)
 {
-	global $StateSNames; return $StateSNames[$a['STATE']];
+	global $StateSNames; return @$StateSNames[$a['STATE']];
 }
 
 /**
@@ -1736,11 +1736,10 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 			$field = GetInputYesNo(null, $attribs);
 			break;
 		case 'radio':
-			$attribs['TYPE'] = 'checkbox';
 			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
 			break;
 		case 'checkbox':
-			if ($attribs['VALUE']) $attribs['CHECKED'] = 'checked';
+			if (@$attribs['VALUE']) $attribs['CHECKED'] = 'checked';
 			$attribs['VALUE'] = '1';
 			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
 			break;

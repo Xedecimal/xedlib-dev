@@ -295,7 +295,7 @@ class Template extends LayeredOutput
 				RequireModule($this->data, $file, $class);
 				$show = false;
 			}
-			else $output = file_get_contents($file);
+			else $output = stripslashes(file_get_contents($file));
 		}
 		else if ($tag == 'INPUT')
 		{
@@ -696,10 +696,11 @@ class VarParser
 	 *
 	 * @param string $data Data to search for variables.
 	 * @param array $vars Override existing names with these.
-	 * @return string Reformatted text with variables replaced.
+	 * @return mixed Reformatted text with variables replaced.
 	 */
 	function ParseVars($data, $vars)
 	{
+		if (empty($data)) return '';
 		$this->vars = $vars;
 		return preg_replace_callback('/\{{([^}]+)\}}/', array(&$this, 'var_parser'), $data);
 	}
@@ -717,16 +718,20 @@ class VarParser
 
 		//Process an array values from $this->vars
 		if (is_array($this->vars) && isset($this->vars[$tvar]))
-			return $this->vars[$tvar];
+			$ret = $this->vars[$tvar];
 		//Process an object property from $this->vars
-		if (is_object($this->vars))
+		else if (is_object($this->vars))
 		{
 			$ov = get_object_vars($this->vars);
-			if (isset($ov[$tvar])) return $ov[$tvar];
+			if (isset($ov[$tvar])) $ret = $ov[$tvar];
 		}
-		else if (isset($$tvar)) return $$tvar;
-		else if (defined($tvar)) return constant($tvar);
-		return ($this->Bleed ? $match[0] : null);
+		else if (isset($$tvar)) $ret = $$tvar;
+		else if (defined($tvar)) $ret = constant($tvar);
+		else $ret = ($this->Bleed ? $match[0] : null);
+
+		if (!is_string($ret)) Error('Var parser needs to return a string!');
+
+		return $ret;
 	}
 }
 
