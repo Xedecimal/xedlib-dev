@@ -252,6 +252,8 @@ class Database
  * @return array specifying that this string shouldn't be quoted.
  */
 function DeString($data) { return array("destring", $data); }
+function SQLBetween($from, $to) { return array('between', $from, $to); }
+function SQLNotNull() { return array('notnull'); }
 /**
  * Returns the proper format for DataSet to generate the current time.
  * @return array This column will get translated into the current time.
@@ -568,6 +570,11 @@ class DataSet
 							$ret .= ' '.$this->QuoteTable($col)." {$val[1]}";
 						else if (is_array($val) && strtolower($val[0]) == 'destring')
 							$ret .= ' '.$this->QuoteTable($col)." = {$val[1]}";
+						else if (is_array($val) && strtolower($val[0]) == 'between')
+							$ret .= ' '.$this->QuoteTable($col).
+								" BETWEEN '{$val[1]}' AND '{$val[2]}'";
+						else if (is_array($val) && strtolower($val[0]) == 'notnull')
+							$ret .= $this->QuoteTable($col).' IS NOT NULL';
 						else
 							$ret .= ' '.$this->QuoteTable($col)." = '{$val}'";
 					}
@@ -746,7 +753,7 @@ class DataSet
 			if ($ix++ != 0) $query .= ", ";
 			$query .= $this->QuoteTable($key);
 		}
-		$query .= ") VALUES(";
+		$query .= ') VALUES (';
 		$ix = 0;
 		foreach ($columns as $key => $val)
 		{

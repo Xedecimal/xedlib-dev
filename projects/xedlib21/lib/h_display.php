@@ -1708,6 +1708,23 @@ function SOCallback($ds, $item, $icol, $col = null)
 
 function TagInput($t, $guts, $attribs, $tag, $args)
 {
+	// Handle Persistent Values
+
+	if ($args['persist'])
+	{
+		switch (strtolower($attribs['TYPE']))
+		{
+			case 'radio':
+				if (GetVar($attribs['NAME']) == $attribs['VALUE'])
+					$attribs['CHECKED'] = 'checked';
+				break;
+			default:
+				if (!isset($attribs['VALUE']))
+				$attribs['VALUE'] = GetVar($attribs['NAME']);
+				break;
+		}
+	}
+
 	$searchable = $attribs['TYPE'] != 'hidden' && $attribs['TYPE'] != 'radio'
 		&& $attribs['TYPE'] != 'checkbox' && $attribs['TYPE'] != 'submit';
 
@@ -1768,6 +1785,12 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 	if ($args == 'search' && $searchable) $ret .= '</div>';
 	return $ret;
 }
+
+function TagUpper($t, $g, $a)
+{
+	return strtoupper($g);
+}
+
 
 function GetAttribs($attribs)
 {

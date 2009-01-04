@@ -1470,7 +1470,7 @@ function Let(&$var, $val)
 
 function GetMonthName($month)
 {
-	return date('F', mktime(1, 1, 1, $month));
+	return date('F', strtotime($month.'/1/'.date('Y')));
 }
 
 function strtoval($val, $def)
