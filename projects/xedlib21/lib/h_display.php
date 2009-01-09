@@ -406,7 +406,7 @@ class Form
 		$this->name = $name;
 		$this->attribs = array();
 		$this->Persist = $persist;
-		$this->Template = dirname(__FILE__).'/temps/form.xml';
+		$this->Template = file_get_contents(dirname(__FILE__).'/temps/form.xml');
 	}
 
 	/**
@@ -509,10 +509,11 @@ class Form
 			($start ? $this->FirstEnd : $this->CellEnd);
 	}
 
-	function TagForm($t, $guts)
+	function TagForm($t, $g, $a)
 	{
 		global $PERSISTS;
-		$ret = "<form {$this->formAttribs}";
+		$atrs = GetAttribs($a);
+		$ret = "<form {$this->formAttribs}{$atrs}";
 		if ($this->multipart) $ret .= ' enctype="multipart/form-data"';
 		$ret .= ">\n";
 
@@ -530,7 +531,7 @@ class Form
 			$ret .= " />\n";
 		}
 
-		return $ret.$guts.'</form>';
+		return $ret.$g.'</form>';
 	}
 
 	function TagField($t, $g)
@@ -573,7 +574,7 @@ class Form
 		$t->Set('form_name', $this->name);
 		$t->ReWrite('form', array($this, 'TagForm'));
 		$t->ReWrite('field', array($this, 'TagField'));
-		return $t->ParseFile($this->Template);
+		return $t->GetString($this->Template);
 	}
 
 	/**
@@ -860,6 +861,16 @@ class FormInput
 		{
 			$this->atrs['NAME'] = @$parent.'_'.$this->name;
 			return GetInputState($this->atrs, @$this->valu);
+		}
+		if ($this->type == 'fullstate')
+		{
+			$this->atrs['NAME'] = @$parent.'_'.$this->name;
+			return GetInputState($this->atrs, @$this->valu, false);
+		}
+		if ($this->type == 'shortstate')
+		{
+			$this->atrs['NAME'] = @$parent.'_'.$this->name;
+			return GetInputSState($this->atrs, @$this->valu);
 		}
 
 		$val = $this->GetValue($persist && $this->type != 'radio');
@@ -1522,10 +1533,20 @@ function GetYearSelect($name, $attribs)
  * @param array $atrs Default state number.
  * @return string Rendered <select> box.
  */
-function GetInputState($atrs = null)
+function GetInputState($atrs = null, $keys = true)
 {
 	global $StateNames;
-	return MakeSelect($atrs, ArrayToSelOptions($StateNames));
+	return MakeSelect($atrs, ArrayToSelOptions($StateNames, null, $keys));
+}
+
+/**
+ * @param array $atrs Default state number.
+ * @return string Rendered <select> box.
+ */
+function GetInputSState($atrs = null, $keys = true)
+{
+	global $StateSNames;
+	return MakeSelect($atrs, ArrayToSelOptions($StateSNames, null, $keys));
 }
 
 $StateNames = array(
@@ -1927,14 +1948,14 @@ function AddResultTags(&$t)
 	$t->ReWrite('sum', 'TagSum');
 }
 
-function TagForm($t, $guts, $attribs)
+function TagForm($t, $g, $a)
 {
 	global $PERSISTS;
-	$ret = '<form'.GetAttribs($attribs).'>';
+	$ret = '<form'.GetAttribs($a).'>';
 	if (is_array($PERSISTS))
 	foreach ($PERSISTS as $n => $v)
 		$ret .= '<input type="hidden" name="'.$n.'" value="'.$v.'" />';
-	$ret .= $guts;
+	$ret .= $g;
 	$ret .= '</form>';
 	return $ret;
 }

@@ -1452,7 +1452,7 @@ class DisplayData
 	/**
 	 * @var string
 	 */
-	public $name;
+	public $Name;
 
 	/**
 	 * @var DataSet
@@ -1473,13 +1473,15 @@ class DisplayData
 	 */
 	public $Behavior;
 
+	private $count;
+
 	/**
 	 * @param string $name Name of this display for state management.
 	 * @param DataSet $ds Associated dataset to collect information from.
 	 */
 	function DisplayData($name, $ds)
 	{
-		$this->name = $name;
+		$this->Name = $name;
 		$this->ds = $ds;
 		$this->Behavior = new DisplayDataBehavior();
 	}
@@ -1491,9 +1493,9 @@ class DisplayData
 	 */
 	function Prepare()
 	{
-		$ca = GetVar('ca');
+		$act = GetVar($this->Name.'_action');
 
-		if ($ca == 'update')
+		if ($act == 'update')
 		{
 			$ci = GetVar('ci');
 			$up = array();
@@ -1521,15 +1523,83 @@ class DisplayData
 			}
 			$this->ds->Update(array($this->ds->id => $ci), $up);
 		}
+
+		//Collect search data...
+
+		if ($act == 'search')
+		{
+			$this->fs = GetVar($this->Name.'_field');
+			$this->ss = GetVar($this->Name.'_search');
+
+			$query = "SELECT *";
+
+			foreach (array_keys($ss) as $col)
+			{
+				$fi = $this->ds->FieldInputs[$col];
+				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+					$query .= ", GROUP_CONCAT(DISTINCT {$col}) AS gc_{$ms[2]}";
+			}
+
+			$query .= " FROM `{$this->ds->table}`";
+			$query .= DataSet::JoinClause($this->joins);
+
+			// Collect the data.
+
+			if (!empty($ss))
+			{
+				$where = ' WHERE';
+				$having = ' HAVING';
+
+				$ix = 0;
+				foreach (array_keys($ss) as $col)
+				{
+					if (!isset($fs[$col])) continue;
+
+					$fi = $this->ds->FieldInputs[$col];
+					$fi->name = $col;
+					if ($ix++ > 0) $where .= ' AND';
+
+					if ($fi->type == 'select') $where .= " $col IN ($fs[$col])";
+					else if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+						$having .= " FIND_IN_SET('".implode(',', $fs[$col])."', gc_$ms[2]) > 0";
+					else if ($fi->type == 'date')
+					{
+						$where .= " $col BETWEEN '".
+						TimestampToMySql(DateInputToTS($fs[$col][0]), false).'\' AND \''.
+						TimestampToMySql(DateInputToTS($fs[$col][1]), false).'\'';
+					}
+					else $where .= " $col LIKE '%".$fi->GetData($fs[$col])."%'";
+				}
+
+				if (strlen($where) > 6) $query .= $where;
+				if (strlen($having) > 7) $query .= $having;
+
+				$this->result = $this->ds->GetCustom($query);
+				$this->count = count($this->result);
+			}
+			else $this->result = array();
+
+			// Paginate the results.
+
+			$this->items = GetFlatPage($this->result, GetVar('cp', 0), 10);
+		}
 	}
 
 	/**
 	 * @param string $target Target script to interact with.
 	 * @param string $ca Current action to execute.
 	 */
-	function Get($target, $ca)
+	function Get($temp)
 	{
-		$ret = '';
+		$t = new Template();
+
+		$t->ReWrite('results', array(&$this, 'TagResults'));
+		$t->ReWrite('result', array(&$this, 'TagResult'));
+		$t->ReWrite('search', array(&$this, 'TagSearch'));
+		$t->ReWrite('pages', array(&$this, 'TagPages'));
+
+		return $t->ParseFile(!isset($temp) ? dirname(__FILE__).
+			'/temps/DisplayData.xml' : $temp);
 		$q = GetVar('q');
 
 		if ($ca == 'edit' && $this->Behavior->AllowEdit)
@@ -1553,7 +1623,7 @@ class DisplayData
 					$this->joins, $cols, $this->ds->id);
 
 				$frm = new Form('frmEdit');
-				$frm->AddHidden('editor', $this->name);
+				$frm->AddHidden('editor', $this->Name);
 				$frm->AddHidden('ca', 'update');
 				$frm->AddHidden('ci', $ci);
 
@@ -1590,108 +1660,87 @@ class DisplayData
 			}
 		}
 
-		else if ($ca == 'search')
-		{
-			$fs = GetVar('field');
-			$ss = GetVar('search');
-
-			$query = "SELECT *";
-
-			foreach (array_keys($ss) as $col)
-			{
-				$fi = $this->ds->FieldInputs[$col];
-				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
-					$query .= ", GROUP_CONCAT(DISTINCT {$col}) AS gc_{$ms[2]}";
-			}
-
-			$query .= " FROM `{$this->ds->table}`";
-			$query .= DataSet::JoinClause($this->joins);
-
-			if (!empty($ss))
-			{
-				$where = ' WHERE';
-				$having = ' HAVING';
-
-				$ix = 0;
-				foreach (array_keys($ss) as $col)
-				{
-					if (!isset($fs[$col])) continue;
-
-					$fi = $this->ds->FieldInputs[$col];
-					$fi->name = $col;
-					if ($ix++ > 0) $where .= ' AND';
-
-					if ($fi->type == 'select') $where .= " $col IN ($fs[$col])";
-					else if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
-						$having .= " FIND_IN_SET('".implode(',', $fs[$col])."', gc_$ms[2]) > 0";
-					else if ($fi->type == 'date')
-					{
-						$where .= " $col BETWEEN '".
-						TimestampToMySql(DateInputToTS($fs[$col][0]), false).'\' AND \''.
-						TimestampToMySql(DateInputToTS($fs[$col][1]), false).'\'';
-					}
-					//else $where .= " $col LIKE '%".$fs[$col]."%'";
-					else $where .= " $col LIKE '%".$fi->GetData($fs[$col])."%'";
-				}
-
-				if (strlen($where) > 6) $query .= $where;
-				$query .= ' GROUP BY app_id';
-				if (strlen($having) > 7) $query .= $having;
-
-				$result = $this->ds->GetCustom($query);
-			}
-			else $result = array();
-
-			$items = GetFlatPage($result, GetVar('cp', 0), 10);
-			if (!empty($items) && !empty($this->ds->DisplayColumns))
-			{
-				$ret .= "<table>";
-				foreach ($items as $ix => $i)
-				{
-					$ret .= <<<EOD
-<tr><td class="header">
-	<label><input type="checkbox" value="{$i[$this->ds->id]}" />Compare</label>
-</td>
-EOD;
-					if ($this->Behavior->AllowEdit) $ret .= <<<EOD
-<td align="right" class="header">
-	<a href="{$target}?editor={$this->name}&ca=edit&ci={$i[$this->ds->id]}">Edit</a>
-</td></tr>
-EOD;
-					foreach ($this->ds->DisplayColumns as $f => $dc)
-					{
-						$val = !empty($dc->callback) ?
-							call_user_func($dc->callback, $this->ds, $i, $f) : $i[$f];
-						$ret .= "<tr><td align=\"right\">{$dc->text}</td><td>$val</td></tr>\n";
-					}
-					if ($ix > 10) break;
-				}
-				$ret .= "</table>";
-				if (count($result) > 10)
-				{
-					$ret .= GetPages($result, 10, array('editor' => 'employee',
-						'ca' => 'search', 'q' => $q, 'fields' => $fs));
-				}
-			}
-		}
-
 		else $ret = $this->GetSearch($target);
 
 		return $ret;
 	}
 
-	/**
-	 * @param string $target Target script to interact with.
-	 */
-	function GetSearch($target)
+	function TagSearch($t, $g, $a)
 	{
-		if (empty($this->SearchFields)) { Error("You should specify a few SearchField items"); return; }
-		$frm = new Form('frmSearch');
-		$frm->AddHidden('ca', 'search');
+		global $me;
+
+		$act = GetVar($this->Name.'_action');
+
+		if ($act == 'search') return;
+
+		if (empty($this->SearchFields))
+		{
+			Error("You should specify a few SearchField items");
+			return;
+		}
+
+		require_once('h_display.php');
+		$frm = new Form($this->Name);
+		$frm->Template = $g;
+		$frm->AddHidden($this->Name.'_action', 'search');
 		if (isset($GLOBALS['editor'])) $frm->AddHidden('editor', $GLOBALS['editor']);
-		$frm->AddInput(new FormInput('Search', 'custom', null, array($this, 'callback_fields')));
+		$frm->AddInput(new FormInput('Search', 'custom', null, array(&$this, 'callback_fields')));
 		$frm->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Search'));
-		return $frm->Get('action="'.$target.'" method="post"');
+		return $frm->Get('action="'.$me.'" method="post"');
+	}
+
+	function TagResults($t, $g, $a)
+	{
+		if (isset($this->count)) return $g;
+	}
+
+	/**
+	 * @param Template $t Associated template.
+	 */
+	function TagResult($t, $g, $a)
+	{
+		if (!empty($this->items) && !empty($this->ds->DisplayColumns))
+		{
+			$tField = new Template();
+			$tField->ReWrite('field', array(&$this, 'TagField'));
+
+			$ret = '';
+			foreach ($this->items as $ix => $i)
+			{
+				$this->item = $i;
+				$tField->Set($i);
+				$ret .= $tField->GetString($g);
+
+				if ($ix > 10) break;
+			}
+			return $ret;
+		}
+		else if (isset($this->count)) return '<p>No results found!</p>';
+	}
+
+	function TagField($t, $g, $a)
+	{
+		$ret = '';
+		$vp = new VarParser();
+		foreach ($this->ds->DisplayColumns as $f => $dc)
+		{
+			$vars['text'] = $dc->text;
+			$vars['val'] = !empty($dc->callback)
+				? call_user_func($dc->callback, $this->ds, $this->item, $f)
+				: $this->item[$f];
+			$ret .= $vp->ParseVars($g, $vars);
+		}
+		return $ret;
+	}
+
+	function TagPages($t, $g, $a)
+	{
+		if ($this->count > 10)
+		{
+			return GetPages($this->result, 10, array('editor' => $this->Name,
+				'ca' => 'search', 'q' => GetVar($this->Name.'_q'),
+				'fields' => $this->fs));
+		}
 	}
 
 	function callback_fields()
@@ -1703,16 +1752,17 @@ EOD;
 			$fi = $this->ds->FieldInputs[$col];
 			$fi->name = 'field['.$col.']';
 			$ret .= '<tr><td valign="top"><label><input type="checkbox"
-				value="1" name="search['.$col.']" onclick="show(\''.$col.'\',
-				this.checked)" /> '.$fi->text.'</label></td>';
+				value="1" name="'.$this->Name.'_search['.$col.']" onclick="$(\'#'.$col
+				.'\').toggle(500)" /> '.$fi->text.'</label></td>';
 			if ($fi->type == 'date')
 			{
 				$fi->name = 'field['.$col.'][0]';
-				$ret .= ' <td valign="top" style="display: none" id="'.$col.'"> from '.$fi->Get($this->name).' to ';
+				$ret .= ' <td valign="top" style="display: none" id="'.$col.'">
+				from '.$fi->Get($this->Name).' to ';
 				$fi->name = 'field['.$col.'][1]';
-				$ret .= $fi->Get($this->name)."</td>\n";
+				$ret .= $fi->Get($this->Name)."</td>\n";
 			}
-			else $ret .= '<td style="display: none" id="'.$col.'">'.$fi->Get($this->name).'</td>';
+			else $ret .= '<td style="display: none" id="'.$col.'">'.$fi->Get($this->Name).'</td>';
 			$ret .= '</tr>';
 		}
 		return $ret.'</table>';
