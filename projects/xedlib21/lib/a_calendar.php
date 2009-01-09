@@ -94,7 +94,7 @@ class Calendar
 	 * @param string $guts Contents of the tag.
 	 * @param array $attribs Attributes for current tag.
 	 */
-	function TagWeek($t, $guts, $attribs)
+	function TagWeek($t, $g, $a)
 	{
 		$ret = null;
 		$this->pad = $this->month->Pad;
@@ -104,7 +104,7 @@ class Calendar
 			$tweek = new Template();
 			$tweek->ReWrite('day',  array(&$this, 'TagDay'));
 			$tweek->ReWrite('pad',  array(&$this, 'TagPad'));
-			$ret .= $tweek->GetString($guts);
+			$ret .= $tweek->GetString($g);
 		}
 		return $ret;
 	}
@@ -115,12 +115,12 @@ class Calendar
 	 * @param string $guts Contents of the tag.
 	 * @param array $attribs Attributes for current tag.
 	 */
-	function TagPad($t, $guts, $attribs)
+	function TagPad($t, $g, $a)
 	{
 		if (empty($this->pad)) return;
 		$vp = new VarParser();
 		$d['amount'] = $this->pad;
-		return $vp->ParseVars($guts, $d);
+		return $vp->ParseVars($g, $d);
 	}
 
 	/**

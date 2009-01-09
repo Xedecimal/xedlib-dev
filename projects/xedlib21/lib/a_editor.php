@@ -432,14 +432,10 @@ class EditorData
 					}
 					else if($in->type == 'datetime')
 					{
-						$time = $value[3][0];
 						if($value[5][0] == 1)
 						{
 							//time is in PM
-							if($value[3][0] != 12)
-							{
-								$value[3][0] += 12;
-							}
+							if($value[3][0] != 12) $value[3][0] += 12;
 						}
 						$time_portion = " {$value[3][0]}:{$value[4][0]}:00";
 						$insert[$col] = $value[2].'-'.$value[0].'-'.$value[1].$time_portion;
@@ -528,14 +524,10 @@ class EditorData
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1];
 					else if($in->type == 'datetime')
 					{
-						$time = $value[3][0];
-						if($value[5][0] == 1)
+						if ($value[5][0] == 1)
 						{
 							//time is in PM
-							if($value[3][0] != 12)
-							{
-								$value[3][0] += 12;
-							}
+							if ($value[3][0] != 12) $value[3][0] += 12;
 						}
 						$time_portion = " {$value[3][0]}:{$value[4][0]}:00";
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1].$time_portion;
@@ -899,7 +891,7 @@ class EditorData
 	 * @return string
 	 * @access private
 	 */
-	function GetTable($target, $ci)
+	function GetTable($target)
 	{
 		if ($this->Behavior->Search)
 		{
@@ -1240,7 +1232,7 @@ class EditorData
 					if ($in->type == 'custom') //Callback
 					{
 						$cb = $in->valu;
-						$ret = call_user_func($cb, isset($sel) ? $sel : null,
+						call_user_func($cb, isset($sel) ? $sel : null,
 							$frm, $col);
 						continue;
 					}

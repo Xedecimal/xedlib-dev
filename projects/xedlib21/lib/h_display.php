@@ -1583,7 +1583,7 @@ $StateNames = array(
 );
 
 $StateSNames = array(
-	0 => 'None',
+	0 => 'NA',
 	1 => 'AL',
 	2 => 'AK',
 	3 => 'AZ',

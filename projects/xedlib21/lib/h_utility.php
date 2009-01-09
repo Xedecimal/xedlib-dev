@@ -686,7 +686,7 @@ function DataToTree($rows, $iCol, $pCol)
 	$tnRoot = new TreeNode();
 
 	if (!empty($flats))
-	foreach ($flats as $id => $tn)
+	foreach ($flats as $tn)
 	{
 		if (isset($flats[$tn->data[$pCol]]))
 			$flats[$tn->data[$pCol]]->AddChild($tn);
@@ -1144,6 +1144,7 @@ function preg_files($pattern, $path = '.', $opts = 3, &$subs = null)
 	{
 		if (is_file("$path/$file") && $opts & PREG_FILES != PREG_FILES) continue;
 		if (is_dir("$path/$file") && $opts & PREG_DIRS != PREG_DIRS) continue;
+		$s = null;
 		if (preg_match($pattern, $file, $s))
 		{
 			$subs[$file] = $s;

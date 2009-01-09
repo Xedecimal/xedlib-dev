@@ -86,7 +86,7 @@ class Validation
 		if (is_array($this->check))
 		{
 			$ret .= "\n\t\t\tix = 0;";
-			foreach ($this->check[0] as $ix => $opt)
+			foreach (array_keys($this->check[0]) as $ix)
 			{
 				$ret .= "\n\t\t\tif (document.getElementById('{$this->field}_{$ix}').checked == true) ix++;";
 			}
@@ -193,7 +193,7 @@ function FormValidate($name, $arr, &$ret, $check)
 	if (is_array($arr))
 	foreach ($arr as $key => $val)
 	{
-		$rec = RecurseReq($key, $val, $checks);
+		RecurseReq($key, $val, $checks);
 
 		if (!$val->Validate($name, $check, $ret))
 			$passed = false;

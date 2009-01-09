@@ -738,11 +738,8 @@ class DataSet
 	 * by unique keys, or just to add ignoring keys otherwise.
 	 * @return int ID of added row.
 	 */
-	function Add($columns, $update_existing = false, $delay = false)
+	function Add($columns, $update_existing = false)
 	{
-		$lq = $this->database->lq;
-		$rq = $this->database->rq;
-
 		if ($update_existing) $query = 'REPLACE';
 		else $query = 'INSERT';
 		$query .= ' INTO '.$this->QuoteTable($this->table).' (';
