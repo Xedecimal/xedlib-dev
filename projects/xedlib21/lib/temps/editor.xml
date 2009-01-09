@@ -1,25 +1,29 @@
 <null>
 
+{{TextHeader}}
+
 <search>
 	<box title="Locate and Edit {{plural}}">
+	{{TextSearchHeader}}
 	<form action="{{me}}">
 	<input type="hidden" name="editor" value="{{name}}" />
 	Search: <input type="text" name="{{name}}_q"
-		onkeyup="$('#ssub').val(this.value.length > 0 ? 'Search' : 'Retrieve All');" />
-	<input type="submit" value="Retrieve All" id="ssub" />
+		onkeyup="$('#{{name}}_subSearch').val(this.value.length > 0 ? 'Search' : 'Retrieve All');" />
+	<input type="submit" value="Retrieve All" id="{{name}}_subSearch" />
 	</form>
 	</box>
 </search>
 
 <if check="isset($this->vars['table'])">
 <box title="{{table_title}}">
-{{table_head}}
+{{TextTableHeader}}
 {{table}}
 </box>
 </if>
 
 <forms>
 <box id="box_{{name}}_forms" title="{{form_title}}">
+{{TextFormHeader}}
 {{form_content}}
 </box>
 </forms>

@@ -444,8 +444,9 @@ class EditorData
 					{
 						$insert[$col] = md5($value);
 					}
-					else if ($in->type == 'file' && $value != null)
+					else if ($in->type == 'file')
 					{
+						if (empty($value['tmp_name'])) continue;
 						$ext = strrchr($value['name'], '.');
 						$vp = new VarParser();
 
@@ -490,7 +491,7 @@ class EditorData
 			}
 
 			foreach ($this->handlers as $handler)
-				$handler->Created($id, $insert);
+				$handler->Created($this, $id, $insert);
 
 			$this->Reset();
 		}
@@ -1241,6 +1242,28 @@ class EditorData
 						if (isset($sel) && isset($in->valu[$sel[0][$col]]))
 							$in->valu[$sel[0][$col]]->selected = true;
 					}
+					else if ($in->type == 'file')
+					{
+						if (!empty($in->atrs['EXTRA']))
+						{
+							$vp = new VarParser();
+							$glob = $vp->ParseVars($in->valu, $sel[0]);
+							$files = glob($glob.'.*');
+
+							switch ($in->atrs['EXTRA'])
+							{
+								case 'thumb':
+									$in->help = '<img src="'
+									.(empty($files) ? 'xedlib/images/cross.png'
+									  : $files[0]).'" />';
+									break;
+								case 'exists':
+									$in->help = '<img src="xedlib/images/'.
+									(empty($files) ? 'cross.png' : 'tick.png').
+									'" />';
+							}
+						}
+					}
 					else
 					{
 						if ($in->type == 'password') $in->valu = '';
@@ -1375,7 +1398,8 @@ class EditorData
 
 		global $me;
 		$t->Set('table', $this->GetTable($me, GetState($this->Name.'_ci')));
-		$t->Set('table_head', $this->View->TableHeader);
+
+		$t->Set($this->View);
 
 		return $t->ParseFile(dirname(__FILE__).'/temps/editor.xml');
 	}
@@ -1389,7 +1413,10 @@ class EditorData
 
 class EditorDataView
 {
-	public $TableHeader = '';
+	public $TextHeader = '';
+	public $TextSearchHeader = '';
+	public $TextTableHeader = '';
+	public $TextFormHeader = '';
 	public $TextEdit = 'Edit Item';
 	public $TextDelete = 'Delete Item';
 }
@@ -1846,8 +1873,9 @@ class EditorText
 		$this->item = str_replace('\\', '', $item);
 	}
 
-	function Prepare($action)
+	function Prepare()
 	{
+		$action = GetVar($this->Name.'_action');
 		if ($action == 'update')
 		{
 			$this->item = SecurePath(GetVar($this->Name.'_ci'));
@@ -1860,7 +1888,7 @@ class EditorText
 	function Get($target)
 	{
 		$frmRet = new Form($this->Name);
-		$frmRet->AddHidden('ca', 'update');
+		$frmRet->AddHidden($this->Name.'_action', 'update');
 		$frmRet->AddHidden($this->Name.'_ci', $this->item);
 
 		$content = file_exists(stripslashes($this->item)) ?

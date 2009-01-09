@@ -1856,17 +1856,22 @@ function TagInputDisplay($t, $guts, $tag)
  */
 function GetNav($t, $links, $attribs = null, $curpage = null, &$pinfo, &$stack)
 {
-	$ret = '<ul'.GetAttribs($attribs).">\n";
+	$ret = "\n<ul".GetAttribs($attribs).">\n";
 	foreach ($links->children as $ix => $link)
 	{
 		$stack[] = $ix;
-		if ($curpage == $link->data) $pinfo = $stack;
-		$ret .= "<li><a href=\"{$t}?page=".urlencode($link->data).'"';
-		if (!empty($link->children)) $ret .= ' class="subitems"';
-		$ret .= ">{$link->data}</a>\n";
+		if (isset($link->data['page']))
+			if (substr($_SERVER['REQUEST_URI'], -strlen($link->data['page']))
+			== $link->data['page'])
+				$pinfo = $stack;
+		$ret .= '<li>';
+
+		if (isset($link->data['page'])) $ret .= '<a href="'.$link->data['page'].'">';
+		$ret .= $link->data['text'];
+		if (isset($link->data['page'])) $ret .= '</a>';
 		if (!empty($link->children))
-			$ret .= GetNav($t, $link, $attribs, $curpage, $pinfo, $stack);
-		$ret .= '</li>';
+			$ret .= GetNav($t, $link, null, $curpage, $pinfo, $stack);
+		$ret .= "</li>\n";
 		array_pop($stack);
 	}
 	return $ret."</ul>\n";
@@ -1880,7 +1885,10 @@ function GetNavPath($t, $tree, $pinfo)
 	foreach ($pinfo as $level => $idx)
 	{
 		$tn = $tn->children[$idx];
-		$ret .= ($level ? ' &raquo; ' : null)."<a href=\"$t?page={$tn->data}\">{$tn->data}</a>";
+		$ret .= ($level ? ' &raquo; ' : null);
+		if (!empty($tn->data['page'])) $ret .= '<a href="'.$tn->data['page'].'">';
+		$ret .= $tn->data['text'];
+		if (!empty($tn->data['page'])) $ret .= '</a>';
 	}
 	return $ret;
 }
