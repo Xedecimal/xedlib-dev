@@ -1533,7 +1533,7 @@ class DisplayData
 
 			$query = "SELECT *";
 
-			foreach (array_keys($ss) as $col)
+			foreach (array_keys($this->ss) as $col)
 			{
 				$fi = $this->ds->FieldInputs[$col];
 				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
@@ -1545,7 +1545,7 @@ class DisplayData
 
 			// Collect the data.
 
-			if (!empty($ss))
+			if (!empty($this->ss))
 			{
 				$where = ' WHERE';
 				$having = ' HAVING';
