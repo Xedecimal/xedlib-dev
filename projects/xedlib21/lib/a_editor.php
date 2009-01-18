@@ -1929,9 +1929,8 @@ class EditorText
 		if ($action == 'update')
 		{
 			$this->item = SecurePath(GetVar($this->Name.'_ci'));
-			$fp = fopen($this->item, 'w');
-			fwrite($fp, stripslashes(GetVar($this->Name.'_body')));
-			fclose($fp);
+			file_put_contents($this->item,
+				stripslashes(GetVar('body')));
 		}
 	}
 
@@ -1941,11 +1940,9 @@ class EditorText
 		$frmRet->AddHidden($this->Name.'_action', 'update');
 		$frmRet->AddHidden($this->Name.'_ci', $this->item);
 
-		$content = file_exists(stripslashes($this->item)) ?
-			stripslashes(file_get_contents(stripslashes($this->item))) : '';
-
-		$frmRet->AddInput(new FormInput(null, 'area', 'body', $content,
-			array('ROWS' => 30)));
+		$frmRet->AddInput(new FormInput(null, 'area', 'body',
+			stripslashes(file_get_contents($this->item)),
+				'rows="30" cols="30" style="width: 100%"'));
 		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
 		return $frmRet->Get('method="post" action="'.$target.'"');
