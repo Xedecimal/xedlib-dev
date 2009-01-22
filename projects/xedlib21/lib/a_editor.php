@@ -1532,16 +1532,20 @@ class DisplayData
 			$this->ss = GetVar($this->Name.'_search');
 
 			$query = "SELECT *";
+			$group = null;
 
-			foreach (array_keys($this->ss) as $col)
+			foreach (array_keys($this->ds->DisplayColumns) as $col)
 			{
 				$fi = $this->ds->FieldInputs[$col];
 				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
-					$query .= ", GROUP_CONCAT(DISTINCT {$col}) AS gc_{$ms[2]}";
+				{
+					$query .= ", GROUP_CONCAT(DISTINCT {$col}) AS {$ms[2]}";
+					$group = ' GROUP BY '.$this->ds->id;
+				}
 			}
 
 			$query .= " FROM `{$this->ds->table}`";
-			$query .= DataSet::JoinClause($this->joins);
+			$query .= DataSet::JoinClause($this->ds->joins);
 
 			// Collect the data.
 
@@ -1551,9 +1555,9 @@ class DisplayData
 				$having = ' HAVING';
 
 				$ix = 0;
-				foreach (array_keys($ss) as $col)
+				foreach (array_keys($this->ss) as $col)
 				{
-					if (!isset($fs[$col])) continue;
+					if (!isset($this->fs[$col])) continue;
 
 					$fi = $this->ds->FieldInputs[$col];
 					$fi->name = $col;
@@ -1561,25 +1565,34 @@ class DisplayData
 
 					if ($fi->type == 'select') $where .= " $col IN ($fs[$col])";
 					else if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
-						$having .= " FIND_IN_SET('".implode(',', $fs[$col])."', gc_$ms[2]) > 0";
+					{
+						foreach ($this->fs[$col] as $ix => $v)
+						{
+							if ($ix > 0) $having .= ' OR';
+							$having .= " FIND_IN_SET($v, $ms[2]) > 0";
+						}
+					}
 					else if ($fi->type == 'date')
 					{
 						$where .= " $col BETWEEN '".
 						TimestampToMySql(DateInputToTS($fs[$col][0]), false).'\' AND \''.
 						TimestampToMySql(DateInputToTS($fs[$col][1]), false).'\'';
 					}
-					else $where .= " $col LIKE '%".$fi->GetData($fs[$col])."%'";
+					else
+					{
+						$where .= " $col LIKE '%".$fi->GetData($this->fs[$col])."%'";
+					}
 				}
 
 				if (strlen($where) > 6) $query .= $where;
+				$query .= $group;
 				if (strlen($having) > 7) $query .= $having;
 
+				var_dump($query);
 				$this->result = $this->ds->GetCustom($query);
 				$this->count = count($this->result);
 			}
 			else $this->result = array();
-
-			// Paginate the results.
 
 			$this->items = GetFlatPage($this->result, GetVar('cp', 0), 10);
 		}
@@ -1660,7 +1673,7 @@ class DisplayData
 			}
 		}
 
-		else $ret = $this->GetSearch($target);
+		//else $ret = $this->GetSearch($target);
 
 		return $ret;
 	}
@@ -1725,9 +1738,31 @@ class DisplayData
 		foreach ($this->ds->DisplayColumns as $f => $dc)
 		{
 			$vars['text'] = $dc->text;
-			$vars['val'] = !empty($dc->callback)
-				? call_user_func($dc->callback, $this->ds, $this->item, $f)
-				: $this->item[$f];
+			$vars['val'] = '';
+			if (strpos($f, '.')) // Sub Table
+			{
+				$vs = explode(',', $this->item[StripTable($f)]);
+
+				foreach ($vs as $ix => $val)
+				{
+					if ($ix > 0) $vars['val'] .= ', ';
+
+					if (!empty($this->fs[$f]))
+					{
+						$bold = array_search($val, $this->fs[$f]) ? true : false;
+						if ($bold) $vars['val'] .= '<span class="result">';
+					}
+					if (!empty($val))
+						$vars['val'] .= $this->ds->FieldInputs[$f]->valu[$val]->text;
+					if (!empty($this->fs[$f]) && $bold) $vars['val'] .= '</span>';
+				}
+			}
+			else
+			{
+				$vars['val'] = !empty($dc->callback)
+					? call_user_func($dc->callback, $this->ds, $this->item, $f)
+					: $this->item[StripTable($f)];
+			}
 			$ret .= $vp->ParseVars($g, $vars);
 		}
 		return $ret;
@@ -1735,12 +1770,12 @@ class DisplayData
 
 	function TagPages($t, $g, $a)
 	{
-		if ($this->count > 10)
+		/*if ($this->count > 10)
 		{
 			return GetPages($this->result, 10, array('editor' => $this->Name,
 				'ca' => 'search', 'q' => GetVar($this->Name.'_q'),
 				'fields' => $this->fs));
-		}
+		}*/
 	}
 
 	function callback_fields()
@@ -1752,17 +1787,19 @@ class DisplayData
 			$fi = $this->ds->FieldInputs[$col];
 			$fi->name = 'field['.$col.']';
 			$ret .= '<tr><td valign="top"><label><input type="checkbox"
-				value="1" name="'.$this->Name.'_search['.$col.']" onclick="$(\'#'.$col
-				.'\').toggle(500)" /> '.$fi->text.'</label></td>';
+				value="1" name="'.$this->Name.'_search['.$col.']"
+				onclick="$(\'#'.str_replace('.','\\\\.',$col).'\').toggle(500)" />
+				'.$fi->text.'</label></td>';
 			if ($fi->type == 'date')
 			{
 				$fi->name = 'field['.$col.'][0]';
 				$ret .= ' <td valign="top" style="display: none" id="'.$col.'">
-				from '.$fi->Get($this->Name).' to ';
+					from '.$fi->Get($this->Name).' to ';
 				$fi->name = 'field['.$col.'][1]';
 				$ret .= $fi->Get($this->Name)."</td>\n";
 			}
-			else $ret .= '<td style="display: none" id="'.$col.'">'.$fi->Get($this->Name).'</td>';
+			else $ret .= '<td style="display: none"
+				id="'.$col.'">'.$fi->Get($this->Name).'</td>';
 			$ret .= '</tr>';
 		}
 		return $ret.'</table>';

@@ -455,7 +455,7 @@ class DataSet
 	 */
 	private $func_fetch;
 
-	private $joins;
+	public $joins;
 
 	/**
 	 * Initialize a new CDataSet binded to $table in $db.
