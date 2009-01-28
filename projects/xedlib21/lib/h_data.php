@@ -251,7 +251,7 @@ class Database
  * @param string $data Information that will not be quited.
  * @return array specifying that this string shouldn't be quoted.
  */
-function DeString($data) { return array("destring", $data); }
+function DeString($data) { return array('destring', $data); }
 function SQLBetween($from, $to) { return array('between', $from, $to); }
 function SQLNotNull() { return array('notnull'); }
 /**
@@ -575,8 +575,7 @@ class DataSet
 								" BETWEEN '{$val[1]}' AND '{$val[2]}'";
 						else if (is_array($val) && strtolower($val[0]) == 'notnull')
 							$ret .= $this->QuoteTable($col).' IS NOT NULL';
-						else
-							$ret .= ' '.$this->QuoteTable($col)." = '{$val}'";
+						else $ret .= ' '.$this->QuoteTable($col)." = '{$val}'";
 					}
 					else //"col = 'value'"
 					{
@@ -740,8 +739,7 @@ class DataSet
 	 */
 	function Add($columns, $update_existing = false)
 	{
-		if ($update_existing) $query = 'REPLACE';
-		else $query = 'INSERT';
+		$query = 'INSERT';
 		$query .= ' INTO '.$this->QuoteTable($this->table).' (';
 		$ix = 0;
 		foreach (array_keys($columns) as $key)
@@ -764,6 +762,11 @@ class DataSet
 			$ix++;
 		}
 		$query .= ")";
+		if ($update_existing)
+		{
+			$query .= ' ON DUPLICATE KEY UPDATE';
+			$query .= $this->GetSetString($columns, null);
+		}
 		$this->database->Query($query);
 		return $this->database->GetLastInsertID();
 	}

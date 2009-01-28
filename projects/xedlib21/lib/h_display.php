@@ -1132,11 +1132,13 @@ function GetInputYesNo($parent, $attribs)
 	$id = CleanID((isset($parent) ? $parent.'_' : null).$attribs['NAME']);
 	if (!isset($attribs['ID'])) $attribs['ID'] = $id;
 	if (!isset($attribs['VALUE'])) $attribs['VALUE'] = 0;
+	if (!isset($attribs['TEXTNO'])) $attribs['TEXTNO'] = 'No';
+	if (!isset($attribs['TEXTYES'])) $attribs['TEXTYES'] = 'Yes';
 	return '<label><input type="radio" id="'.$attribs['ID'].'"
 	name="'.$attribs['NAME'].'" value="0"'.
-	($attribs['VALUE'] ? null : ' checked="checked"').' /> No</label> ' .
+	($attribs['VALUE'] ? null : ' checked="checked"').' /> '.$attribs['TEXTNO'].'</label> ' .
 	'<label><input type="radio" name="'.$attribs['NAME'].'" value="1"'.
-	($attribs['VALUE'] ? ' checked="checked"' : null).' /> Yes</label>';
+	($attribs['VALUE'] ? ' checked="checked"' : null).' /> '.$attribs['TEXTYES'].'</label>';
 }
 
 define('STATE_CREATE', 0);

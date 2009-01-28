@@ -61,6 +61,7 @@ function HandleErrors($file = null)
 function Trace($msg)
 {
 	if (!empty($GLOBALS['debug'])) var_dump($msg);
+	if (!empty($GLOBALS['__debfile'])) file_put_contents('trace.txt', $msg."\r\n", FILE_APPEND);
 }
 
 /**
@@ -430,7 +431,7 @@ function ChompString($text, $length)
  */
 function TimestampToMySql($ts, $time = true)
 {
-	return gmdate($time ? 'y-m-d h:i:s' : 'y-m-d', $ts);
+	return date($time ? 'y-m-d h:i:s' : 'y-m-d', $ts);
 }
 
 /**
@@ -442,7 +443,7 @@ function TimestampToMySql($ts, $time = true)
  */
 function TimestampToMsSql($ts)
 {
-	return gmdate("m/d/y h:i:s A", $ts);
+	return date("m/d/y h:i:s A", $ts);
 }
 
 /**
