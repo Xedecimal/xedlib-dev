@@ -707,12 +707,16 @@ class DataSet
 				if (!is_numeric($val) && !isset($val)) continue;
 				$found = true;
 				if ($x++ > 0) $ret .= ", ";
+				$ret .= $this->QuoteTable($key)." = ";
+
 				if (is_array($val))
 				{
 					if ($val[0] == "destring")
-						$ret .= $this->QuoteTable($key)." = {$val[1]}";
+						$ret .= $val[1];
+					continue;
 				}
-				else $ret .= $this->QuoteTable($key)." = '";
+
+				$ret .= "'";
 				switch ($this->database->type)
 				{
 					case DB_MY:
@@ -764,7 +768,7 @@ class DataSet
 		$query .= ")";
 		if ($update_existing)
 		{
-			$query .= ' ON DUPLICATE KEY UPDATE';
+			$query .= ' ON DUPLICATE KEY UPDATE ';
 			$query .= $this->GetSetString($columns, null);
 		}
 		$this->database->Query($query);

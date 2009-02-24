@@ -1355,13 +1355,14 @@ class LoginManager
 		global $me;
 		if ($template == null)
 			$template = dirname(__FILE__).'/temps/login_manager.xml';
+
 		$f = new Form($this->Name, array(null, 'width="100%"'));
 		$f->AddHidden($this->Name.'_action', 'login');
 		if ($this->type != CONTROL_SIMPLE)
 			$f->AddInput(new FormInput($this->View->TextLogin, 'text', 'auth_user'));
 		$f->AddInput(new FormInput($this->View->TextPassword, 'password', 'auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
-		$f->Template = $template;
+		$f->Template = file_get_contents($template);
 		return $f->Get('action="'.$me.'" method="post"');
 	}
 
@@ -1603,6 +1604,7 @@ $StateNames = array(
 	48 => 'West Virginia',
 	49 => 'Wisconsin',
 	50 => 'Wyoming',
+	51 => 'District of Columbia'
 );
 
 $StateSNames = array(
@@ -1657,6 +1659,7 @@ $StateSNames = array(
 	48 => 'WV',
 	49 => 'WI',
 	50 => 'WY',
+	51 => 'DC'
 );
 
 function StateCallback($ds, $data, $col)

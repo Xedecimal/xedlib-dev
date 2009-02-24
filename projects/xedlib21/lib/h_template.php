@@ -295,7 +295,7 @@ class Template extends LayeredOutput
 				RequireModule($this->data, $file, $class);
 				$show = false;
 			}
-			else $output = stripslashes(file_get_contents($file));
+			else if (file_exists($file)) $output = stripslashes(file_get_contents($file));
 		}
 		else if ($tag == 'INPUT')
 		{
@@ -728,8 +728,6 @@ class VarParser
 		else if (isset($$tvar)) $ret = $$tvar;
 		else if (defined($tvar)) $ret = constant($tvar);
 		else $ret = ($this->Bleed ? $match[0] : null);
-
-		if (!is_string($ret)) Error('Var parser needs to return a string!');
 
 		return $ret;
 	}

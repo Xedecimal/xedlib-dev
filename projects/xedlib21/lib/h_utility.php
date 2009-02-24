@@ -1499,4 +1499,13 @@ function SendDownloadStart($filename, $size = null)
 	if (isset($size)) header("Content-Length: {$size}");
 }
 
+function TagNEmpty($t, $g, $a)
+{
+	$n = $a['VAR'];
+	global $$n;
+	if (empty($a['INDEX']) && !empty($$n)) return $g;
+	$var = $$n;
+	if (!empty($var) && !empty($var[$a['INDEX']])) return $g;
+}
+
 ?>
