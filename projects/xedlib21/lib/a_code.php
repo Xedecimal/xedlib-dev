@@ -5,7 +5,16 @@
  * Shortest doc comment.
  * Longest doc comment.
  * Largest class.
- * @package Code
+ *
+ * PHP Version 5
+ *
+ * @category  Metrics
+ * @package   Code
+ * @author    Xedecimal <Xedecimal@gmail.com>
+ * @copyright 2006-2009 Xedecimal
+ * @license   http://www.gnu.org/licenses/gpl.html GPL
+ * @version   SVN: No Idea
+ * @link      http://www.xedecimal.net:81/projects/Xedlib2.1/test_docgen.php
  */
 
 define('CODE_GET_NONE', 0);
@@ -19,28 +28,39 @@ define('T_DEFINE', 900);
 
 /**
  * Returns the name of a specified token type.
+ *
  * @param int $type Token definition.
+ *
  * @return string
  */
 function GetTypeName($type)
 {
 	switch ($type)
 	{
-		case T_CLASS: return 'class';
-		case T_DEFINE: return 'define';
-		case T_FUNCTION: return 'function';
-		case T_PRIVATE: return 'private';
+		case T_CLASS:     return 'class';
+		case T_DEFINE:    return 'define';
+		case T_FUNCTION:  return 'function';
+		case T_PRIVATE:   return 'private';
 		case T_PROTECTED: return 'protected';
-		case T_PUBLIC: return 'public';
-		case T_RETURN: return 'return';
-		case T_VARIABLE: return 'variable';
-		default: return 'unknown';
+		case T_PUBLIC:    return 'public';
+		case T_RETURN:    return 'return';
+		case T_VARIABLE:  return 'variable';
+		default:          return 'unknown';
 	}
 }
 
 
 /**
  * PHP source code reader.
+ *
+ * @category   Metrics
+ * @package    Code
+ * @subpackage Calendar
+ * @example    doc\examples\calendar.php
+ * @access     public
+ * @author     Xedecimal <Xedecimal@gmail.com>
+ * @license    http://www.gnu.org/licenses/gpl.html GPL
+ * @link       http://www.xedecimal.net:81/projects/Xedlib2.1/test_display.php
  */
 class CodeReader
 {
@@ -48,49 +68,49 @@ class CodeReader
 	 * Current file being parsed.
 	 * @var string
 	 */
-	private $file;
+	private $_file;
 
 	/**
 	 * Current line being parsed.
 	 * @var int
 	 */
-	private $line;
+	private $_line;
 
 	/**
 	 * Current data parsed from a doc comment for the coming object.
 	 * @var mixed
 	 */
-	private $curdoc;
+	private $_curdoc;
 
 	/**
 	 * Type of item currently getting.
 	 * @var int
 	 */
-	private $getting;
+	private $_getting;
 
 	/**
 	 * Current package, changes as new packages are found.
 	 * @var string
 	 */
-	private $curpackage;
+	private $_curpackage;
 
 	/**
 	 * Current function / method we are working with.
 	 * @var CodeObject
 	 */
-	private $curfunction;
+	private $_curfunction;
 
 	/**
 	 * Line that the current function is defined on.
 	 * @var int
 	 */
-	private $funcline;
+	private $_funcline;
 
 	/**
 	 * Array of name => class objects.
 	 * @var array
 	 */
-	private $class_array;
+	private $_class_array;
 
 	/**
 	 * Whether or not to attempt to output a re-creation of the code structure.
@@ -118,7 +138,8 @@ class CodeReader
 	/**
 	 * Processes a file and returns the structure of it as a CodeObject.
 	 *
-	 * @param string $filename
+	 * @param string $filename Filename to process.
+	 *
 	 * @return CodeObject Code object containing all the information.
 	 */
 	function Parse($filename)
@@ -203,22 +224,45 @@ class CodeReader
 				{
 					case T_PUBLIC:
 					case T_PRIVATE:
-					case T_PROTECTED: $this->modifier = $tok[0]; break;
+					case T_PROTECTED:
+						$this->modifier = $tok[0];
+						break;
 
-					case T_VAR: $this->modifier = 0; break;
+					case T_VAR:
+						$this->modifier = 0;
+						break;
 
-					case T_VARIABLE: $this->ProcVariable($tok); break;
-					case T_FUNCTION: $this->ProcFunction($tok); break;
-					case T_CLASS: $this->ProcClass($tok); break;
+					case T_VARIABLE:
+						$this->ProcVariable($tok);
+						break;
+					case T_FUNCTION:
+						$this->ProcFunction($tok);
+						break;
+					case T_CLASS:
+						$this->ProcClass($tok);
+						break;
 
-					case T_CONSTANT_ENCAPSED_STRING: $this->ProcConstant($tok); break;
-					case T_CURLY_OPEN: $this->ProcCurlyOpen($tok); break;
-					case T_DOC_COMMENT: $this->ProcDocComment($tok); break;
-					case T_EXTENDS: $this->getting = CODE_GET_EXTENDS; break;
-					case T_LNUMBER: $this->ProcNumber($tok); break;
-					case T_RETURN: $this->ProcReturn($tok); break;
-					case T_STRING: $this->ProcString($tok); break;
-					default: break;
+					case T_CONSTANT_ENCAPSED_STRING:
+						$this->ProcConstant($tok);
+						break;
+					case T_CURLY_OPEN:
+						$this->ProcCurlyOpen($tok);
+						break;
+					case T_DOC_COMMENT:
+						$this->ProcDocComment($tok);
+						break;
+					case T_EXTENDS:
+						$this->getting = CODE_GET_EXTENDS;
+						break;
+					case T_LNUMBER:
+						$this->ProcNumber($tok);
+						break;
+					case T_RETURN:
+						$this->ProcReturn($tok);
+						break;
+					case T_STRING:
+						$this->ProcString($tok);
+						break;
 				}
 			}
 		}
@@ -229,8 +273,11 @@ class CodeReader
 
 	/**
 	 * Verify all types and such.
-	 * @param array $data Context data.
+	 *
+	 * @param array $data  Context data.
 	 * @param array $names Current nametable.
+	 *
+	 * @return null
 	 */
 	function Validate($data, $names)
 	{
@@ -241,9 +288,13 @@ class CodeReader
 	}
 
 	/**
-	 * @param array $data Context data.
-	 * @param array $names Current nametable.
+	 * TODO: Describe.
+	 *
+	 * @param array      $data   Context data.
+	 * @param array      $names  Current nametable.
 	 * @param CodeObject $member Current member we are iterating.
+	 *
+	 * @return null
 	 */
 	function ValidateRecurse($data, $names, $member)
 	{
@@ -259,14 +310,17 @@ class CodeReader
 			{
 				if (!$member->returning)
 				{
-					$this->Issue("[DOC]: Return tag specified without returning a value", $member);
+					$this->Issue("[DOC]: Return tag specified without".
+						" returning a value", $member);
 				}
 			}
-			else //Return is not documented
+			else
 			{
+				 //Return is not documented
 				if ($member->returning)
 				{
-					$this->Issue("[DOC]: No return tag specified when returning a value.", $member);
+					$this->Issue("[DOC]: No return tag specified when".
+						" returning a value.", $member);
 				}
 			}
 
@@ -362,6 +416,7 @@ class CodeReader
 
 	/**
 	 * Processes a return keyword.
+	 *
 	 * @param mixed $tok Token to be evaluated.
 	 */
 	function ProcReturn($tok)
@@ -380,6 +435,7 @@ class CodeReader
 
 	/**
 	 * Makes argument $val the current object and pops it off the tree.
+	 *
 	 * @param string $val Value to pop.
 	 */
 	function PopValue($val)
@@ -392,6 +448,7 @@ class CodeReader
 
 	/**
 	 * Processes a constant, mainly defines.
+	 *
 	 * @param mixed $tok Token to be evaluated.
 	 */
 	function ProcConstant($tok)
@@ -423,6 +480,7 @@ class CodeReader
 
 	/**
 	 * Processes an evaluated function.
+	 *
 	 * @param mixed $tok Token to be evaluated.
 	 */
 	function ProcFunction($tok)
@@ -444,6 +502,7 @@ class CodeReader
 
 	/**
 	 * Process an evaluated class.
+	 *
 	 * @param mixed $tok Token to be evaluated.
 	 */
 	function ProcClass($tok)
@@ -459,6 +518,7 @@ class CodeReader
 
 	/**
 	 * Process an evaluated string.
+	 *
 	 * @param mixed $tok Token to be evaluated.
 	 */
 	function ProcString($tok)
@@ -552,7 +612,8 @@ class CodeReader
 			}
 		}
 
-		for ($ix = 1; $ix < count($split); $ix++)
+		$total = count($split);
+		for ($ix = 1; $ix < $total; $ix++)
 		{
 			$clean = preg_replace('#\s*\*/*\n*#s', '', $split[$ix][0]);
 			$m = null;
@@ -634,6 +695,7 @@ class CodeReader
 
 	/**
 	 * Process an evaluated variable.
+	 *
 	 * @param mixed $tok Token to be evaluated.
 	 */
 	function ProcVariable($tok)
@@ -683,6 +745,7 @@ class CodeReader
 
 	/**
 	 * Process an evaluated number.
+	 *
 	 * @param mixed $tok Token to be evaluated.
 	 */
 	function ProcNumber($tok)
@@ -693,8 +756,10 @@ class CodeReader
 
 	/**
 	 * Returns the next level of possible overload.
+	 *
 	 * @param array $data Context data.
 	 * @param CodeObject $obj Object to find overload for.
+	 *
 	 * @return CodeObject Overloaded code object.
 	 */
 	function GetOverload($data, $obj)
@@ -719,6 +784,7 @@ class CodeReader
 
 	/**
 	 * Output an issue located in the processed code.
+	 *
 	 * @param string $str Issue description.
 	 * @param CodeObject $member Associated conflicting member.
 	 */
@@ -768,6 +834,7 @@ class CodeObject
 
 	/**
 	 * Creates a new document object.
+	 *
 	 * @param int $type
 	 */
 	function CodeObject($type)
