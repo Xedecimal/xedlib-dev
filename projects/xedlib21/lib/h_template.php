@@ -237,6 +237,7 @@ class Template extends LayeredOutput
 				else die("Class does not exist ($handler).\n");
 			}
 			else $box = new Box();
+			if (isset($attribs['PREFIX'])) $box->prefix = $attribs['PREFIX'];
 			if (isset($attribs['TITLE'])) $box->title = $attribs['TITLE'];
 			if (isset($attribs['TEMPLATE'])) $box->template = $attribs['TEMPLATE'];
 			if (isset($attribs['ID'])) $box->name = $attribs['ID'];
@@ -572,15 +573,16 @@ class Template extends LayeredOutput
 
 		if (!xml_parse($p, $nstr))
 		{
-			echo "XML Error: " . xml_error_string(xml_get_error_code($p)) .
+			$err = "XML Error: " . xml_error_string(xml_get_error_code($p)) .
 			" on line " . xml_get_current_line_number($p);
-			if (!empty($this->template)) echo " of file " . $this->template;
+			if (!empty($this->template)) $err .= " of file " . $this->template;
 			else
 			{
-				echo "<br/>Inside the following template ...<br/>\n";
-				varinfo($str);
+				$err .= "<br/>Inside the following template ...<br/>\n";
+				$err .= print_r($str, true);
 			}
-			echo "<br/>\n";
+			$err .= "<br/>\n";
+			Error($err);
 		}
 		xml_parser_free($p);
 

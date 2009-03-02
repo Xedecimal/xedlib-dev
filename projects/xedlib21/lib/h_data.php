@@ -27,8 +27,9 @@ define("GET_ASSOC", 1);
 define("GET_BOTH", 3);
 
 define('DB_MY', 0); //MySQL
-define('DB_OD', 1); //ODBC
-define('DB_SL', 2); //SQLite
+define('DB_MI', 1); //MySQLi
+define('DB_OD', 2); //ODBC
+define('DB_SL', 3); //SQLite
 
 define('ER_NO_SUCH_TABLE', 1146);
 
@@ -80,6 +81,19 @@ class Database
 	 */
 	public $ErrorHandler;
 
+	function CheckMiError($query, $handler)
+	{
+		if (mysqli_errno($this->link))
+		{
+			if (!empty($handler))
+				if (call_user_func($handler, mysqli_errno($this->link))) return;
+			if (isset($this->Handlers[mysqli_errno($this->link)]))
+				if (call_user_func($this->Handlers[mysqli_errno($this->link)])) return;
+			Error('MySQLi Error ['.mysqli_errno($this->link).']: '
+				.mysqli_error($this->link)."<br />\nQuery: {$query}<br/>\n");
+		}
+	}
+
 	/**
 	 * Checks for a mysql error.
 	 * @param string $query Query that was attempted.
@@ -93,7 +107,7 @@ class Database
 				if (call_user_func($handler, mysql_errno())) return;
 			if (isset($this->Handlers[mysql_errno()]))
 				if (call_user_func($this->Handlers[mysql_errno()])) return;
-			Error("MySQL Error [".mysql_errno().']: '.mysql_error().
+			Error('MySQL Error ['.mysql_errno().']: '.mysql_error().
 				"<br/>\nQuery: {$query}<br/>\n");
 		}
 	}
@@ -122,6 +136,21 @@ class Database
 	{
 	}
 
+	function Escape($val)
+	{
+		switch ($this->type)
+		{
+			case DB_MI:
+				return mysqli_real_escape_string($this->link, $val);
+			case DB_MY:
+				return mysql_real_escape_string($val, $this->link);
+			case DB_SL:
+				return sqlite_escape_string($val);
+			default:
+				return addslashes($val);
+		}
+	}
+
 	/**
 	 * Opens a connection to a database.
 	 * @param string $url Example: mysql://user:pass@host/database
@@ -133,6 +162,14 @@ class Database
 			Error("Invalid url for database.");
 		switch ($m[1])
 		{
+			case 'mysqli':
+				$this->ErrorHandler = array($this, 'CheckMiError');
+				$this->func_aff = 'mysqli_affected_rows';
+				$this->link = mysqli_connect($m[5], $m[3], $m[4]);
+				mysqli_select_db($this->link, $m[6]);
+				$this->type = DB_MI;
+				$this->lq = $this->rq = '`';
+				break;
 			case 'mysql':
 				$this->ErrorHandler = array($this, 'CheckMyError');
 				$this->func_aff = 'mysql_affected_rows';
@@ -176,6 +213,9 @@ class Database
 		Trace($query);
 		switch ($this->type)
 		{
+			case DB_MI:
+				$res = mysqli_query($this->link, $query);
+				break;
 			case DB_MY:
 				$res = mysql_query($query, $this->link);
 				break;
@@ -467,9 +507,9 @@ class DataSet
 	{
 		switch ($db->type)
 		{
-			case DB_OD:
-				$this->func_fetch = 'odbc_fetch_array';
-				$this->func_rows = 'odbc_num_rows';
+			case DB_MI:
+				$this->func_fetch = 'mysqli_fetch_array';
+				$this->func_rows = 'mysqli_affected_rows';
 				break;
 			case DB_MY:
 				$this->func_fetch = 'mysql_fetch_array';
@@ -478,6 +518,11 @@ class DataSet
 			case DB_SL:
 				$this->func_fetch = 'sqlite_fetch_array';
 				$this->func_rows = 'sqlite_num_rows';
+				break;
+			case DB_OD:
+				$this->func_fetch = 'odbc_fetch_array';
+				$this->func_rows = 'odbc_num_rows';
+				break;
 		}
 		$this->database = $db;
 		$this->table = $table;
@@ -507,7 +552,7 @@ class DataSet
 	 * @return string
 	 * @access private
 	 */
-	function ColsClause($cols)
+	/*function ColsClause($cols)
 	{
 		if (!empty($cols))
 		{
@@ -528,7 +573,7 @@ class DataSet
 			return $ret;
 		}
 		return ' *';
-	}
+	}*/
 
 	/**
 	 * Quotes a table properly depending on the data source.
@@ -545,6 +590,11 @@ class DataSet
 			return preg_replace('#([^(]+)\.([^ )]+)#',
 			"{$lq}\\1{$rq}.{$lq}\\2{$rq}", $name);
 		return "{$lq}{$name}{$rq}";
+	}
+
+	function StripTable($name)
+	{
+		return (!strpos($name, '.')?$name:substr($name, strpos($name, '.')+1));
 	}
 
 	/**
@@ -695,7 +745,7 @@ class DataSet
 	 * @param array $values eg: array('col1' => 'val1')
 	 * @return string Proper set.
 	 */
-	function GetSetString($values, $start = ' SET ')
+	function GetSetString($values, $start = ' SET ', $sep = ',')
 	{
 		if (!empty($values))
 		{
@@ -734,6 +784,66 @@ class DataSet
 		}
 	}
 
+	function GetValue($val)
+	{
+		if (is_array($val))
+		{
+			if ($val[0] == 'destring') return $val[1];
+		}
+		return "'".$this->database->Escape($val)."'";
+	}
+
+	function GetColumnString($cols, $tables = true)
+	{
+		$ret = null;
+		$ix = 0;
+		foreach ($cols as $key => $col)
+		{
+			if (!is_numeric($key))
+				$ret .= ($ix++?',':null).
+					($tables?$key:$this->StripTable($key)).
+					' '.$col;
+			else $ret .= ($ix++?',':null).$this->QuoteTable($col);
+		}
+		return $ret;
+	}
+
+	function GetColumnsFromValues($vals)
+	{
+		if (!isset($vals)) return '*';
+		$ret = null;
+		foreach (array_keys($vals) as $ix => $key)
+		{
+			if (!is_numeric($vals[$key]) && !isset($vals[$key])) continue;
+			$ret .= ($ix>0?',':null).$this->QuoteTable($key);
+		}
+		return $ret;
+	}
+
+	function GetSingleValueString($vals, $sep = ',')
+	{
+		$ret = null;
+		$ix = 0;
+		foreach ($vals as $col => $val)
+		{
+			if ($ix++ > 0) $ret .= $sep;
+			$ret .= $this->GetValue($val);
+		}
+		return $ret;
+	}
+
+	function GetValueString($vals, $multi = false, $sep = ',')
+	{
+		if ($multi)
+		{
+			$ret = null;
+			foreach ($vals as $ix => $v)
+				$ret .= ($ix?',':null).	'('.$this->GetSingleValueString($v, $sep).')';
+			return $ret;
+		}
+		return '('.$this->GetSingleValueString($vals,$sep).')';
+	}
+
 	/**
 	 * Inserts a row into the associated table with the passed array.
 	 * @param array $columns An array of columns. If you wish to use functions
@@ -741,7 +851,7 @@ class DataSet
 	 * by unique keys, or just to add ignoring keys otherwise.
 	 * @return int ID of added row.
 	 */
-	function Add($columns, $update_existing = false)
+	function Add($columns, $update_existing = false, $multi = false)
 	{
 		$query = 'INSERT';
 		$query .= ' INTO '.$this->QuoteTable($this->table).' (';
@@ -784,32 +894,15 @@ class DataSet
 	 * keys exist.
 	 * @return mixed Identifier of the last inserted item.
 	 */
-	function AddSeries($columns, $update_existing = false)
+	function AddSeries($values, $update_existing = false, $multi = false)
 	{
-		$lq = $this->database->lq;
-		$rq = $this->database->rq;
-
-		if ($update_existing) $query = 'REPLACE';
-		else $query = 'INSERT';
-		$query .= " INTO {$lq}{$this->table}{$rq} VALUES (";
-		$ix = 0;
-		foreach ($columns as $val)
-		{
-			//destring('value') for functions and such.
-			if (is_array($val))
-			{
-				if ($val[0] == "destring") $query .= $val[1];
-			}
-			else if (empty($val)) $query .= 'NULL';
-			else $query .= "'".paslash($val)."'";
-			if ($ix < count($columns)-1) $query .= ", ";
-			$ix++;
-		}
-		$query .= ")";
+		$query = 'INSERT INTO'.$this->QuoteTable($this->table).'VALUES';
+		if ($multi) foreach ($values as $ix => $row)
+			$query .= ($ix>0?',':null).'('.$this->GetValueString($row).')';
+		else $query .= '('.$this->GetValueString($values).')';
 		if ($update_existing)
-		{
-			$query .= " ON DUPLICATE KEY UPDATE ".$this->GetSetString($columns, '');
-		}
+			$query .= " ON DUPLICATE KEY UPDATE ".
+				$this->GetSetString($values,'');
 		$this->database->Query($query);
 		return $this->database->GetLastInsertID();
 	}
@@ -848,7 +941,7 @@ class DataSet
 
 		//Prepare Query
 		$query = 'SELECT';
-		$query .= $this->ColsClause($columns);
+		$query .= $this->GetColumnsFromValues($columns);
 		$query .= "\n FROM {$lq}{$this->table}{$rq}";
 		if (isset($this->Shortcut)) $query .= " `{$this->Shortcut}`";
 		$query .= $this->JoinClause($joins, $this->joins);
@@ -870,15 +963,19 @@ class DataSet
 				break;
 			default:
 				if ($f($this->database->link) < 1) return null;
-
 		}
 		$items = null;
 
 		$a = null;
 		if ($this->database->type == DB_MY)
 		{
-				$a = MYSQL_BOTH;
-				if ($args == GET_ASSOC) $a = MYSQL_ASSOC;
+			$a = MYSQL_BOTH;
+			if ($args == GET_ASSOC) $a = MYSQL_ASSOC;
+		}
+		else if ($this->database->type == DB_MI)
+		{
+			$a = MYSQLI_BOTH;
+			if ($args == GET_ASSOC) $a = MYSQLI_ASSOC;
 		}
 
 		while (($row = call_user_func($this->func_fetch, $rows, $a)))
@@ -886,11 +983,12 @@ class DataSet
 			$newrow = array();
 			foreach ($row as $key => $val)
 			{
-				//TODO: Do not strip slashes at this level.
+				//Note: Do not strip slashes at this level.
 				$newrow[$key] = $val;
 			}
 			$items[] = $newrow;
 		}
+
 		return $items;
 	}
 
@@ -978,7 +1076,7 @@ class DataSet
 	function GetSearch($columns, $phrase, $start = 0, $limit = null,
 		$sort = null, $filter = null, $joins = null)
 	{
-		$query = "SELECT ".$this->ColsClause($columns).' FROM '.
+		$query = 'SELECT '.$this->GetColumnString($columns,false).' FROM '.
 			$this->QuoteTable($this->table);
 
 		$query .= DataSet::JoinClause($joins, $this->joins);
@@ -1005,7 +1103,7 @@ class DataSet
 				$newphrase = str_replace("'", '%', stripslashes($phrase));
 				$newphrase = str_replace(' ', '%', $newphrase);
 				if (is_array($columns))
-				foreach ($columns as $col)
+				foreach ($columns as $col => $name)
 				{
 					if (is_array($col)) continue;
 					if ($ix++ > 0) $query .= " OR";
@@ -1034,7 +1132,7 @@ class DataSet
 	function GetCustom($query)
 	{
 		$rows = $this->database->Query($query, $this->ErrorHandler);
-		if (!is_resource($rows)) return $rows;
+		if (empty($rows)) return $rows;
 		$ret = array();
 		$f = $this->func_fetch;
 		while (($row = $f($rows)))
@@ -1162,6 +1260,17 @@ class DataSet
 	{
 		$this->database->Query('TRUNCATE '.$this->table);
 	}
+
+	function Begin()
+	{
+		mysqli_autocommit($this->database->link, false);
+	}
+
+	function End()
+	{
+		mysqli_commit($this->database->link);
+		mysqli_autocommit($this->database->link, true);
+	}
 }
 
 function BuildTree($items, $parent, $assoc = null)
@@ -1221,12 +1330,6 @@ function MySqlDate($ds, $data, $col, $dbcol)
 {
 	$ts = MyDateTimestamp($data[$col]);
 	return date('m/d/y', $ts);
-}
-
-function StripTable($name)
-{
-	if (!strpos($name, '.')) return $name;
-	return substr($name, strpos($name, '.')+1);
 }
 
 ?>

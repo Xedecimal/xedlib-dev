@@ -808,7 +808,7 @@ class EditorData
 							}
 							$idcol = $colname;
 						}
-						$data[StripTable($colname)] = $item[StripTable($colname)];
+						$data[$this->ds->StripTable($colname)] = $item[$this->ds->StripTable($colname)];
 					}
 					if (!$skip)
 					{
@@ -908,8 +908,8 @@ class EditorData
 
 			//Build columns so nothing overlaps (eg. id of this and child table)
 
-			$cols["{$this->ds->table}_{$this->ds->id}"] =
-				$this->ds->table.'.'.$this->ds->id;
+			$cols[$this->ds->table.'.'.$this->ds->id] =
+				$this->ds->table.'_'.$this->ds->id;
 
 			if (!empty($this->ds->DisplayColumns))
 			foreach ($this->ds->DisplayColumns as $col => $disp)
@@ -917,10 +917,10 @@ class EditorData
 				if (is_numeric($col)) continue;
 
 				if (strpos($col, '.')) // Referencing a joined table.
-					$cols[StripTable($col)] = $col;
+					$cols[$col] = $this->ds->StripTable($col);
 				else // A table from this dataset.
-					$cols["{$this->ds->table}_{$col}"] =
-						$this->ds->table.'.'.$col;
+					$cols[$this->ds->table.'.'.$col] =
+						$this->ds->table.'_'.$col;
 			}
 
 			$joins = null;
@@ -930,8 +930,8 @@ class EditorData
 				$joins = array();
 
 				//Parent column of the child...
-				$cols["{$child->ds->table}_{$child->child_key}"] =
-					"{$child->ds->table}.{$child->child_key}";
+				$cols[$child->ds->table.'.'.$child->child_key] =
+					$child->ds->table.'_'.$child->child_key;
 
 				//Coming from another table, we gotta join it in.
 				if ($child->ds->table != $this->ds->table)
@@ -941,13 +941,13 @@ class EditorData
 						{$child->parent_key}";
 
 					//We also need to get the column names that we'll need...
-					$cols["{$child->ds->table}_{$child->ds->id}"] =
-						$child->ds->table.'.'.$child->ds->id;
+					$cols[$child->ds->table.'.'.$child->ds->id] =
+						$child->ds->table.'_'.$child->ds->id;
 					if (!empty($child->ds->DisplayColumns))
 					foreach ($child->ds->DisplayColumns as $col => $disp)
 					{
-						$cols["{$child->ds->table}_{$col}"] =
-							"{$child->ds->table}.{$col}";
+						$cols[$child->ds->table.'.'.$col] =
+							"{$child->ds->table}_{$col}";
 					}
 				}
 			}
@@ -1055,7 +1055,7 @@ class EditorData
 			foreach ($context->ds->DisplayColumns as $col => $disp)
 			{
 				if (strpos($col, '.'))
-					$disp_index = StripTable($col);
+					$disp_index = $this->ds->StripTable($col);
 				else
 					$disp_index = $context->ds->table.'_'.$col;
 
@@ -1530,6 +1530,7 @@ class DisplayData
 		{
 			$this->fs = GetVar($this->Name.'_field');
 			$this->ss = GetVar($this->Name.'_search');
+			$this->ipp = GetVar($this->Name.'_ipp', 10);
 
 			$query = "SELECT *";
 			$group = null;
@@ -1575,8 +1576,8 @@ class DisplayData
 					else if ($fi->type == 'date')
 					{
 						$where .= " $col BETWEEN '".
-						TimestampToMySql(DateInputToTS($fs[$col][0]), false).'\' AND \''.
-						TimestampToMySql(DateInputToTS($fs[$col][1]), false).'\'';
+						TimestampToMySql(DateInputToTS($this->fs[$col][0]), false).'\' AND \''.
+						TimestampToMySql(DateInputToTS($this->fs[$col][1]), false).'\'';
 					}
 					else
 					{
@@ -1588,13 +1589,14 @@ class DisplayData
 				$query .= $group;
 				if (strlen($having) > 7) $query .= $having;
 
-				var_dump($query);
 				$this->result = $this->ds->GetCustom($query);
 				$this->count = count($this->result);
 			}
 			else $this->result = array();
 
-			$this->items = GetFlatPage($this->result, GetVar('cp', 0), 10);
+			if (!empty($this->result))
+				$this->items = GetFlatPage($this->result, GetVar('cp', 0),
+					$this->ipp);
 		}
 	}
 
@@ -1605,6 +1607,7 @@ class DisplayData
 	function Get($temp)
 	{
 		$t = new Template();
+		$t->Set('name', $this->Name);
 
 		$t->ReWrite('results', array(&$this, 'TagResults'));
 		$t->ReWrite('result', array(&$this, 'TagResult'));
@@ -1720,11 +1723,13 @@ class DisplayData
 			$ret = '';
 			foreach ($this->items as $ix => $i)
 			{
+				if (!empty($this->Callbacks->Result))
+					RunCallbacks($this->Callbacks->Result, &$tField, $i);
 				$this->item = $i;
 				$tField->Set($i);
 				$ret .= $tField->GetString($g);
 
-				if ($ix > 10) break;
+				if ($ix > $this->ipp) break;
 			}
 			return $ret;
 		}
@@ -1741,7 +1746,7 @@ class DisplayData
 			$vars['val'] = '';
 			if (strpos($f, '.')) // Sub Table
 			{
-				$vs = explode(',', $this->item[StripTable($f)]);
+				$vs = explode(',', $this->item[$this->ds->StripTable($f)]);
 
 				foreach ($vs as $ix => $val)
 				{
@@ -1761,7 +1766,7 @@ class DisplayData
 			{
 				$vars['val'] = !empty($dc->callback)
 					? call_user_func($dc->callback, $this->ds, $this->item, $f)
-					: $this->item[StripTable($f)];
+					: $this->item[$this->ds->StripTable($f)];
 			}
 			$ret .= $vp->ParseVars($g, $vars);
 		}
@@ -1770,12 +1775,14 @@ class DisplayData
 
 	function TagPages($t, $g, $a)
 	{
-		/*if ($this->count > 10)
+		if ($this->count > 10)
 		{
-			return GetPages($this->result, 10, array('editor' => $this->Name,
-				'ca' => 'search', 'q' => GetVar($this->Name.'_q'),
-				'fields' => $this->fs));
-		}*/
+			return GetPages(count($this->result), $this->ipp, array(
+				$this->Name.'_action' => 'search',
+				$this->Name.'_search' => $this->ss,
+				$this->Name.'_fields' => $this->fs,
+				$this->Name.'_ipp' => $this->ipp));
+		}
 	}
 
 	function callback_fields()

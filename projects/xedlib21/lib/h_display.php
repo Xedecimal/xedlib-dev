@@ -86,7 +86,8 @@ class Box
 		$ret  = '<!-- Start Box: '.$this->title.' -->';
 		$ret .= '<div ';
 		if (!empty($this->name)) $ret .= " id=\"{$this->name}\"";
-		$ret .= ' class="box">';
+		$class = (!empty($this->prefix)?$this->prefix.'_box':'box');
+		$ret .= " class=\"{$class}\">";
 		$ret .= '<div class="box_title">'.$this->title.'</div>';
 		$ret .= '<div class="box_body">'.$this->out.'</div>';
 		$ret .= '</div>';
@@ -1347,7 +1348,6 @@ class LoginManager
 	/**
 	 * Returns HTML rendered login form.
 	 *
-	 * @param string $target Target script using this manager.
 	 * @return string
 	 */
 	function Get($template = null)

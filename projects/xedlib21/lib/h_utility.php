@@ -840,6 +840,11 @@ function GetPages($total, $count, $args = null)
 {
 	global $me;
 
+	if (!is_numeric($total))
+	{
+		throw new Exception("Invalid Total Value");
+		return;
+	}
 	if ($total <= $count) return;
 
 	$cp = GetVar('cp');
@@ -863,6 +868,7 @@ function GetPages($total, $count, $args = null)
 		if ($page == $cp) $ret .= '<b>'.($page+1).'</b>';
 		else $ret .= '<b><a href="'.$url.'">'.($page+1).'</a></b>';
 	}
+
 	if ($cp < $page)
 		$ret .= ' &ndash; '.
 		GetButton(URL($me, array_merge(array('cp' => $cp+1), $args)), 'next.png', 'Next');
