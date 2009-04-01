@@ -572,6 +572,7 @@ class Form
 		require_once('h_template.php');
 		$this->formAttribs = $formAttribs;
 		$t = new Template();
+		$t->Behavior->Bleed = false;
 		$t->Set('form_name', $this->name);
 		$t->ReWrite('form', array($this, 'TagForm'));
 		$t->ReWrite('field', array($this, 'TagField'));
@@ -1604,7 +1605,9 @@ $StateNames = array(
 	48 => 'West Virginia',
 	49 => 'Wisconsin',
 	50 => 'Wyoming',
-	51 => 'District of Columbia'
+	51 => 'District of Columbia',
+	52 => 'Canada',
+	53 => 'Armed Forces Africa / Canada / Europe / Middle East',
 );
 
 $StateSNames = array(
@@ -1659,7 +1662,9 @@ $StateSNames = array(
 	48 => 'WV',
 	49 => 'WI',
 	50 => 'WY',
-	51 => 'DC'
+	51 => 'DC',
+	52 => 'CN',
+	52 => 'AE',
 );
 
 function StateCallback($ds, $data, $col)

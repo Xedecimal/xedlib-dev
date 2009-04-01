@@ -585,56 +585,6 @@ class EditorData
 
 			$this->Reset();
 		}
-		/*else if ($action == $this->name.'_swap')
-		{
-			global $ci;
-			$ct = GetVar('ct');
-
-			$child_id = GetVar('child');
-			$context = isset($child_id) ? $this->ds->children[$child_id] : $this;
-
-			foreach ($this->handlers as $handler)
-			{
-				if (!$handler->Swap($ci, $ct)) return;
-			}
-
-			if (!empty($context->ds->FieldInputs))
-			foreach ($context->ds->FieldInputs as $name => $data)
-			{
-				if (is_array($data))
-				{
-					if ($data[1] == 'file')
-					{
-						//Move Source to tmp_source
-						$files = glob("{$data[2]}/{$ci}.*");
-						foreach ($files as $file)
-						{
-							$info = pathinfo("{$data[2]}/{$file}");
-							rename($file, "{$data[2]}/tmp_{$info['filename']}.{$info['extension']}");
-						}
-
-						//Move Target to Source
-						$files = glob("{$data[2]}/{$ct}.*");
-						foreach ($files as $file)
-						{
-							$info = pathinfo("{$data[2]}/{$file}");
-							rename($file, "{$data[2]}/{$ci}.{$info['extension']}");
-						}
-
-						//Move tmp_source to Target
-						$files = glob("{$data[2]}/tmp_{$ci}.*");
-						foreach ($files as $file)
-						{
-							$info = pathinfo("{$data[2]}/{$file}");
-							rename($file, "{$data[2]}/{$ct}.{$info['extension']}");
-						}
-					}
-				}
-			}
-
-			$context->ds->Swap(array($context->ds->id => $ci),
-				array($context->ds->id => $ct), $context->ds->id);
-		}*/
 		else if ($act == 'delete')
 		{
 			$ci = GetState($this->Name.'_ci');
@@ -1172,6 +1122,10 @@ class EditorData
 
 		if ($this->type == CONTROL_BOUND)
 		{
+			if ($this->state == STATE_CREATE)
+				foreach ($this->ds->FieldInputs as $k => $fi)
+					if ($fi->type == 'label')
+						unset($this->ds->FieldInputs[$k]);
 			$context = isset($curchild) ? $this->ds->children[$curchild] :
 				$this;
 
@@ -1283,9 +1237,7 @@ class EditorData
 					$in->name = $col;
 
 					if (isset($this->Errors[$in->name]))
-					{
 						$in->help = $this->Errors[$in->name];
-					}
 
 					$frm->AddInput($in);
 				}
@@ -1339,12 +1291,8 @@ class EditorData
 		{
 			if (!empty($context->ds->children))
 			foreach ($context->ds->children as $ix => $child)
-			{
 				if (isset($child->ds->FieldInputs))
-				{
 					$ret[] = $this->GetForm(STATE_CREATE, $ix);
-				}
-			}
 		}
 		return $ret;
 	}
@@ -1489,6 +1437,7 @@ class DisplayData
 	/**
 	 * Available to calling script to prepare any actions that may be ready to be
 	 * performed.
+	 *
 	 * @access public
 	 */
 	function Prepare()

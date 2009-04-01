@@ -224,45 +224,21 @@ class CodeReader
 				{
 					case T_PUBLIC:
 					case T_PRIVATE:
-					case T_PROTECTED:
-						$this->modifier = $tok[0];
-						break;
+					case T_PROTECTED: $this->modifier = $tok[0]; break;
 
-					case T_VAR:
-						$this->modifier = 0;
-						break;
+					case T_VAR: $this->modifier = 0; break;
 
-					case T_VARIABLE:
-						$this->ProcVariable($tok);
-						break;
-					case T_FUNCTION:
-						$this->ProcFunction($tok);
-						break;
-					case T_CLASS:
-						$this->ProcClass($tok);
-						break;
+					case T_VARIABLE: $this->ProcVariable($tok); break;
+					case T_FUNCTION: $this->ProcFunction($tok); break;
+					case T_CLASS: $this->ProcClass($tok); break;
 
-					case T_CONSTANT_ENCAPSED_STRING:
-						$this->ProcConstant($tok);
-						break;
-					case T_CURLY_OPEN:
-						$this->ProcCurlyOpen($tok);
-						break;
-					case T_DOC_COMMENT:
-						$this->ProcDocComment($tok);
-						break;
-					case T_EXTENDS:
-						$this->getting = CODE_GET_EXTENDS;
-						break;
-					case T_LNUMBER:
-						$this->ProcNumber($tok);
-						break;
-					case T_RETURN:
-						$this->ProcReturn($tok);
-						break;
-					case T_STRING:
-						$this->ProcString($tok);
-						break;
+					case T_CONSTANT_ENCAPSED_STRING: $this->ProcConstant($tok); break;
+					case T_CURLY_OPEN: $this->ProcCurlyOpen($tok); break;
+					case T_DOC_COMMENT: $this->ProcDocComment($tok); break;
+					case T_EXTENDS: $this->getting = CODE_GET_EXTENDS; break;
+					case T_LNUMBER: $this->ProcNumber($tok); break;
+					case T_RETURN: $this->ProcReturn($tok); break;
+					case T_STRING: $this->ProcString($tok); break;
 				}
 			}
 		}
