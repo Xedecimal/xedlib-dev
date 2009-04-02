@@ -448,11 +448,10 @@ class EditorData
 					{
 						if (empty($value['tmp_name'])) continue;
 						$ext = strrchr($value['name'], '.');
-						$vp = new VarParser();
 
 						$moves[] = array(
 							'src' => $value['tmp_name'],
-							'dst' => $vp->ParseVars($in->valu, $insert).$ext
+							'dst' => $in->valu.$ext
 						);
 						//$insert[$col] = $ext;
 					}
@@ -484,10 +483,14 @@ class EditorData
 			$insert[$context->ds->id] = $id;
 
 			if (!empty($moves))
-			foreach ($moves as $move)
 			{
-				move_uploaded_file($move['src'], $move['dst']);
-				chmod($move['dst'], 0777);
+				$vp = new VarParser();
+				foreach ($moves as $move)
+				{
+					$dst = $vp->ParseVars($move['dst'], $insert);
+					move_uploaded_file($move['src'], $dst);
+					chmod($dst, 0777);
+				}
 			}
 
 			foreach ($this->handlers as $handler)
