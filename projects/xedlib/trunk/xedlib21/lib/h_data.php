@@ -293,6 +293,8 @@ class Database
  */
 function DeString($data) { return array('destring', $data); }
 function SQLBetween($from, $to) { return array('between', $from, $to); }
+function SQLEquals($val) { return array('=', $val); }
+function SQLLike($val) { return array('LIKE', $val); }
 function SQLNotNull() { return array('notnull'); }
 /**
  * Returns the proper format for DataSet to generate the current time.
@@ -589,7 +591,15 @@ class DataSet
 		if (strpos($name, '.') > -1)
 			return preg_replace('#([^(]+)\.([^ )]+)#',
 			"{$lq}\\1{$rq}.{$lq}\\2{$rq}", $name);
-		return "{$lq}{$name}{$rq}";
+		return $lq.$name.$rq;
+	}
+
+	function FullTable()
+	{
+		$lq = $this->database->lq;
+		$rq = $this->database->rq;
+		if (!empty($this->Shortcut)) $append = ' '.$lq.$this->Shortcut.$rq;
+		return $this->QuoteTable($this->table).$append;
 	}
 
 	function StripTable($name)
@@ -609,34 +619,41 @@ class DataSet
 		{
 			if (is_array($match))
 			{
-				$ret = "\n".$start;
-				$ix = 0;
 				foreach ($match as $col => $val)
 				{
-					if ($ix++ > 0) $ret .= ' AND';
 					if (is_string($col)) //array('col' => 'value')
 					{
-						if (is_array($val) && strtolower($val[0]) == 'custom')
-							$ret .= ' '.$this->QuoteTable($col)." {$val[1]}";
-						else if (is_array($val) && strtolower($val[0]) == 'destring')
-							$ret .= ' '.$this->QuoteTable($col)." = {$val[1]}";
-						else if (is_array($val) && strtolower($val[0]) == 'between')
-							$ret .= ' '.$this->QuoteTable($col).
-								" BETWEEN '{$val[1]}' AND '{$val[2]}'";
-						else if (is_array($val) && strtolower($val[0]) == 'notnull')
-							$ret .= $this->QuoteTable($col).' IS NOT NULL';
-						else $ret .= ' '.$this->QuoteTable($col)." = '{$val}'";
+						if (is_array($val))
+						switch ($val[0])
+						{
+							case 'custom':
+								$parts[] = $this->QuoteTable($col)." {$val[1]}";
+								break;
+							case 'destring':
+								$parts[] = $this->QuoteTable($col)." = {$val[1]}";
+								break;
+							case 'between':
+								$parts[] = $this->QuoteTable($col).
+									" BETWEEN '{$val[1]}' AND '{$val[2]}'";
+								break;
+							case 'notnull':
+								$parts[] = $this->QuoteTable($col).' IS NOT NULL';
+							default:
+								if (isset($val[1]))
+									$parts[] = $this->QuoteTable($col).' '.$val[0]." '{$val[1]}'";
+						}
+						else if (strlen($val) < 1) { continue; }
+						else $parts[] = $this->QuoteTable($col)." = '{$val}'";
 					}
 					else //"col = 'value'"
-					{
-						$ret .= " {$val}";
-					}
+						$parts[] .= " {$val}";
+
+					$skip = false;
 				}
-				return $ret;
+				return "\n".$start.' '.implode($parts, ' AND ');
 			}
 			else return "\n".$start.' '.$match;
 		}
-		return null;
 	}
 
 	/**
@@ -797,20 +814,25 @@ class DataSet
 	{
 		$ret = null;
 		$ix = 0;
-		foreach ($cols as $key => $col)
+		if (!empty($cols))
 		{
-			if (!is_numeric($key))
-				$ret .= ($ix++?',':null).
-					($tables?$key:$this->StripTable($key)).
-					' '.$col;
-			else $ret .= ($ix++?',':null).$this->QuoteTable($col);
+			if (is_array($cols))
+			foreach ($cols as $key => $col)
+			{
+				if (!is_numeric($key))
+					$ret .= ($ix++?',':null).
+						($tables?$key:$this->StripTable($key)).
+						' '.$col;
+				else $ret .= ($ix++?',':null).$this->QuoteTable($col);
+			}
+			else if (is_string($cols)) $ret = $cols;
 		}
 		return $ret;
 	}
 
 	function GetColumnsFromValues($vals)
 	{
-		if (!isset($vals)) return '*';
+		if (!isset($vals)) return ' *';
 		$ret = null;
 		foreach (array_keys($vals) as $ix => $key)
 		{
@@ -942,8 +964,7 @@ class DataSet
 		//Prepare Query
 		$query = 'SELECT';
 		$query .= $this->GetColumnsFromValues($columns);
-		$query .= "\n FROM {$lq}{$this->table}{$rq}";
-		if (isset($this->Shortcut)) $query .= " `{$this->Shortcut}`";
+		$query .= ' FROM '.$this->FullTable();
 		$query .= $this->JoinClause($joins, $this->joins);
 		$query .= $this->WhereClause($match);
 		$query .= $this->GroupClause($group);

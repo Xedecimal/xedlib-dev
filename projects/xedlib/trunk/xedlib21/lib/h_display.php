@@ -1281,6 +1281,7 @@ class LoginManager
 
 		$this->Name = $name;
 		$this->type = CONTROL_SIMPLE;
+		$this->Behavior = new LoginManagerBehavior();
 
 		$this->View = new LoginManagerView();
 	}
@@ -1311,7 +1312,9 @@ class LoginManager
 			 	SetVar($uservar, $check_user);
 			}
 
-			$check_pass = md5(GetVar($this->Name.'_auth_pass'));
+			$check_pass = GetVar($this->Name.'_auth_pass');
+			if ($this->Behavior->Encryption)
+				$check_pass = md5($check_pass);
 			SetVar($passvar, $check_pass);
 		}
 		if ($act == 'logout')
@@ -1399,6 +1402,11 @@ class LoginManagerView
 {
 	public $TextLogin = 'Login';
 	public $TextPassword = 'Password';
+}
+
+class LoginManagerBehavior
+{
+	public $Encryption = true;
 }
 
 /**

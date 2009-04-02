@@ -392,7 +392,7 @@ class Template extends LayeredOutput
 			$vp = new VarParser();
 			foreach ($this->rewrites[$tag] as $rw)
 
-			$objd->Out(call_user_func($rw, &$this,
+			$objd->Out(call_user_func($rw, $this,
 				$obj->Get(), $vp->ParseVars($obj->attribs, $this->vars),
 				$obj->tag, @$this->rewriteargs[$tag]));
 
@@ -564,7 +564,7 @@ class Template extends LayeredOutput
 		$p = xml_parser_create();
 		$this->data['template.parsers'][] = &$p;
 
-		xml_set_object($p, &$this);
+		xml_set_object($p, $this);
 		xml_set_element_handler($p, 'Start_Tag', 'End_Tag');
 		xml_set_character_data_handler($p, 'CData');
 		xml_set_default_handler($p, 'def');
