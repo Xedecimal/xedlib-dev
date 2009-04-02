@@ -5,6 +5,12 @@ a img { border: 0; }
 
 th { text-align: left; }
 
+.box { float: left; margin: 5px; }
+
+#fman_tasks { clear: both; }
+
+#logger_table { clear: both; }
+
 .box_title
 {
 	padding: 10px;

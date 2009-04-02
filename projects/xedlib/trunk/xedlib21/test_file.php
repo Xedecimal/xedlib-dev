@@ -27,7 +27,7 @@ $t = new Template();
 if (!$user = $lm->Prepare($ca))
 {
 	$page_title = 'Login';
-	$page_body = $lm->Get($me);
+	$page_body = $lm->Get();
 	die($t->ParseFile('template_test.xml'));
 }
 
