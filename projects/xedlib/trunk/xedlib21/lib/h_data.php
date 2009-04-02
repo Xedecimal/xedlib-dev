@@ -875,34 +875,10 @@ class DataSet
 	 */
 	function Add($columns, $update_existing = false, $multi = false)
 	{
-		$query = 'INSERT';
-		$query .= ' INTO '.$this->QuoteTable($this->table).' (';
-		$ix = 0;
-		foreach (array_keys($columns) as $key)
-		{
-			if (!is_numeric($columns[$key]) && !isset($columns[$key])) continue;
-			if ($ix++ != 0) $query .= ", ";
-			$query .= $this->QuoteTable($key);
-		}
-		$query .= ') VALUES (';
-		$ix = 0;
-		foreach ($columns as $key => $val)
-		{
-			if (!is_numeric($val) && !isset($val)) continue;
-			if ($ix > 0) $query .= ', ';
-			if (is_array($val))
-			{
-				if ($val[0] == "destring") $query .= $val[1];
-			}
-			else $query .= "'".mysql_real_escape_string($val)."'";
-			$ix++;
-		}
-		$query .= ")";
-		if ($update_existing)
-		{
-			$query .= ' ON DUPLICATE KEY UPDATE ';
-			$query .= $this->GetSetString($columns, null);
-		}
+		if (empty($columns)) return;
+		$query = 'INSERT INTO '.$this->QuoteTable($this->table).'('.
+			$this->GetColumnsFromValues($multi?$columns[0]:$columns).')VALUES'.
+			$this->GetValueString($columns,$multi);
 		$this->database->Query($query);
 		return $this->database->GetLastInsertID();
 	}

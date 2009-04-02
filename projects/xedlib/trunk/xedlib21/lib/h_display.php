@@ -604,24 +604,28 @@ class FormInput
 	 * @var string
 	 */
 	public $text;
+
 	/**
 	 * Name of this input object, used in conjunction with the associated form.
 	 *
 	 * @var string
 	 */
 	public $name;
+
 	/**
 	 * Type of this input object. (text, select, string, checks, etc)
 	 *
 	 * @var string
 	 */
 	public $type;
+
 	/**
 	 * Manual HTML attributes for this input object.
 	 *
 	 * @var string
 	 */
 	public $atrs;
+
 	/**
 	 * Help text is displayed below the form field. Usually in case of error or
 	 * to provide better information on the input wanted.
@@ -629,6 +633,7 @@ class FormInput
 	 * @var string
 	 */
 	public $help;
+
 	/**
 	 * Default value of this input object.
 	 *
@@ -780,7 +785,7 @@ class FormInput
 				{
 					$selected = $val->selected ? 'checked="checked"' : null;
 					if ($val->group)
-						$ret .= "<b><i>{$val->text}</i></b><br/>\n";
+						$ret .= "<br /><b><i>{$val->text}</i></b>\n";
 					else
 						$ret .= "<label><input
 							type=\"checkbox\"
