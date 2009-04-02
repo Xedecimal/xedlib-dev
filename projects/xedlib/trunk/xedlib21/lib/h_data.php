@@ -779,11 +779,12 @@ class DataSet
 		$ix = 0;
 		if (!empty($cols))
 		{
-			if (!is_numeric($key))
-				$ret .= ($ix++?', ':null).
-					($tables?$key:$this->StripTable($key)).
-					' '.$this->ProcessVal($col);
-			else $ret .= ($ix++?', ':null).$this->QuoteTable($col);
+			foreach ($cols as $key => $col)
+				if (!is_numeric($key))
+					$ret .= ($ix++?', ':null).
+						($tables?$key:$this->StripTable($key)).
+							' '.$this->ProcessVal($col);
+				else $ret .= ($ix++?', ':null).$this->QuoteTable($col);
 		}
 		return $ret;
 	}

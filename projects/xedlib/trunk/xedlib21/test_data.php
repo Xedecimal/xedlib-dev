@@ -2,6 +2,7 @@
 
 //Configuration
 
+$page_head = '';
 $page_title = 'Storage Tests';
 $page_body = '';
 
@@ -105,7 +106,9 @@ $tbl = new Table('tblMain',
 	array('valign="top"', 'valign="top"', 'valign="top"')
 );
 
+$edSelf->Behavior->Search = false;
 $row[0] = $edSelf->GetUI($me, $ci);
+$edForeign->Behavior->Search = false;
 $row[1] = $edForeign->GetUI($me, $ci);
 $row[2] = $edBoth->GetUI($me, $ci);
 
@@ -118,6 +121,6 @@ actually can re-align if in the correct order, but you will destroy their tree
 if they cannot find their parents by their order (a part of manual sorting that
 cannot allow us to automatically sort).";
 
-echo $t->Get('template_test.xml');
+echo $t->ParseFile('template_test.xml');
 
 ?>
