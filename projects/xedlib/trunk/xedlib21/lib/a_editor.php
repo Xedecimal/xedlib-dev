@@ -520,7 +520,7 @@ class EditorData
 			{
 				if (is_object($in))
 				{
-					if ($in->type == 'label') continue;
+					if (GetClass($in) == 'FieldInput' && $in->type == 'label') continue;
 
 					$value = GetVar($this->Name.'_'.$col);
 
