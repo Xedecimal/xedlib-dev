@@ -80,8 +80,7 @@ class LoggerAuth extends EditorHandler
 
 	function TrimByDate($ts)
 	{
-		$this->dsLog->GetCustom("DELETE FROM {$this->dsLog->table}
-			WHERE log_date < '".TimestampToMySql($ts)."'");
+		$this->dsLog->Remove(array('log_date' => SqlLess(TimestampToMySql($ts))));
 	}
 
 	/**

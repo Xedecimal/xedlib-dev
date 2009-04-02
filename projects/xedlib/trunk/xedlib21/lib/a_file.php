@@ -1102,7 +1102,7 @@ class FileManagerView
 	 * Create folder text to be displayed.
 	 * @var string
 	 */
-	public $TitleCreateFolder = 'Create New Folder';
+	public $TextCreateFolder = 'Create New Folder';
 
 	/**
 	 * Title message for the upload box.

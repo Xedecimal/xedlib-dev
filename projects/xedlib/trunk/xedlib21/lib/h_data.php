@@ -301,6 +301,7 @@ function SQLBetween($from, $to) { return array('cmp' => 'between', 'val' => $fro
 function SQLNotNull() { return array('cmp' => 'IS NOT NULL', 'opt' => SQLOPT_DESTRING); }
 function SQLNot($val) { return array('cmp' => '!=', 'val' => $val); }
 function SQLAnd($val) { return array('inc' => 'AND', 'val' => $val); }
+function SqlLess($val) { return array('cmp' => '<', 'val' => $val); }
 
 /**
  * Returns the proper format for DataSet to generate the current time.
@@ -565,6 +566,9 @@ class DataSet
 	 */
 	function WhereClause($match, $start = ' WHERE ')
 	{
+		$ix = 0;
+		$ret = null;
+
 		if (!empty($match))
 		{
 			if (is_array($match))
@@ -591,11 +595,11 @@ class DataSet
 					// array('val')
 
 					else //"col = 'value'"
-						$parts[] .= " {$val}";
+						$ret .= " {$val}";
 
 					$skip = false;
 				}
-				return "\n".$start.' '.implode($parts, ' AND ');
+				return "\n".$start.' '.$ret;
 			}
 			else return "\n".$start.' '.$match;
 		}
@@ -849,8 +853,9 @@ class DataSet
 	 * @return string Quoted name.
 	 * @todo Rename this to QuoteName
 	 */
-	function QuoteTable($name)
+	function QuoteTable($name = null)
 	{
+		if ($name == null) $name = $this->table;
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 		if (strpos($name, '.') > -1)
@@ -959,7 +964,7 @@ class DataSet
 		//Prepare Query
 		$query = 'SELECT ';
 		$query .= $this->GetColumnString($columns);
-		$query .= ' FROM '.$this->FullTable();
+		$query .= ' FROM '.$this->QuoteTable();
 		$query .= $this->JoinClause($joins, $this->joins);
 		$query .= $this->WhereClause($match);
 		$query .= $this->GroupClause($group);

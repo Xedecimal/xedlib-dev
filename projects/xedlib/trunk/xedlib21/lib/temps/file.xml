@@ -6,7 +6,7 @@
 <null>
 
 <header>
-<box title="Current Path Location">
+<box title="Current Path Location" id="{{fn_name}}_path">
 <path root="Home" sep="&raquo;"> <a href="{{uri}}">{{name}}</a></path>
 <download></download>
 </box>
@@ -14,12 +14,12 @@
 
 <form action="{{me}}" method="post" enctype="multipart/form-data">
 
-<table>
-	<tr>
+<!-- <table>
+	<tr> -->
 
 <options>
 	<td valign="top">
-		<box title="File and Folder Tasks">
+		<box title="File and Folder Tasks" id="{{fn_name}}_tasks">
 			<table>
 			<!-- Mass Options -->
 			<tr><td>
@@ -211,8 +211,8 @@
 </td>
 </details>
 
-</tr>
-</table>
+<!-- </tr>
+</table> -->
 
 </form>
 </null>
