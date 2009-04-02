@@ -33,6 +33,11 @@ define('DB_SL', 3); //SQLite
 
 define('ER_NO_SUCH_TABLE', 1146);
 
+define('SQLOPT_NONE', 0);
+define('SQLOPT_QUOTE', 1);
+define('SQLOPT_TQUOTE', 2);
+define('SQLOPT_DESTRING', 4);
+
 /**
  * A generic database interface, currently only supports MySQL apparently.
  */
@@ -291,11 +296,12 @@ class Database
  * @param string $data Information that will not be quited.
  * @return array specifying that this string shouldn't be quoted.
  */
-function DeString($data) { return array('destring', $data); }
-function SQLBetween($from, $to) { return array('between', $from, $to); }
-function SQLEquals($val) { return array('=', $val); }
-function SQLLike($val) { return array('LIKE', $val); }
-function SQLNotNull() { return array('notnull'); }
+function DeString($data) { return array('val' => $data); }
+function SQLBetween($from, $to) { return array('cmp' => 'between', 'val' => $from .' AND '.$to); }
+function SQLNotNull() { return array('cmp' => 'IS NOT NULL', 'opt' => SQLOPT_DESTRING); }
+function SQLNot($val) { return array('cmp' => '!=', 'val' => $val); }
+function SQLAnd($val) { return array('inc' => 'AND', 'val' => $val); }
+
 /**
  * Returns the proper format for DataSet to generate the current time.
  * @return array This column will get translated into the current time.
@@ -428,6 +434,7 @@ class DataSet
 	 * @var string
 	 */
 	public $table;
+
 	/**
 	 * Array of Relation objects that make up associated children of the table
 	 * this DataSet is associated with.
@@ -435,6 +442,7 @@ class DataSet
 	 * @var array
 	 */
 	public $children;
+
 	/**
 	 * Name of the column that holds the primary key of the table that this
 	 * DataSet is associated with.
@@ -442,6 +450,7 @@ class DataSet
 	 * @var string
 	 */
 	public $id;
+
 	/**
 	 * A shortcut name for this dataset for use in SQL queries.
 	 * Eg. Translating AReallyLongName to arln for later using a join
@@ -529,6 +538,7 @@ class DataSet
 		$this->database = $db;
 		$this->table = $table;
 		$this->id = $id;
+		$this->joins = array();
 	}
 
 	/**
@@ -548,103 +558,38 @@ class DataSet
 	}
 
 	/**
-	 * Gets associated SQL text for a clause naming specific columns.
-	 *
-	 * @param array $cols
-	 * @return string
-	 * @access private
-	 */
-	/*function ColsClause($cols)
-	{
-		if (!empty($cols))
-		{
-			$ret = '';
-			$ix = 0;
-			if (is_array($cols))
-			foreach ($cols as $name => $val)
-			{
-				if ($ix++ > 0) $ret .= ",\n";
-				if (is_array($val) && $val[0] = 'destring')
-					$ret .= ' '.$val[1];
-				else
-					$ret .= ' '.$this->QuoteTable($val);
-				if (!is_numeric($name)) $ret .= ' AS '.$this->QuoteTable($name);
-			}
-			else
-				$ret .= ' '.$cols;
-			return $ret;
-		}
-		return ' *';
-	}*/
-
-	/**
-	 * Quotes a table properly depending on the data source.
-	 *
-	 * @param string $name
-	 * @return string Quoted name.
-	 * @todo Rename this to QuoteName
-	 */
-	function QuoteTable($name)
-	{
-		$lq = $this->database->lq;
-		$rq = $this->database->rq;
-		if (strpos($name, '.') > -1)
-			return preg_replace('#([^(]+)\.([^ )]+)#',
-			"{$lq}\\1{$rq}.{$lq}\\2{$rq}", $name);
-		return $lq.$name.$rq;
-	}
-
-	function FullTable()
-	{
-		$lq = $this->database->lq;
-		$rq = $this->database->rq;
-		if (!empty($this->Shortcut)) $append = ' '.$lq.$this->Shortcut.$rq;
-		return $this->QuoteTable($this->table).$append;
-	}
-
-	function StripTable($name)
-	{
-		return (!strpos($name, '.')?$name:substr($name, strpos($name, '.')+1));
-	}
-
-	/**
 	 * Gets a WHERE clause in SQL format.
 	 *
 	 * @param array $match
 	 * @return string
 	 */
-	function WhereClause($match, $start = ' WHERE')
+	function WhereClause($match, $start = ' WHERE ')
 	{
-		if (isset($match))
+		if (!empty($match))
 		{
 			if (is_array($match))
 			{
 				foreach ($match as $col => $val)
 				{
-					if (is_string($col)) //array('col' => 'value')
+					if ($ix++ > 0)
+						$ret .= isset($val['inc'])?' '.$val['inc'].' ':' AND';
+
+					//array('col' => 'value')
+
+					if (is_string($col))
 					{
 						if (is_array($val))
-						switch ($val[0])
 						{
-							case 'custom':
-								$parts[] = $this->QuoteTable($col)." {$val[1]}";
-								break;
-							case 'destring':
-								$parts[] = $this->QuoteTable($col)." = {$val[1]}";
-								break;
-							case 'between':
-								$parts[] = $this->QuoteTable($col).
-									" BETWEEN '{$val[1]}' AND '{$val[2]}'";
-								break;
-							case 'notnull':
-								$parts[] = $this->QuoteTable($col).' IS NOT NULL';
-							default:
-								if (isset($val[1]))
-									$parts[] = $this->QuoteTable($col).' '.$val[0]." '{$val[1]}'";
+							$ret .= $this->QuoteTable($col);
+							$ret .= !empty($val['cmp'])?' '.$val['cmp'].' ':' = ';
+							$ret .= $this->ProcessVal($val);
 						}
-						else if (strlen($val) < 1) { continue; }
-						else $parts[] = $this->QuoteTable($col)." = '{$val}'";
+						else
+							$ret .= "{$col} = '{$val}'";
 					}
+
+					// array('val')
+
 					else //"col = 'value'"
 						$parts[] .= " {$val}";
 
@@ -654,6 +599,20 @@ class DataSet
 			}
 			else return "\n".$start.' '.$match;
 		}
+	}
+
+	function SetClause($values, $start = ' SET ')
+	{
+		if (empty($values)) return;
+
+		$ret = '';
+		$ix = 0;
+		foreach ($values as $k => $v)
+		{
+			$ret .= $ix++ > 0?', ':null;
+			$ret .= $this->QuoteTable($k).' = '.$this->ProcessVal($v);
+		}
+		return $start.$ret;
 	}
 
 	/**
@@ -731,7 +690,7 @@ class DataSet
 	 */
 	static function AmountClause($amount)
 	{
-		if (isset($amount))
+		if (!empty($amount))
 		{
 			$ret = ' LIMIT';
 			if (is_array($amount)) $ret .= " {$amount[0]}, {$amount[1]}";
@@ -762,7 +721,12 @@ class DataSet
 	 * @param array $values eg: array('col1' => 'val1')
 	 * @return string Proper set.
 	 */
-	function GetSetString($values, $start = ' SET ', $sep = ',')
+	function GetColVals($values,
+		$default = null,
+		$start = ' SET ',
+		$cvsep = ' = ',
+		$vsep = ', ',
+		$opts = SQLOPT_QUOTE)
 	{
 		if (!empty($values))
 		{
@@ -771,19 +735,21 @@ class DataSet
 			$x = 0;
 			foreach ($values as $key => $val)
 			{
-				if (!is_numeric($val) && !isset($val)) continue;
+				if (!isset($val)) continue;
 				$found = true;
-				if ($x++ > 0) $ret .= ", ";
-				$ret .= $this->QuoteTable($key)." = ";
-
-				if (is_array($val))
+				if ($x++ > 0) $ret .= isset($val['inc'])?$val['inc']:$vsep;
+				if (is_numeric($key))
 				{
-					if ($val[0] == "destring")
-						$ret .= $val[1];
+					$ret .= $this->QuoteTable($val).$vsep;
 					continue;
 				}
+				else $ret .= $this->QuoteTable($key);
+				$ret .= $cvsep;
 
-				$ret .= "'";
+				$ret .= $this->GetVal($val, $opts);
+				continue;
+
+				if ($opts & SQLOPT_QUOTE) $ret .= "'";
 				switch ($this->database->type)
 				{
 					case DB_MY:
@@ -795,39 +761,49 @@ class DataSet
 					default:
 						$ret .= addslashes($val);
 				}
-				$ret .= "'";
+				if ($opts & SQLOPT_QUOTE) $ret .= "'";
 			}
 			if ($found) return $ret;
 		}
-	}
-
-	function GetValue($val)
-	{
-		if (is_array($val))
-		{
-			if ($val[0] == 'destring') return $val[1];
-		}
-		return "'".$this->database->Escape($val)."'";
+		return $default;
 	}
 
 	function GetColumnString($cols, $tables = true)
 	{
+		if ($cols == null) return '*';
 		$ret = null;
 		$ix = 0;
 		if (!empty($cols))
 		{
-			if (is_array($cols))
-			foreach ($cols as $key => $col)
-			{
-				if (!is_numeric($key))
-					$ret .= ($ix++?',':null).
-						($tables?$key:$this->StripTable($key)).
-						' '.$col;
-				else $ret .= ($ix++?',':null).$this->QuoteTable($col);
-			}
-			else if (is_string($cols)) $ret = $cols;
+			if (!is_numeric($key))
+				$ret .= ($ix++?', ':null).
+					($tables?$key:$this->StripTable($key)).
+					' '.$this->ProcessVal($col);
+			else $ret .= ($ix++?', ':null).$this->QuoteTable($col);
 		}
 		return $ret;
+	}
+
+	function ProcessVal($val)
+	{
+		if (is_array($val))
+		{
+			if (isset($val['val']))
+			{
+				if (isset($val['opt']) && $val['opt'] == SQLOPT_DESTRING)
+					return $val['val'];
+				else return "'".$this->database->Escape($val['val'])."'";
+			}
+		}
+		else return "'".$this->database->Escape($val)."'";
+	}
+
+	function GetVal($val, $opts)
+	{
+		if (is_array($val)) return "'".$this->database->Escape($val['val'])."'";
+		if ($opts & SQLOPT_TQUOTE)
+			return $this->QuoteTable($val);
+		return "'".$this->database->Escape($val)."'";
 	}
 
 	function GetColumnsFromValues($vals)
@@ -867,6 +843,28 @@ class DataSet
 	}
 
 	/**
+	 * Quotes a table properly depending on the data source.
+	 *
+	 * @param string $name
+	 * @return string Quoted name.
+	 * @todo Rename this to QuoteName
+	 */
+	function QuoteTable($name)
+	{
+		$lq = $this->database->lq;
+		$rq = $this->database->rq;
+		if (strpos($name, '.') > -1)
+			return preg_replace('#([^(]+)\.([^ )]+)#',
+			"{$lq}\\1{$rq}.{$lq}\\2{$rq}", $name);
+		return "{$lq}{$name}{$rq}";
+	}
+
+	function StripTable($name)
+	{
+		return (!strpos($name, '.')?$name:substr($name, strpos($name, '.')+1));
+	}
+
+	/**
 	 * Inserts a row into the associated table with the passed array.
 	 * @param array $columns An array of columns. If you wish to use functions
 	 * @param bool $update_existing Whether to update the existing values
@@ -875,10 +873,31 @@ class DataSet
 	 */
 	function Add($columns, $update_existing = false, $multi = false)
 	{
-		if (empty($columns)) return;
-		$query = 'INSERT INTO '.$this->QuoteTable($this->table).'('.
-			$this->GetColumnsFromValues($multi?$columns[0]:$columns).')VALUES'.
-			$this->GetValueString($columns,$multi);
+		$query = 'INSERT';
+		$query .= ' INTO '.$this->QuoteTable($this->table).' (';
+		$ix = 0;
+		foreach (array_keys($columns) as $key)
+		{
+			if (!is_numeric($columns[$key]) && !isset($columns[$key])) continue;
+			if ($ix++ != 0) $query .= ", ";
+			$query .= $this->QuoteTable($key);
+		}
+		$query .= ') VALUES (';
+		$ix = 0;
+		foreach ($columns as $key => $val)
+		{
+			if (!is_numeric($val) && !isset($val)) continue;
+			if ($ix > 0) $query .= ', ';
+			if (is_array($val)) $query .= $this->ProcessVal($val);
+			else $query .= "'".$this->database->Escape($val)."'";
+			$ix++;
+		}
+		$query .= ")";
+		if ($update_existing)
+		{
+			$query .= ' ON DUPLICATE KEY UPDATE ';
+			$query .= $this->SetClause($columns, null);
+		}
 		$this->database->Query($query);
 		return $this->database->GetLastInsertID();
 	}
@@ -938,8 +957,8 @@ class DataSet
 		$rq = $this->database->rq;
 
 		//Prepare Query
-		$query = 'SELECT';
-		$query .= $this->GetColumnsFromValues($columns);
+		$query = 'SELECT ';
+		$query .= $this->GetColumnString($columns);
 		$query .= ' FROM '.$this->FullTable();
 		$query .= $this->JoinClause($joins, $this->joins);
 		$query .= $this->WhereClause($match);
@@ -948,8 +967,7 @@ class DataSet
 		$query .= $this->AmountClause($filter);
 
 		//Execute Query
-		$rows = $this->database->Query($query, !empty($this->ErrorHandler),
-			$this->ErrorHandler);
+		$rows = $this->database->Query($query, $this->ErrorHandler);
 
 		//Prepare Data
 		$f = $this->func_rows;
@@ -1001,61 +1019,6 @@ class DataSet
 		$data = $this->Get($match, null, null, $joins, $cols, $group, $args);
 		if (isset($data)) return $data[0];
 		return $data;
-	}
-
-	/**
-	 * Returns the specified column from the first result of the specified query.
-	 *
-	 * @param array $match
-	 * @param string $col
-	 * @return mixed
-	 */
-	function GetScalar($match, $col)
-	{
-		if (is_array($col) && $col[0] == 'destring') { $lq = $rq = ''; $col = $col[1]; }
-		else $lq = $rq = '`';
-		$query = "SELECT $lq$col$rq FROM `{$this->table}`".$this->WhereClause($match);
-		$cols = $this->database->Query($query);
-		$data = mysql_fetch_array($cols);
-		return $data[0];
-	}
-
-	/**
-	 * Returns every row unless limit is specified without a specific sort column or order
-	 * @param int $limit Maximum amount of rows to return.
-	 * @param int $args Arguments to be passed to mysql_fetch_array (defaults to MYSQL_NUM)
-	 * @return array An array of results from the query specified.
-	 */
-	function GetAll($limit = NULL, $args = GET_BOTH)
-	{
-		return $this->Get(null, null, $limit, null, $args);
-	}
-
-	/**
-	 * Returns every database  row from the database sorting by the given column
-	 * @param string $column Name of the table column to sort by.
-	 * @param string $order Either "ASC" or "DESC" I believe.
-	 * @param int $start Result index to being at.
-	 * @param int $amount Result count to return.
-	 * @return array An array of results from the query specified or null if none.
-	 */
-	function GetAllSort($column, $order = "ASC", $start = NULL,
-		$amount = NULL)
-	{
-		$query = "SELECT * FROM {$this->table} ORDER BY $column $order";
-		if (isset($start))
-		{
-			$query .= " LIMIT $start";
-			if (isset($amount)) $query .= ", $amount";
-		}
-		$rows = $this->database->Query($query);
-		if (mysql_affected_rows() < 1) return null;
-		$this->items = array();
-		while (($row = mysql_fetch_array($rows)))
-		{
-			$this->items[] = $row;
-		}
-		return $this->items;
 	}
 
 	/**
@@ -1167,11 +1130,12 @@ class DataSet
 	 */
 	function Update($match, $values)
 	{
-		$sets = $this->GetSetString($values);
+		$sets = $this->GetColVals($values);
 		if (empty($sets)) { Trace('Nothing to update.'); return; }
 		$query = "UPDATE {$this->table}";
 		$query .= $this->JoinClause($this->joins);
-		$query .= $sets.$this->WhereClause($match);
+		$query .= $this->SetClause($values);
+		$query .= $this->WhereClause($match);
 		$this->database->Query($query);
 	}
 
@@ -1327,6 +1291,50 @@ function MySqlDate($ds, $data, $col, $dbcol)
 {
 	$ts = MyDateTimestamp($data[$col]);
 	return date('m/d/y', $ts);
+}
+
+/**
+* Stack associative data from a series of joined results.
+*
+* @param mixed $items
+* @param mixed $splits
+* @example StackData($ds->Get(), array('tbl1_id', 'tbl2_id'));
+*/
+function StackData($items, $splits)
+{
+	$cursor[0] = new TreeNode('ROOT', 0); // Root object
+
+	foreach ($items as $i)
+	{
+		foreach ($splits as $depth => $col)
+		{
+			if (!isset($cursor[$depth+1]))
+			{
+				echo "Creating tree node for {$col} ({$i[$col]})<br/>\n";
+				$cur = $cursor[$depth+1] = new TreeNode($i, $i[$col]);
+			}
+			else $cur = $cursor[$depth+1];
+			$parent = $cursor[$depth];
+
+			if ($i[$col] != $cur->data[$col])
+			{
+				$id = $i[$col];
+				$parent->children[$id] = new TreeNode($i, $id);
+			}
+		}
+	}
+
+	foreach ($splits as $depth => $col)
+	{
+		$cursor[$depth+1]->children[$i[$col]] = new TreeNode($i, $i[$col]);
+	}
+
+	foreach ($cursor[0]->children as $child)
+	{
+		varinfo($child->id);
+	}
+
+	return $cursor[0];
 }
 
 ?>

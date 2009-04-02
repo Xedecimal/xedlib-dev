@@ -33,18 +33,21 @@ class Box
 	 * @var string
 	 */
 	public $name;
+
 	/**
 	 * Title to be displayed in this box, placement depends on the theme.
 	 *
 	 * @var string
 	 */
 	public $title;
+
 	/**
 	 * Standard text to be output inside this box.
 	 *
 	 * @var string
 	 */
 	public $out;
+
 	/**
 	 * Template filename to use with this box.
 	 *
@@ -107,24 +110,28 @@ class Table
 	 * @var string
 	 */
 	public $name;
+
 	/**
 	 * Column headers for this table (displayed at the top of the rows).
 	 *
 	 * @var array
 	 */
 	public $cols;
+
 	/**
 	 * Each row array that makes up the bulk of this table.
 	 *
 	 * @var array
 	 */
 	public $rows;
+
 	/**
 	 * Array of attributes on a per-column basis.
 	 *
 	 * @var array
 	 */
 	public $atrs;
+
 	/**
 	 * Array of attributes on a per-row basis.
 	 *
@@ -526,7 +533,7 @@ class Form
 		foreach ($this->hiddens as $hidden)
 		{
 			$fname = $hidden[3] ? $hidden[0] : $this->name.'_'.$hidden[0];
-			$ret .= "<input type=\"hidden\" id=\"".CleanID($fname)."\"
+			$ret .= "<input type=\"hidden\" id=\"".CleanID($this->name.'_'.$fname)."\"
 				name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
 			if (isset($hidden[2])) $ret .= ' '.$hidden[2];
 			$ret .= " />\n";
@@ -538,7 +545,9 @@ class Form
 	function TagField($t, $g)
 	{
 		$ret = '';
-		$vp = new VarParser();
+		$tt = new Template();
+		$tt->ReWrite('error', array(&$this, 'TagError'));
+
 		$ix = 0;
 		if (!empty($this->inputs))
 		foreach ($this->inputs as $in)
@@ -556,9 +565,20 @@ class Form
 				$d['help'] = '';
 			}
 
-			$ret .= $vp->ParseVars($g, $d);
+			$this->d = $d;
+			$tt->Set($d);
+			$ret .= $tt->GetString($g);
 		}
 		return $ret;
+	}
+
+	function TagError($t, $g)
+	{
+		if (!empty($this->d['help']))
+		{
+			$vp = new VarParser();
+			return $vp->ParseVars($g, $this->d);
+		}
 	}
 
 	/**
@@ -574,8 +594,8 @@ class Form
 		$t = new Template();
 		$t->Behavior->Bleed = false;
 		$t->Set('form_name', $this->name);
-		$t->ReWrite('form', array($this, 'TagForm'));
-		$t->ReWrite('field', array($this, 'TagField'));
+		$t->ReWrite('form', array(&$this, 'TagForm'));
+		$t->ReWrite('field', array(&$this, 'TagField'));
 		return $t->GetString($this->Template);
 	}
 
@@ -672,7 +692,10 @@ class FormInput
 		$this->type = $type;
 		$this->name = $name;
 		$this->valu = $valu;
-		if (is_array($atrs)) $this->atrs = $atrs;
+		if (is_array($atrs))
+		{
+			foreach ($atrs as $k => $v) $this->atrs[strtoupper($k)] = $v;
+		}
 		else $this->atrs = ParseAtrs($atrs);
 		$this->help = $help;
 		if ($type == 'date' || $type == 'time' || $type == 'datetime')
@@ -1342,7 +1365,7 @@ class LoginManager
 					creation of this LoginManager.");
 				$match = array(
 					$ds[1] => $check_pass,
-					$ds[2] => $check_user
+					$ds[2] => SqlAnd($check_user)
 				);
 				if (!empty($conditions))
 					$match = array_merge($match, $conditions);
@@ -1690,6 +1713,7 @@ function TagIToState($t, $g, $a)
 {
 	global $StateNames; return @$StateNames[$a['STATE']];
 }
+
 function TagIToSState($t, $g, $a)
 {
 	global $StateSNames; return @$StateSNames[$a['STATE']];
@@ -1834,7 +1858,6 @@ function TagUpper($t, $g, $a)
 {
 	return strtoupper($g);
 }
-
 
 function GetAttribs($attribs)
 {

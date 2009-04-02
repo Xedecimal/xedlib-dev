@@ -672,7 +672,7 @@ class EditorData
 	 *
 	 * @return string
 	 */
-	function Get()
+	function Get($assoc)
 	{
 		global $me;
 		$ret['name'] = $this->Name;
@@ -685,8 +685,8 @@ class EditorData
 			&& ($this->Behavior->Search && isset($q)))
 			$ret['table'] = $this->GetTable($me, $act, $q);
 		else $ret['table'] = null;
-		$ret['forms'] = $this->GetForms($me, $act,
-			GetVar('editor') == $this->Name ? GetVar('child') : null);
+		$ret['forms'] = $this->GetForms(GetVar($assoc) == $this->Name ?
+			GetVar('child') : null);
 		return $ret;
 	}
 
@@ -1032,7 +1032,7 @@ class EditorData
 				}
 			}
 
-			$url_defaults = array('editor' => $this->Name);
+			$url_defaults = array($this->assoc => $this->Name);
 			if (isset($child_id)) $url_defaults['child'] = $child_id;
 
 			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
@@ -1175,7 +1175,8 @@ class EditorData
 
 			global $PERSISTS;
 			if (!empty($PERSISTS))
-			foreach ($PERSISTS as $key => $val) $frm->AddHidden($key, $val);
+				foreach ($PERSISTS as $key => $val)
+					$frm->AddHidden($key, $val);
 
 			if (isset($curchild))
 			{
@@ -1334,13 +1335,16 @@ class EditorData
 	 *
 	 * @return string Rendered html of associated objects.
 	 */
-	function GetUI()
+	function GetUI($assoc)
 	{
 		require_once('h_template.php');
+
+		$this->assoc = $assoc;
 
 		$t = new Template();
 		$t->ReWrite('forms', array(&$this, 'TagForms'));
 		$t->ReWrite('search', array(&$this, 'TagSearch'));
+		$t->ReWrite('form', 'TagForm');
 		$t->Set('name', $this->Name);
 		$t->Set('plural', Plural($this->ds->Description));
 
@@ -1591,7 +1595,7 @@ class DisplayData
 					$this->joins, $cols, $this->ds->id);
 
 				$frm = new Form('frmEdit');
-				$frm->AddHidden('editor', $this->Name);
+				$frm->AddHidden($this->assoc, $this->Name);
 				$frm->AddHidden('ca', 'update');
 				$frm->AddHidden('ci', $ci);
 

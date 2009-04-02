@@ -4,7 +4,7 @@
 	<table>
 		<field><tr class="{{even_odd}}">
 			<td class="field_text">{{text}}</td>
-			<td>{{field}} <span class="error">{{help}}</span></td>
+			<td>{{field}}<error><span class="error">{{help}}</span></error></td>
 		</tr></field>
 	</table>
 	</form>

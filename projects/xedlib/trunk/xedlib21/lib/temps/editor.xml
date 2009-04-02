@@ -6,7 +6,6 @@
 	<box title="Locate and Edit {{plural}}">
 	{{TextSearchHeader}}
 	<form action="{{me}}">
-	<input type="hidden" name="editor" value="{{name}}" />
 	Search: <input type="text" name="{{name}}_q"
 		onkeyup="$('#{{name}}_subSearch').val(this.value.length > 0 ? 'Search' : 'Retrieve All');" />
 	<input type="submit" value="Retrieve All" id="{{name}}_subSearch" />

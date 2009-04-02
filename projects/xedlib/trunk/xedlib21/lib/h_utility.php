@@ -128,7 +128,7 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
  * @param int $line Line of caller.
  * @return string Rendered callstack.
  */
-function GetCallstack($file, $line)
+function GetCallstack($file = __FILE__, $line = __LINE__)
 {
 	$err = "<table><tr><td>File</td><td>#</td><td>Function</td>\n";
 	$err .= "<tr>\n\t<td>$file</td>\n\t<td>$line</td>\n";

@@ -60,7 +60,7 @@ function RequireModule(&$data, $file, $class)
 		<b>Where</b>: Template stack...\n".GetTemplateStack($data).
 		"<b>Why</b>: You may have moved this class to another file.");
 
-	$mod = new $class($data);
+	$mod = new $class();
 	$data['includes'][$class] = $mod;
 	$mod->Prepare($data);
 	return $mod;
@@ -528,6 +528,11 @@ class Template extends LayeredOutput
 		return $ret;
 	}
 
+	function Get()
+	{
+		Error('Please do not call Get on Template.');
+	}
+
 	/**
 	 * Processes an entire template as string, good for file_get_contents().
 	 *
@@ -588,8 +593,13 @@ class Template extends LayeredOutput
 
 		array_pop($this->data['template.parsers']);
 
+		return $this->ProcessVars($this->FlushBuffer());
+	}
+
+	function ProcessVars($str)
+	{
 		return preg_replace_callback('/\{{([^}]+)\}}/',
-			array(&$this, "parse_vars"), $this->FlushBuffer());
+			array(&$this, "parse_vars"), $str);
 	}
 
 	function def($p, $g)
@@ -602,21 +612,38 @@ class Template extends LayeredOutput
 	}
 
 	/**
-	 * Parse variables that have been set using set() to replace
-	 * them in this template.
+	 * Need a new description for this. It doesn't only apply to set()
+	 *
 	 * @param array $match A regexp match.
 	 * @return mixed Value of named var.
 	 */
 	function parse_vars($match)
 	{
 		$tvar = $match[1];
+
+		// This is an advanced variable.
+		if (strpos($tvar, '.'))
+		{
+			$indices = explode('.', $tvar);
+			$var = $this->FindVar($indices[0]);
+
+			for ($ix = 1; $ix < count($indices); $ix++) $var = $var[$indices[$ix]];
+			return $var;
+		}
+		$ret = $this->FindVar($tvar);
+		if (isset($ret)) return $ret;
+		return $this->Behavior->Bleed ? $match[0] : $ret;
+	}
+
+	function FindVar($tvar)
+	{
 		global $$tvar;
 		if (key_exists($tvar, $this->vars)) return $this->vars[$tvar];
 		else if (isset($$tvar)) return $$tvar;
 		else if (defined($tvar)) return constant($tvar);
 		else if (isset($this->data[$tvar])) return $this->data[$tvar];
 		else if ($this->use_getvar) return GetVar($tvar);
-		return $this->Behavior->Bleed ? $match[0] : null;
+		return null;
 	}
 
 	/**
@@ -745,6 +772,17 @@ class LayeredOutput
 	function Out($data) { $this->outs[$this->layer] .= $data; }
 	function Get() { return $this->outs[$this->layer]; }
 	function FlushBuffer() { return $this->outs[$this->layer--]; }
+}
+
+function TagNotEmpty($t, $g, $a)
+{
+	if (!empty($GLOBALS[$a['VAR']])) return $g;
+	if (!empty($t->vars[$a['VAR']])) return $g;
+}
+
+function TagRelativeDate($t, $g)
+{
+	return GetDateOffset(strtotime($t->ProcessVars($g)));
 }
 
 ?>
