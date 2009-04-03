@@ -36,7 +36,7 @@ define('ER_NO_SUCH_TABLE', 1146);
 define('SQLOPT_NONE', 0);
 define('SQLOPT_QUOTE', 1);
 define('SQLOPT_TQUOTE', 2);
-define('SQLOPT_DESTRING', 4);
+define('SQLOPT_UNQUOTE', 4);
 
 /**
  * A generic database interface, currently only supports MySQL apparently.
@@ -296,7 +296,7 @@ class Database
  * @param string $data Information that will not be quited.
  * @return array specifying that this string shouldn't be quoted.
  */
-function DeString($data) { return array('val' => $data); }
+function SqlUnquote($data) { return array('val' => $data, 'opt' => SQLOPT_UNQUOTE); }
 function SqlBetween($from, $to) { return array('cmp' => 'between', 'val' => $from .' AND '.$to); }
 function SqlNotNull() { return array('cmp' => 'IS NOT NULL', 'opt' => SQLOPT_DESTRING); }
 function SqlNot($val) { return array('cmp' => '!=', 'val' => $val); }
@@ -805,7 +805,7 @@ class DataSet
 		{
 			if (isset($val['val']))
 			{
-				if (isset($val['opt']) && $val['opt'] == SQLOPT_DESTRING)
+				if (isset($val['opt']) && $val['opt'] == SQLOPT_UNQUOTE)
 					return $val['val'];
 				else return $lq.$this->database->Escape($val['val']).$rq;
 			}

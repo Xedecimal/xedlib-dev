@@ -86,7 +86,7 @@ class Box
 			$t->set("box_body", $this->out);
 			return $t->ParseFile($temp);
 		}
-		$ret  = '<!-- Start Box: '.$this->title.' -->';
+		$ret  = '<!-- Start Box: '.$this->name.' -->';
 		$ret .= '<div ';
 		if (!empty($this->name)) $ret .= " id=\"{$this->name}\"";
 		$class = (!empty($this->prefix)?$this->prefix.'_box':'box');
@@ -94,7 +94,7 @@ class Box
 		$ret .= '<div class="box_title">'.$this->title.'</div>';
 		$ret .= '<div class="box_body">'.$this->out.'</div>';
 		$ret .= '</div>';
-		$ret .= "<!-- End Box {$this->title} -->\n";
+		$ret .= "<!-- End Box {$this->name} -->\n";
 		return $ret;
 	}
 }
