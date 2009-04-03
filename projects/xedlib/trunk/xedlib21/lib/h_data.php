@@ -297,11 +297,13 @@ class Database
  * @return array specifying that this string shouldn't be quoted.
  */
 function DeString($data) { return array('val' => $data); }
-function SQLBetween($from, $to) { return array('cmp' => 'between', 'val' => $from .' AND '.$to); }
-function SQLNotNull() { return array('cmp' => 'IS NOT NULL', 'opt' => SQLOPT_DESTRING); }
-function SQLNot($val) { return array('cmp' => '!=', 'val' => $val); }
-function SQLAnd($val) { return array('inc' => 'AND', 'val' => $val); }
+function SqlBetween($from, $to) { return array('cmp' => 'between', 'val' => $from .' AND '.$to); }
+function SqlNotNull() { return array('cmp' => 'IS NOT NULL', 'opt' => SQLOPT_DESTRING); }
+function SqlNot($val) { return array('cmp' => '!=', 'val' => $val); }
+function SqlAnd($val) { return array('inc' => 'AND', 'val' => $val); }
 function SqlLess($val) { return array('cmp' => '<', 'val' => $val); }
+function SqlDistinct($val) { return array('cmp' => 'DISTINCT', 'val' => $val); }
+function SqlCount($val) { return array('val' => 'COUNT('.$val.')', 'opt' => SQLOPT_DESTRING); }
 
 /**
  * Returns the proper format for DataSet to generate the current time.
@@ -780,27 +782,35 @@ class DataSet
 		if (!empty($cols))
 		{
 			foreach ($cols as $key => $col)
+			{
 				if (!is_numeric($key))
-					$ret .= ($ix++?', ':null).
-						($tables?$key:$this->StripTable($key)).
-							' '.$this->ProcessVal($col);
+				{
+					$ret .= ($ix++?', ':null);
+					$ret .= is_array($col) && isset($col['cmp'])?$col['cmp'].' ':null;
+					$ret .= $this->ProcessVal($col, true);
+					$ret .= ' '.($tables?$key:$this->StripTable($key));
+				}
 				else $ret .= ($ix++?', ':null).$this->QuoteTable($col);
+			}
 		}
 		return $ret;
 	}
 
-	function ProcessVal($val)
+	function ProcessVal($val, $tbl = false)
 	{
+		$lq = $tbl?$this->database->lq:"'";
+		$rq = $tbl?$this->database->rq:"'";
+
 		if (is_array($val))
 		{
 			if (isset($val['val']))
 			{
 				if (isset($val['opt']) && $val['opt'] == SQLOPT_DESTRING)
 					return $val['val'];
-				else return "'".$this->database->Escape($val['val'])."'";
+				else return $lq.$this->database->Escape($val['val']).$rq;
 			}
 		}
-		else return "'".$this->database->Escape($val)."'";
+		else return $lq.$this->database->Escape($val).$rq;
 	}
 
 	function GetVal($val, $opts)

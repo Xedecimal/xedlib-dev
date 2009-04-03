@@ -1333,9 +1333,10 @@ class EditorData
 	/**
 	 * Gets a standard user interface for a single editor's Get() method.
 	 *
+	 * @param string Name of state variable to pass around via GPC.
 	 * @return string Rendered html of associated objects.
 	 */
-	function GetUI($assoc)
+	function GetUI($assoc = 'editor')
 	{
 		require_once('h_template.php');
 
@@ -1355,6 +1356,7 @@ class EditorData
 		$t->Set('table', $this->GetTable($me, GetState($this->Name.'_ci')));
 
 		$t->Set($this->View);
+		$t->Set('assoc', $assoc);
 
 		return $t->ParseFile(dirname(__FILE__).'/temps/editor.xml');
 	}
