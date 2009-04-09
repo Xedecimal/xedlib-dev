@@ -298,12 +298,12 @@ class Database
  */
 function SqlUnquote($data) { return array('val' => $data, 'opt' => SQLOPT_UNQUOTE); }
 function SqlBetween($from, $to) { return array('cmp' => 'between', 'val' => $from .' AND '.$to); }
-function SqlNotNull() { return array('cmp' => 'IS NOT NULL', 'opt' => SQLOPT_DESTRING); }
+function SqlNotNull() { return array('cmp' => 'IS NOT NULL', 'opt' => SQLOPT_UNQUOTE); }
 function SqlNot($val) { return array('cmp' => '!=', 'val' => $val); }
 function SqlAnd($val) { return array('inc' => 'AND', 'val' => $val); }
 function SqlLess($val) { return array('cmp' => '<', 'val' => $val); }
 function SqlDistinct($val) { return array('cmp' => 'DISTINCT', 'val' => $val); }
-function SqlCount($val) { return array('val' => 'COUNT('.$val.')', 'opt' => SQLOPT_DESTRING); }
+function SqlCount($val) { return array('val' => 'COUNT('.$val.')', 'opt' => SQLOPT_UNQUOTE); }
 
 /**
  * Returns the proper format for DataSet to generate the current time.
@@ -578,7 +578,12 @@ class DataSet
 				foreach ($match as $col => $val)
 				{
 					if ($ix++ > 0)
-						$ret .= isset($val['inc'])?' '.$val['inc'].' ':' AND';
+					{
+						if (is_array($val) && isset($val['inc']))
+							$ret .= ' '.$val['inc'].' ';
+						else
+							$ret .= ' AND ';
+					}
 
 					//array('col' => 'value')
 
@@ -810,7 +815,9 @@ class DataSet
 				else return $lq.$this->database->Escape($val['val']).$rq;
 			}
 		}
-		else return $lq.$this->database->Escape($val).$rq;
+		else return $tbl
+			? $this->QuoteTable($val)
+			: $lq.$this->database->Escape($val).$rq;
 	}
 
 	function GetVal($val, $opts)
@@ -1052,9 +1059,8 @@ class DataSet
 	function GetSearch($columns, $phrase, $start = 0, $limit = null,
 		$sort = null, $filter = null, $joins = null)
 	{
-		$query = 'SELECT '.$this->GetColumnString($columns,false).' FROM '.
+		$query = 'SELECT '.$this->GetColumnString($columns, false).' FROM '.
 			$this->QuoteTable($this->table);
-
 		$query .= DataSet::JoinClause($joins, $this->joins);
 
 		$ix = 0;
@@ -1067,7 +1073,7 @@ class DataSet
 			if (is_array($phrase))
 			{
 				$ix = 0;
-				foreach ($phrase as $c => $v)
+				foreach ($phrase as $v => $c)
 				{
 					if ($ix++ > 0) $query .= ' OR';
 					$query .= ' '.$c." LIKE '%{$v}%'";
@@ -1079,7 +1085,7 @@ class DataSet
 				$newphrase = str_replace("'", '%', stripslashes($phrase));
 				$newphrase = str_replace(' ', '%', $newphrase);
 				if (is_array($columns))
-				foreach ($columns as $col => $name)
+				foreach ($columns as $name => $col)
 				{
 					if (is_array($col)) continue;
 					if ($ix++ > 0) $query .= " OR";

@@ -55,7 +55,7 @@ class LoggerAuth extends EditorHandler
 	function Log($user, $action, $target)
 	{
 		$this->dsLog->Add(array(
-			'log_date' => DeString('NOW()'),
+			'log_date' => SqlUnquote('NOW()'),
 			'log_user' => $user,
 			'log_action' => $action,
 			'log_target' => $target

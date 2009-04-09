@@ -755,7 +755,8 @@ class FormInput
 		}
 		if ($this->type == 'yesno')
 		{
-			return GetInputYesNo($parent, $this->name,
+			return GetInputYesNo($parent,
+				array_merge(array('NAME' => $this->name), (array)$this->atrs),
 				!isset($this->valu) ? GetVar($this->name) : $this->valu);
 		}
 		if ($this->type == 'select' || $this->type == 'selects')
@@ -842,11 +843,11 @@ class FormInput
 					if ($val->group)
 						$ret .= "<b><i>{$val->text}</i></b>\n";
 					else
-						$ret .= "<label><input
-							type=\"radio\"
-							name=\"{$this->name}\"
-							value=\"{$id}\"
-							id=\"".CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
+						$ret .= '<label><input
+							type="radio"
+							name="'.$parent.'_'.$this->name.'"
+							value="'.$id.'"
+							id="'.CleanID($this->name.'_'.$id)."\"{$selected}{$this->atrs}/>
 							{$val->text}</label>";
 					if (empty($this->Horizontal)) $ret .= '<br/>';
 				}

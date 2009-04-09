@@ -459,7 +459,7 @@ class EditorData
 					else $insert[$col] = $value;
 				}
 				else if (is_numeric($col)) continue;
-				else $insert[$col] = DeString($in);
+				else $insert[$col] = SqlUnquote($in);
 				//I just changed this to 'else' (check the history), because a
 				//numeric value with a string column would not go in eg. 5
 				//instead of '5', if this ends up conflicting, we'll need to
@@ -520,10 +520,13 @@ class EditorData
 			{
 				if (is_object($in))
 				{
-					if (GetClass($in) == 'FieldInput' && $in->type == 'label') continue;
+					if (get_class($in) == 'FieldInput' && $in->type == 'label') continue;
 
 					$value = GetVar($this->Name.'_'.$col);
 
+					//TODO: Support editing custom fields.
+					#if ($in->type == 'custom')
+					#	unset($update[$col]);
 					if ($in->type == 'date')
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1];
 					else if($in->type == 'datetime')
@@ -536,6 +539,8 @@ class EditorData
 						$time_portion = " {$value[3][0]}:{$value[4][0]}:00";
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1].$time_portion;
 					}
+					else if ($in->type == 'label')
+						unset($update[$col]);
 					else if ($in->type == 'password')
 					{
 						if (strlen($value) > 0) $update[$col] = md5($value);
@@ -588,6 +593,7 @@ class EditorData
 
 			$this->Reset();
 		}
+
 		else if ($act == 'delete')
 		{
 			$ci = GetState($this->Name.'_ci');
@@ -861,8 +867,8 @@ class EditorData
 
 			//Build columns so nothing overlaps (eg. id of this and child table)
 
-			$cols[$this->ds->table.'.'.$this->ds->id] =
-				$this->ds->table.'_'.$this->ds->id;
+			$cols[$this->ds->table.'_'.$this->ds->id] =
+				$this->ds->table.'.'.$this->ds->id;
 
 			if (!empty($this->ds->DisplayColumns))
 			foreach ($this->ds->DisplayColumns as $col => $disp)
@@ -872,8 +878,8 @@ class EditorData
 				if (strpos($col, '.')) // Referencing a joined table.
 					$cols[$col] = $this->ds->StripTable($col);
 				else // A table from this dataset.
-					$cols[$this->ds->table.'.'.$col] =
-						$this->ds->table.'_'.$col;
+					$cols[$this->ds->table.'_'.$col] =
+						$this->ds->table.'.'.$col;
 			}
 
 			$joins = null;
@@ -899,8 +905,8 @@ class EditorData
 					if (!empty($child->ds->DisplayColumns))
 					foreach ($child->ds->DisplayColumns as $col => $disp)
 					{
-						$cols[$child->ds->table.'.'.$col] =
-							"{$child->ds->table}_{$col}";
+						$cols[$child->ds->table.'_'.$col] =
+							$child->ds->table.'.'.$col;
 					}
 				}
 			}
@@ -1171,7 +1177,11 @@ class EditorData
 			}
 
 			if ($state == STATE_EDIT || $this->type != CONTROL_BOUND)
-				$frm->AddHidden($this->Name.'_ci', $ci);
+			{
+				$frm->AddHidden('ci', $ci);
+				if (!empty($this->assoc))
+					$frm->AddHidden($this->assoc, $this->Name);
+			}
 
 			global $PERSISTS;
 			if (!empty($PERSISTS))
@@ -1195,7 +1205,7 @@ class EditorData
 							$frm, $col);
 						continue;
 					}
-					else if ($in->type == 'select')
+					else if ($in->type == 'select' || $in->type == 'radios')
 					{
 						if (isset($sel) && isset($in->valu[$sel[0][$col]]))
 							$in->valu[$sel[0][$col]]->selected = true;
@@ -1589,7 +1599,7 @@ class DisplayData
 					$ms = null;
 					if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
 						$cols[$ms[2]] =
-							DeString("GROUP_CONCAT(DISTINCT {$ms[2]})");
+							SqlUnquote("GROUP_CONCAT(DISTINCT {$ms[2]})");
 					else $cols[$col] = $col;
 				}
 
