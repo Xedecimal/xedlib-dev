@@ -32,6 +32,7 @@ define('DB_OD', 2); //ODBC
 define('DB_SL', 3); //SQLite
 
 define('ER_NO_SUCH_TABLE', 1146);
+define('ER_INVALID_LOGIN', 9999);
 
 define('SQLOPT_NONE', 0);
 define('SQLOPT_QUOTE', 1);
@@ -106,13 +107,14 @@ class Database
 	 */
 	function CheckMyError($query, $handler)
 	{
-		if (mysql_errno())
+		if (mysql_errno($this->link))
 		{
 			if (!empty($handler))
-				if (call_user_func($handler, mysql_errno())) return;
-			if (isset($this->Handlers[mysql_errno()]))
-				if (call_user_func($this->Handlers[mysql_errno()])) return;
-			Error('MySQL Error ['.mysql_errno().']: '.mysql_error().
+				if (call_user_func($handler, mysql_errno($this->link))) return;
+			if (isset($this->Handlers[mysql_errno($this->link)]))
+				if (call_user_func($this->Handlers[mysql_errno($this->link)])) return;
+
+			Error('MySQL Error ['.mysql_errno($this->link).']: '.mysql_error($this->link).
 				"<br/>\nQuery: {$query}<br/>\n");
 		}
 	}
@@ -178,7 +180,8 @@ class Database
 			case 'mysql':
 				$this->ErrorHandler = array($this, 'CheckMyError');
 				$this->func_aff = 'mysql_affected_rows';
-				$this->link = mysql_connect($m[5], $m[3], $m[4], true);
+				if (!$this->link = @mysql_connect($m[5], $m[3], $m[4], true))
+					return false;
 				mysql_select_db($m[6], $this->link);
 				$this->type = DB_MY;
 				$this->lq = $this->rq = '`';
@@ -235,13 +238,18 @@ class Database
 		return $res;
 	}
 
+	function Queries($query)
+	{
+		foreach (split(';', $query) as $q) $this->Query($q);
+	}
+
 	/**
 	* Quickly create this database
 	*/
 	function Create()
 	{
 		mysql_query("CREATE DATABASE {$this->name}", $this->link);
-		if (mysql_error()) echo "Create(): " . mysql_error() . "<br>\n";
+		if (mysql_error($this->link)) echo "Create(): " . mysql_error($this->link) . "<br>\n";
 	}
 
 	/**
@@ -259,8 +267,8 @@ class Database
 	*/
 	function Drop()
 	{
-		mysql_query("DROP DATABASE {$this->name}");
-		if (mysql_error()) echo "Drop(): " . mysql_error() . "<br>\n";
+		mysql_query("DROP DATABASE {$this->name}", $this->link);
+		if (mysql_error($this->link)) echo "Drop(): " . mysql_error($this->link) . "<br>\n";
 	}
 
 	/**
@@ -270,10 +278,10 @@ class Database
 	function CheckInstall()
 	{
 		mysql_select_db($this->name, $this->link);
-		if (mysql_error())
+		if (mysql_error($this->link))
 		{
 			echo "Database: Could not locate database, installing...<br/>\n";
-			mysql_query("CREATE DATABASE {$this->name}");
+			mysql_query("CREATE DATABASE {$this->name}", $this->link);
 		}
 	}
 
@@ -764,7 +772,7 @@ class DataSet
 				switch ($this->database->type)
 				{
 					case DB_MY:
-						$ret .= mysql_real_escape_string($val);
+						$ret .= mysql_real_escape_string($val, $this->database->link);
 						break;
 					case DB_SL:
 						$ret .= sqlite_escape_string($val);

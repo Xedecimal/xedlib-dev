@@ -627,8 +627,10 @@ class Template extends LayeredOutput
 			$indices = explode('.', $tvar);
 			$var = $this->FindVar($indices[0]);
 
-			for ($ix = 1; $ix < count($indices); $ix++) $var = $var[$indices[$ix]];
-			return $var;
+			for ($ix = 1; $ix < count($indices); $ix++)
+				if (isset($var[$indices[$ix]])) $var = $var[$indices[$ix]];
+
+			if (!is_array($var)) return $var;
 		}
 		$ret = $this->FindVar($tvar);
 		if (isset($ret)) return $ret;

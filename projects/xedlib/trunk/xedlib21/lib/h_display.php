@@ -527,13 +527,13 @@ class Form
 
 		if ($this->Persist && !empty($PERSISTS))
 		foreach ($PERSISTS as $name => $value)
-			$this->AddHidden($name, $value, null, true);
+			$this->AddHidden($name, $value);
 
 		if (!empty($this->hiddens))
 		foreach ($this->hiddens as $hidden)
 		{
 			$fname = $hidden[3] ? $hidden[0] : $this->name.'_'.$hidden[0];
-			$ret .= "<input type=\"hidden\" id=\"".CleanID($this->name.'_'.$fname)."\"
+			$ret .= "<input type=\"hidden\" id=\"".CleanID($fname)."\"
 				name=\"{$hidden[0]}\" value=\"{$hidden[1]}\"";
 			if (isset($hidden[2])) $ret .= ' '.$hidden[2];
 			$ret .= " />\n";
@@ -1922,7 +1922,7 @@ function TagInputDisplay($t, $guts, $tag)
 /**
  * @param string $t Target page that this should link to.
  */
-function GetNav($t, $links, $attribs = null, $curpage = null, &$pinfo, &$stack)
+function GetNav($t, $links, $attribs = null, $curpage = null, &$pinfo = null, &$stack = null)
 {
 	$ret = "\n<ul".GetAttribs($attribs).">\n";
 	foreach ($links->children as $ix => $link)

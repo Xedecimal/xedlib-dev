@@ -926,7 +926,7 @@ class EditorData
 			if (!empty($this->ds->DisplayColumns))
 			foreach ($this->ds->DisplayColumns as $col => $disp)
 			{
-				$cols[$col] = "{$disp->text}";
+				$cols[$col] = $disp->text;
 				$atrs[] = $disp->attribs;
 			}
 
