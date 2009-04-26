@@ -1334,29 +1334,31 @@ function StackData($items, $splits)
 {
 	$cursor[0] = new TreeNode('ROOT', 0); // Root object
 
-	foreach ($items as $i)
+	if (!empty($items))
 	{
-		foreach ($splits as $depth => $col)
+		foreach ($items as $i)
 		{
-			if (!isset($cursor[$depth+1]))
+			foreach ($splits as $depth => $col)
 			{
-				echo "Creating tree node for {$col} ({$i[$col]})<br/>\n";
-				$cur = $cursor[$depth+1] = new TreeNode($i, $i[$col]);
-			}
-			else $cur = $cursor[$depth+1];
-			$parent = $cursor[$depth];
+				if (!isset($cursor[$depth+1]))
+				{
+					echo "Creating tree node for {$col} ({$i[$col]})<br/>\n";
+					$cur = $cursor[$depth+1] = new TreeNode($i, $i[$col]);
+				}
+				else $cur = $cursor[$depth+1];
+				$parent = $cursor[$depth];
 
-			if ($i[$col] != $cur->data[$col])
-			{
-				$id = $i[$col];
-				$parent->children[$id] = new TreeNode($i, $id);
+				if ($i[$col] != $cur->data[$col])
+				{
+					$id = $i[$col];
+					$parent->children[$id] = new TreeNode($i, $id);
+				}
 			}
 		}
-	}
-
-	foreach ($splits as $depth => $col)
-	{
-		$cursor[$depth+1]->children[$i[$col]] = new TreeNode($i, $i[$col]);
+		foreach ($splits as $depth => $col)
+		{
+			$cursor[$depth+1]->children[$i[$col]] = new TreeNode($i, $i[$col]);
+		}
 	}
 
 	foreach ($cursor[0]->children as $child)
