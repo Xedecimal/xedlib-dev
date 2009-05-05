@@ -1,0 +1,32 @@
+<div id="divDisplayData">
+<search>
+	<!-- Begin Form: {{form_name}} -->
+	<form>
+	<table>
+		<field><tr class="{{even_odd}}">
+			<td class="field_text">{{text}}</td>
+			<td>{{field}}</td>
+			<td><span class="error">{{help}}</span></td>
+		</tr></field>
+	</table>
+	</form>
+	<!-- End Form: {{form_name}} -->
+</search>
+
+<results>
+	<result>
+		<box title="Result">
+			<table>
+			<field>
+				<tr><td align="right">{{text}}</td><td>{{val}}</td></tr>
+			</field>
+			</table>
+		</box>
+	</result>
+
+	<pages />
+
+	<p><a href="{{me}}">Return</a></p>
+</results>
+
+</div>
