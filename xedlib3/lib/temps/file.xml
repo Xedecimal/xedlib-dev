@@ -12,13 +12,13 @@
 </box>
 </header>
 
-<form action="{{me}}" method="post" enctype="multipart/form-data">
+<form action="{{target}}" method="post" enctype="multipart/form-data">
 
 <!-- <table>
 	<tr> -->
 
 <options>
-	<td valign="top">
+	<!-- <td valign="top"> -->
 		<box title="File and Folder Tasks" id="{{fn_name}}_tasks">
 			<table>
 			<!-- Mass Options -->
@@ -122,11 +122,11 @@
 
 			</table>
 		</box>
-	</td>
+	<!-- </td> -->
 </options>
 
 <directory>
-	<td valign="top">
+	<!-- <td valign="top"> -->
 		<folders>
 		<box title="Folders">
 			<table>
@@ -158,7 +158,7 @@
 			</table>
 		</box>
 		</folders>
-	</td><td valign="top">
+	<!-- </td><td valign="top"> -->
 		<files>
 		<box title="Files">
 			<table>
@@ -195,7 +195,7 @@
 			</QuickCapButton>
 		</box>
 		</files>
-	</td>
+	<!-- </td> -->
 </directory>
 
 <details>

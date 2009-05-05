@@ -30,7 +30,7 @@ class FileManager
 	 *
 	 * @var string
 	 */
-	private $Name;
+	public $Name;
 
 	/**
 	 * Behavior of this filemanager.
@@ -213,7 +213,7 @@ class FileManager
 			$info = new FileInfo($this->Root.$this->cf, $this->filters);
 			$newinfo = GetPost($this->Name.'_info');
 			$f = FileInfo::GetFilter($info, $this->Root, $this->filters);
-			$f->Updated($info, $newinfo);
+			$f->Updated($this, $info, $newinfo);
 			$this->Behavior->Update($newinfo);
 
 			if (!empty($newinfo))
@@ -335,7 +335,6 @@ class FileManager
 						$fi->path . ' to ' . $ct);
 			}
 		}
-
 		else if ($act == 'Download Selected')
 		{
 			require_once('3rd/zipfile.php');
@@ -355,7 +354,6 @@ class FileManager
 			echo $zip->file();
 			die();
 		}
-
 		else if ($act == 'getfile')
 		{
 			$finfo = new FileInfo($this->Root.$this->cf);
@@ -402,13 +400,19 @@ class FileManager
 		$ret = null;
 		$cpath = '';
 
+		global $me;
+
+		// Home Link
+
 		if (isset($this->cf))
 		{
-			$d['uri'] = URL($this->vars['target'],
+			$d['uri'] = URL($this->Behavior->Target,
 				array($this->Name.'_cf' => ''));
 			$d['name'] = $attribs['ROOT'];
 			$ret .= $vp->ParseVars($guts, $d);
 		}
+
+		// Each path link
 
 		$items = explode('/', substr($fi->path, strlen($this->Root)));
 
@@ -417,7 +421,8 @@ class FileManager
 		{
 			if (strlen($items[$ix]) < 1) continue;
 			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
-			$uri = URL($me, array($this->Name.'_cf' => $cpath));
+			$uri = URL($this->Behavior->Target,
+				array($this->Name.'_cf' => $cpath));
 			$ret .= ' '.$attribs['SEP'];
 			$d['name'] = $items[$ix];
 			$d['uri'] = $uri;
@@ -477,7 +482,8 @@ class FileManager
 				$this->vars['url'] = URL($me, $vars);
 			}
 			else
-				$this->vars['url'] = URL($me, array($this->Name.'_cf' =>
+				$this->vars['url'] = URL($this->Behavior->Target,
+					array($this->Name.'_cf' =>
 					"{$this->cf}{$f->filename}"));
 
 			$this->curfile = $f;
@@ -764,7 +770,7 @@ EOF;
 		$fi = new FileInfo($this->Root.$this->cf);
 
 		global $me;
-		$this->vars['target'] = $me;
+		$this->vars['target'] = $this->Behavior->Target;
 		$this->vars['root'] = $this->Root;
 		$this->vars['cf'] = $this->cf;
 
@@ -1598,7 +1604,7 @@ class FilterDefault
 	 * When options are updated, this will be fired.
 	 * @param FileInfo $fi Associated file information.
 	 */
-	function Updated(&$fi, &$newinfo)
+	function Updated(&$fm, &$fi, &$newinfo)
 	{
 	}
 
@@ -1665,13 +1671,17 @@ class FilterGallery extends FilterDefault
 		if (empty($fi->info['thumb_width'])) $fi->info['thumb_width'] = 200;
 		if (empty($fi->info['thumb_height'])) $fi->info['thumb_height'] = 200;
 
-		if (file_exists($fi->dir."/t_".$fi->filename))
-			$fi->icon = "{$fi->dir}/t_{$fi->filename}";
+		global $_d;
+
+		$dir = $_d['site.root'].$fi->dir;
+		$abs = "$dir/t_{$fi->filename}";
+		$rel = "{$fi->dir}/t_{$fi->filename}";
+		if (file_exists($rel)) $fi->icon = $abs;
 
 		if (is_dir($fi->path))
 		{
 			$fs = glob($fi->path.'/.t_image.*');
-			if (!empty($fs)) $fi->icon = $fs[0];
+			if (!empty($fs)) $fi->icon = $_d['site.root'].$fs[0];
 		}
 		return $fi;
 	}
@@ -1679,10 +1689,11 @@ class FilterGallery extends FilterDefault
 	/**
 	 * @param FileInfo $fi Associated file information.
 	 */
-	function Updated(&$fi, &$newinfo)
+	function Updated(&$fm, &$fi, &$newinfo)
 	{
 		$upimg = GetVar('upimage');
-		$img = GetVar('image');
+		$img = GetVar($fm->Name.'_image');
+
 		if (!empty($upimg['name']))
 		{
 			mkdir("timg");

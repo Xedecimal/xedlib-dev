@@ -112,7 +112,7 @@ document.onmousedown = click;
 			<span class="item">
 			<a href="{{url}}">
 			{{icon}}<br />
-			{{name}}
+			<span class="item_caption">{{name}}</span>
 			</a>
 			</span>
 			</div>
@@ -121,9 +121,8 @@ document.onmousedown = click;
 		<file>
 			<div class="float">
 			<span class="item">
-			<a href="{{fullname}}" rel="shadowbox[main]">
-			<img src="{{icon}}" title="{{name}}" alt="{{name}}" /></a>
-			<br/>{{name}}
+			<img src="{{icon}}" class="thumb" title="{{name}}" alt="{{fullname}}" />
+			<br/><span class="item_caption">{{name}}</span>
 			</span>
 			</div>
 		</file>

@@ -680,7 +680,6 @@ class EditorData
 	 */
 	function Get($assoc)
 	{
-		global $me;
 		$ret['name'] = $this->Name;
 
 		$act = GetVar($this->Name.'_action');
@@ -689,7 +688,7 @@ class EditorData
 		$ret['ds'] = $this->ds;
 		if ($act != 'edit' && !empty($this->ds->DisplayColumns)
 			&& ($this->Behavior->Search && isset($q)))
-			$ret['table'] = $this->GetTable($me, $act, $q);
+			$ret['table'] = $this->GetTable($this->Behavior->Target, $act, $q);
 		else $ret['table'] = null;
 		$ret['forms'] = $this->GetForms(GetVar($assoc) == $this->Name ?
 			GetVar('child') : null);
@@ -1062,46 +1061,6 @@ class EditorData
 					title=\"".$this->View->TextDelete."\" class=\"png\" /></a>";
 			}
 
-			// @TODO Bring this tree system back to life!
-			//$row[0] = str_repeat("&nbsp;", $level*4).$row[0];
-
-			//Sorting should be done by javascript.
-
-			/*if ($this->sorting == ED_SORT_MANUAL && count($node->children) > 1)
-			{
-				//We can possibly swap up
-				if ($index > 0)
-				{
-					//This is a child of some sort, but it doesn't match the
-					//prior child, this would require a change of parents.
-					if ($node->children[$index-1]->data['_child'] == $cnode->data['_child'])
-					{
-						$args = array(
-							'ci' => $cnode->id,
-							'ct' => $node->children[$index-1]->id,
-							$this->Name.'_action' => 'swap'
-						);
-						if (isset($PERSISTS)) $args = array_merge($PERSISTS, $args);
-						$url = URL($target, $args);
-						$row[] = GetButton($url, 'up.png', 'Up', 'class="png"');
-					}
-				}
-				else $row[] = '&nbsp;';
-				if ($index < count($node->children)-1 && $node->children[$index+1]->data['_child'] == $cnode->data['_child'])
-				{
-					$args = array(
-						'ci' => $cnode->id,
-						'ct' => $node->children[$index+1]->id,
-						$this->Name.'_action' => 'swap'
-					);
-					if (isset($PERSISTS)) $args = array_merge($PERSISTS, $args);
-					$url = URL($target, $args);
-					$row[] = GetButton($url, 'down.png', 'Down', 'class="png"');
-				}
-				else $row[] = '&nbsp;';
-			}
-			else { $row[] = '&nbsp;'; $row[] = '&nbsp;'; }*/
-
 			$rows[] = $row;
 
 			$this->AddRows($rows, $target, $cnode, $level+1);
@@ -1132,9 +1091,12 @@ class EditorData
 		if ($this->type == CONTROL_BOUND)
 		{
 			if ($this->state == STATE_CREATE)
+			{
+				if (!empty($this->ds->FieldInputs))
 				foreach ($this->ds->FieldInputs as $k => $fi)
 					if ($fi->type == 'label')
 						unset($this->ds->FieldInputs[$k]);
+			}
 			$context = isset($curchild) ? $this->ds->children[$curchild] :
 				$this;
 
@@ -1319,8 +1281,6 @@ class EditorData
 	 */
 	function TagForms($t, $guts)
 	{
-		global $me;
-
 		$out = '';
 		$forms = $this->GetForms();
 		$vp = new VarParser();
@@ -1328,7 +1288,8 @@ class EditorData
 		foreach ($forms as $frm)
 		{
 			$d['form_title'] = "{$frm->State} {$frm->Description}";
-			$d['form_content'] = $frm->Get("method=\"post\" action=\"{$me}\"",
+			$d['form_content'] = $frm->Get('method="post" action="'.
+				$this->Behavior->Target.'"',
 				'class="form"');
 			$out .= $vp->ParseVars($guts, $d);
 		}
@@ -1356,14 +1317,15 @@ class EditorData
 		$t->ReWrite('forms', array(&$this, 'TagForms'));
 		$t->ReWrite('search', array(&$this, 'TagSearch'));
 		$t->ReWrite('form', 'TagForm');
+		$t->Set('target', $this->Behavior->Target);
 		$t->Set('name', $this->Name);
 		$t->Set('plural', Plural($this->ds->Description));
 
 		if (!empty($this->ds))
 			$t->Set('table_title', Plural($this->ds->Description));
 
-		global $me;
-		$t->Set('table', $this->GetTable($me, GetState($this->Name.'_ci')));
+		$t->Set('table', $this->GetTable($this->Behavior->Target,
+			GetState($this->Name.'_ci')));
 
 		$t->Set($this->View);
 		$t->Set('assoc', $assoc);
