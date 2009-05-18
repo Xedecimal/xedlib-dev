@@ -1673,7 +1673,7 @@ class FilterGallery extends FilterDefault
 
 		global $_d;
 
-		$dir = $_d['site.root'].$fi->dir;
+		$dir = $_d['site_root'].$fi->dir;
 		$abs = "$dir/t_{$fi->filename}";
 		$rel = "{$fi->dir}/t_{$fi->filename}";
 		if (file_exists($rel)) $fi->icon = $abs;
@@ -1681,7 +1681,7 @@ class FilterGallery extends FilterDefault
 		if (is_dir($fi->path))
 		{
 			$fs = glob($fi->path.'/.t_image.*');
-			if (!empty($fs)) $fi->icon = $_d['site.root'].$fs[0];
+			if (!empty($fs)) $fi->icon = $_d['site_root'].$fs[0];
 		}
 		return $fi;
 	}

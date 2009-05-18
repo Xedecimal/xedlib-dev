@@ -1802,11 +1802,12 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 	switch (strtolower($attribs['TYPE']))
 	{
 		case 'date':
-			$field = '<input type="hidden" name="type_'.$attribs['NAME'].'" value="'.$attribs['TYPE'].'" />';
-			$field .= GetInputDate($attribs['NAME'], @$attribs['VALUE']);
+			$field = '<input type="hidden" name="type_'.@$attribs['NAME'].'" value="'.$attribs['TYPE'].'" />';
+			$field .= GetInputDate(@$attribs['NAME'], @$attribs['VALUE']);
 			break;
 		case 'datetime':
-			$field = GetInputDate($attribs['NAME'], @$attribs['VALUE'], true);
+			$field = '<input type="hidden" name="type_'.@$attribs['NAME'].'" value="'.$attribs['TYPE'].'" />';
+			$field = GetInputDate(@$attribs['NAME'], @$attribs['VALUE'], true);
 			break;
 		case 'year':
 			$field = GetYearSelect($attribs['NAME'], $attribs);
