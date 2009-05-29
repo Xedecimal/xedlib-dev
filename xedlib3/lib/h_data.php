@@ -312,6 +312,7 @@ function SqlAnd($val) { return array('inc' => 'AND', 'val' => $val); }
 function SqlLess($val) { return array('cmp' => '<', 'val' => $val); }
 function SqlDistinct($val) { return array('cmp' => 'DISTINCT', 'val' => $val); }
 function SqlCount($val) { return array('val' => 'COUNT('.$val.')', 'opt' => SQLOPT_UNQUOTE); }
+function SqlLike($val) { return array('val' => '%'.$val.'%', 'cmp' => 'LIKE'); }
 
 /**
  * Returns the proper format for DataSet to generate the current time.
@@ -879,9 +880,9 @@ class DataSet
 	 * @return string Quoted name.
 	 * @todo Rename this to QuoteName
 	 */
-	function QuoteTable($name = null)
+	function QuoteTable($name = null, $sc = null)
 	{
-		if ($name == null) $name = $this->table;
+		if ($name == null) { $name = $this->table; $sc = $this->Shortcut; }
 		if ($name == '*') return $name;
 		if (is_array($name))
 		{
@@ -893,7 +894,7 @@ class DataSet
 		if (strpos($name, '.') > -1)
 			return preg_replace('#([^(]+)\.([^ )]+)#',
 				"{$lq}\\1{$rq}.{$lq}\\2{$rq}", $name);
-		return "{$lq}{$name}{$rq}";
+		return "{$lq}{$name}{$rq}".(!empty($sc) ? " $lq$sc$rq" : null);
 	}
 
 	function StripTable($name)

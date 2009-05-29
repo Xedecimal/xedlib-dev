@@ -125,7 +125,11 @@ class FileManager
 		//Append trailing slash.
 		if (substr($this->Root, -1) != '/') $this->Root .= '/';
 		$this->cf = SecurePath(GetState($this->Name.'_cf'));
-		if (!file_exists($this->Root.$this->cf)) $this->cf = '';
+		if (!file_exists($this->Root.$this->cf))
+		{
+			Error('Directory does not exist:'.$this->cf);
+			$this->cf = '';
+		}
 
 		if (is_dir($this->Root.$this->cf)
 			&& strlen($this->cf) > 0
@@ -1143,6 +1147,13 @@ class FileManagerView
 class FileManagerBehavior
 {
 	//Access Restriction
+
+	/**
+	* Target url of this script, to keep everything related.
+	*
+	* @var string
+	*/
+	public $Target = '';
 
 	/**
 	 * Whether or not file uploads are allowed.

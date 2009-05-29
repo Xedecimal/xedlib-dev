@@ -1654,7 +1654,7 @@ class DisplayData
 			foreach ($this->items as $ix => $i)
 			{
 				if (!empty($this->Callbacks->Result))
-					RunCallbacks($this->Callbacks->Result, &$tField, $i);
+					RunCallbacks($this->Callbacks->Result, $tField, $i);
 				$this->item = $i;
 				$tField->Set($i);
 				$ret .= $tField->GetString($g);
