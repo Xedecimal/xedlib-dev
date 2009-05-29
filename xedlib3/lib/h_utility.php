@@ -1516,7 +1516,7 @@ function TagNEmpty($t, $g, $a)
 
 function GetQ()
 {
-	$pi = GetVar('PATH_INFO', '/home');
+	$pi = GetVar('q', '/home');
 	if (!empty($pi)) return explode('/', substr($pi, 1));
 }
 

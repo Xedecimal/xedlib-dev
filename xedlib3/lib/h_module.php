@@ -21,6 +21,9 @@ class Module
 
 	static function Run($template)
 	{
+		require_once('h_utility.php');
+		require_once('h_template.php');
+
 		global $_d;
 
 		$tprep = new Template();
@@ -32,11 +35,17 @@ class Module
 
 		global $mods;
 		RunCallbacks(@$_d['index.cb.prelink']);
+		if (empty($mods)) Error('No modules found to use!');
 		foreach ($mods as $mod) $mod->PreLink();
 		foreach ($mods as $mod) $mod->Link();
 		foreach ($mods as $mod) $mod->Prepare();
 		foreach ($mods as $mod)
-			$GLOBALS['_d']['blocks'][$mod->Block] .= $mod->Get();
+		{
+			if (array_key_exists($mod->Block, $_d['blocks']))
+				$_d['blocks'][$mod->Block] .= $mod->Get();
+			else
+				$_d['blocks']['default'] .= $mod->Get();
+		}
 
 		return $t->ParseFile($template);
 	}
