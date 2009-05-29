@@ -151,6 +151,7 @@ class Template extends LayeredOutput
 		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
 
 		$this->ReWrite('template', array(&$this, 'TagTemplate'));
+		$this->ReWrite('repeat', array(&$this, 'TagRepeat'));
 		parent::LayeredOutput();
 	}
 
@@ -168,6 +169,19 @@ class Template extends LayeredOutput
 		{
 			return $t->ParseFile($a['FILE']);
 		}
+	}
+
+	function TagRepeat($t, $g, $a)
+	{
+		if (empty($a['ON'])) return;
+		$target = $this->FindVar($a['ON']);
+		$vp = new VarParser();
+		$ret = '';
+		foreach ($target as $k => $v)
+		{
+			$ret .= $vp->ParseVars($g, $v);
+		}
+		return $ret;
 	}
 
 	/**

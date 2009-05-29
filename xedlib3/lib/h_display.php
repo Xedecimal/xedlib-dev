@@ -1042,22 +1042,56 @@ class SelOption
  */
 function MakeSelect($atrs = null, $value = null, $selvalue = null)
 {
-	if (isset($atrs['VALUE'])) $selvalue = $atrs['VALUE'];
-	unset($atrs['VALUE']);
+	if (isset($atrs['VALUE']))
+		$selvalue = $atrs['VALUE'];
+	if (is_array($atrs))
+		unset($atrs['VALUE']);
 
 	$strout = '<select';
 	$strout .= GetAttribs($atrs);
 	$strout .= ">\n";
 
+	$GroupStarted = false;
 	foreach ($value as $id => $option)
 	{
 		$selected = null;
 		if ($id == $selvalue) $selected = ' selected="selected"';
 		if ($option->selected) $selected = ' selected="selected"';
-		$strout .= "<option value=\"{$id}\"$selected>{$option->text}</option>\n";
+		if ($option->group)
+		{
+			if ($GroupStarted) $strout .= '</optgroup>';
+			$strout .= "<optgroup label=\"{$option->text}\">";
+			$GroupStarted = true;
+		}
+		else
+			$strout .= "<option value=\"{$id}\"$selected>{$option->text}</option>\n";
 		$selected = null;
 	}
+	if ($GroupStarted) $strout .= '</optgroup>';
 	$strout .= "</select>\n";
+	return $strout;
+}
+
+function MakeChecks($atrs = null, $value = null, $selvalue = null)
+{
+	if (isset($atrs['VALUE'])) $selvalue = $atrs['VALUE'];
+	if (is_array($atrs)) unset($atrs['VALUE']);
+
+	$strout = null;
+	foreach ($value as $id => $option)
+	{
+		$selected = null;
+		if ($id == $selvalue) $selected = ' selected="selected"';
+		if ($option->selected) $selected = ' selected="selected"';
+		if ($option->group)
+			$strout .= "<strong><em>{$option->text}</em></strong><br />\n";
+		else
+			$strout .= '<label><input type="checkbox" value="'
+				.$id.'"'.GetAttribs($atrs).$selected.' />'.$option->text
+				.'</label>'."<br/>\n";
+		$selected = null;
+	}
+
 	return $strout;
 }
 
@@ -1339,14 +1373,14 @@ class LoginManager
 			{
 				$check_user = ($this->type == CONTROL_BOUND) ? $check_user =
 					GetVar($this->Name.'_auth_user') : null;
-			 	SetVar($uservar, $check_user);
+				SetVar($uservar, $check_user);
 			}
 
 			$check_pass = GetVar($this->Name.'_auth_pass');
-			if ($this->Behavior->Encryption)
-				$check_pass = md5($check_pass);
+			if ($this->Behavior->Encryption) $check_pass = md5($check_pass);
 			SetVar($passvar, $check_pass);
 		}
+
 		if ($act == 'logout')
 		{
 			$check_pass = null;

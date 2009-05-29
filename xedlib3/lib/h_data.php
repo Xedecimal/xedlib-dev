@@ -882,11 +882,17 @@ class DataSet
 	function QuoteTable($name = null)
 	{
 		if ($name == null) $name = $this->table;
+		if ($name == '*') return $name;
+		if (is_array($name))
+		{
+			if ($name['opt'] == SQLOPT_UNQUOTE)
+			return $name['val'];
+		}
 		$lq = $this->database->lq;
 		$rq = $this->database->rq;
 		if (strpos($name, '.') > -1)
 			return preg_replace('#([^(]+)\.([^ )]+)#',
-			"{$lq}\\1{$rq}.{$lq}\\2{$rq}", $name);
+				"{$lq}\\1{$rq}.{$lq}\\2{$rq}", $name);
 		return "{$lq}{$name}{$rq}";
 	}
 
