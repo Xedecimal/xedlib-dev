@@ -1355,6 +1355,7 @@ function StackData($items, $splits)
 				}
 			}
 		}
+
 		foreach ($splits as $depth => $col)
 		{
 			$cursor[$depth+1]->children[$i[$col]] = new TreeNode($i, $i[$col]);

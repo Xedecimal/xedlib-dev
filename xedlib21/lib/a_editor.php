@@ -1261,7 +1261,7 @@ class EditorData
 			foreach ($this->handlers as $handler)
 			{
 				//Use plural objects to compliment the joins property.
-				//For some reason I change this to a single item when
+				//For some reason I changed this to a single item when
 				//it can be multiple.
 
 				$handler->GetFields($this, $frm,
