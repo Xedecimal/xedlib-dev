@@ -6,6 +6,7 @@ Module::RegisterModule('ModNewsAdmin');
 class ModNews extends Module
 {
 	public $Block = 'news';
+	public $Name = 'news';
 
 	function __construct()
 	{
@@ -77,6 +78,8 @@ class ModNewsAdmin extends Module
 	{
 		global $_d, $me;
 
+		if (@$_d['q'][1] != 'news') return;
+
 		if (!ModUser::RequireAccess(2)) return;
 		$_d['nav.links']['News'] = $me.'/news';
 	}
@@ -84,6 +87,8 @@ class ModNewsAdmin extends Module
 	function Prepare()
 	{
 		global $_d;
+
+		if (@$_d['q'][1] != 'news') return;
 
 		$_d['news.ds']->Description = 'News';
 		$_d['news.ds']->DisplayColumns = array(
