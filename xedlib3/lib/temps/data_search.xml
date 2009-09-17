@@ -1,0 +1,31 @@
+<null>
+
+<results>
+<result>
+<table>
+	<tr><td><a href="{{me}}/{{name}}/view/{{id}}" target="_new">View</a></td></tr>
+<resultfield>
+	<tr><td>{{text}}</td><td>{{val}}</td></tr>
+</resultfield>
+</table>
+</result>
+</results>
+
+<search>
+<form action="{{me}}/{{name}}/search" method="post">
+<script type="text/javascript" src="{{tempurl}}/data_search.js" />
+<fieldset>
+<legend>Select fields to search</legend>
+<ul>
+<searchfield>
+	<li><input type="checkbox" id="hider_{{id}}" name="{{name}}_search[{{fname}}]" class="hider" />
+	<label for="{{id}}">{{text}}</label>
+	<div class="hidden ds_field" id="hidden_{{id}}">{{field}}</div></li>
+</searchfield>
+</ul>
+</fieldset>
+<input type="submit" value="Search" />
+</form>
+</search>
+
+</null>
