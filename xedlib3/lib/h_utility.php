@@ -431,7 +431,7 @@ function ChompString($text, $length)
  */
 function TimestampToMySql($ts, $time = true)
 {
-	return date($time ? 'Y-m-d h:i:s' : 'y-m-d', $ts);
+	return date($time ? 'Y-m-d h:i:s' : 'Y-m-d', $ts);
 }
 
 /**
@@ -1518,6 +1518,13 @@ function GetQ()
 {
 	$pi = GetVar('q', '/home');
 	if (!empty($pi)) return explode('/', substr($pi, 1));
+}
+
+function Pull(&$arr, $key)
+{
+	$ret = $arr[$key];
+	unset($arr[$key]);
+	return $ret;
 }
 
 ?>

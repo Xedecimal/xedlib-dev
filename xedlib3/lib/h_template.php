@@ -157,6 +157,10 @@ class Template extends LayeredOutput
 		$this->use_getvar = false;
 		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
 
+		if (!empty($GLOBALS['_d']['template.rewrites']))
+			foreach ($GLOBALS['_d']['template.rewrites'] as $tag => $rw)
+				$this->ReWrite($tag, $rw);
+
 		$this->ReWrite('template', array(&$this, 'TagTemplate'));
 		$this->ReWrite('repeat', array(&$this, 'TagRepeat'));
 		parent::LayeredOutput();
@@ -675,7 +679,7 @@ class Template extends LayeredOutput
 	 * @param Template $t Associated Template.
 	 * @param string $guts Contents of the associated tag.
 	 */
-	function TagHead($t, $guts)
+	function TagAddHead($t, $guts)
 	{
 		$this->heads .= $guts;
 	}
@@ -767,6 +771,8 @@ class VarParser
 	{
 		$tvar = $match[1];
 
+		$ret = null;
+
 		//Process an array values from $this->vars
 		if (is_array($this->vars) && isset($this->vars[$tvar]))
 			$ret = $this->vars[$tvar];
@@ -778,7 +784,7 @@ class VarParser
 		}
 		else if (isset($GLOBALS[$tvar])) $ret = $GLOBALS[$tvar];
 		else if (defined($tvar)) $ret = constant($tvar);
-		else $ret = ($this->Bleed ? $match[0] : null);
+		else $ret = $this->Bleed ? $match[0] : null;
 
 		return $ret;
 	}

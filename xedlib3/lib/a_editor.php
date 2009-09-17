@@ -1111,8 +1111,9 @@ class EditorData
 				if (!empty($join)) $joins = array_merge($joins, $join);
 			}
 
-			$sel = $state == STATE_EDIT ? $context->ds->Get(
-				array($context->ds->id => $ci), null, null, $joins) : null;
+			$sel = $state == STATE_EDIT ? $context->ds->Get(array(
+					'match' => array($context->ds->id => $ci),
+					'joins' => $joins)) : null;
 
 			$ds = $context->ds;
 		}
@@ -1418,8 +1419,8 @@ class DisplayData
 	}
 
 	/**
-	 * Available to calling script to prepare any actions that may be ready to be
-	 * performed.
+	 * Available to calling script to prepare any actions that may be ready to
+	 * be performed.
 	 *
 	 * @access public
 	 */
@@ -1456,7 +1457,7 @@ class DisplayData
 			$this->ds->Update(array($this->ds->id => $ci), $up);
 		}
 
-		//Collect search data...
+		//Collect search data
 
 		if ($act == 'search')
 		{
@@ -1464,7 +1465,6 @@ class DisplayData
 			$this->ss = GetVar($this->Name.'_search');
 			$this->ipp = GetVar($this->Name.'_ipp', 10);
 
-			$query = "SELECT *";
 			$group = null;
 
 			foreach (array_keys($this->ds->DisplayColumns) as $col)
@@ -1472,56 +1472,22 @@ class DisplayData
 				$fi = $this->ds->FieldInputs[$col];
 				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
 				{
-					$query .= ", GROUP_CONCAT(DISTINCT {$col}) AS {$ms[2]}";
-					$group = ' GROUP BY '.$this->ds->id;
+					$query['cols'][$ms[2]] = "GROUP_CONCAT(DISTINCT {$col})";
+					$query['group'] =  $this->ds->id;
 				}
 			}
-
-			$query .= " FROM `{$this->ds->table}`";
-			$query .= DataSet::JoinClause($this->ds->joins);
 
 			// Collect the data.
 
 			if (!empty($this->ss))
 			{
-				$where = ' WHERE';
-				$having = ' HAVING';
-
-				$ix = 0;
 				foreach (array_keys($this->ss) as $col)
 				{
-					if (!isset($this->fs[$col])) continue;
-
-					$fi = $this->ds->FieldInputs[$col];
-					$fi->name = $col;
-					if ($ix++ > 0) $where .= ' AND';
-
-					if ($fi->type == 'select') $where .= " $col IN ($fs[$col])";
-					else if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
-					{
-						foreach ($this->fs[$col] as $ix => $v)
-						{
-							if ($ix > 0) $having .= ' OR';
-							$having .= " FIND_IN_SET($v, $ms[2]) > 0";
-						}
-					}
-					else if ($fi->type == 'date')
-					{
-						$where .= " $col BETWEEN '".
-						TimestampToMySql(DateInputToTS($this->fs[$col][0]), false).'\' AND \''.
-						TimestampToMySql(DateInputToTS($this->fs[$col][1]), false).'\'';
-					}
-					else
-					{
-						$where .= " $col LIKE '%".$fi->GetData($this->fs[$col])."%'";
-					}
+					if (!isset($this->fs[$col])) return;
+					$this->AddToQuery($query, $col, $this->fs[$col]);
 				}
 
-				if (strlen($where) > 6) $query .= $where;
-				$query .= $group;
-				if (strlen($having) > 7) $query .= $having;
-
-				$this->result = $this->ds->GetCustom($query);
+				$this->result = $this->ds->Get($query);
 				$this->count = count($this->result);
 			}
 			else $this->result = array();
@@ -1532,11 +1498,36 @@ class DisplayData
 		}
 	}
 
+	function AddToQuery(&$query, $col, $val)
+	{
+		if (is_array(@$this->SearchFields[$col]))
+		{
+			foreach ($this->SearchFields[$col] as $icol)
+				$this->AddToQuery($query, $icol, $val);
+		}
+
+		$fi = $this->ds->FieldInputs[$col];
+		$fi->name = $col;
+
+		if ($fi->type == 'select')
+			$query['match'][$col] = SqlIn($val);
+		else if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+			foreach ($this->fs[$col] as $ix => $v)
+				$query['having'][] = " FIND_IN_SET($v, $ms[2]) > 0";
+		else if ($fi->type == 'date')
+			$query['match'][$col] = SqlBetween(
+				TimestampToMySql(DateInputToTS(
+					$this->fs[$col][0]), false),
+				TimestampToMySql(DateInputToTS(
+					$this->fs[$col][1]), false)
+			);
+		else $query['match'][$col] = SqlLike($val);
+	}
+
 	/**
-	 * @param string $target Target script to interact with.
-	 * @param string $ca Current action to execute.
+	 * @param string $temp Template to use for rendering me.
 	 */
-	function Get($temp)
+	function Get($temp = null)
 	{
 		$t = new Template();
 		$t->Set('name', $this->Name);
@@ -1547,7 +1538,8 @@ class DisplayData
 		$t->ReWrite('pages', array(&$this, 'TagPages'));
 
 		return $t->ParseFile(!isset($temp) ? dirname(__FILE__).
-			'/temps/DisplayData.xml' : $temp);
+			'/temps/displaydata.xml' : $temp);
+
 		$q = GetVar('q');
 
 		if ($ca == 'edit' && $this->Behavior->AllowEdit)
@@ -1561,7 +1553,7 @@ class DisplayData
 					// This is a sub table, we GROUP_CONCAT these for
 					// finding later if need be.
 					$ms = null;
-					if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+					if (preg_match('/([^.]+)\.(.+)/', $col, $ms))
 						$cols[$ms[2]] =
 							SqlUnquote("GROUP_CONCAT(DISTINCT {$ms[2]})");
 					else $cols[$col] = $col;
@@ -1577,7 +1569,7 @@ class DisplayData
 
 				foreach ($this->ds->FieldInputs as $col => $fi)
 				{
-					if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+					if (preg_match('/([^.]+)\.(.+)/', $col, $ms))
 						$col = $ms[2];
 					$fi->name = $col;
 					if ($fi->type == 'select' || $fi->type == 'selects'
@@ -1676,7 +1668,9 @@ class DisplayData
 		{
 			$vars['text'] = $dc->text;
 			$vars['val'] = '';
-			if (strpos($f, '.')) // Sub Table
+
+			// Sub Table
+			if (strpos($f, '.'))
 			{
 				$vs = explode(',', $this->item[$this->ds->StripTable($f)]);
 
@@ -1694,7 +1688,7 @@ class DisplayData
 					if (!empty($this->fs[$f]) && $bold) $vars['val'] .= '</span>';
 				}
 			}
-			else
+			else // Standard column
 			{
 				$vars['val'] = !empty($dc->callback)
 					? call_user_func($dc->callback, $this->ds, $this->item, $f)
@@ -1720,28 +1714,38 @@ class DisplayData
 	function callback_fields()
 	{
 		$ret = '<table>';
-		foreach ($this->SearchFields as $col)
-		{
-			if (!isset($this->ds->FieldInputs[$col])) continue;
-			$fi = $this->ds->FieldInputs[$col];
-			$fi->name = 'field['.$col.']';
-			$ret .= '<tr><td valign="top"><label><input type="checkbox"
-				value="1" name="'.$this->Name.'_search['.$col.']"
-				onclick="$(\'#'.str_replace('.','\\\\.',$col).'\').toggle(500)" />
-				'.$fi->text.'</label></td>';
-			if ($fi->type == 'date')
-			{
-				$fi->name = 'field['.$col.'][0]';
-				$ret .= ' <td valign="top" style="display: none" id="'.$col.'">
-					from '.$fi->Get($this->Name).' to ';
-				$fi->name = 'field['.$col.'][1]';
-				$ret .= $fi->Get($this->Name)."</td>\n";
-			}
-			else $ret .= '<td style="display: none"
-				id="'.$col.'">'.$fi->Get($this->Name).'</td>';
-			$ret .= '</tr>';
-		}
+		foreach ($this->SearchFields as $idx => $col)
+			$ret .= $this->add_field($idx, $col);
 		return $ret.'</table>';
+	}
+
+	function add_field($idx, $col)
+	{
+		$ret = null;
+
+		// Tied to multiple fields
+		if (is_array($col)) $col = $idx;
+		if (!isset($this->ds->FieldInputs[$col])) return;
+		$fi = $this->ds->FieldInputs[$col];
+		$fi->name = "field[{$col}]";
+		$ret .= '<tr><td valign="top"><label><input type="checkbox"
+			value="1" id="'.$this->Name.'_search_'.$col.'" name="'.$this->Name.'_search['.$col.']"
+			onclick="$(\'#'.str_replace('.','\\\\.',$col).'\').toggle(500)" />
+			'.$fi->text.'</label></td>';
+		if ($fi->type == 'date')
+		{
+			$fi->name = 'field['.$col.'][0]';
+			$ret .= ' <td valign="top" style="display: none" id="'.$col.'">
+				from '.$fi->Get($this->Name).' to ';
+			$fi->name = 'field['.$col.'][1]';
+			$ret .= $fi->Get($this->Name)."</td>\n";
+		}
+		if ($fi->type == 'select')
+			$fi->type = 'checks';
+		else $ret .= '<td style="display: none"
+			id="'.$col.'">'.$fi->Get($this->Name).'</td>';
+		$ret .= '</tr>';
+		return $ret;
 	}
 }
 
@@ -1959,6 +1963,296 @@ class EditorUpload
 		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
 		return $frmRet->Get('enctype="multipart/form-data" method="post" action="'.$target.'"');
+	}
+}
+
+class DataSearch
+{
+	/** @var string */
+	public $Name;
+	/** @var DataSearchBehavior */
+	public $Behavior;
+	/** @var array */
+	public $SearchFields;
+	/** @var DataSet */
+	private $_ds;
+
+	function __construct($name, &$ds)
+	{
+		$this->Name = $name;
+		$this->_ds = $ds;
+		$this->Behavior = new DataSearchBehavior();
+	}
+
+	function Prepare()
+	{
+		global $_d;
+
+		$this->_q = array_reverse($_d['q']);
+
+		if (@$this->_q[2] == $this->Name && @$this->_q[1] == 'viewjs')
+		{
+			$ci = $this->_q[0];
+			$orders[$this->_ds->id] = 'ASC';
+			foreach ($this->_ds->joins as $j)
+				$orders[$j->DataSet->id] = 'ASC';
+
+			$data = $this->_ds->Get(array(
+				'match' => array('app_id' => $ci),
+				'args' => GET_ASSOC,
+				'order' => $orders
+			));
+
+			$t = new Template();
+			$t->Set('json', json_encode($data));
+			die($t->ParseFile(dirname(__FILE__).'/temps/data_search_view.js'));
+		}
+
+		//Collect search data
+
+		if (@$this->_q[1] == $this->Name && @$this->_q[0] == 'search')
+		{
+			$this->ss = GetVar($this->Name.'_search');
+			$this->ipp = GetVar($this->Name.'_ipp', 10);
+
+			$query['group'] = $this->_ds->id;
+
+			foreach (array_keys($this->_ds->DisplayColumns) as $col)
+			{
+				$fi = $this->_ds->FieldInputs[$col];
+				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+					$query['cols'][$ms[2]] = "GROUP_CONCAT(DISTINCT {$col})";
+			}
+
+			// Collect the data.
+
+			if (!empty($this->ss))
+			{
+				foreach (array_keys($this->ss) as $col)
+				{
+					$val = GetVar("{$this->Name}_{$col}");
+					if (!isset($val)) return;
+					$this->AddToQuery($query, $col, $val);
+				}
+
+				$this->result = $this->_ds->Get($query);
+				$this->count = count($this->result);
+			}
+			else $this->result = array();
+
+			if (!empty($this->result))
+				$this->items = GetFlatPage($this->result, GetVar('cp', 0),
+					$this->ipp);
+		}
+	}
+
+	function Get()
+	{
+		global $_d;
+
+		$qc = $_d['q'];
+		$ci = array_pop($qc);
+		$act = array_pop($qc);
+		$target = array_pop($qc);
+
+		$t = new Template();
+
+		$t->Set($_d);
+
+		if ($target == $this->Name && $act == 'view')
+		{
+			$t->ReWrite('loop', 'TagLoop');
+			$t->ReWrite('input', 'TagInput');
+			$ret = '<script type="text/javascript" src="../viewjs/'.$ci.'"></script>';
+			return $ret.$t->ParseFile($this->Form);
+		}
+		else
+		{
+			$t->ReWrite('search', array(&$this, 'TagSearch'));
+			$t->ReWrite('results', array(&$this, 'TagResults'));
+			return $t->Parsefile(dirname(__FILE__).'/temps/data_search.xml');
+		}
+	}
+
+	# Search Related
+
+	function TagSearch($t, $g, $a)
+	{
+		$tt = new Template();
+		$tt->Set('name', $this->Name);
+		$tt->Set('tempurl', GetRelativePath(dirname(__FILE__).'/temps'));
+
+		$tt->ReWrite('searchfield', array(&$this, 'TagSearchField'));
+		return $tt->GetString($g);
+		return $g;
+	}
+
+	function TagSearchField($t, $g)
+	{
+		$ret = null;
+		foreach ($this->SearchFields as $ix => $sf)
+			$ret .= $this->AddSearchField($ix, $sf, $g);
+		return $ret;
+	}
+
+	function AddSearchField($ix, $sf, $g)
+	{
+		$vp = new VarParser();
+		$ret = null;
+
+		if (is_array($sf)) $sf = $ix;
+		if (array_key_exists($sf, $this->_ds->FieldInputs))
+		{
+			/** @var FormInput */
+			$fi = $this->_ds->FieldInputs[$sf];
+			$fi->name = $sf;
+
+			if ($fi->type == 'date')
+			{
+				$field = $fi->Get($this->Name).' to ';
+				$fi->name = $sf;
+				$fi->atrs['ID'] .= '2';
+				$fi->name .= '2';
+				$field .= $fi->Get($this->Name)."\n";
+				$fi->name = substr($fi->name, 0, -1);
+			}
+			else
+			{
+				$field = $fi->Get($this->Name);
+			}
+
+			$ret .= $vp->ParseVars($g, array(
+				'id' => $fi->GetCleanID(null),
+				'text' => $fi->text,
+				'fname' => $fi->name,
+				'field' => $field
+			));
+		}
+		else
+			Error("Could not find the field input for {$sf}.");
+		return $ret;
+	}
+
+	function AddToQuery(&$query, $col, $val)
+	{
+		if (is_array(@$this->SearchFields[$col]))
+		{
+			foreach ($this->SearchFields[$col] as $icol)
+				$this->AddToQuery($query, $icol, $val);
+		}
+
+		$fi = $this->_ds->FieldInputs[$col];
+		$fi->name = $col;
+
+		if ($fi->type == 'select')
+		{
+			$query['match'][$col] = SqlOr(SqlIn($val));
+		}
+		if ($fi->type == 'checks')
+		{
+			$query['match'][$col] = SqlOr(SqlIn(implode(', ', $val)));
+		}
+		else if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
+			foreach ($this->fs[$col] as $ix => $v)
+				$query['having'][] = " FIND_IN_SET($v, $ms[2]) > 0";
+		else if ($fi->type == 'date')
+		{
+			$query['match'][$col] = SqlBetween(
+				TimestampToMySql(DateInputToTS(GetVar($this->Name.'_'.$col)), false),
+				TimestampToMySql(DateInputToTS(GetVar($this->Name.'_'.$col.'2')), false)
+			);
+		}
+		else $query['match'][$col] = SqlLike($val);
+	}
+
+	# Result Related
+
+	/** @param Template $t Associated template */
+	function TagResults($t, $g)
+	{
+		$t->ReWrite('result', array(&$this, 'TagResult'));
+		if (isset($this->count))
+			return $t->GetString($g);
+	}
+
+	function TagResult($t, $g)
+	{
+		if (!empty($this->items) && !empty($this->_ds->DisplayColumns))
+		{
+			global $_d;
+			$tField = new Template();
+			$tField->ReWrite('resultfield', array(&$this, 'TagResultField'));
+
+			$ret = '';
+			foreach ($this->items as $ix => $i)
+			{
+				if (!empty($this->Callbacks->Result))
+					RunCallbacks($this->Callbacks->Result, $tField, $i);
+				$this->item = $i;
+
+				$tField->Set('res_links', RunCallbacks(@$_d['datasearch.cb.head_res'], $this, $i));
+				$tField->Set('name', $this->Name);
+				$tField->Set('id', $i[$this->_ds->id]);
+				$tField->Set($i);
+				$ret .= $tField->GetString($g);
+
+				if ($ix > $this->Behavior->ItemsPerPage) break;
+			}
+			return $ret;
+		}
+		else if (isset($this->count)) return '<p>No results found!</p>';
+	}
+
+	function TagResultField($t, $g, $a)
+	{
+		$ret = '';
+		$vp = new VarParser();
+		foreach ($this->_ds->DisplayColumns as $f => $dc)
+		{
+			$vars['text'] = $dc->text;
+			$vars['val'] = '';
+
+			// Sub Table
+			if (strpos($f, '.'))
+			{
+				$vs = explode(',', $this->item[$this->_ds->StripTable($f)]);
+
+				foreach ($vs as $ix => $val)
+				{
+					if ($ix > 0) $vars['val'] .= ', ';
+
+					if (!empty($this->fs[$f]))
+					{
+						$bold = array_search($val, $this->fs[$f]) ? true : false;
+						if ($bold) $vars['val'] .= '<span class="result">';
+					}
+					if (!empty($val))
+						$vars['val'] .= $this->ds->FieldInputs[$f]->valu[$val]->text;
+					if (!empty($this->fs[$f]) && $bold) $vars['val'] .= '</span>';
+				}
+			}
+			else // Standard column
+			{
+				$vars['val'] = !empty($dc->callback)
+					? call_user_func($dc->callback, $this->_ds, $this->item, $f, $f)
+					: $this->item[$this->_ds->StripTable($f)];
+			}
+			$ret .= $vp->ParseVars($g, $vars);
+		}
+		return $ret;
+	}
+}
+
+class DataSearchBehavior
+{
+	/** @var Boolean */
+	public $AllowEdit;
+
+	public $ItemsPerPage = 10;
+
+	function AllowAll()
+	{
+		$this->AllowEdit = true;
 	}
 }
 

@@ -7,7 +7,7 @@ class ModUser extends Module
 {
 	static function RequireAccess($level)
 	{
-		if ($GLOBALS['_d']['cl']['usr_access'] >= $level) return true;
+		if (@$GLOBALS['_d']['cl']['usr_access'] >= $level) return true;
 		return false;
 	}
 
@@ -17,7 +17,11 @@ class ModUser extends Module
 
 		require_once(dirname(__FILE__).'/../h_data.php');
 
-		$_d['user.ds'] = new DataSet($_d['db'], 'user', 'usr_id');
+		if (!empty($_d['db']))
+		{
+			$_d['user.ds'] = new DataSet($_d['db'], 'user', 'usr_id');
+		}
+		$_d['template.rewrites']['access'] = array('ModUser', 'TagAccess');
 	}
 
 	function PreLink()
@@ -34,7 +38,7 @@ class ModUser extends Module
 		global $_d, $me;
 
 		if (ModUser::RequireAccess(1))
-			$_d['nav.links']['Log Out'] = "{$me}/{$this->lm->Name}/logout";
+			$_d['nav.links']['Log Out'] = "{$me}/user?{$this->lm->Name}_action=logout";
 	}
 
 	function Get()
@@ -45,13 +49,20 @@ class ModUser extends Module
 
 		if (ModUser::RequireAccess(1))
 			$out .= "Welcome, {$_d['cl']['usr_name']}<br/>\n";
-		else
+		else if (!empty($_d['user.ds']))
 		{
 			$out .= $this->lm->Get();
 			$out .= RunCallbacks(@$_d['user.callbacks.knee']);
 			return GetBox('box_user', 'Login', $out);
 		}
 		return $out;
+	}
+
+	static function TagAccess($t, $g, $a)
+	{
+		global $_d;
+		if (isset($_d['cl']) && $a['REQUIRE'] > @$_d['cl']['usr_access']) return;
+		return $g;
 	}
 }
 
@@ -64,8 +75,6 @@ class ModUserAdmin extends Module
 	*/
 	private $edUser;
 
-	private $selAccess;
-
 	function __construct()
 	{
 		global $_d, $me;
@@ -73,18 +82,8 @@ class ModUserAdmin extends Module
 		require_once(dirname(__FILE__).'/../a_editor.php');
 		require_once(dirname(__FILE__).'/../h_display.php');
 
-		$this->selAccess = ArrayToSelOptions(array(1 => 'User', 2 => 'Admin'));
-		$_d['user.ds']->Description = 'User';
-		$_d['user.ds']->DisplayColumns = array(
-			'usr_name' => new DisplayColumn('Name'),
-			'usr_access' => new DisplayColumn('Access', 'socallback')
-		);
-		$_d['user.ds']->FieldInputs = array(
-			'usr_name' => new FormInput('Name'),
-			'usr_pass' => new FormInput('Password', 'password'),
-			'usr_access' => new FormInput('Access', 'select', null,
-				$this->selAccess)
-		);
+		if (empty($_d['user.levels']))
+			$_d['user.levels'] = array(1 => 'User', 2 => 'Admin');
 		$this->edUser = new EditorData('user', $_d['user.ds']);
 		$this->edUser->Behavior->Target = $me.'/user';
 		$this->edUser->Behavior->Search = false;
@@ -95,7 +94,7 @@ class ModUserAdmin extends Module
 		global $_d;
 
 		if (ModUser::RequireAccess(2))
-			$_d['nav.links']['Users'] = $_d['tempurl'].'/user';
+			$_d['nav.links']['Users'] = $GLOBALS['me'].'/user';
 	}
 
 	function Prepare()
@@ -103,6 +102,17 @@ class ModUserAdmin extends Module
 		global $_d;
 
 		if (@$_d['q'][0] != 'user') return;
+		$_d['user.ds']->Description = 'User';
+		$_d['user.ds']->DisplayColumns = array(
+			'usr_name' => new DisplayColumn('Name'),
+			'usr_access' => new DisplayColumn('Access', 'socallback')
+		);
+		$_d['user.ds']->FieldInputs = array(
+			'usr_name' => new FormInput('Name'),
+			'usr_pass' => new FormInput('Password', 'password'),
+			'usr_access' => new FormInput('Access', 'select', null,
+				ArrayToSelOptions($_d['user.levels']))
+		);
 		$this->edUser->Prepare();
 	}
 
@@ -111,7 +121,7 @@ class ModUserAdmin extends Module
 		global $_d;
 
 		if (@$_d['q'][0] != 'user') return;
-		return $this->edUser->GetUI();
+		if (ModUser::RequireAccess(2)) return $this->edUser->GetUI();
 	}
 }
 

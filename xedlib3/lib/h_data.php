@@ -305,14 +305,20 @@ class Database
  * @return array specifying that this string shouldn't be quoted.
  */
 function SqlUnquote($data) { return array('val' => $data, 'opt' => SQLOPT_UNQUOTE); }
-function SqlBetween($from, $to) { return array('cmp' => 'between', 'val' => $from .' AND '.$to); }
+function SqlBetween($from, $to) { return array('cmp' => 'between', 'val' => "{$from}' AND '{$to}"); }
 function SqlNotNull() { return array('cmp' => 'IS NOT NULL', 'opt' => SQLOPT_UNQUOTE); }
 function SqlNot($val) { return array('cmp' => '!=', 'val' => $val); }
 function SqlAnd($val) { return array('inc' => 'AND', 'val' => $val); }
+function SqlOr($val)
+{
+	if (is_array($val)) { $val['inc'] = 'OR'; return $val; }
+	else return array('inc' => 'OR', 'val' => $val);
+}
 function SqlLess($val) { return array('cmp' => '<', 'val' => $val); }
 function SqlDistinct($val) { return array('cmp' => 'DISTINCT', 'val' => $val); }
 function SqlCount($val) { return array('val' => 'COUNT('.$val.')', 'opt' => SQLOPT_UNQUOTE); }
 function SqlLike($val) { return array('val' => '%'.$val.'%', 'cmp' => 'LIKE'); }
+function SqlIn($vals) { return array('val' => 'IN('.$vals.')', 'opt' => SQLOPT_UNQUOTE, 'cmp' => ''); }
 
 /**
  * Returns the proper format for DataSet to generate the current time.
@@ -601,7 +607,7 @@ class DataSet
 						if (is_array($val))
 						{
 							$ret .= $this->QuoteTable($col);
-							$ret .= !empty($val['cmp'])?' '.$val['cmp'].' ':' = ';
+							$ret .= isset($val['cmp'])?' '.$val['cmp'].' ':' = ';
 							$ret .= $this->ProcessVal($val);
 						}
 						else
@@ -821,12 +827,16 @@ class DataSet
 			{
 				if (isset($val['opt']) && $val['opt'] == SQLOPT_UNQUOTE)
 					return $val['val'];
-				else return $lq.$this->database->Escape($val['val']).$rq;
+				else return "'{$val['val']}'";
 			}
+			else return $lq.$this->database->Escape((string)$val).$rq;
 		}
-		else return $tbl
+		else
+		{
+			return $tbl
 			? $this->QuoteTable($val)
 			: $lq.$this->database->Escape($val).$rq;
+		}
 	}
 
 	function GetVal($val, $opts)
@@ -974,14 +984,7 @@ class DataSet
 	 * @param int $args passed to mysql_fetch_array.
 	 * @return array Array of items selected.
 	 */
-	function Get(
-		$match = null,
-		$sort = null,
-		$filter = null,
-		$joins = null,
-		$columns = null,
-		$group = null,
-		$args = GET_BOTH)
+	function Get($opts)
 	{
 		//Error handling
 		if (!isset($this->database))
@@ -997,13 +1000,13 @@ class DataSet
 
 		//Prepare Query
 		$query = 'SELECT ';
-		$query .= $this->GetColumnString($columns);
+		$query .= $this->GetColumnString(@$opts['cols']);
 		$query .= ' FROM '.$this->QuoteTable();
-		$query .= $this->JoinClause($joins, $this->joins);
-		$query .= $this->WhereClause($match);
-		$query .= $this->GroupClause($group);
-		$query .= $this->OrderClause($sort);
-		$query .= $this->AmountClause($filter);
+		$query .= $this->JoinClause(@$opts['joins'], $this->joins);
+		$query .= $this->WhereClause(@$opts['match']);
+		$query .= $this->GroupClause(@$opts['group']);
+		$query .= $this->OrderClause(@$opts['sort']);
+		$query .= $this->AmountClause(@$opts['filter']);
 
 		//Execute Query
 		$rows = $this->database->Query($query, $this->ErrorHandler);
@@ -1024,12 +1027,12 @@ class DataSet
 		if ($this->database->type == DB_MY)
 		{
 			$a = MYSQL_BOTH;
-			if ($args == GET_ASSOC) $a = MYSQL_ASSOC;
+			if (@$opts['args'] == GET_ASSOC) $a = MYSQL_ASSOC;
 		}
 		else if ($this->database->type == DB_MI)
 		{
 			$a = MYSQLI_BOTH;
-			if ($args == GET_ASSOC) $a = MYSQLI_ASSOC;
+			if (@$opts['args'] == GET_ASSOC) $a = MYSQLI_ASSOC;
 		}
 
 		while (($row = call_user_func($this->func_fetch, $rows, $a)))
@@ -1053,9 +1056,9 @@ class DataSet
 	 * @param int $args Arguments passed to fetch_array.
 	 * @return array A single serialized row matching $match or null if not found.
 	 */
-	function GetOne($match, $joins = null, $cols = null, $group = null, $args = GET_BOTH)
+	function GetOne($opts)
 	{
-		$data = $this->Get($match, null, null, $joins, $cols, $group, $args);
+		$data = $this->Get($opts);
 		if (isset($data)) return $data[0];
 		return $data;
 	}

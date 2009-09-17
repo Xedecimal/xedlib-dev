@@ -30,14 +30,23 @@ class Module
 		$tprep->ReWrite('block', array('Module', 'TagPrepBlock'));
 		$tprep->ParseFile($template);
 
+		$t = new Template($_d);
+		$t->ReWrite('block', array('Module', 'TagBlock'));
+
 		global $mods;
+		usort($mods, array('Module', 'cmp_mod'));
+
 		RunCallbacks(@$_d['index.cb.prelink']);
 		if (empty($mods)) Error('No modules found to use!');
-		foreach ($mods as $mod) $mod->PreLink();
-		foreach ($mods as $mod) $mod->Link();
-		foreach ($mods as $mod) $mod->Prepare();
-		foreach ($mods as $mod)
+		foreach ($mods as $n => $mod)
+			if (!isset($_d['module.disable'][$n])) $mod->PreLink();
+		foreach ($mods as $n => $mod)
+			if (!isset($_d['module.disable'][$n])) $mod->Link();
+		foreach ($mods as $n => $mod)
+			if (!isset($_d['module.disable'][$n])) $mod->Prepare();
+		foreach ($mods as $n => $mod)
 		{
+			if (isset($_d['module.disable'][$n])) continue;
 			if (array_key_exists($mod->Block, $_d['blocks']))
 				$_d['blocks'][$mod->Block] .= $mod->Get();
 			else
@@ -47,6 +56,14 @@ class Module
 		$t = new Template($_d);
 		$t->ReWrite('block', array('Module', 'TagBlock'));
 		return $t->ParseFile($template);
+	}
+
+	static function cmp_mod($x, $y)
+	{
+		global $_d;
+
+		return @$_d['module.order'][get_class($x)] <
+			@$_d['module.order'][get_class($y)];
 	}
 
 	static function TagPrepBlock($t, $g, $a)
@@ -62,6 +79,8 @@ class Module
 	}
 
 	public $Block = 'default';
+	/** @var boolean */
+	public $Active;
 
 	function DataError($errno)
 	{
@@ -91,6 +110,17 @@ class Module
 				#}
 			}
 			return true;
+		}
+	}
+
+	function CheckActive($name)
+	{
+		global $_d;
+
+		if (@$_d['q'][0] == $name)
+		{
+			$GLOBALS['me'] .= '/'.array_shift($_d['q']);
+			$this->Active = true;
 		}
 	}
 
@@ -136,7 +166,6 @@ class Module
 	 * the user.
 	 */
 	function InstallFields(&$frm) { }
-
 }
 
 ?>

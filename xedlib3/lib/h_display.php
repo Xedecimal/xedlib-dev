@@ -697,6 +697,7 @@ class FormInput
 			foreach ($atrs as $k => $v) $this->atrs[strtoupper($k)] = $v;
 		}
 		else $this->atrs = ParseAtrs($atrs);
+		if ($this->type == 'state') $this->valu = ArrayToSelOptions($GLOBALS['StateNames']);
 		$this->help = $help;
 		if ($type == 'date' || $type == 'time' || $type == 'datetime')
 			$this->EndLabel = true;
@@ -727,9 +728,8 @@ class FormInput
 	 */
 	function Get($parent = null, $persist = true)
 	{
-		$id = !empty($parent) ? $parent.'_' : null;
-		$id .= !empty($this->atrs['ID']) ? $this->atrs['ID'] : $this->name;
-		$id = CleanID($id);
+		if (!isset($this->atrs['ID']))
+			$this->atrs['ID'] = $this->GetCleanID($parent);
 
 		if ($this->type == 'custom')
 			return call_user_func($this->valu, $this);
@@ -762,14 +762,13 @@ class FormInput
 		if ($this->type == 'select' || $this->type == 'selects')
 		{
 			$this->atrs['NAME'] = $parent.'_'.$this->name;
-			if (!isset($this->atrs['ID']))
-				$this->atrs['ID'] = CleanID($parent.'_'.$this->name);
 			if ($this->type == 'selects')
 			{
 				$this->atrs['MULTIPLE'] = 'multiple';
 				$this->atrs['NAME'] .= '[]';
 			}
-			if (!isset($this->attrs['CLASS'])) $this->atrs['CLASS'] = 'input_select';
+			if (!isset($this->atrs['CLASS']))
+				$this->atrs['CLASS'] = 'input_select';
 
 			$ret = "<select".GetAttribs($this->atrs).'>';
 			if (!empty($this->valu))
@@ -777,20 +776,7 @@ class FormInput
 				$newsels = $this->GetValue($persist);
 				$ogstarted = false;
 				foreach ($newsels as $id => $opt)
-				{
-					$selected = $opt->selected ? ' selected="selected"' : null;
-					if ($opt->group)
-					{
-						if ($ogstarted) $ret .= "</optgroup>";
-						$ret .= "<optgroup label=\"{$opt->text}\">";
-						$ogstarted = true;
-					}
-					else $ret .= "<option
-						value=\"{$id}\"$selected>".
-						htmlspecialchars($opt->text).
-						"</option>";
-				}
-				if ($ogstarted) $ret .= "</optgroup>";
+					$ret .= $opt->Render();
 			}
 			return $ret.'</select>';
 		}
@@ -802,18 +788,20 @@ class FormInput
 			$vp = new VarParser();
 			if (!empty($this->valu))
 			{
+				@$this->atrs['CLASS'] .= ' checks';
 				$atrs = GetAttribs($this->atrs);
 				$ret .= "<div {$atrs}>";
 				$newsels = $this->GetValue($persist);
 				foreach ($newsels as $id => $val)
 				{
-					$selected = $val->selected ? 'checked="checked"' : null;
+					$ret .= $val->RenderCheck(array('NAME' => $parent.'_'.$this->name.'[]'));
+					/*$selected = $val->selected ? 'checked="checked"' : null;
 					if ($val->group)
 						$ret .= "<br /><b><i>{$val->text}</i></b>\n";
 					else
 						$ret .= "<label><input
 							type=\"checkbox\"
-							name=\"{$this->name}[]\" value=\"{$id}\"
+							name=\"{$parent}_{$this->name}[]\" value=\"{$id}\"
 							id=\"".CleanID($this->name.'_'.$id)."\"{$selected} />
 							{$val->text}</label>";
 					if (!empty($this->append))
@@ -822,7 +810,10 @@ class FormInput
 						$dat->valu = $id;
 						$ret .= $vp->ParseVars($this->append, $dat);
 					}
-					$ret .= "<br />\n";
+					if (!empty($val->children))
+						foreach ($val->children as $c)
+							$ret .= $c->Render($parent, $persist);
+					$ret .= "<br />\n";*/
 				}
 				$ret .= '</div>';
 			}
@@ -858,7 +849,10 @@ class FormInput
 		if ($this->type == 'date')
 		{
 			$this->labl = false;
-			return GetInputDate($parent.'_'.$this->name, $this->valu);
+			return GetInputDate(array(
+				'name' => $parent.'_'.$this->name,
+				'ts' => $this->valu,
+				'atrs' => $this->atrs));
 		}
 		if ($this->type == 'time')
 		{
@@ -868,7 +862,12 @@ class FormInput
 		if ($this->type == 'datetime')
 		{
 			$this->labl = false;
-			return GetInputDate($parent.'_'.$this->name, $this->valu, true);
+			return GetInputDate(array(
+				'name' => $parent.'_'.$this->name,
+				'ts' => $this->valu,
+				'time' => true,
+				'atrs' => $this->atrs
+			));
 		}
 		if ($this->type == 'area')
 		{
@@ -891,7 +890,8 @@ class FormInput
 		if ($this->type == 'state')
 		{
 			$this->atrs['NAME'] = @$parent.'_'.$this->name;
-			return GetInputState($this->atrs, @$this->valu);
+			$this->atrs['VALUE'] = @$this->valu;
+			return GetInputState($this->atrs);
 		}
 		if ($this->type == 'fullstate')
 		{
@@ -956,6 +956,13 @@ class FormInput
 		}
 	}
 
+	function GetCleanID($parent)
+	{
+		$id = !empty($parent) ? $parent.'_' : null;
+		$id .= !empty($this->atrs['ID']) ? $this->atrs['ID'] : $this->name;
+		return CleanID($id);
+	}
+
 	static function GetPostValue($name)
 	{
 		$v = $_POST[$name];
@@ -995,7 +1002,7 @@ class FormInput
 /**
  * Enter description here...
  */
-class SelOption
+class SelOption extends TreeNode
 {
 	/**
 	 * The text of this option.
@@ -1003,6 +1010,7 @@ class SelOption
 	 * @var string
 	 */
 	public $text;
+	public $valu;
 	/**
 	 * Whether this is a group header.
 	 *
@@ -1025,12 +1033,45 @@ class SelOption
 	 * @param bool $group
 	 * @param bool $selected
 	 */
-	function SelOption($text, $group = false, $selected = false)
+	function SelOption($text, $selected = false)
 	{
 		$this->text = $text;
-		$this->group = $group;
 		$this->selected = $selected;
 		$this->disabled = false;
+	}
+
+	function RenderCheck($atrs)
+	{
+		if ($this->selected) $selected = ' selected="selected"';
+		if (!empty($this->children))
+		{
+			$ret = '<p><b><i>'.$this->text.'</i></b><br />';
+			foreach ($this->children as $c) $ret .= $c->RenderCheck($atrs);
+			$ret .= '</p>';
+			return $ret;
+		}
+		else
+		{
+			$valu = isset($this->valu) ? ' value="'.$this->valu.'"' : null;
+			return '<input type="checkbox" value="'.$this->valu.'"'.GetAttribs($atrs).' />'.htmlspecialchars($this->text).'<br/>';
+		}
+	}
+
+	function Render()
+	{
+		if ($this->selected) $selected = ' selected="selected"';
+		if (!empty($this->children))
+		{
+			$ret = '<optgroup label="'.$this->text.'">';
+			foreach ($this->children as $c) $ret .= $c->Render();
+			$ret .= '</optgroup>';
+			return $ret;
+		}
+		else
+		{
+			$valu = isset($this->valu) ? ' value="'.$this->valu.'"' : null;
+			return "<option{$valu}>".htmlspecialchars($this->text).'</option>';
+		}
 	}
 
 	function __tostring() { return $this->text; }
@@ -1045,34 +1086,13 @@ class SelOption
  */
 function MakeSelect($atrs = null, $value = null, $selvalue = null)
 {
-	if (isset($atrs['VALUE']))
-		$selvalue = $atrs['VALUE'];
-	if (is_array($atrs))
-		unset($atrs['VALUE']);
+	if (isset($atrs['VALUE'])) $selvalue = $atrs['VALUE'];
+	if (is_array($atrs)) unset($atrs['VALUE']);
 
-	$strout = '<select';
-	$strout .= GetAttribs($atrs);
-	$strout .= ">\n";
-
-	$GroupStarted = false;
-	foreach ($value as $id => $option)
-	{
-		$selected = null;
-		if ($id == $selvalue) $selected = ' selected="selected"';
-		if ($option->selected) $selected = ' selected="selected"';
-		if ($option->group)
-		{
-			if ($GroupStarted) $strout .= '</optgroup>';
-			$strout .= "<optgroup label=\"{$option->text}\">";
-			$GroupStarted = true;
-		}
-		else
-			$strout .= "<option value=\"{$id}\"$selected>{$option->text}</option>\n";
-		$selected = null;
-	}
-	if ($GroupStarted) $strout .= '</optgroup>';
-	$strout .= "</select>\n";
-	return $strout;
+	$ret = '<select'.GetAttribs($atrs).">\n";
+	foreach ($value as $id => $option) $ret .= $option->Render();
+	$ret .= "</select>\n";
+	return $ret;
 }
 
 function MakeChecks($atrs = null, $value = null, $selvalue = null)
@@ -1133,7 +1153,15 @@ function ArrayToSelOptions($array, $default = null, $use_keys = true)
 	$opts = array();
 	foreach ($array as $ix => $item)
 	{
-		$o = new SelOption($item, false, $default == $item);
+		if (is_array($item))
+		{
+			$o = new SelOption($ix, $default == $item);
+			$o->children = ArrayToSelOptions($item, $default, $use_keys);
+			$o->group = true;
+		}
+		else $o = new SelOption($item, $default == $item);
+
+		if ($use_keys) $o->valu = $o->id = $ix;
 		$opts[$use_keys ? $ix : $item] = $o;
 	}
 	return $opts;
@@ -1146,30 +1174,30 @@ function ArrayToSelOptions($array, $default = null, $use_keys = true)
  * @param bool $include_time Whether or not to add time to the date.
  * @return string Rendered date input.
  */
-function GetInputDate($name = "", $timestamp = null, $include_time = false)
+function GetInputDate($args)
 {
-	if (is_array($timestamp))
+	if (is_array($args['ts']))
 	{
-		if (isset($timestamp[5]))
-			$timestamp = mktime($timestamp[3], $timestamp[4], $timestamp[5],
-				$timestamp[0], $timestamp[1], $timestamp[2]);
+		if (isset($args['ts'][5]))
+			$args['ts'] = mktime($args['ts'][3], $args['ts'][4], $args['ts'][5],
+				$args['ts'][0], $args['ts'][1], $args['ts'][2]);
 		else
-			$timestamp = mktime(0, 0, 0, $timestamp[0], $timestamp[1],
-				$timestamp[2]);
+			$args['ts'] = mktime(0, 0, 0, $args['ts'][0], $args['ts'][1],
+				$args['ts'][2]);
 	}
-	else if (!is_numeric($timestamp) && !empty($timestamp))
+	else if (!is_numeric($args['ts']) && !empty($args['ts']))
 	{
-		$timestamp = MyDateTimestamp($timestamp, $include_time);
+		$args['ts'] = MyDateTimestamp($args['ts'], $args['time']);
 	}
-	if (!isset($timestamp)) $timestamp = time();
-	$strout = '<label>'.GetMonthSelect("{$name}[]", date('n', $timestamp)).
-		'</label>';
-	$strout .= "/ <input type=\"text\" size=\"2\" name=\"{$name}[]\" value=\"".
-		date('d', $timestamp)."\" alt=\"Day\" />\n";
-	$strout .= "/ <input type=\"text\" size=\"4\" name=\"{$name}[]\" value=\"".
-		date('Y', $timestamp)."\" alt=\"Year\" />\n";
-	$strout .= $include_time ? GetInputTime($name.'[]', $timestamp) : null;
-	return $strout;
+	if (!isset($args['ts'])) $args['ts'] = time();
+	$strout = '<div'.GetAttribs(@$args['atrs']).'>';
+	$strout .= GetMonthSelect("{$args['name']}[]", date('n', $args['ts']));
+	$strout .= '/ <input type="text" size="2" name="'.$args['name'].'[]" value="'.
+		date('d', $args['ts']).'" alt="Day" />'."\n";
+	$strout .= '/ <input type="text" size="4" name="'.$args['name'].'[]" value="'.
+		date('Y', $args['ts']).'" alt="Year" />'."\n";
+	$strout .= @$args['time'] ? GetInputTime($args['name'].'[]', $args['ts']) : null;
+	return $strout.'</div>';
 }
 
 /**
@@ -1289,6 +1317,9 @@ class TreeNode
 
 	function Find($id)
 	{
+		if ($this->id == $id) return $this;
+
+		if (is_array($this->children))
 		foreach ($this->children as $c)
 		{
 			if ($c->id == $id) return $c;
@@ -1364,8 +1395,7 @@ class LoginManager
 		$passvar = $this->Name.'_sespass';
 		$uservar = $this->Name.'_sesuser';
 
-		$q = explode('/', GetVar('q'));
-		$act = array_pop($q);
+		$act = GetVar($this->Name.'_action');
 
 		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
 			? $_SESSION[$uservar] : null;
@@ -1404,13 +1434,13 @@ class LoginManager
 					<br />Who: LoginManager::Prepare()
 					<br />Why: You may have set an incorrect dataset in the
 					creation of this LoginManager.");
-				$match = array(
+				$query['match'] = array(
 					$ds[1] => $check_pass,
 					$ds[2] => SqlAnd($check_user)
 				);
 				if (!empty($conditions))
-					$match = array_merge($match, $conditions);
-				$item = $ds[0]->GetOne($match);
+					$match = array_merge($query['match'], $conditions);
+				$item = $ds[0]->GetOne($query);
 				if ($item != null) return $item;
 			}
 		}
@@ -1436,7 +1466,7 @@ class LoginManager
 		$f->AddInput(new FormInput($this->View->TextPassword, 'password', 'auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
 		$f->Template = file_get_contents($template);
-		return $f->Get('action="'.$me.'/'.$this->Name.'/login" method="post"');
+		return $f->Get('action="'.$me.'/'.GetVar('q').'" method="post"');
 	}
 
 	/**
@@ -1562,7 +1592,7 @@ class DisplayObject
 function GetMonthSelect($name, $default, $attribs = null)
 {
 	$ret = "<select name=\"$name\"";
-	if ($attribs != null) $ret .= " $attribs";
+	$ret .= GetAttribs($attribs);
 	$ret .= ">";
 	for ($ix = 1; $ix <= 12; $ix++)
 	{
@@ -1810,8 +1840,12 @@ function GetHiddenPost($name, $val)
  */
 function SOCallback($ds, $item, $icol, $col = null)
 {
-	if (isset($ds->FieldInputs[$col]->valu[$item[$icol]]))
-		return $ds->FieldInputs[$col]->valu[$item[$icol]]->text;
+	if (is_array($ds->FieldInputs[$col]->valu))
+	foreach ($ds->FieldInputs[$col]->valu as $v)
+	{
+		$res = $v->Find($item[$icol]);
+		if (isset($res)) return $res->text;
+	}
 	return $item[$icol];
 }
 
@@ -1842,11 +1876,11 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 	{
 		case 'date':
 			$field = '<input type="hidden" name="type_'.@$attribs['NAME'].'" value="'.$attribs['TYPE'].'" />';
-			$field .= GetInputDate(@$attribs['NAME'], @$attribs['VALUE']);
+			$field .= GetInputDate(array('name' => @$attribs['NAME'], 'ts' => @$attribs['VALUE']));
 			break;
 		case 'datetime':
 			$field = '<input type="hidden" name="type_'.@$attribs['NAME'].'" value="'.$attribs['TYPE'].'" />';
-			$field = GetInputDate(@$attribs['NAME'], @$attribs['VALUE'], true);
+			$field = GetInputDate(array('name' => @$attribs['NAME'], 'ts' => @$attribs['VALUE'], 'time' => true));
 			break;
 		case 'year':
 			$field = GetYearSelect($attribs['NAME'], $attribs);
@@ -1866,8 +1900,8 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
 			break;
 		case 'checkbox':
-			if (@$attribs['VALUE']) $attribs['CHECKED'] = 'checked';
-			$attribs['VALUE'] = '1';
+			//if (@$attribs['VALUE']) $attribs['CHECKED'] = 'checked';
+			//$attribs['VALUE'] = '1';
 			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
 			break;
 		case 'state':
@@ -1896,10 +1930,18 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 	return $ret;
 }
 
-function TagUpper($t, $g, $a)
+function TagLoop($t, $g, $a)
 {
-	return strtoupper($g);
+	$vp = new VarParser();
+	$ret = null;
+	for ($ix = $a['START']; $ix <= $a['END']; $ix++)
+	{
+		$ret .= $vp->ParseVars($g, array($a['VAR'] => $ix));
+	}
+	return $ret;
 }
+
+function TagUpper($t, $g, $a) { return strtoupper($g); }
 
 function GetAttribs($attribs)
 {
