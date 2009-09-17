@@ -16,7 +16,7 @@ class ModNav extends Module
 
 			if (!empty($title))
 				$ret .= "<li><span class=\"nav_header\">{$title}</span><ul>\n";
-			else $ret .= '<ul>';
+			else $ret .= '<ul class="nav">';
 			foreach ($link as $t => $l)
 				$ret .= ModNav::GetLinks($t, $l, $depth+1);
 			if (!empty($title)) $ret .= "</ul></li>\n";

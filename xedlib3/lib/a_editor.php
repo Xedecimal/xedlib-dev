@@ -1899,12 +1899,17 @@ class EditorText
 
 	function Prepare()
 	{
-		$action = GetVar($this->Name.'_action');
+		$q = $GLOBALS['_d']['q'];
+		$action = array_pop($q);
+		$target = array_pop($q);
+
+		if ($target != $this->Name) return;
+
 		if ($action == 'update')
 		{
 			$this->item = SecurePath(GetVar($this->Name.'_ci'));
 			file_put_contents($this->item,
-				stripslashes(GetVar('body')));
+				stripslashes(GetVar($this->Name.'_body')));
 		}
 	}
 
@@ -1915,11 +1920,11 @@ class EditorText
 		$frmRet->AddHidden($this->Name.'_ci', $this->item);
 
 		$frmRet->AddInput(new FormInput(null, 'area', 'body',
-			stripslashes(file_get_contents($this->item)),
-				'rows="30" cols="30" style="width: 100%"'));
+			stripslashes(@file_get_contents($this->item)),
+				array('ROWS' => 30, 'COLS' => 30, 'style' => 'width: 100%')));
 		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
-		return $frmRet->Get('method="post" action="'.$target.'"');
+		return $frmRet->Get('method="post" action="'.$target.'/'.$this->Name.'/update"');
 	}
 }
 

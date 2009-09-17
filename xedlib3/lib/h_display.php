@@ -1360,7 +1360,7 @@ class LoginManager
 		$uservar = $this->Name.'_sesuser';
 
 		$q = explode('/', GetVar('q'));
-		$act = @$q[1];
+		$act = array_pop($q);
 
 		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
 			? $_SESSION[$uservar] : null;
@@ -1431,7 +1431,7 @@ class LoginManager
 		$f->AddInput(new FormInput($this->View->TextPassword, 'password', 'auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
 		$f->Template = file_get_contents($template);
-		return $f->Get('action="'.$me.$this->Name.'/login" method="post"');
+		return $f->Get('action="'.$me.'/'.$this->Name.'/login" method="post"');
 	}
 
 	/**
