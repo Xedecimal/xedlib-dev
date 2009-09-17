@@ -305,7 +305,7 @@ class Database
  * @return array specifying that this string shouldn't be quoted.
  */
 function SqlUnquote($data) { return array('val' => $data, 'opt' => SQLOPT_UNQUOTE); }
-function SqlBetween($from, $to) { return array('cmp' => 'between', 'val' => "{$from}' AND '{$to}"); }
+function SqlBetween($from, $to) { return array('cmp' => 'between', 'opt' => SQLOPT_UNQUOTE, 'val' => "'$from' AND '$to'"); }
 function SqlNotNull() { return array('cmp' => 'IS NOT NULL', 'opt' => SQLOPT_UNQUOTE); }
 function SqlNot($val) { return array('cmp' => '!=', 'val' => $val); }
 function SqlAnd($val) { return array('inc' => 'AND', 'val' => $val); }
