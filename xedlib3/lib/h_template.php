@@ -143,10 +143,17 @@ class Template extends LayeredOutput
 	{
 		$this->Behavior = new TemplateBehavior();
 		$args = func_get_args();
-		if (isset($args[0])) $data = &$args[0];
+		if (isset($args[0]))
+		{
+			$data = &$args[0];
+			$this->data = &$data;
+
+			// Handle Global Rewrites
+			if (!empty($data['rewrites']))
+			foreach ($data['rewrites'] as $rw) $this->ReWrite($rw[0], $rw[1]);
+		}
 		$this->objs = array();
 		$this->vars = array();
-		$this->data = &$data;
 		$this->use_getvar = false;
 		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
 
@@ -408,7 +415,7 @@ class Template extends LayeredOutput
 
 			$objd->Out(call_user_func($rw, $this,
 				$obj->Get(), $vp->ParseVars($obj->attribs, $this->vars),
-				$obj->tag, @$this->rewriteargs[$tag]));
+				$obj->tag, $this->rewriteargs[$tag]));
 
 			return;
 		}
@@ -612,7 +619,7 @@ class Template extends LayeredOutput
 
 	function ProcessVars($str)
 	{
-		return preg_replace_callback('/\{{([^}]+)\}}/',
+		return preg_replace_callback('/\{\{([^\}]+)\}\}/',
 			array(&$this, "parse_vars"), $str);
 	}
 
@@ -747,19 +754,18 @@ class VarParser
 	{
 		if (empty($data)) return '';
 		$this->vars = $vars;
-		return preg_replace_callback('/\{{([^}]+)\}}/', array(&$this, 'var_parser'), $data);
+		return preg_replace_callback('/\{\{([^\}]+)\}\}/', array(&$this, 'var_parser'), $data);
 	}
 
 	/**
 	 * Callback for each regex match, not for external use.
 	 *
-	 * @param array $match
+	 * @param array $match Matches found by preg_replace_callback calling this.
 	 * @return string
 	 */
 	function var_parser($match)
 	{
 		$tvar = $match[1];
-		global $$tvar;
 
 		//Process an array values from $this->vars
 		if (is_array($this->vars) && isset($this->vars[$tvar]))
@@ -770,7 +776,7 @@ class VarParser
 			$ov = get_object_vars($this->vars);
 			if (isset($ov[$tvar])) $ret = $ov[$tvar];
 		}
-		else if (isset($$tvar)) $ret = $$tvar;
+		else if (isset($GLOBALS[$tvar])) $ret = $GLOBALS[$tvar];
 		else if (defined($tvar)) $ret = constant($tvar);
 		else $ret = ($this->Bleed ? $match[0] : null);
 

@@ -1016,6 +1016,8 @@ class SelOption
 	 */
 	public $selected;
 
+	public $disabled;
+
 	/**
 	 * Create a new select option.
 	 *
@@ -1028,6 +1030,7 @@ class SelOption
 		$this->text = $text;
 		$this->group = $group;
 		$this->selected = $selected;
+		$this->disabled = false;
 	}
 
 	function __tostring() { return $this->text; }
@@ -1078,16 +1081,18 @@ function MakeChecks($atrs = null, $value = null, $selvalue = null)
 	if (is_array($atrs)) unset($atrs['VALUE']);
 
 	$strout = null;
+	if (!empty($value))
 	foreach ($value as $id => $option)
 	{
-		$selected = null;
+		$selected = $disabled = null;
 		if ($id == $selvalue) $selected = ' selected="selected"';
 		if ($option->selected) $selected = ' selected="selected"';
+		if ($option->disabled) $disabled = ' disabled="disabled"';
 		if ($option->group)
 			$strout .= "<strong><em>{$option->text}</em></strong><br />\n";
 		else
 			$strout .= '<label><input type="checkbox" value="'
-				.$id.'"'.GetAttribs($atrs).$selected.' />'.$option->text
+				.$id.'"'.GetAttribs($atrs).$selected.$disabled.' />'.$option->text
 				.'</label>'."<br/>\n";
 		$selected = null;
 	}

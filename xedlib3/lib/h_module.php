@@ -27,11 +27,8 @@ class Module
 		global $_d;
 
 		$tprep = new Template();
-		$tprep->ReWrite('block', 'Module::TagPrepBlock');
+		$tprep->ReWrite('block', array('Module', 'TagPrepBlock'));
 		$tprep->ParseFile($template);
-
-		$t = new Template($_d);
-		$t->ReWrite('block', 'Module::TagBlock');
 
 		global $mods;
 		RunCallbacks(@$_d['index.cb.prelink']);
@@ -47,6 +44,8 @@ class Module
 				$_d['blocks']['default'] .= $mod->Get();
 		}
 
+		$t = new Template($_d);
+		$t->ReWrite('block', array('Module', 'TagBlock'));
 		return $t->ParseFile($template);
 	}
 

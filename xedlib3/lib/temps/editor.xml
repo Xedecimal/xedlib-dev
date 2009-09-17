@@ -22,10 +22,11 @@
 </if>
 
 <forms>
-<box id="box_{{name}}_forms" title="{{form_title}}">
+<div id="box_{{name}}_forms" class="editor_form">
+<div class="box_title">{{form_title}}</div>
 {{TextFormHeader}}
 {{form_content}}
-</box>
+</div>
 </forms>
 
 </null>

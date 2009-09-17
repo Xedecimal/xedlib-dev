@@ -936,6 +936,7 @@ class DataSet
 			$query .= ' ON DUPLICATE KEY UPDATE ';
 			$query .= $this->SetClause($columns, null);
 		}
+
 		$this->database->Query($query);
 		return $this->database->GetLastInsertID();
 	}

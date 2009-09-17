@@ -1374,6 +1374,8 @@ class EditorDataBehavior
 	 * @var array
 	 */
 	public $Group;
+
+	public $Target;
 }
 
 class DisplayData

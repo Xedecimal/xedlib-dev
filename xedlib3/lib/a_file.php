@@ -568,7 +568,7 @@ class FileManager
 				$this->vars['url'] = URL($me, $vars);
 			}
 			else if ($this->Behavior->UseInfo)
-				$this->vars['url'] = URL($me,
+				$this->vars['url'] = URL($this->Behavior->Target,
 					array($this->Name.'_cf' => $this->cf.$f->filename));
 			else
 				$this->vars['url'] = $this->Root."{$this->cf}{$f->filename}";
@@ -759,8 +759,6 @@ class FileManager
 
 		if (!isset($GLOBALS['page_head'])) $GLOBALS['page_head'] = '';
 		$GLOBALS['page_head'] .= <<<EOF
-<script type="text/javascript" src="{$relpath}/js/helper.js"></script>
-
 <script type="text/javascript">
 window.onload = function() {
 	$('#{$this->Name}_mass_options').hide();
@@ -1685,7 +1683,7 @@ class FilterGallery extends FilterDefault
 		global $_d;
 
 		$dir = $_d['site_root'].$fi->dir;
-		$abs = "$dir/t_{$fi->filename}";
+		$abs = "{$dir}/t_{$fi->filename}";
 		$rel = "{$fi->dir}/t_{$fi->filename}";
 		if (file_exists($rel)) $fi->icon = $abs;
 
