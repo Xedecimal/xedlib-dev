@@ -1064,7 +1064,7 @@ class DataSet
 	 * @param mixed $joins array(new Join(dataset, condition, type))
 	 * @return array
 	 */
-	function GetSearch($columns, $phrase, $start = 0, $limit = null,
+	function GetSearch($columns, $phrase, $limit = null,
 		$sort = null, $filter = null, $joins = null)
 	{
 		$query = 'SELECT '.$this->GetColumnString($columns, false).' FROM '.
@@ -1106,7 +1106,7 @@ class DataSet
 
 		if ($filter != null) $query .= $this->WhereClause($filter, ' AND');
 		if ($sort != null) $query .= DataSet::OrderClause($sort);
-		if ($limit != null) $query .= " LIMIT {$start}, {$limit}";
+		if ($limit != null) $query .= DataSet::AmountClause($limit);
 
 		return $this->GetCustom($query);
 	}

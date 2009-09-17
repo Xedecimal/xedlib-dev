@@ -370,10 +370,11 @@ class EditorData
 		require_once('h_display.php');
 
 		$this->Name = $name;
-		$this->filter = $filter;
 		$this->ds = $ds;
 
 		$this->Behavior = new EditorDataBehavior();
+		$this->Behavior->Filter = $filter;
+
 		$this->View = new EditorDataView();
 		$this->handlers = array();
 
@@ -912,7 +913,7 @@ class EditorData
 			}
 
 			$items = $this->ds->GetSearch($cols, GetVar($this->Name.'_q'),
-				null, null, $this->sort, $this->filter);
+				$this->Behavior->Limit, $this->sort, $this->Behavior->Filter);
 
 			$root = $this->BuildTree($items);
 		}
@@ -1412,6 +1413,8 @@ class EditorDataBehavior
 	 * @var array
 	 */
 	public $Group;
+
+	public $Limit;
 }
 
 class DisplayData
@@ -1639,7 +1642,7 @@ class DisplayData
 			foreach ($this->Editors as $join => $editor)
 			{
 				if (preg_match('/([^.]+)\.(.*)/', $join, $ms))
-					$editor->filter = "{$ms[2]} = $ci";
+					$editor->Behavior->Filter = "{$ms[2]} = $ci";
 				$ret .= $editor->GetUI($target, $ci);
 			}
 		}

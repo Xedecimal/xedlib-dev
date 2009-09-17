@@ -1101,14 +1101,14 @@ function GetMiles($lat1, $lat2, $lon1, $lon2)
 function GetZips($ds, $zip, $range)
 {
 	$details = GetZipLocation($ds, $zip);  // base zip details
-    if ($details == false) return null;
+	if ($details == false) return null;
 
-    $lat_range = $range / 69.172;
-    $lon_range = abs($range / (cos($details['lng']) * 69.172));
-    $min_lat = number_format($details['lat'] - $lat_range, "4", ".", "");
-    $max_lat = number_format($details['lat'] + $lat_range, "4", ".", "");
-    $min_lon = number_format($details['lng'] - $lon_range, "4", ".", "");
-    $max_lon = number_format($details['lng'] + $lon_range, "4", ".", "");
+	$lat_range = $range / 69.172;
+	$lon_range = abs($range / (cos($details['lng']) * 69.172));
+	$min_lat = number_format($details['lat'] - $lat_range, "4", ".", "");
+	$max_lat = number_format($details['lat'] + $lat_range, "4", ".", "");
+	$min_lon = number_format($details['lng'] - $lon_range, "4", ".", "");
+	$max_lon = number_format($details['lng'] + $lon_range, "4", ".", "");
 
 	$query = "SELECT zip, lat, lng, name FROM zips
 		WHERE lat BETWEEN '{$min_lat}' AND '{$max_lat}'
@@ -1127,7 +1127,7 @@ function GetZips($ds, $zip, $range)
 		}
 	}
 
-    asort($return['dists']);
+	asort($return['dists']);
 
 	return $return;
 }
@@ -1189,34 +1189,34 @@ function is_in($src, $dst)
  */
 function crypt_apr1_md5($plainpasswd)
 {
-    $salt = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"), 0, 8);
-    $len = strlen($plainpasswd);
-    $text = $plainpasswd.'$apr1$'.$salt;
-    $bin = pack("H32", md5($plainpasswd.$salt.$plainpasswd));
-    for($i = $len; $i > 0; $i -= 16) { $text .= substr($bin, 0, min(16, $i)); }
-    for($i = $len; $i > 0; $i >>= 1) { $text .= ($i & 1) ? chr(0) : $plainpasswd{0}; }
-    $bin = pack("H32", md5($text));
-    for($i = 0; $i < 1000; $i++)
+	$salt = substr(str_shuffle("abcdefghijklmnopqrstuvwxyz0123456789"), 0, 8);
+	$len = strlen($plainpasswd);
+	$text = $plainpasswd.'$apr1$'.$salt;
+	$bin = pack("H32", md5($plainpasswd.$salt.$plainpasswd));
+	for($i = $len; $i > 0; $i -= 16) { $text .= substr($bin, 0, min(16, $i)); }
+	for($i = $len; $i > 0; $i >>= 1) { $text .= ($i & 1) ? chr(0) : $plainpasswd{0}; }
+	$bin = pack("H32", md5($text));
+	for($i = 0; $i < 1000; $i++)
 	{
-        $new = ($i & 1) ? $plainpasswd : $bin;
-        if ($i % 3) $new .= $salt;
-        if ($i % 7) $new .= $plainpasswd;
-        $new .= ($i & 1) ? $bin : $plainpasswd;
-        $bin = pack("H32", md5($new));
-    }
-    $tmp = '';
-    for ($i = 0; $i < 5; $i++)
+		$new = ($i & 1) ? $plainpasswd : $bin;
+		if ($i % 3) $new .= $salt;
+		if ($i % 7) $new .= $plainpasswd;
+		$new .= ($i & 1) ? $bin : $plainpasswd;
+		$bin = pack("H32", md5($new));
+	}
+	$tmp = '';
+	for ($i = 0; $i < 5; $i++)
 	{
-        $k = $i + 6;
-        $j = $i + 12;
-        if ($j == 16) $j = 5;
-        $tmp = $bin[$i].$bin[$k].$bin[$j].$tmp;
-    }
-    $tmp = chr(0).chr(0).$bin[11].$tmp;
-    $tmp = strtr(strrev(substr(base64_encode($tmp), 2)),
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
-    "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-    return "\$apr1\$".$salt."$".$tmp;
+		$k = $i + 6;
+		$j = $i + 12;
+		if ($j == 16) $j = 5;
+		$tmp = $bin[$i].$bin[$k].$bin[$j].$tmp;
+	}
+	$tmp = chr(0).chr(0).$bin[11].$tmp;
+	$tmp = strtr(strrev(substr(base64_encode($tmp), 2)),
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
+	"./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+	return "\$apr1\$".$salt."$".$tmp;
 }
 
 /**
@@ -1463,6 +1463,11 @@ function get_csv($str)
 	$arr = preg_split('/,(?=(?:[^"]*"[^"]*")*(?![^"]*"))/', trim($str));
 	foreach ($arr as $k => $v) $arr[$k] = trim($v, '"');
 	return $arr;
+}
+
+function put_csv($arr)
+{
+	return '"'.implode('","', $arr).'"';
 }
 
 /**
