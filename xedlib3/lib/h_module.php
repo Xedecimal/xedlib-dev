@@ -119,7 +119,7 @@ class Module
 
 		if (@$_d['q'][0] == $name)
 		{
-			$GLOBALS['me'] .= '/'.array_shift($_d['q']);
+			@$GLOBALS['me'] .= '/'.array_shift($_d['q']);
 			$this->Active = true;
 		}
 	}

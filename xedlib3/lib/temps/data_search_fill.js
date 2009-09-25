@@ -25,18 +25,12 @@ function fill(ix, element) {
 			if (m[1].match(/\.([^.]+)/)) m[1] = m[1].match(/\.([^.]+)/)[1];
 			input.val(json[record][m[1]]);
 		}
-
-		$(this).attr('readonly', true);
-		$(this).addClass('disabled');
 	}
 }
 
 $(function () {
-	// Remove interactivity.
-	$('input:button,input:submit,.front').hide();
-
 	// Populate the remains.
-	$('input:visible,textarea:visible,select:visible').each(fill);
+	$('input,textarea,select').each(fill);
 
 	//Populate the repeatable entries.
 	$('.repeatable').each(function () {
@@ -48,18 +42,10 @@ $(function () {
 			if (!ids[row[col]] && row[col] != null) {
 				obj = $(rep.children[0]).repeat($(rep));
 				record = ix;
-				obj.find('input:visible,textarea:visible,select:visible').each(fill);
+				obj.find('input,textarea,select').each(fill);
 				ids[row[col]] = 1;
 			}
 		});
-	});
-
-	$('select').each(function () {
-		$(this).replaceWith('<span class="input">'+$(this).find('option:selected').text()+'</span>');
-	});
-
-	$('input[type!=checkbox][type!=radio],textarea').each(function () {
-		$(this).replaceWith('<span class="input">'+$(this).val()+'</span>');
 	});
 });
 </null>

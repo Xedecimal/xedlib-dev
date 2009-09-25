@@ -6,12 +6,6 @@
  */
 
 /**
- * Global reference to self script.
- * @var string
- */
-$me = GetVar("SCRIPT_NAME");
-
-/**
  * Whether the files should be checked for reformatting.
  * @var bool
  */
@@ -29,6 +23,8 @@ if (!isset($__checked) && substr(phpversion(), 0, 1) != '5')
 		Reformat($file);
 	}
 }
+
+function null() {}
 
 /**
  * Handles errors and tries to open them up more to strictly find problems.
@@ -1524,6 +1520,14 @@ function Pull(&$arr, $key)
 {
 	$ret = $arr[$key];
 	unset($arr[$key]);
+	return $ret;
+}
+
+function array_lower_keys($array)
+{
+	if (!is_array($array)) return null;
+	$ret = array();
+	foreach ($array as $k => $v) $ret[strtolower($k)] = $v;
 	return $ret;
 }
 

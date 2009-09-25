@@ -11,5 +11,16 @@ $(function () {
 		$(this).click(function () {
 			$('#hidden_'+targ).showHide($(this).attr('checked'));
 		});
-	})
+	});
+	
+	$('.delResult').click(function () {
+		if (confirm('Are you sure you wish to delete this entry?'))
+		{
+			id = $(this).attr('id').match(/del:(\d+)/)[1];
+			$.post('{{me}}/{{name}}/delete/'+id, null, function (data) {
+				$('#result\\:'+id).hide(500);
+			}, 'json');
+		}
+		return false;
+	});
 });

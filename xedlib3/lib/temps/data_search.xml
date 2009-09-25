@@ -2,18 +2,20 @@
 
 <results>
 <result>
-<table>
-	<tr><td><a href="{{me}}/{{name}}/view/{{id}}" target="_new">View</a></td></tr>
-<resultfield>
+<table id="result:{{id}}">
+	<tr><td colspan="2">
+		<result_button><a class="button">{{text}}</a></result_button>
+	</td></tr>
+<result_field>
 	<tr><td>{{text}}</td><td>{{val}}</td></tr>
-</resultfield>
+</result_field>
 </table>
 </result>
 </results>
 
 <search>
-<form action="{{me}}/{{name}}/search" method="post">
-<script type="text/javascript" src="{{tempurl}}/data_search.js" />
+<form action="{{root}}{{me}}/{{name}}/search" method="post">
+<script type="text/javascript" src="{{root}}/xedlib/temps/data_search.js" />
 <fieldset>
 <legend>Select fields to search</legend>
 <ul>

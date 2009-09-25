@@ -1040,7 +1040,8 @@ class EditorData
 			$url_defaults = array($this->assoc => $this->Name);
 			if (isset($child_id)) $url_defaults['child'] = $child_id;
 
-			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults, $PERSISTS);
+			if (!empty($PERSISTS)) $url_defaults = array_merge($url_defaults,
+				$PERSISTS);
 
 			$p = GetRelativePath(dirname(__FILE__));
 
@@ -1982,6 +1983,19 @@ class DataSearch
 		$this->Name = $name;
 		$this->_ds = $ds;
 		$this->Behavior = new DataSearchBehavior();
+		$this->Behavior->Buttons['View'] = array(
+			'href' => '{{root}}{{me}}/{{name}}/view/{{id}}',
+			'target' => '_blank'
+		);
+		$this->Behavior->Buttons['Edit'] = array(
+			'href' => '{{root}}{{me}}/{{name}}/edit/{{id}}',
+			'target' => '_blank'
+		);
+		$this->Behavior->Buttons['Delete'] = array(
+			'class' => 'button delResult',
+			'href' => '#',
+			'id' => 'del:{{id}}'
+		);
 	}
 
 	function Prepare()
@@ -1990,22 +2004,30 @@ class DataSearch
 
 		$this->_q = array_reverse($_d['q']);
 
-		if (@$this->_q[2] == $this->Name && @$this->_q[1] == 'viewjs')
+		if (@$this->_q[3] == $this->Name)
 		{
-			$ci = $this->_q[0];
-			$orders[$this->_ds->id] = 'ASC';
-			foreach ($this->_ds->joins as $j)
-				$orders[$j->DataSet->id] = 'ASC';
+			if (@$this->_q[2] == 'js')
+			{
+				$t = new Template();
+				if (@$this->_q[1] == 'data_search_fill')
+				{
+					$ci = $this->_q[0];
+					$orders[$this->_ds->id] = 'ASC';
+					foreach ($this->_ds->joins as $j)
+						$orders[$j->DataSet->id] = 'ASC';
 
-			$data = $this->_ds->Get(array(
-				'match' => array('app_id' => $ci),
-				'args' => GET_ASSOC,
-				'order' => $orders
-			));
+					$data = $this->_ds->Get(array(
+						'match' => array('app_id' => $ci),
+						'args' => GET_ASSOC,
+						'order' => $orders
+					));
 
-			$t = new Template();
-			$t->Set('json', json_encode($data));
-			die($t->ParseFile(dirname(__FILE__).'/temps/data_search_view.js'));
+					$t->Set('json', json_encode($data));
+				}
+				$t->Set('name', $this->Name);
+				die($t->ParseFile(dirname(__FILE__).
+					'/temps/'.@$this->_q[1].'.js'));
+			}
 		}
 
 		//Collect search data
@@ -2044,6 +2066,13 @@ class DataSearch
 				$this->items = GetFlatPage($this->result, GetVar('cp', 0),
 					$this->ipp);
 		}
+
+		if (@$this->_q[2] == $this->Name && @$this->_q[1] == 'delete')
+		{
+			$id = $this->_q[0];
+			$this->_ds->Remove(array($this->_ds->id => $id));
+			die(json_encode(array('result' => 1)));
+		}
 	}
 
 	function Get()
@@ -2063,13 +2092,24 @@ class DataSearch
 		{
 			$t->ReWrite('loop', 'TagLoop');
 			$t->ReWrite('input', 'TagInput');
-			$ret = '<script type="text/javascript" src="../viewjs/'.$ci.'"></script>';
+			$ret = '<script type="text/javascript" src="../js/data_search_fill/'.$ci.'"></script>';
+			$ret .= '<script type="text/javascript" src="../js/data_search_print/'.$ci.'"></script>';
+			return $ret.$t->ParseFile($this->Form);
+		}
+		if ($target == $this->Name && $act == 'edit')
+		{
+			$t->ReWrite('loop', 'TagLoop');
+			$t->ReWrite('input', 'TagInput');
+			$t->ReWrite('form', array($this, 'TagEditForm'));
+			$this->ci = $ci;
+			$ret = '<script type="text/javascript" src="../../../js"></script>';
+			$ret .= '<script type="text/javascript" src="../js/data_search_fill/'.$ci.'"></script>';
 			return $ret.$t->ParseFile($this->Form);
 		}
 		else
 		{
-			$t->ReWrite('search', array(&$this, 'TagSearch'));
-			$t->ReWrite('results', array(&$this, 'TagResults'));
+			$t->ReWrite('search', array($this, 'TagSearch'));
+			$t->ReWrite('results', array($this, 'TagResults'));
 			return $t->Parsefile(dirname(__FILE__).'/temps/data_search.xml');
 		}
 	}
@@ -2107,19 +2147,8 @@ class DataSearch
 			$fi = $this->_ds->FieldInputs[$sf];
 			$fi->name = $sf;
 
-			if ($fi->type == 'date')
-			{
-				$field = $fi->Get($this->Name).' to ';
-				$fi->name = $sf;
-				$fi->atrs['ID'] .= '2';
-				$fi->name .= '2';
-				$field .= $fi->Get($this->Name)."\n";
-				$fi->name = substr($fi->name, 0, -1);
-			}
-			else
-			{
-				$field = $fi->Get($this->Name);
-			}
+			if ($fi->type == 'date') $fi->type = 'daterange';
+			$field = $fi->Get($this->Name);
 
 			$ret .= $vp->ParseVars($g, array(
 				'id' => $fi->GetCleanID(null),
@@ -2170,9 +2199,11 @@ class DataSearch
 	/** @param Template $t Associated template */
 	function TagResults($t, $g)
 	{
-		$t->ReWrite('result', array(&$this, 'TagResult'));
 		if (isset($this->count))
+		{
+			$t->ReWrite('result', array($this, 'TagResult'));
 			return $t->GetString($g);
+		}
 	}
 
 	function TagResult($t, $g)
@@ -2180,21 +2211,21 @@ class DataSearch
 		if (!empty($this->items) && !empty($this->_ds->DisplayColumns))
 		{
 			global $_d;
-			$tField = new Template();
-			$tField->ReWrite('resultfield', array(&$this, 'TagResultField'));
+			$t->ReWrite('result_field', array($this, 'TagResultField'));
+			$t->ReWrite('result_button', array($this, 'TagResultButton'));
 
 			$ret = '';
 			foreach ($this->items as $ix => $i)
 			{
 				if (!empty($this->Callbacks->Result))
-					RunCallbacks($this->Callbacks->Result, $tField, $i);
+					RunCallbacks($this->Callbacks->Result, $t, $i);
 				$this->item = $i;
 
-				$tField->Set('res_links', RunCallbacks(@$_d['datasearch.cb.head_res'], $this, $i));
-				$tField->Set('name', $this->Name);
-				$tField->Set('id', $i[$this->_ds->id]);
-				$tField->Set($i);
-				$ret .= $tField->GetString($g);
+				$t->Set('res_links', RunCallbacks(@$_d['datasearch.cb.head_res'], $this, $i));
+				$t->Set('name', $this->Name);
+				$t->Set('id', $i[$this->_ds->id]);
+				$t->Set($i);
+				$ret .= $t->GetString($g);
 
 				if ($ix > $this->Behavior->ItemsPerPage) break;
 			}
@@ -2203,7 +2234,26 @@ class DataSearch
 		else if (isset($this->count)) return '<p>No results found!</p>';
 	}
 
-	function TagResultField($t, $g, $a)
+	function TagResultButton($t, $g)
+	{
+		$ret = null;
+		$tButton = new Template();
+		$tButton->ReWrite('a', array($this, 'TagButtonA'));
+		foreach ($this->Behavior->Buttons as $text => $b)
+		{
+			$tButton->Set('text', $text);
+			$this->but = $b;
+			$ret .= $tButton->GetString($g);
+		}
+		return $ret;
+	}
+	
+	function TagButtonA($t, $g, $a)
+	{
+		return '<a'.GetAttribs(array_merge($this->but, $a)).'>'.$g.'</a>';
+	}
+
+	function TagResultField($t, $g)
 	{
 		$ret = '';
 		$vp = new VarParser();
@@ -2240,6 +2290,16 @@ class DataSearch
 			$ret .= $vp->ParseVars($g, $vars);
 		}
 		return $ret;
+	}
+
+	# Edit Related
+	
+	function TagEditForm($t, $g, $a)
+	{
+		return '<form'.GetAttribs($a).'>'.
+		'<input type="hidden" name="state" value="edit" />'.
+		'<input type="hidden" name="id" value="'.$this->ci.'" />'.
+		$g.'</form>';
 	}
 }
 

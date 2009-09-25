@@ -38,7 +38,7 @@ class ModUser extends Module
 		global $_d, $me;
 
 		if (ModUser::RequireAccess(1))
-			$_d['nav.links']['Log Out'] = "{$me}/user?{$this->lm->Name}_action=logout";
+			$_d['nav.links']['Log Out'] = "{{root}}{{me}}/user?{$this->lm->Name}_action=logout";
 	}
 
 	function Get()
@@ -77,7 +77,7 @@ class ModUserAdmin extends Module
 
 	function __construct()
 	{
-		global $_d, $me;
+		global $_d;
 
 		require_once(dirname(__FILE__).'/../a_editor.php');
 		require_once(dirname(__FILE__).'/../h_display.php');
@@ -85,8 +85,6 @@ class ModUserAdmin extends Module
 		if (empty($_d['user.levels']))
 			$_d['user.levels'] = array(1 => 'User', 2 => 'Admin');
 		$this->edUser = new EditorData('user', $_d['user.ds']);
-		$this->edUser->Behavior->Target = $me.'/user';
-		$this->edUser->Behavior->Search = false;
 	}
 
 	function Link()
@@ -94,12 +92,12 @@ class ModUserAdmin extends Module
 		global $_d;
 
 		if (ModUser::RequireAccess(2))
-			$_d['nav.links']['Users'] = $GLOBALS['me'].'/user';
+			$_d['nav.links']['Users'] = '{{root}}{{me}}/user';
 	}
 
 	function Prepare()
 	{
-		global $_d;
+		global $_d, $me;
 
 		if (@$_d['q'][0] != 'user') return;
 		$_d['user.ds']->Description = 'User';
@@ -113,6 +111,8 @@ class ModUserAdmin extends Module
 			'usr_access' => new FormInput('Access', 'select', null,
 				ArrayToSelOptions($_d['user.levels']))
 		);
+		$this->edUser->Behavior->Search = false;
+		$this->edUser->Behavior->Target = $_d['root'].$me.'/user';
 		$this->edUser->Prepare();
 	}
 

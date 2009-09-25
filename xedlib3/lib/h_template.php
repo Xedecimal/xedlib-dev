@@ -813,4 +813,9 @@ function TagRelativeDate($t, $g)
 	return GetDateOffset(strtotime($t->ProcessVars($g)));
 }
 
+function TagPassthrough($t, $g)
+{
+	return $g;
+}
+
 ?>
