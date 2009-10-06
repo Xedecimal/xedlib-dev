@@ -427,6 +427,7 @@ function ChompString($text, $length)
  */
 function TimestampToMySql($ts, $time = true)
 {
+	if (empty($ts)) return null;
 	return date($time ? 'Y-m-d h:i:s' : 'Y-m-d', $ts);
 }
 
