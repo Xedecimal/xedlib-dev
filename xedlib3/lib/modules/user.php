@@ -10,6 +10,11 @@ class ModUser extends Module
 		if (@$GLOBALS['_d']['cl']['usr_access'] >= $level) return true;
 		return false;
 	}
+	
+	static function GetAccess()
+	{
+		return @$GLOBALS['_d']['cl']['usr_access'];
+	}
 
 	function __construct()
 	{

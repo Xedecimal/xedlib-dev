@@ -1,16 +1,27 @@
 <null>
-
+<script type="text/javascript">
+me = '{{me}}';
+name = '{{name}}';
+</script>
 <results>
+<div>
+<table class="ds_tblResult">
 <result>
-<table id="result:{{id}}">
-	<tr><td colspan="2">
-		<result_button><a class="button">{{text}}</a></result_button>
+	<tbody class="ds_tbodyResult" id="result:{{id}}">
+	<tr><td colspan="2" class="ds_buttons">
+		<result_button><div class="button"><a>{{text}}</a></div></result_button>
 	</td></tr>
-<result_field>
-	<tr><td>{{text}}</td><td>{{val}}</td></tr>
-</result_field>
-</table>
+	<result_field>
+		<tr class="ds_field"><td class="ds_field_text">{{text}}</td>
+		<td class="ds_field_value">{{val}}</td></tr>
+	</result_field>
+	</tbody>
 </result>
+</table>
+&laquo;
+<page> <a href="{{url}}&amp;{{name}}_page={{num}}">{{num}}</a> </page>
+&raquo;
+</div>
 </results>
 
 <search>
@@ -20,7 +31,8 @@
 <legend>Select fields to search</legend>
 <ul>
 <searchfield>
-	<li><input type="checkbox" id="hider_{{id}}" name="{{name}}_search[{{fname}}]" class="hider" />
+	<li><input type="checkbox" id="hider_{{id}}"
+		name="{{name}}_search[{{fname}}]" class="hider" />
 	<label for="{{id}}">{{text}}</label>
 	<div class="hidden ds_field" id="hidden_{{id}}">{{field}}</div></li>
 </searchfield>

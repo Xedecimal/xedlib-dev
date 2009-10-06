@@ -480,15 +480,15 @@ class Form
 
 		$this->inputs[] = $input;
 
-		if ($input->type == 'submit' && isset($this->Validation))
+		if ($input->attr('TYPE') == 'submit' && isset($this->Validation))
 		{
 			$input->atrs['ONCLICK'] = "return {$this->name}_check(1);";
 		}
-		if ($input->type == 'file') $this->multipart = true;
+		if ($input->attr('TYPE') == 'file') $this->multipart = true;
 
 		$right = false;
-		if ($input->type == 'checkbox') $right = true;
-		if ($input->type == 'spamblock')
+		if ($input->attr('TYPE') == 'checkbox') $right = true;
+		if ($input->attr('TYPE') == 'spamblock')
 		{
 			//This form has been submitted.
 			$b = GetVar('block_'.$input->name);
@@ -625,25 +625,11 @@ class FormInput
 	public $text;
 
 	/**
-	 * Name of this input object, used in conjunction with the associated form.
-	 *
-	 * @var string
-	 */
-	public $name;
-
-	/**
-	 * Type of this input object. (text, select, string, checks, etc)
-	 *
-	 * @var string
-	 */
-	public $type;
-
-	/**
 	 * Manual HTML attributes for this input object.
 	 *
 	 * @var string
 	 */
-	public $atrs;
+	private $atrs;
 
 	/**
 	 * Help text is displayed below the form field. Usually in case of error or
@@ -652,13 +638,6 @@ class FormInput
 	 * @var string
 	 */
 	public $help;
-
-	/**
-	 * Default value of this input object.
-	 *
-	 * @var string
-	 */
-	public $valu;
 
 	/**
 	 * Whether or not to attach a label to this field.
@@ -678,23 +657,40 @@ class FormInput
 	 * @param string $atrs
 	 * @param string $help
 	 */
-	function FormInput($text, $type = 'text', $name = null, $valu = null, $atrs = null,
-		$help = '')
+	function FormInput($text, $type = 'text', $name = null,
+		$valu = null, $atrs = null, $help = '')
 	{
 		$this->text = $text;
-		$this->type = $type;
 		$this->name = $name;
-		$this->valu = $valu;
-		if (is_array($atrs))
-		{
-			foreach ($atrs as $k => $v) $this->atrs[strtoupper($k)] = $v;
-		}
-		else $this->atrs = ParseAtrs($atrs);
-		if ($this->type == 'state') $this->valu = ArrayToSelOptions($GLOBALS['StateNames']);
 		$this->help = $help;
-		if ($type == 'date' || $type == 'time' || $type == 'datetime')
-			$this->EndLabel = true;
-		else $this->EndLabel = false;
+
+		if (is_array($atrs))
+			foreach ($atrs as $k => $v)
+				$this->atrs[strtoupper($k)] = $v;
+		else $this->atrs = ParseAtrs($atrs);
+
+		$this->atrs['TYPE'] = $type;
+		if ($name != null) $this->atrs['NAME'] = $name;
+		if ($valu != null) $this->atrs['VALUE'] = $valu;
+
+		switch ($type)
+		{
+			case 'state':
+				$this->atrs['TYPE'] = 'select';
+				$this->atrs['VALUE'] = ArrayToSelOptions($GLOBALS['StateNames'],
+					$this->attr('VALUE'));
+				break;
+			case 'fullstate':
+				return GetInputState($this->atrs, @$this->valu, false);
+			case 'shortstate':
+				return GetInputSState($this->atrs, @$this->valu);
+		}
+	}
+
+	function attr($attr, $val = null)
+	{
+		if (isset($val)) $this->atrs[$attr] = $val;
+		if (isset($this->atrs[$attr])) return $this->atrs[$attr];
 	}
 
 	/**
@@ -724,19 +720,7 @@ class FormInput
 		if (!isset($this->atrs['ID']))
 			$this->atrs['ID'] = $this->GetCleanID($parent);
 
-		if (!empty($parent)) $name = $parent.'_'.$this->name;
-		else $name = $this->name;
-
-		if ($this->type == 'custom')
-			return call_user_func($this->valu, $this);
-		if ($this->type == 'label') return $this->valu;
-		if ($this->type == 'mask')
-		{
-			$this->mask_walk = 0;
-			return preg_replace_callback('/t([0-9]+)/',
-				array($this, 'mask_callback'), @$this->mask);
-		}
-		if ($this->type == 'spamblock')
+		if ($this->atrs['TYPE'] == 'spamblock')
 		{
 			$this->atrs['TYPE'] = 'text';
 			$this->atrs['CLASS'] = 'input_generic';
@@ -749,53 +733,12 @@ class FormInput
 				$this->valu.'</u>:<br/>'.
 				"<input{$atrs} /></label>";
 		}
-		if ($this->type == 'yesno')
+		if ($this->atrs['TYPE'] == 'boolean')
 		{
-			return GetInputYesNo($parent,
-				array_merge(array('NAME' => $name), (array)$this->atrs),
-				!isset($this->valu) ? GetVar($name) : $this->valu);
+			return GetInputBoolean($parent, $this->atrs,
+				!isset($this->valu) ? GetVar($this->atrs['NAME']) : $this->valu);
 		}
-		if ($this->type == 'select' || $this->type == 'selects')
-		{
-			$this->atrs['NAME'] = $name;
-			if ($this->type == 'selects')
-			{
-				$this->atrs['MULTIPLE'] = 'multiple';
-				$this->atrs['NAME'] .= '[]';
-			}
-			if (!isset($this->atrs['CLASS']))
-				$this->atrs['CLASS'] = 'input_select';
-
-			$ret = "<select".GetAttribs($this->atrs).'>';
-			if (!empty($this->valu))
-			{
-				$newsels = $this->GetValue($persist);
-				$ogstarted = false;
-				foreach ($newsels as $id => $opt)
-					$ret .= $opt->Render();
-			}
-			return $ret.'</select>';
-		}
-		if ($this->type == 'checks')
-		{
-			$this->labl = false;
-
-			$ret = null;
-			$vp = new VarParser();
-			if (!empty($this->valu))
-			{
-				@$this->atrs['CLASS'] .= ' checks';
-				$atrs = GetAttribs($this->atrs);
-				$ret .= "<div {$atrs}>";
-				$newsels = $this->GetValue($persist);
-				foreach ($newsels as $id => $val)
-					$ret .= $val->RenderCheck(array(
-						'NAME' => $name.'[]'));
-				$ret .= '</div>';
-			}
-			return $ret;
-		}
-		if ($this->type == 'radios')
+		if ($this->atrs['TYPE'] == 'radios')
 		{
 			$this->labl = false;
 
@@ -820,44 +763,8 @@ class FormInput
 			}
 			return $ret;
 		}
-		if ($this->type == 'date')
-		{
-			$this->labl = false;
-			return GetInputDate(array(
-				'name' => $name,
-				'ts' => $this->valu,
-				'atrs' => $this->atrs));
-		}
-		if ($this->type == 'daterange')
-		{
-			$this->labl = false;
-			$one = GetInputDate(array(
-				'name' => $name,
-				'ts' => $this->valu,
-				'atrs' => $this->atrs));
-			if (isset($this->atrs['ID'])) $this->atrs['ID'] .= '2';
-			$two = GetInputDate(array(
-				'name' => $name.'2',
-				'ts' => $this->valu,
-				'atrs' => $this->atrs));
-			return $one.' to '.$two;
-		}
-		if ($this->type == 'time')
-		{
-			$this->labl = false;
-			return GetInputTime($name, $this->valu);
-		}
-		if ($this->type == 'datetime')
-		{
-			$this->labl = false;
-			return GetInputDate(array(
-				'name' => $name,
-				'ts' => $this->valu,
-				'time' => true,
-				'atrs' => $this->atrs
-			));
-		}
-		if ($this->type == 'area')
+
+		if ($this->atrs['TYPE'] == 'area')
 		{
 			if (empty($this->atrs['ROWS'])) $this->atrs['ROWS'] = 3;
 			if (empty($this->atrs['COLS'])) $this->atrs['COLS'] = 25;
@@ -867,37 +774,108 @@ class FormInput
 			$atrs = GetAttribs($this->atrs);
 			return "<textarea$atrs>".$this->GetValue($persist).'</textarea>';
 		}
-		if ($this->type == 'checkbox')
+		if ($this->atrs['TYPE'] == 'checkbox')
 		{
-			return "<input type=\"checkbox\"
-				name=\"{$name}\"
-				id=\"{$this->atrs['ID']}\"
-				value=\"1\" ".$this->GetValue($persist).
-				$this->atrs." />";
-		}
-		if ($this->type == 'state')
-		{
-			$this->atrs['NAME'] = $name;
-			$this->atrs['VALUE'] = @$this->valu;
-			return GetInputState($this->atrs);
-		}
-		if ($this->type == 'fullstate')
-		{
-			$this->atrs['NAME'] = $name;
-			return GetInputState($this->atrs, @$this->valu, false);
-		}
-		if ($this->type == 'shortstate')
-		{
-			$this->atrs['NAME'] = $name;
-			return GetInputSState($this->atrs, @$this->valu);
+			return "<input ".$this->GetValue($persist).
+				GetAttribs($this->atrs)." />";
 		}
 
-		$val = $this->GetValue($persist && $this->type != 'radio');
+		switch ($this->atrs['TYPE'])
+		{
+			case 'checks':
+				$this->labl = false;
 
+				$ret = null;
+				$vp = new VarParser();
+				if (!empty($this->atrs['VALUE']))
+				{
+					@$this->atrs['CLASS'] .= ' checks';
+					$divAtrs = $this->atrs;
+					unset($divAtrs['TYPE'], $divAtrs['VALUE'], $divAtrs['NAME']);
+					$atrs = GetAttribs($this->atrs);
+					$ret .= '<div'.GetAttribs($divAtrs).'>';
+					$newsels = $this->GetValue($persist);
+					foreach ($newsels as $id => $val)
+						$ret .= $val->RenderCheck(array(
+							'NAME' => $this->atrs['NAME'].'[]'));
+					$ret .= '</div>';
+				}
+				return $ret;
+			case 'custom':
+				return call_user_func($this->valu, $this);
+
+			// Dates
+			
+			case 'date':
+				$this->labl = false;
+				return GetInputDate(array(
+					'ts' => $this->valu,
+					'atrs' => $this->atrs));
+			case 'daterange':
+				$this->labl = false;
+				$one = GetInputDate(array(
+					'NAME' => $this->atrs['NAME'],
+					'ts' => @$this->atrs['VALUE'],
+					'atrs' => $this->atrs));
+
+				$atrsTwo = $this->atrs;
+				if (isset($atrsTwo['ID'])) $atrsTwo['ID'] .= '2';
+				$atrsTwo['NAME'] .= '2';
+
+				$two = GetInputDate(array(
+					'NAME' => $this->atrs['NAME'].'2',
+					'ts' => @$this->atrs['VALUE'],
+					'atrs' => $atrsTwo));
+				return $one.' to '.$two;
+			case 'time':
+				$this->labl = false;
+				return GetInputTime($name, $this->valu);
+			case 'datetime':
+				$this->labl = false;
+				return GetInputDate(array(
+					'name' => $name,
+					'ts' => $this->valu,
+					'time' => true,
+					'atrs' => $this->atrs
+				));
+
+			case 'label':
+				return $this->valu;
+			case 'mask':
+				$this->mask_walk = 0;
+				return preg_replace_callback('/t([0-9]+)/',
+					array($this, 'mask_callback'), @$this->mask);
+
+			case 'select':
+			case 'selects':
+				if ($this->atrs['TYPE'] == 'selects')
+				{
+					$this->atrs['MULTIPLE'] = 'multiple';
+					$this->atrs['NAME'] .= '[]';
+				}
+				if (!isset($this->atrs['CLASS']))
+					$this->atrs['CLASS'] = 'input_select';
+
+				$selAtrs = $this->atrs;
+				unset($selAtrs['TYPE'],$selAtrs['VALUE']);
+				$ret = "<select".GetAttribs($selAtrs).'>';
+				if (!empty($this->atrs['VALUE']))
+				{
+					$newsels = $this->GetValue($persist);
+					$ogstarted = false;
+					$useidx = empty($this->atrs['NOTYPE']);
+					foreach ($newsels as $id => $opt)
+					{
+						if ($useidx) $opt->valu = $id;
+						$ret .= $opt->Render();
+					}
+				}
+				return $ret.'</select>';
+		}
+
+		$val = $this->GetValue($persist && $this->atrs['TYPE'] != 'radio');
 		$atrs = GetAttribs($this->atrs);
-
-		return "<input type=\"{$this->type}\" name=\"{$name}\"".
-			" value=\"{$val}\" {$atrs}/>";
+		return "<input {$atrs} />";
 	}
 
 	/**
@@ -906,7 +884,7 @@ class FormInput
 	 */
 	function GetValue($persist = true)
 	{
-		switch ($this->type)
+		switch ($this->atrs['TYPE'])
 		{
 			//Definate Failures...
 			case 'password':
@@ -916,7 +894,7 @@ class FormInput
 			//Single Selectables...
 			case 'select':
 			case 'radios':
-				$newsels = array_clone($this->valu);
+				$newsels = array_clone($this->atrs['VALUE']);
 				if ($persist)
 				{
 					$sel = GetVar($this->name);
@@ -927,7 +905,7 @@ class FormInput
 			//Multi Selectables...
 			case 'selects':
 			case 'checks':
-				$newsels = array_clone($this->valu);
+				$newsels = array_clone($this->atrs['VALUE']);
 				if ($persist)
 				{
 					$svalus = GetVar($this->name);
@@ -940,14 +918,14 @@ class FormInput
 				return $persist && $this->valu ? ' checked="checked"' : null;
 			//May get a little more complicated if we don't know what it is...
 			default:
-				return stripslashes(htmlspecialchars($persist ? GetVars($this->name, $this->valu) : $this->valu));
+				return stripslashes(htmlspecialchars($persist ? GetVars($this->atrs['NAME'], @$this->atrs['VALUE']) : @$this->atrs['VALUE']));
 		}
 	}
 
 	function GetCleanID($parent)
 	{
 		$id = !empty($parent) ? $parent.'_' : null;
-		$id .= !empty($this->atrs['ID']) ? $this->atrs['ID'] : $this->name;
+		$id .= !empty($this->atrs['ID']) ? $this->atrs['ID'] : $this->atrs['NAME'];
 		return CleanID($id);
 	}
 
@@ -1048,6 +1026,7 @@ class SelOption extends TreeNode
 	function Render()
 	{
 		if ($this->selected) $selected = ' selected="selected"';
+		else $selected = '';
 		if (!empty($this->children))
 		{
 			$ret = '<optgroup label="'.$this->text.'">';
@@ -1058,7 +1037,7 @@ class SelOption extends TreeNode
 		else
 		{
 			$valu = isset($this->valu) ? ' value="'.$this->valu.'"' : null;
-			return "<option{$valu}>".htmlspecialchars($this->text).'</option>';
+			return "<option{$valu}{$selected}>".htmlspecialchars($this->text).'</option>';
 		}
 	}
 
@@ -1178,13 +1157,15 @@ function GetInputDate($args)
 		$args['ts'] = MyDateTimestamp($args['ts'], $args['time']);
 	}
 	if (!isset($args['ts'])) $args['ts'] = time();
-	$strout = '<div'.GetAttribs(@$args['atrs']).'>';
-	$strout .= GetMonthSelect("{$args['name']}[]", date('n', $args['ts']));
-	$strout .= '/ <input type="text" size="2" name="'.$args['name'].'[]" value="'.
+	$divAtrs = $args['atrs'];
+	unset($divAtrs['NAME'],$divAtrs['TYPE']);
+	$strout = '<div'.GetAttribs(@$divAtrs).'>';
+	$strout .= GetMonthSelect("{$args['atrs']['NAME']}[]", date('n', $args['ts']));
+	$strout .= '/ <input type="text" size="2" name="'.$args['atrs']['NAME'].'[]" value="'.
 		date('d', $args['ts']).'" alt="Day" />'."\n";
-	$strout .= '/ <input type="text" size="4" name="'.$args['name'].'[]" value="'.
+	$strout .= '/ <input type="text" size="4" name="'.$args['atrs']['NAME'].'[]" value="'.
 		date('Y', $args['ts']).'" alt="Year" />'."\n";
-	$strout .= @$args['time'] ? GetInputTime($args['name'].'[]', $args['ts']) : null;
+	$strout .= @$args['time'] ? GetInputTime($args['atrs']['NAME'].'[]', $args['ts']) : null;
 	return $strout.'</div>';
 }
 
@@ -1213,7 +1194,7 @@ function GetInputTime($name, $timestamp)
  * @param array $atrs Array of HTML attributes.
  * @return string Rendered time input.
  */
-function GetInputYesNo($parent, $attribs)
+function GetInputBoolean($parent, $attribs)
 {
 	$id = CleanID((isset($parent) ? $parent.'_' : null).$attribs['NAME']);
 	if (!isset($attribs['ID'])) $attribs['ID'] = $id;
@@ -1450,8 +1431,8 @@ class LoginManager
 		$f = new Form($this->Name, array(null, 'width="100%"'));
 		$f->AddHidden($this->Name.'_action', 'login');
 		if ($this->type != CONTROL_SIMPLE)
-			$f->AddInput(new FormInput($this->View->TextLogin, 'text', 'auth_user'));
-		$f->AddInput(new FormInput($this->View->TextPassword, 'password', 'auth_pass'));
+			$f->AddInput(new FormInput($this->View->TextLogin, 'text', $this->Name.'_auth_user'));
+		$f->AddInput(new FormInput($this->View->TextPassword, 'password', $this->Name.'_auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
 		$f->Template = file_get_contents($template);
 		return $f->Get('action="{{root}}{{me}}" method="post"');
@@ -1800,7 +1781,7 @@ function InputToString($field)
 		return $out;
 	}
 	else if ($field->type == 'radios') return $field->valu[$val]->text;
-	else if ($field->type == 'yesno') return $val == 1 ? 'yes' : 'no';
+	else if ($field->type == 'boolean') return $val == 1 ? 'yes' : 'no';
 	else if ($field->type == 'select') return $field->valu[$val]->text;
 	else Error("Unknown field type.");
 }
@@ -1828,12 +1809,14 @@ function GetHiddenPost($name, $val)
  */
 function SOCallback($ds, $item, $icol, $col = null)
 {
-	if (is_array($ds->FieldInputs[$col]->valu))
-	foreach ($ds->FieldInputs[$col]->valu as $v)
+	if (is_array($ds->FieldInputs[$col]->attr('VALUE')))
+	foreach ($ds->FieldInputs[$col]->attr('VALUE') as $v)
 	{
 		$res = $v->Find($item[$icol]);
 		if (isset($res)) return $res->text;
 	}
+	
+	varinfo($ds->FieldInputs[$col]);
 	return $item[$icol];
 }
 
@@ -1861,8 +1844,9 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 
 	if (!empty($attribs['TYPE']))
 	{
-		$fi = new FormInput(null, @$attribs['TYPE'], @$attribs['NAME'], @$attribs['VALUE'], $attribs);
-		$field = $fi->Get();
+		$fi = new FormInput(null, @$attribs['TYPE'], @$attribs['NAME'],
+			@$attribs['VALUE'], $attribs);
+		$field = $fi->Get(null, false);
 	}
 	/*switch (strtolower($attribs['TYPE']))
 	{
@@ -1885,8 +1869,8 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 			$in->mask = $attribs['MASK'];
 			$field = $in->Get();
 			break;
-		case 'yesno':
-			$field = GetInputYesNo(null, $attribs);
+		case 'boolean':
+			$field = GetInputBoolean(null, $attribs);
 			break;
 		case 'radio':
 			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
@@ -1896,10 +1880,7 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 			//$attribs['VALUE'] = '1';
 			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
 			break;
-		case 'state':
-			unset($attribs['TYPE']);
-			$field = GetInputState($attribs);
-			break;
+
 		default:
 			$field = '<input'.GetAttribs($attribs).' />';
 			break;

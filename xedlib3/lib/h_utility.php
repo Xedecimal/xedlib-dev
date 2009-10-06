@@ -367,7 +367,7 @@ function URLParse($key, $val, $start = false)
 	$ret = null;
 	if (is_array($val))
 		foreach ($val as $akey => $aval)
-			$ret .= URLParse($key.'['.$akey.']', $aval, false);
+			$ret .= URLParse($key.'['.$akey.']', $aval, $start);
 	else
 	{
 		$nval = str_replace(' ', '%20', $val);

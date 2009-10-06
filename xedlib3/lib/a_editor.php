@@ -426,11 +426,11 @@ class EditorData
 				if (is_object($in))
 				{
 					$value = GetVar($this->Name.'_'.$col);
-					if ($in->type == 'date')
+					if ($in->attr('TYPE') == 'date')
 					{
 						$insert[$col] = $value[2].'-'.$value[0].'-'.$value[1];
 					}
-					else if($in->type == 'datetime')
+					else if($in->attr('TYPE') == 'datetime')
 					{
 						if($value[5][0] == 1)
 						{
@@ -440,22 +440,22 @@ class EditorData
 						$time_portion = " {$value[3][0]}:{$value[4][0]}:00";
 						$insert[$col] = $value[2].'-'.$value[0].'-'.$value[1].$time_portion;
 					}
-					else if ($in->type == 'password' && strlen($value) > 0)
+					else if ($in->attr('TYPE') == 'password' && strlen($value) > 0)
 					{
 						$insert[$col] = md5($value);
 					}
-					else if ($in->type == 'file')
+					else if ($in->attr('TYPE') == 'file')
 					{
 						if (empty($value['tmp_name'])) continue;
 						$ext = strrchr($value['name'], '.');
 
 						$moves[] = array(
 							'src' => $value['tmp_name'],
-							'dst' => $in->valu.$ext
+							'dst' => $in->attr('VALUE').$ext
 						);
 						//$insert[$col] = $ext;
 					}
-					else if ($in->type == 'selects') $insert[$col] = $value;
+					else if ($in->attr('TYPE') == 'selects') $insert[$col] = $value;
 					else $insert[$col] = $value;
 				}
 				else if (is_numeric($col)) continue;
@@ -527,9 +527,9 @@ class EditorData
 					//TODO: Support editing custom fields.
 					#if ($in->type == 'custom')
 					#	unset($update[$col]);
-					if ($in->type == 'date')
+					if ($in->attr('TYPE') == 'date')
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1];
-					else if($in->type == 'datetime')
+					else if($in->attr('TYPE') == 'datetime')
 					{
 						if ($value[5][0] == 1)
 						{
@@ -539,28 +539,28 @@ class EditorData
 						$time_portion = " {$value[3][0]}:{$value[4][0]}:00";
 						$update[$col] = $value[2].'-'.$value[0].'-'.$value[1].$time_portion;
 					}
-					else if ($in->type == 'label')
+					else if ($in->attr('TYPE') == 'label')
 						unset($update[$col]);
-					else if ($in->type == 'password')
+					else if ($in->attr('TYPE') == 'password')
 					{
 						if (strlen($value) > 0) $update[$col] = md5($value);
 					}
-					else if ($in->type == 'checkbox')
+					else if ($in->attr('TYPE') == 'checkbox')
 						$update[$col] = ($value == 1) ? 1 : 0;
-					else if ($in->type == 'selects')
+					else if ($in->attr('TYPE') == 'selects')
 					{
 						$update[$col] = $value;
 					}
-					else if ($in->type == 'file')
+					else if ($in->attr('TYPE') == 'file')
 					{
 						if (strlen($value['tmp_name']) > 0)
 						{
 							$vp = new VarParser();
-							$files = glob($vp->ParseVars($in->valu, $update).".*");
+							$files = glob($vp->ParseVars($in->attr('VALUE'), $update).".*");
 							foreach ($files as $file) unlink($file);
 							$ext = strrchr($value['name'], '.');
 							$src = $value['tmp_name'];
-							$dst = $vp->ParseVars($in->valu.$ext, $update);
+							$dst = $vp->ParseVars($in->attr('VALUE').$ext, $update);
 							move_uploaded_file($src, $dst);
 							$update[$col] = $ext;
 						}
@@ -615,10 +615,10 @@ class EditorData
 			{
 				if (strtolower(get_class($in)) == 'forminput')
 				{
-					if ($in->type == 'file')
+					if ($in->attr('TYPE') == 'file')
 					{
 						$vp = new VarParser();
-						$files = glob($vp->ParseVars($in->valu, $data).".*");
+						$files = glob($vp->ParseVars($in->attr('VALUE'), $data).".*");
 						foreach ($files as $file) unlink($file);
 					}
 				}
@@ -1095,14 +1095,14 @@ class EditorData
 			{
 				if (!empty($this->ds->FieldInputs))
 				foreach ($this->ds->FieldInputs as $k => $fi)
-					if ($fi->type == 'label')
+					if ($fi->attr('TYPE') == 'label')
 						unset($this->ds->FieldInputs[$k]);
 			}
 			$context = isset($curchild) ? $this->ds->children[$curchild] :
 				$this;
 
 			if (!isset($this->ds)) Error("<br />What: Dataset is not set.
-				<br />Where: EditorData({$this->name})::GetForm.
+				<br />Where: EditorData({$this->Name})::GetForm.
 				<br />Why: This editor was not created with a proper dataset.");
 
 			$joins = array();
@@ -1125,8 +1125,8 @@ class EditorData
 			foreach (array_keys($ds->FieldInputs) as $n)
 			{
 				if (isset($this->values[$n]))
-					$ds->FieldInputs[$n]->valu =
-						stripslashes($this->values[$n]);
+					$ds->FieldInputs[$n]->attr('VALUE',
+						stripslashes($this->values[$n]));
 			}
 		}
 
@@ -1162,24 +1162,28 @@ class EditorData
 			{
 				if (is_object($in))
 				{
-					if ($in->type == 'custom') //Callback
+					if ($in->attr('TYPE') == 'custom') //Callback
 					{
-						$cb = $in->valu;
+						$cb = $in->attr('VALUE');
 						call_user_func($cb, isset($sel) ? $sel : null,
 							$frm, $col);
 						continue;
 					}
-					else if ($in->type == 'select' || $in->type == 'radios')
+					else if ($in->attr('TYPE') == 'select' || $in->attr('TYPE') == 'radios')
 					{
-						if (isset($sel) && isset($in->valu[$sel[0][$col]]))
-							$in->valu[$sel[0][$col]]->selected = true;
+						$val = $in->attr('VALUE');
+						if (isset($sel) && isset($val[$sel[0][$col]]))
+						{
+							$val[$sel[0][$col]]->selected = true;
+							$in->attr('VALUE', $val);
+						}
 					}
-					else if ($in->type == 'file')
+					else if ($in->attr('TYPE') == 'file')
 					{
 						if (!empty($in->atrs['EXTRA']))
 						{
 							$vp = new VarParser();
-							$glob = $vp->ParseVars($in->valu, $sel[0]);
+							$glob = $vp->ParseVars($in->attr('VALUE'), $sel[0]);
 							$files = glob($glob.'.*');
 
 							switch ($in->atrs['EXTRA'])
@@ -1198,24 +1202,24 @@ class EditorData
 					}
 					else
 					{
-						if ($in->type == 'password') $in->valu = '';
+						if ($in->attr('TYPE') == 'password') $in->attr('VALUE', '');
 						else if (isset($sel[0][$col]))
 						{
-							if ($in->type == 'date')
-								$in->valu = MyDateTimestamp($sel[0][$col]);
-							else if ($in->type == 'datetime')
-								$in->valu = MyDateTimestamp($sel[0][$col], true);
-							else $in->valu = $sel[0][$col];
+							if ($in->attr('TYPE') == 'date')
+								$in->attr('VALUE', MyDateTimestamp($sel[0][$col]));
+							else if ($in->attr('TYPE') == 'datetime')
+								$in->attr('VALUE', MyDateTimestamp($sel[0][$col], true));
+							else $in->attr('VALUE', $sel[0][$col]);
 						}
 						//If we bring this back, make sure setting explicit
 						//values in DataSet::FormInputs still works.
 						//else { $in->valu = null; }
 					}
 
-					$in->name = $col;
+					$in->attr('NAME', $this->Name.'_'.$col);
 
-					if (isset($this->Errors[$in->name]))
-						$in->help = $this->Errors[$in->name];
+					if (isset($this->Errors[$in->attr('NAME')]))
+						$in->help = $this->Errors[$in->atrs['NAME']];
 
 					$frm->AddInput($in);
 				}
@@ -1435,7 +1439,7 @@ class DisplayData
 			$up = array();
 			foreach ($this->ds->FieldInputs as $col => $fi)
 			{
-				$fi->name = $col;
+				$fi->atrs['NAME'] = $col;
 				// Sub table, we're going to need to clear and re-create the
 				// associated table rows.
 				$ms = null;
@@ -1508,7 +1512,7 @@ class DisplayData
 		}
 
 		$fi = $this->ds->FieldInputs[$col];
-		$fi->name = $col;
+		$fi->atrs['NAME'] = $col;
 
 		if ($fi->type == 'select')
 			$query['match'][$col] = SqlIn($val);
@@ -1572,7 +1576,7 @@ class DisplayData
 				{
 					if (preg_match('/([^.]+)\.(.+)/', $col, $ms))
 						$col = $ms[2];
-					$fi->name = $col;
+					$fi->atrs['NAME'] = $col;
 					if ($fi->type == 'select' || $fi->type == 'selects'
 						|| $fi->type == 'radios' || $fi->type == 'checks')
 					{
@@ -1728,17 +1732,17 @@ class DisplayData
 		if (is_array($col)) $col = $idx;
 		if (!isset($this->ds->FieldInputs[$col])) return;
 		$fi = $this->ds->FieldInputs[$col];
-		$fi->name = "field[{$col}]";
+		$fi->atrs['NAME'] = "field[{$col}]";
 		$ret .= '<tr><td valign="top"><label><input type="checkbox"
 			value="1" id="'.$this->Name.'_search_'.$col.'" name="'.$this->Name.'_search['.$col.']"
 			onclick="$(\'#'.str_replace('.','\\\\.',$col).'\').toggle(500)" />
 			'.$fi->text.'</label></td>';
 		if ($fi->type == 'date')
 		{
-			$fi->name = 'field['.$col.'][0]';
+			$fi->atrs['NAME'] = 'field['.$col.'][0]';
 			$ret .= ' <td valign="top" style="display: none" id="'.$col.'">
 				from '.$fi->Get($this->Name).' to ';
-			$fi->name = 'field['.$col.'][1]';
+			$fi->atrs['NAME'] = 'field['.$col.'][1]';
 			$ret .= $fi->Get($this->Name)."</td>\n";
 		}
 		if ($fi->type == 'select')
@@ -1992,7 +1996,7 @@ class DataSearch
 			'target' => '_blank'
 		);
 		$this->Behavior->Buttons['Delete'] = array(
-			'class' => 'button delResult',
+			'class' => 'delResult',
 			'href' => '#',
 			'id' => 'del:{{id}}'
 		);
@@ -2052,19 +2056,22 @@ class DataSearch
 			{
 				foreach (array_keys($this->ss) as $col)
 				{
-					$val = GetVar("{$this->Name}_{$col}");
+					$val = GetVar("{$col}");
 					if (!isset($val)) return;
 					$this->AddToQuery($query, $col, $val);
 				}
 
-				$this->result = $this->_ds->Get($query);
-				$this->count = count($this->result);
+				$query['cols'] = array(
+					SqlUnquote('SQL_CALC_FOUND_ROWS *'));
+				$start = $this->Behavior->ItemsPerPage *
+					(GetVar($this->Name.'_page', 1) - 1);
+				$query['filter'] = array($start, $this->Behavior->ItemsPerPage);
+				$this->items = $this->_ds->Get($query);
+				
+				$count = $this->_ds->GetCustom('SELECT FOUND_ROWS()');
+				$this->count = $count[0][0];
 			}
-			else $this->result = array();
-
-			if (!empty($this->result))
-				$this->items = GetFlatPage($this->result, GetVar('cp', 0),
-					$this->ipp);
+			else $this->items = array();
 		}
 
 		if (@$this->_q[2] == $this->Name && @$this->_q[1] == 'delete')
@@ -2096,7 +2103,8 @@ class DataSearch
 			$ret .= '<script type="text/javascript" src="../js/data_search_print/'.$ci.'"></script>';
 			return $ret.$t->ParseFile($this->Form);
 		}
-		if ($target == $this->Name && $act == 'edit')
+		if ($target == $this->Name && $act == 'edit'
+		&& $this->Behavior->AllowEdit)
 		{
 			$t->ReWrite('loop', 'TagLoop');
 			$t->ReWrite('input', 'TagInput');
@@ -2145,15 +2153,15 @@ class DataSearch
 		{
 			/** @var FormInput */
 			$fi = $this->_ds->FieldInputs[$sf];
-			$fi->name = $sf;
+			$fi->attr('NAME', $sf);
 
-			if ($fi->type == 'date') $fi->type = 'daterange';
+			if ($fi->attr('TYPE') == 'date') $fi->attr('TYPE', 'daterange');
 			$field = $fi->Get($this->Name);
 
 			$ret .= $vp->ParseVars($g, array(
 				'id' => $fi->GetCleanID(null),
 				'text' => $fi->text,
-				'fname' => $fi->name,
+				'fname' => $fi->attr('NAME'),
 				'field' => $field
 			));
 		}
@@ -2171,24 +2179,24 @@ class DataSearch
 		}
 
 		$fi = $this->_ds->FieldInputs[$col];
-		$fi->name = $col;
+		$fi->attr('NAME', $col);
 
-		if ($fi->type == 'select')
+		if ($fi->attr('TYPE') == 'select')
 		{
 			$query['match'][$col] = SqlOr(SqlIn($val));
 		}
-		if ($fi->type == 'checks')
+		if ($fi->attr('TYPE') == 'checks')
 		{
 			$query['match'][$col] = SqlOr(SqlIn(implode(', ', $val)));
 		}
 		else if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
 			foreach ($this->fs[$col] as $ix => $v)
 				$query['having'][] = " FIND_IN_SET($v, $ms[2]) > 0";
-		else if ($fi->type == 'date')
+		else if ($fi->attr('TYPE') == 'date')
 		{
 			$query['match'][$col] = SqlBetween(
-				TimestampToMySql(DateInputToTS(GetVar($this->Name.'_'.$col)), false),
-				TimestampToMySql(DateInputToTS(GetVar($this->Name.'_'.$col.'2')), false)
+				TimestampToMySql(DateInputToTS(GetVar($col)), false),
+				TimestampToMySql(DateInputToTS(GetVar($col.'2')), false)
 			);
 		}
 		else $query['match'][$col] = SqlLike($val);
@@ -2202,6 +2210,7 @@ class DataSearch
 		if (isset($this->count))
 		{
 			$t->ReWrite('result', array($this, 'TagResult'));
+			$t->ReWrite('page', array($this, 'TagPage'));
 			return $t->GetString($g);
 		}
 	}
@@ -2292,6 +2301,23 @@ class DataSearch
 		return $ret;
 	}
 
+	function TagPage($t, $g)
+	{
+		global $_d;
+
+		$pages = $this->count / $this->Behavior->ItemsPerPage;
+		$ret = null;
+		$vp = new VarParser();
+		for ($ix = 0; $ix < $pages; $ix++)
+		{
+			$vars['url'] = url($_d['root'].$GLOBALS['me'].'/'.$this->Name
+				.'/search', array_merge($_GET, $_POST));
+			$vars['num'] = $ix+1;
+			$ret .= $vp->ParseVars($g, $vars);
+		}
+		return $ret;
+	}
+
 	# Edit Related
 	
 	function TagEditForm($t, $g, $a)
@@ -2308,7 +2334,7 @@ class DataSearchBehavior
 	/** @var Boolean */
 	public $AllowEdit;
 
-	public $ItemsPerPage = 10;
+	public $ItemsPerPage = 5;
 
 	function AllowAll()
 	{
