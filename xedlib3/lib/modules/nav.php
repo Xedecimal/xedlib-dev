@@ -38,8 +38,12 @@ class ModNav extends Module
 
 		$out = null;
 		if (isset($_d['nav.links']))
-			$out .= ModNav::GetLinks(null, $_d['nav.links']);
-		if (strlen($out) > 0) return $out;
+		{
+			$t = new Template();
+			$t->ReWrite('link', array($this, 'TagLink'));
+			$t->ReWrite('head', array($this, 'TagHead'));
+			return ModNav::GetLinks(null, $_d['nav.links']);
+		}
 	}
 }
 

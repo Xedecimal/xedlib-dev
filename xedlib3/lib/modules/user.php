@@ -1,7 +1,6 @@
 <?php
 
 Module::RegisterModule('ModUser');
-Module::RegisterModule('ModUserAdmin');
 
 class ModUser extends Module
 {
@@ -43,24 +42,28 @@ class ModUser extends Module
 		global $_d, $me;
 
 		if (ModUser::RequireAccess(1))
-			$_d['nav.links']['Log Out'] = "{{root}}{{me}}/user?{$this->lm->Name}_action=logout";
+			$_d['nav.links']['Log Out'] = "{{app_abs}}{{app_rel}}/user?{$this->lm->Name}_action=logout";
 	}
 
 	function Get()
 	{
 		global $_d;
 
-		$out = null;
-
-		if (ModUser::RequireAccess(1))
-			$out .= "Welcome, {$_d['cl']['usr_name']}<br/>\n";
-		else if (!empty($_d['user.ds']))
+		if (!empty($_d['user.pages']))
 		{
-			$out .= $this->lm->Get();
+			$q = $_d['q'];
+			$p = array_pop($q);
+			if (array_search($p, $_d['user.pages']) === false) return;
+		}
+
+		if (ModUser::RequireAccess(1)) return;
+
+		if (!empty($_d['user.ds']) && @$_d['user.login'])
+		{
+			$out = $this->lm->Get();
 			$out .= RunCallbacks(@$_d['user.callbacks.knee']);
 			return GetBox('box_user', 'Login', $out);
 		}
-		return $out;
 	}
 
 	static function TagAccess($t, $g, $a)
@@ -129,5 +132,8 @@ class ModUserAdmin extends Module
 		if (ModUser::RequireAccess(2)) return $this->edUser->GetUI();
 	}
 }
+
+if ($GLOBALS['_d']['q'][0] == 'user')
+	Module::RegisterModule('ModUserAdmin');
 
 ?>

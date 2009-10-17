@@ -8,8 +8,10 @@ class ModPage extends Module
 	{
 		global $_d;
 
-		$file = "content/{$_d['q'][0]}.xml";
-		if (file_exists($file)) return file_get_contents($file);
+		$name = @$_d['q'][0];
+		$file = "content/{$name}.xml";
+		$t = new Template();
+		if (file_exists($file)) return $t->ParseFile($file);
 	}
 }
 

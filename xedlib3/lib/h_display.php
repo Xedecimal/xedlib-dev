@@ -771,7 +771,9 @@ class FormInput
 			if (empty($this->atrs['CLASS'])) $this->atrs['CLASS'] = 'input_area';
 			if (empty($this->atrs['NAME'])) $this->atrs['NAME'] = $name;
 			if (empty($this->atrs['ID'])) $this->atrs['ID'] = $id;
-			$atrs = GetAttribs($this->atrs);
+			$natrs = $this->atrs;
+			unset($natrs['TYPE']);
+			$atrs = GetAttribs($natrs);
 			return "<textarea$atrs>".$this->GetValue($persist).'</textarea>';
 		}
 		if ($this->atrs['TYPE'] == 'checkbox')
@@ -1365,7 +1367,7 @@ class LoginManager
 		$uservar = $this->Name.'_sesuser';
 
 		$act = GetVar($this->Name.'_action');
-
+		
 		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
 			? $_SESSION[$uservar] : null;
 
@@ -1435,7 +1437,7 @@ class LoginManager
 		$f->AddInput(new FormInput($this->View->TextPassword, 'password', $this->Name.'_auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
 		$f->Template = file_get_contents($template);
-		return $f->Get('action="{{root}}{{me}}" method="post"');
+		return $f->Get('action="{{app_abs}}{{app_rel}}" method="post"');
 	}
 
 	/**

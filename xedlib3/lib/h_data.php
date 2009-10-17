@@ -534,6 +534,7 @@ class DataSet
 	 */
 	function DataSet($db, $table, $id = 'id')
 	{
+		if (empty($db)) return;
 		switch ($db->type)
 		{
 			case DB_MI:
@@ -984,7 +985,7 @@ class DataSet
 	 * @param int $args passed to mysql_fetch_array.
 	 * @return array Array of items selected.
 	 */
-	function Get($opts)
+	function Get($opts = null)
 	{
 		//Error handling
 		if (!isset($this->database))

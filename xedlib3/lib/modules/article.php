@@ -1,19 +1,63 @@
 <?php
 
-Module::RegisterModule('ModNews');
-Module::RegisterModule('ModNewsAdmin');
-
-class ModNews extends Module
+class ModArticles extends Module
 {
-	public $Block = 'news';
-	public $Name = 'news';
+	public $Block = 'articles';
+	public $Name = 'articles';
+
+	protected $_template;
+	
+	function __construct()
+	{
+		global $_d;
+
+		$this->_template = dirname(__FILE__).'/../temps/mod_articles.xml';
+	}
+
+	function TagArticle($t, $g)
+	{
+		$vp = new VarParser();
+		foreach ($this->_map as $k => $v)
+			$this->_article[$v] = $this->_article[$k];
+		return $vp->ParseVars($g, $this->_article);
+	}
+	
+	function TagArticles($t, $g)
+	{
+		$t->ReWrite('article', array($this, 'TagArticle'));
+		if (isset($this->_source)) $this->_articles = $this->_source->Get();
+		if (!empty($this->_articles))
+		{
+			foreach ($this->_articles as $a)
+			{
+				$this->_article = $a;
+				@$ret .= $t->GetString($g);
+			}
+			return $ret;
+		}
+	}
+
+	function Get()
+	{
+		$t = new Template();
+		$t->ReWrite('articles', array($this, 'TagArticles'));
+		$t->Set('foot', @$this->_foot);
+		$t->Behavior->Bleed = false;
+		return $t->ParseFile($this->_template);
+	}
+}
+
+class ModArticle extends Module
+{
+	public $Block = 'article';
+	public $Name = 'article';
+
+	protected $_template;
 
 	function __construct()
 	{
 		global $_d;
-		if ($_d['q'][0] != $this->Name) return;
-
-		$_d['news.ds'] = new DataSet($_d['db'], 'news', 'nws_id');
+		$this->_template = dirname(__FILE__).'/../temps/mod_article.xml';
 	}
 
 	function TagNews($t, $g)
@@ -49,11 +93,11 @@ class ModNews extends Module
 		$t = new Template();
 		$t->ReWrite('news', array(&$this, 'TagNews'));
 		$t->ReWrite('newsdetail', array(&$this, 'TagNewsDetail'));
-		return $t->ParseFile('t_news.xml');
+		return $t->ParseFile($this->_template);
 	}
 }
 
-class ModNewsAdmin extends Module
+class ModArticleAdmin extends Module
 {
 	/**
 	* Associated news editor.
@@ -107,7 +151,7 @@ class ModNewsAdmin extends Module
 	function Get()
 	{
 		global $_d;
-		if ($_d['q'][0] != 'news') return;
+		if (@$_d['q'][0] != 'news') return;
 		return $this->edNews->GetUI('edNews');
 	}
 }
