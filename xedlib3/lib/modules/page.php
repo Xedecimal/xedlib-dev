@@ -10,8 +10,9 @@ class ModPage extends Module
 
 		$name = @$_d['q'][0];
 		$file = "content/{$name}.xml";
-		$t = new Template();
-		if (file_exists($file)) return $t->ParseFile($file);
+
+		$content = @file_get_contents($file);
+		return '<div class="page_content">'.$content.'</div>';
 	}
 }
 
