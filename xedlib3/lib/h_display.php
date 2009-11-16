@@ -1277,6 +1277,7 @@ class TreeNode
 	{
 		$this->data = $data;
 		$this->id = $id;
+		$this->_index[$id] = &$this;
 		$this->children = array();
 	}
 
@@ -1284,6 +1285,20 @@ class TreeNode
 	{
 		$this->children[] = $tn;
 		$tn->parent = $this;
+		$this->Index();
+	}
+
+	function Index()
+	{
+		$this->GetIndex();
+		if (isset($this->parent)) $this->parent->Index();
+	}
+	
+	function GetIndex()
+	{
+		foreach ($this->children as $c)
+			foreach ($c->_index as $id => $tn)
+				$this->_index[$id] = $tn;
 	}
 
 	function Find($id)

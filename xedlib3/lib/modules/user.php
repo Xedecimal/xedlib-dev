@@ -42,7 +42,8 @@ class ModUser extends Module
 		global $_d, $me;
 
 		if (ModUser::RequireAccess(1))
-			$_d['nav.links']['Log Out'] = "{{app_abs}}{{app_rel}}/user?{$this->lm->Name}_action=logout";
+			$_d['nav.links']->AddChild(new TreeNode('Log Out',
+				"{{app_abs}}{{app_rel}}/user?{$this->lm->Name}_action=logout"));
 	}
 
 	function Get()
@@ -100,7 +101,7 @@ class ModUserAdmin extends Module
 		global $_d;
 
 		if (ModUser::RequireAccess(2))
-			$_d['nav.links']['Users'] = '{{root}}{{me}}/user';
+			$_d['nav.links']->AddChild(new TreeNode('Users', '{{root}}{{me}}/user'));
 	}
 
 	function Prepare()
@@ -120,7 +121,7 @@ class ModUserAdmin extends Module
 				ArrayToSelOptions($_d['user.levels']))
 		);
 		$this->edUser->Behavior->Search = false;
-		$this->edUser->Behavior->Target = $_d['root'].$me.'/user';
+		$this->edUser->Behavior->Target = $me.'/user';
 		$this->edUser->Prepare();
 	}
 
