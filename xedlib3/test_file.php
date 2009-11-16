@@ -3,23 +3,29 @@
 session_start();
 
 require_once('h_main.php');
-require_once('lib/h_template.php');
-require_once('lib/a_file.php');
 require_once('lib/a_log.php');
+require_once('lib/a_file.php');
+
+$_d['me'] = GetVar('SCRIPT_NAME');
 
 $ca = GetVar('ca');
 $ed = GetVar('editor');
 $ci = GetVar('ci');
 
+$GLOBALS['app_abs'] = GetRelativePath(dirname(__FILE__)).'/'.basename(__FILE__);
+$GLOBALS['app_rel'] = '';
+
+Module::Initialize();
+
 $dsUser = new DataSet($db, 'user', 'usr_id');
-$lm = new LoginManager();
+$lm = new LoginManager('lm');
 $lm->AddDataset($dsUser, 'usr_pass', 'usr_name');
 $dsLogs = new DataSet($db, 'docmanlog');
-$logger = new LoggerAuth($dsLogs, $dsUser);
+$logger = new LoggerAuth('la', $dsLogs, $dsUser);
 
 if (!$user = $lm->Prepare($ca))
 {
-	die($lm->Get($me));
+	die($lm->Get());
 }
 
 $fm_actions = array(
@@ -45,9 +51,9 @@ $page_head = '<script type="text/javascript" src="lib/js/swfobject.js"></script>
 
 $ca = GetVar('ca');
 
-$page_body = "<p><a href=\"{$me}?ca=logout\">Log out</a>
-| <a href=\"{$me}\">Files</a>
-| <a href=\"{$me}?editor=user\">Users</a></p>";
+$page_body = "<p><a href=\"{$_d['me']}?ca=logout\">Log out</a>
+| <a href=\"{$_d['me']}\">Files</a>
+| <a href=\"{$_d['me']}?editor=user\">Users</a></p>";
 
 if ($ed == 'user')
 {
@@ -70,19 +76,13 @@ else
 	$fm = new FileManager('fman', 'test', array('Default', 'Gallery'));
 	$fm->uid = $user['usr_id'];
 	$fm->Behavior->Recycle = true;
+	$fm->Behavior->AllowCopy = $fm->Behavior->AllowLink = true;
 	$fm->Behavior->ShowAllFiles = $user['usr_name'] == 'Admin';
 	$fm->Behavior->Watcher = array('fm_watcher');
 
 	$fm->Behavior->AllowAll();
 	$fm->Prepare($ca);
 
-	$files = count($fm->files['files']);
-    $dirs = count($fm->files['dirs']);
-    $page_body .= <<<EOF
-	    <script type="text/javascript">var dirs = "{$dirs}";</script>
-	    <script type="text/javascript">var files = "{$files}";</script>
-    EOF;
-    
     $page_head .= <<<EOF
 	    <script type="text/javascript" src="lib/js/yui/yahoo-min.js" ></script>
 	    <script type="text/javascript" src="lib/js/yui/connection-min.js" ></script>
@@ -112,16 +112,17 @@ else
 		    return false;
 		}
 		</script>
-    EOF;
+EOF;
 
-	$page_body .= $fm->Get($me, $ca);
-
+	$page_body .= $fm->Get();
 	$logger->TrimByCount(5);
 	$page_body .= $logger->Get(10);
 }
 
 $context = null;
 $t = new Template($context);
-echo $t->Get('template_test.html');
+echo $t->ParseFile('t.xml');
+
+die(Module::Run('t.xml'));
 
 ?>

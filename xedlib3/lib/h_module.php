@@ -34,23 +34,24 @@ class Module
 		$t->ReWrite('block', array('Module', 'TagBlock'));
 
 		global $mods;
-		usort($mods, array('Module', 'cmp_mod'));
-
-		RunCallbacks(@$_d['index.cb.prelink']);
-		if (empty($mods)) Error('No modules found to use!');
-		foreach ($mods as $n => $mod)
-			if (!isset($_d['module.disable'][$n])) $mod->PreLink();
-		foreach ($mods as $n => $mod)
-			if (!isset($_d['module.disable'][$n])) $mod->Link();
-		foreach ($mods as $n => $mod)
-			if (!isset($_d['module.disable'][$n])) $mod->Prepare();
-		foreach ($mods as $n => $mod)
+		if (!empty($mods))
 		{
-			if (isset($_d['module.disable'][$n])) continue;
-			if (array_key_exists($mod->Block, $_d['blocks']))
-				$_d['blocks'][$mod->Block] .= $mod->Get();
-			else
-				$_d['blocks']['default'] .= $mod->Get();
+			usort($mods, array('Module', 'cmp_mod'));
+			RunCallbacks(@$_d['index.cb.prelink']);
+			foreach ($mods as $n => $mod)
+				if (!isset($_d['module.disable'][$n])) $mod->PreLink();
+			foreach ($mods as $n => $mod)
+				if (!isset($_d['module.disable'][$n])) $mod->Link();
+			foreach ($mods as $n => $mod)
+				if (!isset($_d['module.disable'][$n])) $mod->Prepare();
+			foreach ($mods as $n => $mod)
+			{
+				if (isset($_d['module.disable'][$n])) continue;
+				if (array_key_exists($mod->Block, $_d['blocks']))
+					$_d['blocks'][$mod->Block] .= $mod->Get();
+				else
+					$_d['blocks']['default'] .= $mod->Get();
+			}
 		}
 
 		$t = new Template($_d);

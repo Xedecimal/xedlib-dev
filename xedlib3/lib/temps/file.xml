@@ -25,8 +25,13 @@
 			<tr><td>
 				<div id="{{fn_name}}_mass_options">
 				<p>With selected files...</p>
-				<behavior type="AllowMove"><input type="submit"
-					name="{{fn_name}}_action" value="Move" /> to
+				<behavior type="AllowMove,AllowCopy,AllowLink">
+					<behavior type="AllowMove"><input type="submit"
+						name="{{fn_name}}_action" value="Move To" /></behavior>
+					<behavior type="AllowCopy"><input type="submit"
+						name="{{fn_name}}_action" value="Copy To" /></behavior>
+					<behavior type="AllowLink"><input type="submit"
+						name="{{fn_name}}_action" value="Link In" /></behavior>
 					{{dirsel}}<br/></behavior>
 				<behavior type="AllowDelete"><input type="submit"
 					name="{{fn_name}}_action" value="Delete" onclick="return

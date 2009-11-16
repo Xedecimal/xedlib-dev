@@ -1,9 +1,11 @@
 <?php
 
+require_once('a_editor.php');
+
 /**
  * @package Logging
  */
-
+ 
 class LoggerAuth extends EditorHandler
 {
 	/**
@@ -29,6 +31,7 @@ class LoggerAuth extends EditorHandler
 
 	/**
 	 * Creates a new Logger.
+	 * @param string $name Name of this logger.
 	 * @param DataSet $dsLog DataSet that holds log information.
 	 * @param DataSet $dsUser DataSet that holds identity information.
 	 * @param array $actions A series of possible actions to log.
@@ -68,14 +71,14 @@ class LoggerAuth extends EditorHandler
 	 */
 	function TrimByCount($count)
 	{
-		$this->dsLog->GetCustom("DELETE FROM {$this->dsLog->table}
+		/*$this->dsLog->GetCustom("DELETE FROM {$this->dsLog->table}
 			USING {$this->dsLog->table}
 			LEFT JOIN (
 				SELECT log_id FROM {$this->dsLog->table}
 				ORDER BY log_date DESC
 				LIMIT {$count}) AS dt
 			ON {$this->dsLog->table}.log_id = dt.log_id
-			WHERE dt.log_id IS NULL;");
+			WHERE dt.log_id IS NULL;");*/
 	}
 
 	function TrimByDate($ts)
@@ -92,9 +95,14 @@ class LoggerAuth extends EditorHandler
 	{
 		global $me;
 		$match = $user != null ? array($idcol => $user) : null;
-		$items = $this->dsLog->Get($match, array('log_date' => 'DESC'),
-			$count != null ? array(0, $count) : null,
-			array(new Join($this->dsUser, 'log_user = '.$this->dsUser->id, 'JOIN')));
+
+		$query = array(
+			'match' => $match,
+			'order' => array('log_date' => 'DESC'),
+			'filter' => $count != null ? array(0, $count) : null,
+			'joins' => array(new Join($this->dsUser, 'log_user = '.$this->dsUser->id, 'JOIN'))
+		);
+		$items = $this->dsLog->Get($query);
 
 		$tbl = new Table('tbl_logs', array('Date', 'User', 'Action', 'Target'));
 		if (!empty($items))

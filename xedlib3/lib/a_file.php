@@ -323,7 +323,7 @@ class FileManager
 				RunCallbacks($this->Behavior->Watchers, FM_ACTION_REORDER,
 					$sfile->path . ' ' . ($cd == 'up' ? 'up' : 'down'));
 		}
-		else if ($act == 'Move')
+		else if ($act == 'Move To')
 		{
 			$sels = GetVar($this->Name.'_sels');
 			$ct = GetVar($this->Name.'_ct');
@@ -337,6 +337,33 @@ class FileManager
 				if (!empty($this->Behavior->Watchers))
 					RunCallbacks($this->Behavior->Watchers, FM_ACTION_MOVE,
 						$fi->path . ' to ' . $ct);
+			}
+		}
+		else if ($act == 'Copy To')
+		{
+			$sels = GetVar($this->Name.'_sels');
+			$ct = GetVar($this->Name.'_ct');
+			if (!empty($sels))
+			foreach ($sels as $file)
+			{
+				$fi = new FileInfo($file, $this->filters);
+				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
+				$f->Copy($fi, $ct.$fi->filename);
+
+				if (!empty($this->Behavior->Watchers))
+					RunCallbacks($this->Behavior->Watchers, FM_ACTION_COPY,
+						$fi->path . ' to ' . $ct);
+			}
+		}
+		else if ($act == 'Link In')
+		{
+			$sels = GetVar($this->Name.'_sels');
+			$ct = GetVar($this->Name.'_ct');
+			if (!empty($sels))
+			foreach ($sels as $file)
+			{
+				$fi = new FileInfo($file, $this->filters);
+				`ln -s "{$fi->path}" "{$ct}{$fi->filename}`;
 			}
 		}
 		else if ($act == 'Download Selected')
@@ -443,8 +470,9 @@ class FileManager
 
 	function TagBehavior($t, $g, $a)
 	{
-		$name = $a['TYPE'];
-		if ($this->Behavior->$name) return $g;
+		$names = explode(',', $a['TYPE']);
+		foreach ($names as $name)
+			if ($this->Behavior->$name) return $g;
 	}
 
 	function TagDownload($t, $g, $a)
@@ -1205,6 +1233,10 @@ class FileManagerBehavior
 	 */
 	public $AllowMove = false;
 
+	public $AllowCopy = false;
+	
+	public $AllowLink = false;
+	
 	/**
 	 * Allow downloading all packaged files as a zip file.
 	 *
