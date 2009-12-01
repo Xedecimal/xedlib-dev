@@ -1256,7 +1256,7 @@ class FileManagerBehavior
 	 *
 	 * @var bool
 	 */
-	public $UseInfo = true;
+	public $UseInfo = false;
 
 	/**
 	 * If true, do not delete files, they are renamed to

@@ -5,6 +5,11 @@
 
 <null>
 
+<script type="text/javascript">
+var fn_name = '{{fn_name}}';
+</script>
+<script type="text/javascript" src="{{app_abs}}/xedlib/temps/file.js"></script>
+
 <header>
 <box title="Current Path Location" id="{{fn_name}}_path">
 <path root="Home" sep="&raquo;"> <a href="{{uri}}">{{name}}</a></path>
@@ -65,7 +70,7 @@
 			<!-- Upload File -->
 			<behavior type="AllowUpload">
 			<tr><td>
-				<a href="#" onclick="$('#{{fn_name}}_upload').slideToggle(500);return false;">Send Files</a>
+				<a href="#" id="a_toggle_upload">Send Files</a>
 			</td><td>
 				<img id="img{{fn_name}}_upload" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
@@ -85,7 +90,7 @@
 			<!-- Create Folder -->
 			<behavior type="AllowCreateDir">
 			<tr><td>
-				<a href="#" onclick="$('#{{fn_name}}_create').slideToggle(500);return false;">{{TextCreateFolder}}</a>
+				<a href="#" id="a_toggle_create">{{TextCreateFolder}}</a>
 			</td><td>
 				<img id="img{{fn_name}}_create" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
@@ -99,7 +104,7 @@
 			<!-- Rename File / Folder -->
 			<behavior type="AllowRename">
 			<tr><td class="opt_title">
-				<a href="#" onclick="$('#{{fn_name}}_rename').toggle('slow');return false;">Rename this file or folder</a>
+				<a href="#" id="a_toggle_rename">Rename this file or folder</a>
 			</td><td>
 				<img id="img{{fn_name}}_rename" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td>
@@ -113,11 +118,11 @@
 			<!-- Additional Settings -->
 			<behavior type="AllowEdit">
 			<tr><td>
-				<a href="#" onclick="$('#{{fn_name}}_add').slideToggle(500);return false;">Additional Settings</a>
+				<a href="#" id="a_toggle_edit" onclick="">Additional Settings</a>
 			</td><td>
-				<img id="img{{fn_name}}_add" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_edit" src="{{relpath}}/images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
-				<div id="{{fn_name}}_add" style="display: none">
+				<div id="{{fn_name}}_edit" style="display: none">
 				<addopts>
 					<tr><td>{{text}}</td><td>{{field}}</td></tr>
 				</addopts>
@@ -137,11 +142,7 @@
 			<table>
 				<check><tr>
 					<td>&nbsp;</td>
-					<td><input type="checkbox" id="{{fn_name}}_sel_folders"
-						onclick="$('input').filter('[id^={{fn_name}}_sel_folders]').
-						attr('checked', this.checked ? 'checked' : '');
-						toggleAny(['{{fn_name}}_sel_files_', '{{fn_name}}_sel_folders_'],
-						'{{fn_name}}_mass_options');" /></td>
+					<td><input type="checkbox" id="{{fn_name}}_sel_folders" /></td>
 					<td><label for="{{fn_name}}_sel_folders">Select All</label></td>
 				</tr></check>
 				<folder>
@@ -149,10 +150,9 @@
 					<td align="right"><icon><img src="{{icon}}" alt="icon" /></icon></td>
 					<check>
 						<td>
-							<input type="checkbox" id="{{fn_name}}_sel_{{type}}_{{index}}"
-							name="{{fn_name}}_sels[]" value="{{fipath}}"
-							onclick="toggleAny(['{{fn_name}}_sel_files_', '{{fn_name}}_sel_folders_'],
-								'{{fn_name}}_mass_options');" />
+							<input type="checkbox" class="check_folder"
+							id="{{fn_name}}_sel_{{type}}_{{index}}"
+							name="{{fn_name}}_sels[]" value="{{fipath}}" />
 						</td>
 					</check>
 					<td><a href="{{url}}">{{caption}}</a></td>
@@ -169,11 +169,7 @@
 			<table>
 				<check><tr>
 					<td>&nbsp;</td>
-					<td><input type="checkbox" id="sel_files"
-						onclick="$('input').filter('[id^=sel_files]').
-						attr('checked', this.checked ? 'checked' : '');
-						toggleAny(['sel_files_', 'sel_folders_'],
-						'{{fn_name}}_mass_options');" /></td>
+					<td><input type="checkbox" id="sel_files" /></td>
 					<td><label for="sel_files">Select All</label></td>
 				</tr></check>
 				<file>
@@ -181,10 +177,9 @@
 					<td align="right"><icon><img src="{{icon}}" alt="icon" /></icon></td>
 					<check>
 					<td>
-						<input type="checkbox" id="sel_{{type}}_{{index}}"
-						name="{{fn_name}}_sels[]" value="{{fipath}}"
-						onclick="toggleAny(['sel_files_', 'sel_folders_'],
-						'{{fn_name}}_mass_options');" />
+						<input type="checkbox" class="check_file"
+						id="sel_{{type}}_{{index}}" name="{{fn_name}}_sels[]"
+						value="{{fipath}}" />
 					</td>
 					</check>
 					<td><a href="{{url}}">{{filename}}</a></td>

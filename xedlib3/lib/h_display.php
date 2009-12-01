@@ -811,7 +811,7 @@ class FormInput
 			case 'date':
 				$this->labl = false;
 				return GetInputDate(array(
-					'ts' => $this->valu,
+					'ts' => @$this->atrs['VALUE'],
 					'atrs' => $this->atrs));
 			case 'daterange':
 				$this->labl = false;
@@ -840,6 +840,9 @@ class FormInput
 					'time' => true,
 					'atrs' => $this->atrs
 				));
+			case 'month':
+				return GetMonthSelect($this->atrs['NAME'],
+					@$this->atrs['VALUE']);
 
 			case 'label':
 				return $this->valu;
@@ -927,7 +930,7 @@ class FormInput
 	function GetCleanID($parent)
 	{
 		$id = !empty($parent) ? $parent.'_' : null;
-		$id .= !empty($this->atrs['ID']) ? $this->atrs['ID'] : $this->atrs['NAME'];
+		$id .= !empty($this->atrs['ID']) ? $this->atrs['ID'] : @$this->atrs['NAME'];
 		return CleanID($id);
 	}
 
@@ -1865,43 +1868,6 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 			@$attribs['VALUE'], $attribs);
 		$field = $fi->Get(null, false);
 	}
-	/*switch (strtolower($attribs['TYPE']))
-	{
-		case 'date':
-			$field = '<input type="hidden" name="type_'.@$attribs['NAME'].'" value="'.$attribs['TYPE'].'" />';
-			$field .= GetInputDate(array('name' => @$attribs['NAME'], 'ts' => @$attribs['VALUE']));
-			break;
-		case 'datetime':
-			$field = '<input type="hidden" name="type_'.@$attribs['NAME'].'" value="'.$attribs['TYPE'].'" />';
-			$field = GetInputDate(array('name' => @$attribs['NAME'], 'ts' => @$attribs['VALUE'], 'time' => true));
-			break;
-		case 'year':
-			$field = GetYearSelect($attribs['NAME'], $attribs);
-			break;
-		case 'month':
-			$field = GetMonthSelect($attribs['NAME'], @$attribs['VALUE']);
-			break;
-		case 'mask':
-			$in = new FormInput(null, 'mask', $attribs['NAME'], @$attribs['VALUE']);
-			$in->mask = $attribs['MASK'];
-			$field = $in->Get();
-			break;
-		case 'boolean':
-			$field = GetInputBoolean(null, $attribs);
-			break;
-		case 'radio':
-			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
-			break;
-		case 'checkbox':
-			//if (@$attribs['VALUE']) $attribs['CHECKED'] = 'checked';
-			//$attribs['VALUE'] = '1';
-			$field = '<input'.GetAttribs($attribs).' /> '.@$attribs['TEXT'];
-			break;
-
-		default:
-			$field = '<input'.GetAttribs($attribs).' />';
-			break;
-	}*/
 
 	$ret = '';
 

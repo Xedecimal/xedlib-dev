@@ -18,7 +18,11 @@ class ModArticles extends Module
 	{
 		$vp = new VarParser();
 		foreach ($this->_map as $k => $v)
-			$this->_article[$v] = $this->_article[$k];
+		{
+			if (is_array($v))
+				$this->_article[$k] = RunCallbacks($v, $this->_article);
+			else $this->_article[$k] = $this->_article[$v];
+		}
 		return $vp->ParseVars($g, $this->_article);
 	}
 	
@@ -82,7 +86,8 @@ class ModArticle extends Module
 
 		if (!empty($_d['q'][1]))
 		{
-			$item = $_d['news.ds']->GetOne(array('nws_id' => $_d['q'][1]));
+			$query = array('match' => array('nws_id' => $_d['q'][1]));
+			$item = $_d['news.ds']->GetOne($query);
 			$vp = new VarParser();
 			return $vp->ParseVars($g, $item);
 		}
@@ -91,7 +96,6 @@ class ModArticle extends Module
 	function Get()
 	{
 		$t = new Template();
-		$t->ReWrite('news', array(&$this, 'TagNews'));
 		$t->ReWrite('newsdetail', array(&$this, 'TagNewsDetail'));
 		return $t->ParseFile($this->_template);
 	}

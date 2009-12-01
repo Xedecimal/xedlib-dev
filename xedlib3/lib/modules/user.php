@@ -121,7 +121,7 @@ class ModUserAdmin extends Module
 				ArrayToSelOptions($_d['user.levels']))
 		);
 		$this->edUser->Behavior->Search = false;
-		$this->edUser->Behavior->Target = $me.'/user';
+		$this->edUser->Behavior->Target = $_d['app_abs'].$me.'/user';
 		$this->edUser->Prepare();
 	}
 
