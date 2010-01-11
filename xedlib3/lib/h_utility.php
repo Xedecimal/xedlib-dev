@@ -1309,10 +1309,9 @@ function Comb($path, $exclude = null, $flags = 3)
 	while ($f = readdir($dp))
 	{
 		if ($f[0] == '.') continue;
-		$ret = array_merge($ret, Comb($path.'/'.$f, $exclude, $flags));
+		$ret = array_merge($ret, Comb(realpath($path.'/'.$f), $exclude, $flags));
 	}
-	
-	varinfo($ret);
+
 	return $ret;
 }
 

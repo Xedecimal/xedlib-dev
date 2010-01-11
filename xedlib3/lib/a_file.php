@@ -857,7 +857,7 @@ EOF;
 		$ret = "<select name=\"{$name}\">";
 		$dirs = Comb($this->Root, null, OPT_DIRS);
 		sort($dirs);
-		foreach ($dirs as $d) $ret .= "<option value=\"{$path}\">{$path}</option>";
+		foreach ($dirs as $d) $ret .= "<option value=\"{$d}\">{$d}</option>";
 		$ret .= '</select>';
 		return $ret;
 	}
