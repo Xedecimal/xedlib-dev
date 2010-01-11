@@ -1303,16 +1303,21 @@ function Comb($path, $exclude = null, $flags = 3)
 		return array();
 	}
 
-	// We will return ourselves if we're including directories.
-	$ret = ($flags & OPT_DIRS) ? array($path) : array();
-	$dp = opendir($path);
-	while ($f = readdir($dp))
+	else if (is_dir($path))
 	{
-		if ($f[0] == '.') continue;
-		$ret = array_merge($ret, Comb(realpath($path.'/'.$f), $exclude, $flags));
+		// We will return ourselves if we're including directories.
+		$ret = ($flags & OPT_DIRS) ? array($path) : array();
+		$dp = opendir($path);
+		while ($f = readdir($dp))
+		{
+			if ($f[0] == '.') continue;
+			$ret = array_merge($ret, Comb(realpath($path.'/'.$f), $exclude, $flags));
+		}
+
+		return $ret;
 	}
 
-	return $ret;
+	return array();
 }
 
 /**

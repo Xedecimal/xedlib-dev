@@ -363,7 +363,7 @@ class FileManager
 			foreach ($sels as $file)
 			{
 				$fi = new FileInfo($file, $this->filters);
-				`ln -s "{$fi->path}" "{$ct}{$fi->filename}`;
+				`ln -s "{$fi->path}" "{$ct}"`;
 			}
 		}
 		else if ($act == 'Download Selected')
