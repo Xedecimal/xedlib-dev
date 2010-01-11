@@ -855,7 +855,9 @@ EOF;
 	function GetDirectorySelect($name)
 	{
 		$ret = "<select name=\"{$name}\">";
-		$ret .= $this->GetDirectorySelectRecurse($this->Root, $this->Behavior->IgnoreRoot);
+		$dirs = Comb($this->Root, null, OPT_DIRS);
+		sort($dirs);
+		foreach ($dirs as $d) $ret .= "<option value=\"{$path}\">{$path}</option>";
 		$ret .= '</select>';
 		return $ret;
 	}

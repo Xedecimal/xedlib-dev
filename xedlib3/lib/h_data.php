@@ -612,7 +612,7 @@ class DataSet
 							$ret .= $this->ProcessVal($val);
 						}
 						else
-							$ret .= "{$col} = '{$val}'";
+							$ret .= "{$col} = ".$this->ProcessVal($val);
 					}
 
 					// array('val')
@@ -828,7 +828,7 @@ class DataSet
 			{
 				if (isset($val['opt']) && $val['opt'] == SQLOPT_UNQUOTE)
 					return $val['val'];
-				else return "'{$val['val']}'";
+				else return $this->database->Escape($val['val']);
 			}
 			else return $lq.$this->database->Escape((string)$val).$rq;
 		}

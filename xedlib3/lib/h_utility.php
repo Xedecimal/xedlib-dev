@@ -562,9 +562,9 @@ function DelTree($dir)
 }
 
 /**
- * Recursively upwardly deletes empty folders.
+ * Recursively deletes empty folders in the direction of the parent.
  *
- * @param string $dir Top level directory to empty.
+ * @param string $dir Deepest level directory to empty.
  */
 function DelEmpty($dir)
 {
@@ -1129,9 +1129,6 @@ function GetZips($ds, $zip, $range)
 	return $return;
 }
 
-define('PREG_FILES', 1);
-define('PREG_DIRS', 2);
-
 /**
  * Regular expression matches files located in $path using $pattern and $opts.
  *
@@ -1286,6 +1283,9 @@ function dir_get($path = '.')
 	return $ret;
 }
 
+define('OPT_FILES', 1);
+define('OPT_DIRS', 2);
+
 /**
  * Returns an array of all files located recursively in a given path, excluding
  * anything matching the regular expression of $exclude.
@@ -1294,18 +1294,25 @@ function dir_get($path = '.')
  * @param string $exclude Passed to preg_match to blacklist files.
  * @return array Series of non-directories that were not excluded.
  */
-function Comb($path, $exclude = null)
+function Comb($path, $exclude = null, $flags = 3)
 {
-	if (is_file($path)) return array($path);
-	$ret = array();
+	// This is a file and unable to recurse.
+	if (is_file($path))
+	{
+		if (OPT_FILES & $flags) return array($path);
+		return array();
+	}
+
+	// We will return ourselves if we're including directories.
+	$ret = ($flags & OPT_DIRS) ? array($path) : array();
 	$dp = opendir($path);
 	while ($f = readdir($dp))
 	{
 		if ($f[0] == '.') continue;
-		if (!empty($exclude) && preg_match($exclude, $f)) continue;
-		if (is_file($path.'/'.$f)) $ret[] = $path.'/'.$f;
-		else $ret = array_merge($ret, Comb($path.'/'.$f));
+		$ret = array_merge($ret, Comb($path.'/'.$f, $exclude, $flags));
 	}
+	
+	varinfo($ret);
 	return $ret;
 }
 
