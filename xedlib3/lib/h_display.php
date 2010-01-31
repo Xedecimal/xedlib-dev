@@ -724,9 +724,8 @@ class FormInput
 		{
 			$this->atrs['TYPE'] = 'text';
 			$this->atrs['CLASS'] = 'input_generic';
-			$this->atrs['NAME'] = $name;
 			$this->atrs['VALUE'] = $this->GetValue($persist);
-			$this->atrs['ID'] = $id;
+			$this->atrs['ID'] = $this->GetCleanID($parent);
 			$this->labl = false;
 			$atrs = GetAttribs($this->atrs);
 			return '<label>To verify your request, please type the word <u>'.
@@ -754,9 +753,9 @@ class FormInput
 					else
 						$ret .= '<label><input
 							type="radio"
-							name="'.$name.'"
+							name="'.$this->atrs['NAME'].'"
 							value="'.$id.'"
-							id="'.CleanID($name.'_'.$id)."\"{$selected}{$this->atrs}/>
+							id="'.CleanID($this->atrs['NAME'].'_'.$id)."\"{$selected}{$this->atrs}/>
 							{$val->text}</label>";
 					if (empty($this->Horizontal)) $ret .= '<br/>';
 				}
@@ -769,7 +768,6 @@ class FormInput
 			if (empty($this->atrs['ROWS'])) $this->atrs['ROWS'] = 3;
 			if (empty($this->atrs['COLS'])) $this->atrs['COLS'] = 25;
 			if (empty($this->atrs['CLASS'])) $this->atrs['CLASS'] = 'input_area';
-			if (empty($this->atrs['NAME'])) $this->atrs['NAME'] = $name;
 			if (empty($this->atrs['ID'])) $this->atrs['ID'] = $id;
 			$natrs = $this->atrs;
 			unset($natrs['TYPE']);
@@ -831,11 +829,11 @@ class FormInput
 				return $one.' to '.$two;
 			case 'time':
 				$this->labl = false;
-				return GetInputTime($name, $this->valu);
+				return GetInputTime($this->atrs['NAME'], $this->valu);
 			case 'datetime':
 				$this->labl = false;
 				return GetInputDate(array(
-					'name' => $name,
+					'name' => $this->atrs['NAME'],
 					'ts' => $this->valu,
 					'time' => true,
 					'atrs' => $this->atrs

@@ -163,6 +163,7 @@ class Template extends LayeredOutput
 
 		$this->ReWrite('template', array(&$this, 'TagTemplate'));
 		$this->ReWrite('repeat', array(&$this, 'TagRepeat'));
+		$this->ReWrite('callback', array(&$this, 'TagCallback'));
 		parent::LayeredOutput();
 	}
 
@@ -193,6 +194,12 @@ class Template extends LayeredOutput
 			$ret .= $vp->ParseVars($g, $v);
 		}
 		return $ret;
+	}
+
+	function TagCallback($t, $g, $a)
+	{
+		$ds = $GLOBALS[$a['DS']];
+		return RunCallbacks(@$ds[$a['NAME']]);
 	}
 
 	/**
@@ -524,7 +531,7 @@ class Template extends LayeredOutput
 		{
 			$this->vars = array_merge($this->vars, $var);
 		}
-		else if (get_class($var) != null)
+		else if (@get_class($var) != null)
 		{
 			$array = get_object_vars($var);
 			foreach ($array as $key => $val)

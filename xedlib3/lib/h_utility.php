@@ -1113,6 +1113,8 @@ function GetZips($ds, $zip, $range)
 
 	$items = $ds->GetCustom($query);
 
+	$return = array();
+
 	foreach ($items as $i)
 	{
 		$dist = GetMiles($details['lat'], $i['lat'], $details['lng'], $i['lng']);
@@ -1541,6 +1543,37 @@ function array_lower_keys($array)
 	$ret = array();
 	foreach ($array as $k => $v) $ret[strtolower($k)] = $v;
 	return $ret;
+}
+
+function preg_rename($glob, $preg_src, $preg_dst)
+{
+	foreach (glob($glob) as $f)
+	{
+		if (preg_match($preg_src, $f))
+		{
+			$dst = preg_replace($preg_src, $preg_dst, $f);
+			rename($f, $dst);
+		}
+	}
+}
+
+function get_relative_sizes($arr, $min_size = 12, $max_size = 32)
+{
+	//arsort($arr);
+
+	$max_qty = max(array_values($arr));
+	$min_qty = min(array_values($arr));
+
+	$spread = max(1, $max_qty - $min_qty);
+
+	$step = ($max_size - $min_size) / ($spread);
+
+	foreach ($arr as $key => $value)
+	{
+		$size = round($min_size + (($value - $min_qty) * $step));
+		$ret[$key] = $size;
+    }
+    return $ret;
 }
 
 ?>

@@ -4,8 +4,16 @@ class Module
 {
 	static function Initialize()
 	{
-		$files = glob('modules/*.php');
-		foreach ($files as $file) require_once($file);
+		$dp = opendir('modules');
+		while ($f = readdir($dp))
+		{
+			$p = 'modules/'.$f;
+			if ($f[0] == '.') continue;
+			if (is_dir($p) && file_exists($p.'/'.$f.'.php'))
+				require_once($p.'/'.$f.'.php');
+			else if (fileext($p) == 'php') require_once($p);
+		}
+		closedir($dp);
 	}
 
 	static function RegisterModule($name)

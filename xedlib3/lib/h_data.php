@@ -305,8 +305,8 @@ class Database
  * @return array specifying that this string shouldn't be quoted.
  */
 function SqlUnquote($data) { return array('val' => $data, 'opt' => SQLOPT_UNQUOTE); }
-function SqlBetween($from, $to) { return array('cmp' => 'between', 'opt' => SQLOPT_UNQUOTE, 'val' => "'$from' AND '$to'"); }
-function SqlNotNull() { return array('cmp' => 'IS NOT NULL', 'opt' => SQLOPT_UNQUOTE); }
+function SqlBetween($from, $to) { return array('cmp' => 'BETWEEN', 'opt' => SQLOPT_UNQUOTE, 'val' => "'$from' AND '$to'"); }
+function SqlIs($val) { return array('cmp' => 'IS', 'opt' => SQLOPT_UNQUOTE, 'val' => $val); }
 function SqlNot($val) { return array('cmp' => '!=', 'val' => $val); }
 function SqlAnd($val) { return array('inc' => 'AND', 'val' => $val); }
 function SqlOr($val)
@@ -317,7 +317,7 @@ function SqlOr($val)
 function SqlLess($val) { return array('cmp' => '<', 'val' => $val); }
 function SqlDistinct($val) { return array('cmp' => 'DISTINCT', 'val' => $val); }
 function SqlCount($val) { return array('val' => 'COUNT('.$val.')', 'opt' => SQLOPT_UNQUOTE); }
-function SqlLike($val) { return array('val' => '%'.$val.'%', 'cmp' => 'LIKE'); }
+function SqlLike($val) { return array('val' => $val, 'cmp' => 'LIKE'); }
 function SqlIn($vals) { return array('val' => 'IN('.$vals.')', 'opt' => SQLOPT_UNQUOTE, 'cmp' => ''); }
 
 /**
@@ -828,9 +828,10 @@ class DataSet
 			{
 				if (isset($val['opt']) && $val['opt'] == SQLOPT_UNQUOTE)
 					return $val['val'];
-				else return $this->database->Escape($val['val']);
+				else return $lq.$this->database->Escape($val['val']).$rq;
 			}
-			else return $lq.$this->database->Escape((string)$val).$rq;
+			else
+				return $lq.$this->database->Escape($val).$rq;
 		}
 		else
 		{
@@ -1017,12 +1018,12 @@ class DataSet
 		switch ($this->database->type)
 		{
 			case DB_SL:
-				if ($f($rows) < 1) return null;
+				if ($f($rows) < 1) return array();
 				break;
 			default:
-				if ($f($this->database->link) < 1) return null;
+				if ($f($this->database->link) < 1) return array();
 		}
-		$items = null;
+		$items = array();
 
 		$a = null;
 		if ($this->database->type == DB_MY)
@@ -1412,14 +1413,14 @@ class DOMHigh
 	}
 
 	// Manipulation
-	
+
 	function RemoveElements($xpath)
 	{
 		$els = $this->Query($xpath);
 		foreach ($els as $e)
 			$e->parentNode->removeChild($e);
 	}
-	
+
 	function Append($xpath, $element, $attributes)
 	{
 		$elAdd = $this->Doc->createElement($element);

@@ -1470,7 +1470,7 @@ class DisplayData
 			$this->ss = GetVar($this->Name.'_search');
 			$this->ipp = GetVar($this->Name.'_ipp', 10);
 
-			$group = null;
+			$query = array();
 
 			foreach (array_keys($this->ds->DisplayColumns) as $col)
 			{
@@ -1545,7 +1545,7 @@ class DisplayData
 		return $t->ParseFile(!isset($temp) ? dirname(__FILE__).
 			'/temps/displaydata.xml' : $temp);
 
-		$q = GetVar('q');
+		/*$q = GetVar('q');
 
 		if ($ca == 'edit' && $this->Behavior->AllowEdit)
 		{
@@ -1607,7 +1607,7 @@ class DisplayData
 
 		//else $ret = $this->GetSearch($target);
 
-		return $ret;
+		return $ret;*/
 	}
 
 	function TagSearch($t, $g, $a)
