@@ -1002,7 +1002,7 @@ class DataSet
 
 		//Prepare Query
 		$query = 'SELECT ';
-		$query .= $this->GetColumnString(@$opts['cols']);
+		$query .= $this->GetColumnString(@$opts['columns']);
 		$query .= ' FROM '.$this->QuoteTable();
 		$query .= $this->JoinClause(@$opts['joins'], $this->joins);
 		$query .= $this->WhereClause(@$opts['match']);
@@ -1061,7 +1061,7 @@ class DataSet
 	function GetOne($opts)
 	{
 		$data = $this->Get($opts);
-		if (isset($data)) return $data[0];
+		if (!empty($data)) return $data[0];
 		return $data;
 	}
 

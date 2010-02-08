@@ -1559,8 +1559,6 @@ function preg_rename($glob, $preg_src, $preg_dst)
 
 function get_relative_sizes($arr, $min_size = 12, $max_size = 32)
 {
-	//arsort($arr);
-
 	$max_qty = max(array_values($arr));
 	$min_qty = min(array_values($arr));
 

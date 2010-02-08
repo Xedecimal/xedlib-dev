@@ -198,7 +198,7 @@ class Template extends LayeredOutput
 
 	function TagCallback($t, $g, $a)
 	{
-		$ds = $GLOBALS[$a['DS']];
+		$ds = @$GLOBALS[$a['DS']];
 		return RunCallbacks(@$ds[$a['NAME']]);
 	}
 
