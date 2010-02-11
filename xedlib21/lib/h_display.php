@@ -554,7 +554,7 @@ class Form
 		{
 			$d['even_odd'] = ($ix++ % 2) ? 'even' : 'odd';
 			$d['text'] = !empty($in->text) ? $in->text : '';
-			if (strtolower(get_class($in)) == 'forminput')
+			if (is_object($in) && strtolower(get_class($in)) == 'forminput')
 			{
 				$d['field'] = $in->Get($this->name);
 				$d['help'] = $in->help;

@@ -219,6 +219,7 @@ class Database
 	{
 		if (!isset($this->type)) Error("Database has not been opened.");
 		Trace($query);
+		$this->last_query = $query;
 		switch ($this->type)
 		{
 			case DB_MI:

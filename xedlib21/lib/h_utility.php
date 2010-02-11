@@ -84,22 +84,26 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 {
 	if (error_reporting() == 0) return;
 	$errortype = array (
-		E_ERROR           => "Error",
-		E_WARNING         => "Warning",
-		E_PARSE           => "Parsing Error",
-		E_NOTICE          => "Notice",
-		E_CORE_ERROR      => "Core Error",
-		E_CORE_WARNING    => "Core Warning",
-		E_COMPILE_ERROR   => "Compile Error",
-		E_COMPILE_WARNING => "Compile Warning",
-		E_USER_ERROR      => "User Error",
-		E_USER_WARNING    => "User Warning",
-		E_USER_NOTICE     => "User Notice",
+		E_ERROR             => 'Error',
+		E_WARNING           => 'Warning',
+		E_PARSE             => 'Parsing Error',
+		E_NOTICE            => 'Notice',
+		E_CORE_ERROR        => 'Core Error',
+		E_CORE_WARNING      => 'Core Warning',
+		E_COMPILE_ERROR     => 'Compile Error',
+		E_COMPILE_WARNING   => 'Compile Warning',
+		E_USER_ERROR        => 'User Error',
+		E_USER_WARNING      => 'User Warning',
+		E_USER_NOTICE       => 'User Notice',
 	);
 	$ver = phpversion();
 	if ($ver[0] > 4) $errortype[E_STRICT] = 'Strict Error';
 	if ($ver[0] > 4 && $ver[2] > 1)
+	{
 		$errortype[E_RECOVERABLE_ERROR] = 'Recoverable Error';
+		$errortype[E_DEPRECATED]        = 'Depricated';
+		$errortype[E_USER_DEPRECATED]   = 'User Depricated';
+	}
 
 	$err = "[{$errortype[$errno]}] ".nl2br($errmsg)."<br/>";
 	$err .= "Error seems to be in one of these places...\n";
@@ -166,7 +170,6 @@ function GetCallstack($file = __FILE__, $line = __LINE__)
 function SetVar($name, $value)
 {
 	global $HTTP_SESSION_VARS;
-	if (!session_is_registered($name)) session_register($name);
 	if (is_array($_SESSION)) $_SESSION[$name] = $value;
 	if (is_array($HTTP_SESSION_VARS)) $HTTP_SESSION_VARS[$name] = $value;
 	return $value;
