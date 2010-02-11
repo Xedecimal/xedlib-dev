@@ -628,7 +628,15 @@ class Template extends LayeredOutput
 			$var = $this->FindVar($indices[0]);
 
 			for ($ix = 1; $ix < count($indices); $ix++)
-				if (isset($var[$indices[$ix]])) $var = $var[$indices[$ix]];
+			{
+				// Variable indice, getting kinda hairy!
+				if (isset($this->vars[$indices[$ix]]))
+				{
+					$var = $var[$this->vars[$indices[$ix]]];
+				}
+				else if (isset($var[$indices[$ix]]))
+					$var = $var[$indices[$ix]];
+			}
 
 			if (!is_array($var)) return $var;
 		}

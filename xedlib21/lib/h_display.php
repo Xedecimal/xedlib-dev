@@ -1338,7 +1338,7 @@ class LoginManager
 			{
 				$check_user = ($this->type == CONTROL_BOUND) ? $check_user =
 					GetVar($this->Name.'_auth_user') : null;
-			 	SetVar($uservar, $check_user);
+				SetVar($uservar, $check_user);
 			}
 
 			$check_pass = GetVar($this->Name.'_auth_pass');
@@ -1852,6 +1852,31 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 	$ret .= $field;
 
 	if ($args == 'search' && $searchable) $ret .= '</div>';
+	return $ret;
+}
+
+function TagLoop($t, $g, $a)
+{
+	$vp = new VarParser();
+	$ret = null;
+	for ($ix = $a['START']; $ix <= $a['END']; $ix++)
+	{
+		$ret .= $vp->ParseVars($g, array($a['VAR'] => $ix));
+	}
+	return $ret;
+}
+
+function TagEach($t, $g, $a)
+{
+	$tx = new Template();
+	$tx->use_getvar = true;
+	$ret = null;
+	foreach (GetVar($a['VAR']) as $ix => $v)
+	{
+		if (!empty($a['START']) && $ix < $a['START']) continue;
+		$tx->Set($a['IDX'], $ix);
+		$ret .= $tx->GetString('<null>'.$g.'</null>');
+	}
 	return $ret;
 }
 
