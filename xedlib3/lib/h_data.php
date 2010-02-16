@@ -167,6 +167,7 @@ class Database
 		$m = null;
 		if (!preg_match('#([^:]+)://(([^:]*):*(.*)@|)([^/]*)/*(.*)#', $url, $m))
 			Error("Invalid url for database.");
+
 		switch ($m[1])
 		{
 			case 'mysqli':
@@ -180,7 +181,7 @@ class Database
 			case 'mysql':
 				$this->ErrorHandler = array($this, 'CheckMyError');
 				$this->func_aff = 'mysql_affected_rows';
-				if (!$this->link = @mysql_connect($m[5], $m[3], $m[4], true))
+				if (!$this->link = mysql_connect($m[5], $m[3], $m[4], true))
 					return false;
 				mysql_select_db($m[6], $this->link);
 				$this->type = DB_MY;
