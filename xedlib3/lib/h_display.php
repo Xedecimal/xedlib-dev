@@ -1161,14 +1161,14 @@ function GetInputDate($args)
 	if (!isset($args['ts'])) $args['ts'] = time();
 	$divAtrs = $args['atrs'];
 	unset($divAtrs['NAME'],$divAtrs['TYPE']);
-	$strout = '<div'.GetAttribs(@$divAtrs).'>';
-	$strout .= GetMonthSelect(@$args['atrs']['NAME'].'[]', date('n', $args['ts']));
+	# $strout = '<div'.GetAttribs(@$divAtrs).'>';
+	$strout = GetMonthSelect(@$args['atrs']['NAME'].'[]', date('n', $args['ts']));
 	$strout .= '/ <input type="text" size="2" name="'.@$args['atrs']['NAME'].'[]" value="'.
 		date('d', $args['ts']).'" alt="Day" />'."\n";
 	$strout .= '/ <input type="text" size="4" name="'.@$args['atrs']['NAME'].'[]" value="'.
 		date('Y', $args['ts']).'" alt="Year" />'."\n";
 	$strout .= @$args['time'] ? GetInputTime($args['atrs']['NAME'].'[]', $args['ts']) : null;
-	return $strout.'</div>';
+	return $strout /*.'</div>'*/;
 }
 
 /**
