@@ -735,7 +735,7 @@ class FormInput
 		if ($this->atrs['TYPE'] == 'boolean')
 		{
 			return GetInputBoolean($parent, $this->atrs,
-				!isset($this->valu) ? GetVar($this->atrs['NAME']) : $this->valu);
+				!isset($this->valu) ? GetVar(@$this->atrs['NAME']) : $this->valu);
 		}
 		if ($this->atrs['TYPE'] == 'radios')
 		{
@@ -768,7 +768,6 @@ class FormInput
 			if (empty($this->atrs['ROWS'])) $this->atrs['ROWS'] = 3;
 			if (empty($this->atrs['COLS'])) $this->atrs['COLS'] = 25;
 			if (empty($this->atrs['CLASS'])) $this->atrs['CLASS'] = 'input_area';
-			if (empty($this->atrs['ID'])) $this->atrs['ID'] = $id;
 			$natrs = $this->atrs;
 			unset($natrs['TYPE']);
 			$atrs = GetAttribs($natrs);
@@ -805,7 +804,7 @@ class FormInput
 				return call_user_func($this->valu, $this);
 
 			// Dates
-			
+
 			case 'date':
 				$this->labl = false;
 				return GetInputDate(array(
@@ -1163,10 +1162,10 @@ function GetInputDate($args)
 	$divAtrs = $args['atrs'];
 	unset($divAtrs['NAME'],$divAtrs['TYPE']);
 	$strout = '<div'.GetAttribs(@$divAtrs).'>';
-	$strout .= GetMonthSelect("{$args['atrs']['NAME']}[]", date('n', $args['ts']));
-	$strout .= '/ <input type="text" size="2" name="'.$args['atrs']['NAME'].'[]" value="'.
+	$strout .= GetMonthSelect(@$args['atrs']['NAME'].'[]', date('n', $args['ts']));
+	$strout .= '/ <input type="text" size="2" name="'.@$args['atrs']['NAME'].'[]" value="'.
 		date('d', $args['ts']).'" alt="Day" />'."\n";
-	$strout .= '/ <input type="text" size="4" name="'.$args['atrs']['NAME'].'[]" value="'.
+	$strout .= '/ <input type="text" size="4" name="'.@$args['atrs']['NAME'].'[]" value="'.
 		date('Y', $args['ts']).'" alt="Year" />'."\n";
 	$strout .= @$args['time'] ? GetInputTime($args['atrs']['NAME'].'[]', $args['ts']) : null;
 	return $strout.'</div>';
@@ -1199,15 +1198,15 @@ function GetInputTime($name, $timestamp)
  */
 function GetInputBoolean($parent, $attribs)
 {
-	$id = CleanID((isset($parent) ? $parent.'_' : null).$attribs['NAME']);
+	$id = CleanID((isset($parent) ? $parent.'_' : null).@$attribs['NAME']);
 	if (!isset($attribs['ID'])) $attribs['ID'] = $id;
 	if (!isset($attribs['VALUE'])) $attribs['VALUE'] = 0;
 	if (!isset($attribs['TEXTNO'])) $attribs['TEXTNO'] = 'No';
 	if (!isset($attribs['TEXTYES'])) $attribs['TEXTYES'] = 'Yes';
 	return '<label><input type="radio" id="'.$attribs['ID'].'"
-	name="'.$attribs['NAME'].'" value="0"'.
+	name="'.@$attribs['NAME'].'" value="0"'.
 	($attribs['VALUE'] ? null : ' checked="checked"').' /> '.$attribs['TEXTNO'].'</label> ' .
-	'<label><input type="radio" name="'.$attribs['NAME'].'" value="1"'.
+	'<label><input type="radio" name="'.@$attribs['NAME'].'" value="1"'.
 	($attribs['VALUE'] ? ' checked="checked"' : null).' /> '.$attribs['TEXTYES'].'</label>';
 }
 
@@ -1294,7 +1293,7 @@ class TreeNode
 		$this->GetIndex();
 		if (isset($this->parent)) $this->parent->Index();
 	}
-	
+
 	function GetIndex()
 	{
 		foreach ($this->children as $c)
@@ -1383,7 +1382,7 @@ class LoginManager
 		$uservar = $this->Name.'_sesuser';
 
 		$act = GetVar($this->Name.'_action');
-		
+
 		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
 			? $_SESSION[$uservar] : null;
 
@@ -1833,7 +1832,7 @@ function SOCallback($ds, $item, $icol, $col = null)
 		$res = $v->Find($item[$icol]);
 		if (isset($res)) return $res->text;
 	}
-	
+
 	varinfo($ds->FieldInputs[$col]);
 	return $item[$icol];
 }
