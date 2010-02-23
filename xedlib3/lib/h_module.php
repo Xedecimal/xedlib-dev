@@ -42,19 +42,22 @@ class Module
 		$t->ReWrite('block', array('Module', 'TagBlock'));
 
 		global $mods;
+
 		if (!empty($mods))
 		{
-			usort($mods, array('Module', 'cmp_mod'));
+			foreach (array_keys($_d['module.disable']) as $m) unset($mods[$m]);
+
+			uksort($mods, array('Module', 'cmp_mod'));
 			RunCallbacks(@$_d['index.cb.prelink']);
+
 			foreach ($mods as $n => $mod)
-				if (!isset($_d['module.disable'][$n])) $mod->PreLink();
+				$mod->PreLink();
 			foreach ($mods as $n => $mod)
-				if (!isset($_d['module.disable'][$n])) $mod->Link();
+				$mod->Link();
 			foreach ($mods as $n => $mod)
-				if (!isset($_d['module.disable'][$n])) $mod->Prepare();
+				$mod->Prepare();
 			foreach ($mods as $n => $mod)
 			{
-				if (isset($_d['module.disable'][$n])) continue;
 				if (array_key_exists($mod->Block, $_d['blocks']))
 					$_d['blocks'][$mod->Block] .= $mod->Get();
 				else

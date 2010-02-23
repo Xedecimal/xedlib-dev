@@ -1833,7 +1833,6 @@ function SOCallback($ds, $item, $icol, $col = null)
 		if (isset($res)) return $res->text;
 	}
 
-	varinfo($ds->FieldInputs[$col]);
 	return $item[$icol];
 }
 

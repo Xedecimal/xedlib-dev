@@ -1032,8 +1032,6 @@ function linkup($tree, $target, $text)
 
 	$ret = $text;
 	foreach ($reps as $word => $val) $ret = str_replace($word, $val, $ret);
-
-	//if (count($reps)) varinfo($ret);
 	return $ret;
 }
 
