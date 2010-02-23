@@ -1452,7 +1452,7 @@ class LoginManager
 		$f->AddInput(new FormInput($this->View->TextPassword, 'password', $this->Name.'_auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
 		$f->Template = file_get_contents($template);
-		return $f->Get('action="{{app_abs}}{{app_rel}}" method="post"');
+		return $f->Get('action="{{app_abs}}/{{app_rel}}" method="post"');
 	}
 
 	/**
