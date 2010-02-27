@@ -24,7 +24,7 @@ class Module
 		if (!empty($_d['module.enable']) && empty($_d['module.enable'][$name]))
 			return;
 
-		$GLOBALS['mods'][$name] = new $name(file_exists('settings.txt'));
+		$GLOBALS['mods'][$name] = new $name(file_exists('settings.ini'));
 	}
 
 	static function Run($template)
@@ -45,17 +45,16 @@ class Module
 
 		if (!empty($mods))
 		{
-			foreach (array_keys($_d['module.disable']) as $m) unset($mods[$m]);
+			if (!empty($_d['module.disable']))
+				foreach (array_keys($_d['module.disable']) as $m)
+					unset($mods[$m]);
 
 			uksort($mods, array('Module', 'cmp_mod'));
 			RunCallbacks(@$_d['index.cb.prelink']);
 
-			foreach ($mods as $n => $mod)
-				$mod->PreLink();
-			foreach ($mods as $n => $mod)
-				$mod->Link();
-			foreach ($mods as $n => $mod)
-				$mod->Prepare();
+			foreach ($mods as $n => $mod) $mod->PreLink();
+			foreach ($mods as $n => $mod) $mod->Link();
+			foreach ($mods as $n => $mod) $mod->Prepare();
 			foreach ($mods as $n => $mod)
 			{
 				if (array_key_exists($mod->Block, $_d['blocks']))
