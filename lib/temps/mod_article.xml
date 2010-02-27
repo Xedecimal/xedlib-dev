@@ -1,0 +1,6 @@
+<newsdetail>
+<div class="news_item">
+<h2 class="news_title">{{nws_title}}</h2>
+<p class="news_body">{{nws_body}}</p>
+</div>
+</newsdetail>

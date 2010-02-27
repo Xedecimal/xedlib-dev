@@ -1,0 +1,150 @@
+<!DOCTYPE null [
+	<!ENTITY raquo "&#187;">
+	<!ENTITY nbsp "&#160;">
+]>
+
+<null>
+
+<header>
+<!--[if lt IE 7.]>
+<script defer type="text/javascript" src="js/pngfix.js"></script>
+<![endif]-->
+
+<style type="text/css">
+.float
+{
+	text-align: center;
+	display: inline;
+	text-align: center;
+}
+
+.item
+{
+	padding: 5px;
+	display: table-cell;
+	display: inline-block;
+	width: {{file_thumb_width}}px;
+	vertical-align: top;
+}
+
+.gallery
+{
+	border-collapse: collapse;
+}
+
+.float img { border: 1px solid #000; }
+
+.shadow_tr
+{
+	width: 5px;
+	height: 10px;
+	background-image: url(lib/images/shad_tr.png);
+}
+
+.shadow_right
+{
+	width: 10px;
+	height: 10px;
+	background-image: url(lib/images/shad_r.png);
+	background-repeat: repeat-y;
+}
+
+.shadow_bottom
+{
+	height: 5px;
+	background-image: url(lib/images/shad_b.png);
+}
+
+.shadow_br
+{
+	height: 10px;
+	width: 10px;
+	background-image: url(lib/images/shad_br.png);
+	background-repeat: no-repeat;
+}
+
+td { padding: 0; }
+</style>
+
+<if check="{{disable_save}}">
+<script type="text/javascript">
+<!--
+var message = "Saving images is not allowed.";
+function click(e)
+{
+	if (document.all)
+	{
+		if (event.button == 2 || event.button == 3)
+		{
+			alert(message);
+			return false;
+		}
+	}
+	if (document.layers)
+	{
+		if (e.which == 3)
+		{
+			alert(message);
+			return false;
+		}
+	}
+}
+if (document.layers)
+{
+	document.captureEvents(Event.MOUSEDOWN);
+}
+document.onmousedown = click;
+// -->
+</script>
+</if>
+</header>
+
+<part type="IconContent"><img src="{{icon}}" /></part>
+
+<if check="!empty($this->vars['galcf'])">
+<a href="{{galme}}">View Main Gallery</a> &raquo; {{name}}
+</if>
+
+<table class="gallery">
+	<tr><td>
+		<folder>
+			<div class="float">
+			<span class="item">
+			<a href="{{url}}">
+			{{icon}}<br />
+			<span class="item_caption">{{name}}</span>
+			</a>
+			</span>
+			</div>
+		</folder>
+	</td></tr><tr><td>
+		<file>
+			<div class="float">
+			<span class="item">
+			<img src="{{icon}}" class="thumb" title="{{name}}" alt="{{fullname}}" />
+			<br/><span class="item_caption">{{name}}</span>
+			</span>
+			</div>
+		</file>
+	</td></tr>
+</table>
+
+<image>
+	{{butBack}}
+	<b>Picture {{current}} of {{total}}</b>
+	{{butForward}}
+
+	<div class="gallery_cell">
+	<table class="gallery_shadow">
+		<tr>
+			<td><img id="fullview" src="{{url}}" alt="{{caption}}" /></td>
+			<td class="gallery_shadow_right">&nbsp;&nbsp;</td>
+		</tr><tr>
+			<td class="gallery_shadow_bottom"></td>
+			<td class="gallery_shadow_bright"></td>
+		</tr>
+	</table></div>
+	<div class="gallery_caption">{{caption}}</div>
+</image>
+<page>{{prev}} Picture {{curnum}} of {{totnum}} {{next}}</page>
+</null>
