@@ -161,6 +161,10 @@ class Template extends LayeredOutput
 			foreach ($GLOBALS['_d']['template.rewrites'] as $tag => $rw)
 				$this->ReWrite($tag, $rw);
 
+		if (!empty($GLOBALS['_d']['template.transforms']))
+			foreach ($GLOBALS['_d']['template.transforms'] as $tag => $tf)
+				$this->Transform($tag, $tf);
+
 		$this->ReWrite('template', array(&$this, 'TagTemplate'));
 		$this->ReWrite('repeat', array(&$this, 'TagRepeat'));
 		$this->ReWrite('callback', array(&$this, 'TagCallback'));
