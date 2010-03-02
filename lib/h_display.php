@@ -915,7 +915,7 @@ class FormInput
 				return $newsels;
 			//Simple Checked...
 			case 'checkbox':
-				return $persist && $this->valu ? ' checked="checked"' : null;
+				return $persist && $this->atrs['VALUE'] ? ' checked="checked"' : null;
 			//May get a little more complicated if we don't know what it is...
 			default:
 				return stripslashes(htmlspecialchars($persist ? GetVars($this->atrs['NAME'], @$this->atrs['VALUE']) : @$this->atrs['VALUE']));
