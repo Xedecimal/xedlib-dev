@@ -915,7 +915,7 @@ class FormInput
 				return $newsels;
 			//Simple Checked...
 			case 'checkbox':
-				return $persist && $this->atrs['VALUE'] ? ' checked="checked"' : null;
+				return $persist && @$this->atrs['VALUE'] ? ' checked="checked"' : null;
 			//May get a little more complicated if we don't know what it is...
 			default:
 				return stripslashes(htmlspecialchars($persist ? GetVars($this->atrs['NAME'], @$this->atrs['VALUE']) : @$this->atrs['VALUE']));
@@ -1023,9 +1023,10 @@ class SelOption extends TreeNode
 		}
 	}
 
-	function Render()
+	function Render($selected = false)
 	{
-		if ($this->selected) $selected = ' selected="selected"';
+		if ($this->selected || $selected)
+			$selected = ' selected="selected"';
 		else $selected = '';
 		if (!empty($this->children))
 		{
@@ -1057,7 +1058,8 @@ function MakeSelect($atrs = null, $value = null, $selvalue = null)
 	if (is_array($atrs)) unset($atrs['VALUE']);
 
 	$ret = '<select'.GetAttribs($atrs).">\n";
-	foreach ($value as $id => $option) $ret .= $option->Render();
+	foreach ($value as $id => $option)
+		$ret .= $option->Render($id == $selvalue);
 	$ret .= "</select>\n";
 	return $ret;
 }
