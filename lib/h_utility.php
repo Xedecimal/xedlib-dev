@@ -669,7 +669,7 @@ function DataToArray($rows, $idcol)
 	return $ret;
 }
 
-function DataToTree($rows, $iCol, $pCol)
+function DataToTree($rows, $iCol, $pCol, $rootid = null)
 {
 	// Build Flats
 
@@ -680,14 +680,16 @@ function DataToTree($rows, $iCol, $pCol)
 
 	// Build Tree
 
-	$tnRoot = new TreeNode();
+	if (!isset($rootid)) $tnRoot = new TreeNode();
+	else $tnRoot = $flats[$rootid];
 
 	if (!empty($flats))
 	foreach ($flats as $tn)
 	{
 		if (isset($flats[$tn->data[$pCol]]))
 			$flats[$tn->data[$pCol]]->AddChild($tn);
-		else $tnRoot->AddChild($tn);
+		else
+			$tnRoot->AddChild($tn);
 	}
 
 	return $tnRoot;

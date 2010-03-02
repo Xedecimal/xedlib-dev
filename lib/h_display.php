@@ -1289,7 +1289,8 @@ class TreeNode
 	function Index()
 	{
 		$this->GetIndex();
-		if (isset($this->parent)) $this->parent->Index();
+		if (isset($this->parent) && $this->id != $this->parent->id)
+			$this->parent->Index();
 	}
 
 	function GetIndex()
@@ -1950,6 +1951,31 @@ function TagInputDisplay($t, $guts, $tag)
 		default:
 			echo "Unknown type: {$tag}<br/>\n";
 	}
+}
+
+//TODO: Replace Nav with Tree
+
+/**
+* put your comment there...
+*
+* @param TreeNode $root Root treenode item.
+* @param string $text VarParser capable text linked to treenode data items.
+*/
+function GetTree($root, $text)
+{
+	$vp = new VarParser();
+
+	$ret = '<ul><li>'.$vp->ParseVars($text, $root->data);
+	if (!empty($root->children))
+	{
+		foreach ($root->children as $c)
+		{
+			if ($c->id == $root->id) continue;
+			$ret .= GetTree($c, $text);
+		}
+	}
+	$ret .= "</li></ul>";
+	return $ret;
 }
 
 /**
