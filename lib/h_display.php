@@ -1451,13 +1451,13 @@ class LoginManager
 			$template = dirname(__FILE__).'/temps/login_manager.xml';
 
 		$f = new Form($this->Name, array(null, 'width="100%"'));
-		$f->AddHidden($this->Name.'_action', 'login');
 		if ($this->type != CONTROL_SIMPLE)
 			$f->AddInput(new FormInput($this->View->TextLogin, 'text', $this->Name.'_auth_user'));
 		$f->AddInput(new FormInput($this->View->TextPassword, 'password', $this->Name.'_auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
 		$f->Template = file_get_contents($template);
-		return $f->Get('action="{{app_abs}}/{{app_rel}}" method="post"');
+		$target = "{{app_abs}}/{$this->Name}/login";
+		return $f->Get('action="'.$target.'" method="post"');
 	}
 
 	/**
