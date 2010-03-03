@@ -1379,10 +1379,14 @@ class LoginManager
 	 */
 	function Prepare($conditions = null)
 	{
+		global $_d;
+
+		if ($_d['q'][0] != $this->Name) return;
+
 		$passvar = $this->Name.'_sespass';
 		$uservar = $this->Name.'_sesuser';
 
-		$act = GetVar($this->Name.'_action');
+		$act = $_d['q'][1];
 
 		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
 			? $_SESSION[$uservar] : null;
