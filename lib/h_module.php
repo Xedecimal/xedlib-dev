@@ -57,10 +57,10 @@ class Module
 			foreach ($mods as $n => $mod) $mod->Prepare();
 			foreach ($mods as $n => $mod)
 			{
-				if (array_key_exists($mod->Block, $_d['blocks']))
+				if (@array_key_exists($mod->Block, $_d['blocks']))
 					$_d['blocks'][$mod->Block] .= $mod->Get();
 				else
-					$_d['blocks']['default'] .= $mod->Get();
+					@$_d['blocks']['default'] .= $mod->Get();
 			}
 		}
 
