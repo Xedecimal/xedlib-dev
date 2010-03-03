@@ -293,7 +293,6 @@ function UnsetVar($name)
 		if (!empty($name))
 		foreach ($name as $var) UnsetVar($var);
 	}
-	if (session_is_registered($name)) session_unregister($name);
 	if (isset($_SESSION)) unset($_SESSION[$name]);
 	if (isset($HTTP_SESSION_VARS)) unset($HTTP_SESSION_VARS[$name]);
 }
