@@ -97,10 +97,11 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 		E_USER_NOTICE       => 'User Notice',
 	);
 	$ver = phpversion();
-	if ($ver[0] > 4) $errortype[E_STRICT] = 'Strict Error';
-	if ($ver[0] > 4 && $ver[2] > 1)
-	{
+	if ($ver[0] >= 5) $errortype[E_STRICT] = 'Strict Error';
+	if ($ver[0] >= 5 && $ver[2] >= 2)
 		$errortype[E_RECOVERABLE_ERROR] = 'Recoverable Error';
+	if ($ver[0] >= 5 && $ver[2] >= 3)
+	{
 		$errortype[E_DEPRECATED]        = 'Depricated';
 		$errortype[E_USER_DEPRECATED]   = 'User Depricated';
 	}

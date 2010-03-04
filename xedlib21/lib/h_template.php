@@ -151,6 +151,7 @@ class Template extends LayeredOutput
 		$this->vars['relpath'] = GetRelativePath(dirname(__FILE__));
 
 		$this->ReWrite('template', array(&$this, 'TagTemplate'));
+		$this->ReWrite('processvars', array(&$this, 'TagProcessVars'));
 		parent::LayeredOutput();
 	}
 
@@ -168,6 +169,14 @@ class Template extends LayeredOutput
 		{
 			return $t->ParseFile($a['FILE']);
 		}
+	}
+
+	function TagProcessVars($t, $g, $a)
+	{
+		$in = $GLOBALS[$a['VALUE']];
+		$vp = new VarParser();
+		$vp->Bleed = true;
+		return $vp->ParseVars($in, null);
 	}
 
 	/**
