@@ -73,8 +73,8 @@ class Module
 	{
 		global $_d;
 
-		return @$_d['module.order'][get_class($x)] <
-			@$_d['module.order'][get_class($y)];
+		return @$_d['module.order'][$x] >
+			@$_d['module.order'][$y];
 	}
 
 	static function TagPrepBlock($t, $g, $a)
