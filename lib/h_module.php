@@ -16,10 +16,18 @@ class Module
 		closedir($dp);
 	}
 
-	static function RegisterModule($name)
+	/**
+	* put your comment there...
+	*
+	* @param string $name Class name of defined module class.
+	* @param array $deps Depended modules eg. array('ModName', 'ModName2')
+	*/
+	static function RegisterModule($name, $deps = null)
 	{
 		global $_d;
 		if (!empty($_d['module.disable'][$name])) return;
+		if (!empty($deps))
+		foreach ($deps as $dep) if (!empty($_d['module.disable'][$dep])) return;
 
 		if (!empty($_d['module.enable']) && empty($_d['module.enable'][$name]))
 			return;

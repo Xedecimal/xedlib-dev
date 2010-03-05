@@ -1102,9 +1102,9 @@ function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 {
 	$ret = null;
 	if (isset($none)) $ret[0] = new SelOption($none, false, $default == 0);
-	if (!empty($result)) foreach ($result as $res)
+	foreach ($result as $res)
 	{
-		$ret[$res[$col_id]] = new SelOption($res[$col_disp], false,
+		$ret[$res[$col_id]] = new SelOption($res[$col_disp],
 			strcmp($default, $res[$col_id]) == 0);
 	}
 	return $ret;
@@ -1904,7 +1904,8 @@ function GetAttribs($attribs)
 {
 	$ret = '';
 	if (is_array($attribs))
-	foreach ($attribs as $n => $v) $ret .= ' '.strtolower($n).'="'.htmlspecialchars($v).'"';
+	foreach ($attribs as $n => $v)
+		$ret .= ' '.strtolower($n).'="'.htmlspecialchars($v).'"';
 	else return ' '.$attribs;
 	return $ret;
 }
