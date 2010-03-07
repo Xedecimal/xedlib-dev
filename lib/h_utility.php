@@ -335,7 +335,9 @@ function Persist($name, $value)
  */
 function URL($url, $uri = null)
 {
-	$ret = str_replace(' ', '%20', $url);
+	// This will probably wreak havoc, try and see how well we can use it.
+	$ret = urlencode($url);
+	//$ret = str_replace(' ', '%20', $url);
 
 	global $PERSISTS;
 	$nuri = array();
@@ -373,8 +375,8 @@ function URLParse($key, $val, $start = false)
 			$ret .= URLParse($key.'['.$akey.']', $aval, $start);
 	else
 	{
-		$nval = str_replace(' ', '%20', $val);
-		$ret .= ($start ? '?' : '&amp;')."{$key}={$nval}";
+		//$nval = str_replace(' ', '%20', $val);
+		$ret .= ($start ? '?' : '&amp;').$key.'='.urlencode($val);
 	}
 	return $ret;
 }
@@ -1316,7 +1318,7 @@ function Comb($path, $exclude = null, $flags = 3)
 		while ($f = readdir($dp))
 		{
 			if ($f[0] == '.') continue;
-			$ret = array_merge($ret, Comb(realpath($path.'/'.$f), $exclude, $flags));
+			$ret = array_merge($ret, Comb($path.$f, $exclude, $flags));
 		}
 
 		return $ret;

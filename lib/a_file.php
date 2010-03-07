@@ -215,7 +215,7 @@ class FileManager
 		{
 			if (!$this->Behavior->AllowEdit) return;
 			$info = new FileInfo($this->Root.$this->cf, $this->filters);
-			$newinfo = GetPost($this->Name.'_info');
+			$newinfo = GetPost('info');
 			$f = FileInfo::GetFilter($info, $this->Root, $this->filters);
 			$f->Updated($this, $info, $newinfo);
 			$this->Behavior->Update($newinfo);
@@ -332,7 +332,7 @@ class FileManager
 			{
 				$fi = new FileInfo($file, $this->filters);
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
-				$f->Rename($fi, $ct.$fi->filename);
+				$f->Rename($fi, "$ct/{$fi->filename}");
 
 				if (!empty($this->Behavior->Watchers))
 					RunCallbacks($this->Behavior->Watchers, FM_ACTION_MOVE,
@@ -599,9 +599,9 @@ class FileManager
 				$this->vars['url'] = URL($this->Behavior->Target,
 					array($this->Name.'_cf' => $this->cf.$f->filename));
 			else
-				$this->vars['url'] = $this->Root."{$this->cf}{$f->filename}";
-			$this->vars['filename'] = $f->filename;
-			$this->vars['fipath'] = $f->path;
+				$this->vars['url'] = htmlspecialchars($this->Root.$this->cf.$f->filename);
+			$this->vars['filename'] = htmlspecialchars($f->filename);
+			$this->vars['fipath'] = htmlspecialchars($f->path);
 			$this->vars['type'] = 'files';
 			$this->vars['index'] = $ix;
 			if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
@@ -760,7 +760,7 @@ class FileManager
 			}
 			if ($this->Behavior->UpdateButton)
 			{
-				$sub = new FormInput(null, 'submit', 'action', 'Save');
+				$sub = new FormInput(null, 'submit', $this->Name.'_action', 'Save');
 				$this->vars['text'] = '';
 				$this->vars['field'] = $sub->Get($this->Name, false);
 				$ret .= $vp->ParseVars($guts, $this->vars);
@@ -1719,7 +1719,7 @@ class FilterGallery extends FilterDefault
 		$dir = $fi->dir;
 		$abs = "{$dir}/t_{$fi->filename}";
 		$rel = "{$fi->dir}/t_{$fi->filename}";
-		if (file_exists($rel)) $fi->icon = $abs;
+		if (file_exists($rel)) $fi->icon = htmlspecialchars($abs);
 
 		if (is_dir($fi->path))
 		{
@@ -1787,7 +1787,7 @@ class FilterGallery extends FilterDefault
 
 			if (is_dir($fi->path.'/'.$file))
 			{
-				$g = glob("$fir->path/._image.*");
+				$g = glob("{$fir->path}/._image.*");
 				if (!empty($g))
 					$this->ResizeFile($g[0], $fir->path.'/.'.
 						filenoext('t'.substr(basename($g[0]), 1)),
@@ -1823,7 +1823,7 @@ class FilterGallery extends FilterDefault
 			foreach ($fm->files['files'] as $fiImg)
 			{
 				if (substr($fiImg->filename, 0, 2) == 't_') continue;
-				$selImages[$fiImg->filename] = new SelOption($fiImg->filename);
+				$selImages[htmlspecialchars($fiImg->filename)] = new SelOption($fiImg->filename);
 			}
 
 			$new[] = new FormInput('Thumbnail Width', 'text',
