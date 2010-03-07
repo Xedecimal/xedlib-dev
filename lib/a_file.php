@@ -61,13 +61,6 @@ class FileManager
 	private $filters;
 
 	/**
-	 * Icons and their associated filetypes, overridden with FilterGallery.
-	 *
-	 * @var array
-	 */
-	public $icons;
-
-	/**
 	 * Current File
 	 *
 	 * @var string
@@ -137,19 +130,6 @@ class FileManager
 			$this->cf .= '/';
 
 		$rp = GetRelativePath(dirname(__FILE__));
-
-		$this->icons = array(
-			'folder' => p('images/icons/folder.png'),
-			'png' => p('images/icons/image.png'),
-			'jpg' => p('/images/icons/image.png'),
-			'jpeg' => p('/images/icons/image.png'),
-			'gif' => p('/images/icons/image.png'),
-			'pdf' => p('/images/icons/acrobat.png'),
-			'sql' => p('/images/icons/db.png'),
-			'xls' => p('/images/icons/excel.png'),
-			'doc' => p('/images/icons/word.png'),
-			'docx' => p('/images/icons/word.png')
-		);
 	}
 
 	/**
@@ -407,12 +387,24 @@ class FileManager
 		if (is_dir($this->Root.$this->cf)) $this->files = $this->GetDirectory();
 	}
 
-	function GetIcon($f)
+	static function GetIcon($f)
 	{
+		$icons = array(
+			'folder' => p('images/icons/folder.png'),
+			'png' => p('images/icons/image.png'),
+			'jpg' => p('/images/icons/image.png'),
+			'jpeg' => p('/images/icons/image.png'),
+			'gif' => p('/images/icons/image.png'),
+			'pdf' => p('/images/icons/acrobat.png'),
+			'sql' => p('/images/icons/db.png'),
+			'xls' => p('/images/icons/excel.png'),
+			'doc' => p('/images/icons/word.png'),
+			'docx' => p('/images/icons/word.png')
+		);
 		if (!empty($f->vars['icon']))
 			return $f->vars['icon'];
-		else if (isset($this->icons[$f->type]))
-			return $this->icons[$f->type];
+		else if (isset($icons[$f->type]))
+			return $icons[$f->type];
 		else return null;
 	}
 
@@ -1094,23 +1086,21 @@ EOF;
 	 */
 	static function TagBreadcrumb($t, $g, $a)
 	{
-		//root, $path, $arg = 'cf', $sep = '/', $rootname = 'Home'
 		$path = GetVar($a['SOURCE']);
 		if (empty($path)) return null;
 
 		$items = explode('/', $path);
+
 		$ret = null;
 		$cpath = '';
 
-		$ret .= "<a href=\"?\">{$a['ROOT']}</a> {$a['SEP']} ";
-
-		for ($ix = 0; $ix < count($items); $ix++)
+		foreach ($items as $ix => $i)
 		{
-			if (strlen($items[$ix]) < 1) continue;
-			$cpath = (strlen($cpath) > 0 ? '/'.$cpath : '/').$items[$ix];
+			if ($ix > 0) { $ret .= $a['SEP']; $text = $i; }
+			else $text = $a['ROOT'];
+			$cpath .= ($ix > 0 ? '/' : null).$i;
 			$uri = URL('', array($a['SOURCE'] => $cpath));
-			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
-			if ($ix < count($items)-1) $ret .= " $sep \n";
+			$ret .= "<a href=\"{$uri}\">{$text}</a>";
 		}
 		return $ret;
 	}
@@ -1749,7 +1739,8 @@ class FilterGallery extends FilterDefault
 		if (is_dir($fi->path))
 		{
 			$fs = glob($fi->path.'/.t_image.*');
-			if (!empty($fs)) $fi->icon = $_d['site_root'].$fs[0];
+			if (!empty($fs)) $fi->vars['icon'] = $fs[0];
+			else $fi->vars['icon'] = FileManager::GetIcon($fi);
 		}
 		return $fi;
 	}
@@ -1759,21 +1750,26 @@ class FilterGallery extends FilterDefault
 	 */
 	function Updated(&$fm, &$fi, &$newinfo)
 	{
+		$img = GetVar('image');
 		$upimg = GetVar('upimage');
-		$img = GetVar($fm->Name.'_image');
 
+		// Uploaded folder image
 		if (!empty($upimg['name']))
 		{
 			mkdir("timg");
 			move_uploaded_file($upimg['tmp_name'], 'timg/'.$upimg['name']);
 			$newimg = 'timg/'.$upimg['name'];
 		}
+		// No folder image.
 		else if ($img == 1)
 		{
 			$files = glob("{$fi->path}.t_image.*");
 			foreach ($files as $f) unlink($f);
 		}
+		// Selected folder image.
 		else if (!empty($img)) $newimg = $fi->path.$img;
+
+		// Uploaded folder image.
 		if (!empty($newimg))
 		{
 			$this->ResizeFile($newimg,

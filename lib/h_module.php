@@ -93,6 +93,7 @@ class Module
 		$tprep->ParseFile($template);
 
 		$t = new Template($_d);
+		$t->ReWrite('head', array($t, 'TagAddHead'));
 		$t->ReWrite('block', array('Module', 'TagBlock'));
 
 		global $mods;

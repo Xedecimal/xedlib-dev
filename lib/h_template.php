@@ -687,17 +687,6 @@ class Template extends LayeredOutput
 	}
 
 	/**
-	 * Header tag to combine all head tags into the topmost tag.
-	 *
-	 * @param Template $t Associated Template.
-	 * @param string $guts Contents of the associated tag.
-	 */
-	function TagAddHead($t, $guts)
-	{
-		$this->heads .= $guts;
-	}
-
-	/**
 	 * Processes possible php code in a template.
 	 *
 	 * @param string $str String to process php code in.

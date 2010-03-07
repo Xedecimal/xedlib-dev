@@ -1,10 +1,7 @@
 <div id="gallery">
-<head>
 <link type="text/css" rel="stylesheet" href="temps/gallery.css" />
-</head>
 
-<p><breadcrumb source="galcf" sep="&raquo;" root="Gallery" /></p>
-<!-- <a href="{{galme}}">Gallery</a> &raquo; {{name}} -->
+<p><breadcrumb source="galcf" sep=" &raquo; " root="Gallery" /></p>
 
 <folder>
 <div class="folder">
@@ -13,12 +10,16 @@
 </div> <!-- folder -->
 </folder>
 
+<div class="clear"></div>
+
 <file>
 <div class="file">
 <img src="{{icon}}" class="thumb" title="{{name}}" alt="{{fullname}}" />
 <div class="caption">{{name}}</div>
 </div> <!-- file -->
 </file>
+
+<div class="clear"></div>
 
 <image>
 	{{butBack}}

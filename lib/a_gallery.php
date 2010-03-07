@@ -75,11 +75,8 @@ class Gallery
 			$d['url'] = URL($me, $du);
 
 			$d['name'] = $file;
-			$d['icon'] = $fi->icon;
+			$d['icon'] = $fi->vars['icon'];
 			$d['editor'] = GetVar('editor');
-			if (!empty($d['icon']))
-				$d['icon'] = $vp->ParseVars($this->IconContent, $d);
-			else $d['icon'] = '';
 
 			$out .= $vp->ParseVars($guts, $d);
 		}
