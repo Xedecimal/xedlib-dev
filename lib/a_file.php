@@ -1236,9 +1236,9 @@ class FileManagerBehavior
 	public $AllowMove = false;
 
 	public $AllowCopy = false;
-	
+
 	public $AllowLink = false;
-	
+
 	/**
 	 * Allow downloading all packaged files as a zip file.
 	 *
@@ -1716,7 +1716,7 @@ class FilterGallery extends FilterDefault
 
 		global $_d;
 
-		$dir = $_d['site_root'].$fi->dir;
+		$dir = $fi->dir;
 		$abs = "{$dir}/t_{$fi->filename}";
 		$rel = "{$fi->dir}/t_{$fi->filename}";
 		if (file_exists($rel)) $fi->icon = $abs;

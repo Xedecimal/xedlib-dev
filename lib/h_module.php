@@ -1,9 +1,36 @@
 <?php
 
+function p($path)
+{
+	global $_d;
+	$abs = $_d['app_abs'];
+	$tmp = @$_d['settings']['site_template'];
+
+	// Overloaded Path
+	$opath = "$tmp/$path";
+	if (file_exists($opath)) return "$abs/$opath";
+	// Module Path
+	$modpath = "modules/{$path}";
+	if (file_exists($modpath)) return "$abs/modules/$path";
+	if (substr($path, 0, strlen($abs)) == $abs) return $path;
+	return "$abs/$path";
+}
+
+function l($path)
+{
+	global $_d;
+
+	$ovrpath = @$_d['settings']['site_template'].'/'.$path;
+	if (file_exists($ovrpath)) return "{$_d['app_dir']}/{$ovrpath}";
+	$modpath = "{$_d['app_dir']}/modules/{$path}";
+	if (file_exists($modpath)) return "{$_d['app_dir']}/modules/{$path}";
+}
+
 class Module
 {
-	static function Initialize()
+	static function Initialize($rewrite = false)
 	{
+		if (!file_exists('modules')) return;
 		$dp = opendir('modules');
 		while ($f = readdir($dp))
 		{
@@ -14,6 +41,15 @@ class Module
 			else if (fileext($p) == 'php') require_once($p);
 		}
 		closedir($dp);
+		if ($rewrite)
+		{
+			global $_d;
+
+			$_d['template.transforms']['link'] = array('Module', 'TransHref');
+			$_d['template.transforms']['a'] = array('Module', 'TransHref');
+			$_d['template.transforms']['img'] = array('Module', 'TransSrc');
+			$_d['template.transforms']['script'] = array('Module', 'TransSrc');
+		}
 	}
 
 	/**
@@ -185,6 +221,18 @@ class Module
 	 * the user.
 	 */
 	function InstallFields(&$frm) { }
+
+	static function TransHref($a)
+	{
+		if (isset($a['HREF'])) $a['HREF'] = p($a['HREF']);
+		return $a;
+	}
+
+	static function TransSrc($a)
+	{
+		if (isset($a['SRC'])) $a['SRC'] = p($a['SRC']);
+		return $a;
+	}
 }
 
 ?>
