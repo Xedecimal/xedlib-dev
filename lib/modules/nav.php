@@ -6,9 +6,16 @@ class ModNav extends Module
 {
 	public $Block = 'nav';
 
+	function __construct()
+	{
+		global $_d;
+
+		$_d['nav.links'] = new TreeNode();
+	}
+
 	/**
 	* put your comment there...
-	* 
+	*
 	* @param TreeNode $link
 	* @param int $depth
 	*/

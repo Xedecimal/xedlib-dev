@@ -2,8 +2,13 @@
 
 function p($path)
 {
+	// Only translate finished paths.
+	if (preg_match('/{/', $path)) return $path;
+
 	global $_d;
 	$abs = $_d['app_abs'];
+	if (substr($path, 0, strlen($abs)) == $abs) return $path;
+
 	$tmp = @$_d['settings']['site_template'];
 
 	// Overloaded Path
@@ -12,7 +17,9 @@ function p($path)
 	// Module Path
 	$modpath = "modules/{$path}";
 	if (file_exists($modpath)) return "$abs/modules/$path";
-	if (substr($path, 0, strlen($abs)) == $abs) return $path;
+	// Xedlib Path
+	$xedpath = __DIR__.'/'.$path;
+	if (file_exists($xedpath)) return GetRelativePath(__DIR__).'/'.$path;
 	return "$abs/$path";
 }
 
@@ -24,6 +31,9 @@ function l($path)
 	if (file_exists($ovrpath)) return "{$_d['app_dir']}/{$ovrpath}";
 	$modpath = "{$_d['app_dir']}/modules/{$path}";
 	if (file_exists($modpath)) return "{$_d['app_dir']}/modules/{$path}";
+	$xedpath = __DIR__.'/'.$path;
+	if (file_exists($xedpath)) return $xedpath;
+	return $path;
 }
 
 class Module

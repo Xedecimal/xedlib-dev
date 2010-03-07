@@ -36,8 +36,8 @@ function HandleErrors($file = null)
 	if (!empty($file)) $GLOBALS['__err_file'] = $file;
 	else ini_set('display_errors', 1);
 	$ver = phpversion();
-	if ($ver[0] == '5') ini_set('error_reporting', E_ALL | E_STRICT);
-	else ini_set('error_reporting', E_ALL);
+	//if ($ver[0] == '5') ini_set('error_reporting', E_ALL | E_STRICT);
+	//else ini_set('error_reporting', E_ALL);
 	ini_set('error_log', 'errors_php.txt');
 	set_error_handler("ErrorHandler");
 }

@@ -139,16 +139,16 @@ class FileManager
 		$rp = GetRelativePath(dirname(__FILE__));
 
 		$this->icons = array(
-			'folder' => $rp.'/images/icons/folder.png',
-			'png' => $rp.'/images/icons/image.png',
-			'jpg' => $rp.'/images/icons/image.png',
-			'jpeg' => $rp.'/images/icons/image.png',
-			'gif' => $rp.'/images/icons/image.png',
-			'pdf' => $rp.'/images/icons/acrobat.png',
-			'sql' => $rp.'/images/icons/db.png',
-			'xls' => $rp.'/images/icons/excel.png',
-			'doc' => $rp.'/images/icons/word.png',
-			'docx' => $rp.'/images/icons/word.png'
+			'folder' => p('images/icons/folder.png'),
+			'png' => p('images/icons/image.png'),
+			'jpg' => p('/images/icons/image.png'),
+			'jpeg' => p('/images/icons/image.png'),
+			'gif' => p('/images/icons/image.png'),
+			'pdf' => p('/images/icons/acrobat.png'),
+			'sql' => p('/images/icons/db.png'),
+			'xls' => p('/images/icons/excel.png'),
+			'doc' => p('/images/icons/word.png'),
+			'docx' => p('/images/icons/word.png')
 		);
 	}
 
@@ -407,6 +407,15 @@ class FileManager
 		if (is_dir($this->Root.$this->cf)) $this->files = $this->GetDirectory();
 	}
 
+	function GetIcon($f)
+	{
+		if (!empty($f->vars['icon']))
+			return $f->vars['icon'];
+		else if (isset($this->icons[$f->type]))
+			return $this->icons[$f->type];
+		else return null;
+	}
+
 	function TagPart($t, $guts, $attribs)
 	{
 		$this->vars[$attribs['TYPE']] = $guts;
@@ -518,14 +527,15 @@ class FileManager
 					array($this->Name.'_cf' =>
 					"{$this->cf}{$f->filename}"));
 
-			$this->curfile = $f;
+			//$this->curfile = $f;
 			$this->vars['caption'] = $this->View->GetCaption($f);
 			$this->vars['filename'] = $f->filename;
 			$this->vars['fipath'] = $f->path;
 			$this->vars['type'] = 'folders';
 			$this->vars['index'] = $ix;
-			if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
-			else $this->vars['icon'] = '';
+			$this->vars['icon'] = $this->GetIcon($f);
+			//if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
+			//else $this->vars['icon'] = '';
 
 			$common = "?cf={$this->cf}&amp;editor={$this->Name}&amp;type=folders";
 
@@ -553,7 +563,6 @@ class FileManager
 			else $this->vars['butdown'] = '';
 
 			$tfile = new Template($this->vars);
-			$tfile->ReWrite('icon', array(&$this, 'TagIcon'));
 			$ret .= $tfile->GetString($g);
 
 			$ix++;
@@ -635,28 +644,12 @@ class FileManager
 			else $this->vars['butdown'] = '';
 
 			$tfile = new Template($this->vars);
-			$tfile->ReWrite('icon', array(&$this, 'TagIcon'));
 			$tfile->ReWrite('quickcap', array(&$this, 'TagQuickCap'));
 			$ret .= $tfile->GetString($g);
 
 			$ix++;
 		}
 		return $ret;
-	}
-
-	function TagIcon($t, $g, $a)
-	{
-		$file = $this->curfile;
-
-		if (!empty($this->vars['icon'])) return $g;
-		else if (isset($this->icons[$file->type]))
-		{
-			$this->vars['icon'] = $this->icons[$file->type];
-		}
-		else return null;
-
-		$vp = new VarParser();
-		return $vp->ParseVars($g, $this->vars);
 	}
 
 	function TagQuickCap($t, $guts)
@@ -1088,6 +1081,38 @@ EOF;
 				return true;
 
 		return false;
+	}
+
+	/**
+	 * Gets a breadcrumb like path.
+	 * @param string $root Root location of this path.
+	 * @param string $path Current path we are recursing.
+	 * @param string $arg Name of url argument to attach path to.
+	 * @param string $sep Separation of folders use this character.
+	 * @param string $rootname Name of the top level folder.
+	 * @return string Rendered breadcrumb trail.
+	 */
+	static function TagBreadcrumb($t, $g, $a)
+	{
+		//root, $path, $arg = 'cf', $sep = '/', $rootname = 'Home'
+		$path = GetVar($a['SOURCE']);
+		if (empty($path)) return null;
+
+		$items = explode('/', $path);
+		$ret = null;
+		$cpath = '';
+
+		$ret .= "<a href=\"?\">{$a['ROOT']}</a> {$a['SEP']} ";
+
+		for ($ix = 0; $ix < count($items); $ix++)
+		{
+			if (strlen($items[$ix]) < 1) continue;
+			$cpath = (strlen($cpath) > 0 ? '/'.$cpath : '/').$items[$ix];
+			$uri = URL('', array($a['SOURCE'] => $cpath));
+			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
+			if ($ix < count($items)-1) $ret .= " $sep \n";
+		}
+		return $ret;
 	}
 }
 

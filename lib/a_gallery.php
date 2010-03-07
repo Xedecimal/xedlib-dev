@@ -47,38 +47,6 @@ class Gallery
 		$this->root = $root;
 	}
 
-	/**
-	 * Gets a breadcrumb like path.
-	 * @param string $root Root location of this path.
-	 * @param string $path Current path we are recursing.
-	 * @param string $arg Name of url argument to attach path to.
-	 * @param string $sep Separation of folders use this character.
-	 * @param string $rootname Name of the top level folder.
-	 * @return string Rendered breadcrumb trail.
-	 */
-	function GetPath($root, $path, $arg = 'cf', $sep = '/', $rootname = 'Home')
-	{
-		if ($path == $root) return null;
-		global $me;
-
-		$items = explode('/', substr($path, strlen($root)));
-		$ret = null;
-		$cpath = '';
-
-		$ret .= '<a href="'.URL($me)."\">$rootname</a> $sep ";
-
-		for ($ix = 0; $ix < count($items); $ix++)
-		{
-			if (strlen($items[$ix]) < 1) continue;
-			$cpath = (strlen($cpath) > 0 ? $cpath.'/' : null).$items[$ix];
-			$uri = URL($me, array('editor' => $this->name,
-				$arg => $root.'/'.$cpath));
-			$ret .= "<a href=\"{$uri}\">{$items[$ix]}</a>";
-			if ($ix < count($items)-1) $ret .= " $sep \n";
-		}
-		return $ret;
-	}
-
 	function TagHeader($t, $guts)
 	{
 		global $page_head;
@@ -87,7 +55,7 @@ class Gallery
 
 	function TagFolder($t, $guts)
 	{
-		global $me;
+		$me = GetVar('q');
 
 		$out = '';
 		$vp = new VarParser();
@@ -214,13 +182,14 @@ EOF;
 	 * @param string $path Current location, usually GetVar('galcf')
 	 * @return string Rendered gallery.
 	 */
-	function Get($path, $temp = null)
+	function Get()
 	{
 		global $me;
 		$this->f = new FilterGallery();
 
 		require_once('h_template.php');
 
+		$path = GetVar('galcf');
 		$fm = new FileManager('gallery', $this->root.$path, array('Gallery'), 'Gallery');
 		$fm->Behavior->ShowAllFiles = true;
 		$fm->View->Sort = $this->Display->Sort;
@@ -228,6 +197,7 @@ EOF;
 
 		$t = new Template();
 		$this->path = $path;
+		$t->ReWrite('breadcrumb', array('FileManager', 'TagBreadcrumb'));
 		$t->ReWrite('header', array(&$this, 'TagHeader'));
 		$t->ReWrite('folder', array(&$this, 'TagFolder'));
 		$t->ReWrite('file', array(&$this, 'TagFile'));
@@ -299,8 +269,7 @@ EOF;
 		if ($path != $this->root) $t->Set('name', $this->GetCaption($fi));
 		else $t->Set('name', '');
 
-		if ($temp == null) return $t->ParseFile(dirname(__FILE__).'/temps/gallery.xml');
-		else return $t->ParseFile($temp);
+		return $t->ParseFile(l('temps/gallery.xml'));
 	}
 
 	/**

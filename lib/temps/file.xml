@@ -3,7 +3,7 @@
 <script type="text/javascript">
 var fn_name = '{{fn_name}}';
 </script>
-<script type="text/javascript" src="xedlib/temps/file.js"></script>
+<script type="text/javascript" src="temps/file.js"></script>
 
 <header>
 <box title="Current Path Location" id="{{fn_name}}_path">
@@ -36,7 +36,7 @@ var fn_name = '{{fn_name}}';
 				<a href="#" onclick="$('#{{fn_name}}_search').toggle('slow'); return false;">Search</a>
 			</td><td>
 				<img id="img{{fn_name}}_search"
-					src="{{relpath}}/images/down.png" alt="Visibility" />
+					src="images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
 				<div id="{{fn_name}}_search" style="display: none">
 				<table>
@@ -50,7 +50,7 @@ var fn_name = '{{fn_name}}';
 			<!-- Upload File -->
 			<behavior type="AllowUpload">
 			<a href="#" id="a_toggle_upload">Send Files</a>
-				<img id="img{{fn_name}}_upload" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_upload" src="images/down.png" alt="Visibility" />
 				<div id="{{fn_name}}_upload" style="display: none">
 					<applet codebase="{{relpath}}/java/" code="uploadApplet.class"
 						archive="UploadApplet.jar,commons-codec-1.3.jar,commons-httpclient-3.0.1.jar,commons-logging-1.0.4.jar"
@@ -66,7 +66,7 @@ var fn_name = '{{fn_name}}';
 			<!-- Create Folder -->
 			<behavior type="AllowCreateDir">
 				<a href="#" id="a_toggle_create">{{TextCreateFolder}}</a>
-				<img id="img{{fn_name}}_create" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_create" src="images/down.png" alt="Visibility" />
 				<div id="{{fn_name}}_create" style="display: none">
 					<input type="text" name="{{fn_name}}_cname" />
 					<input type="submit" name="{{fn_name}}_action" value="Create" /><br/>
@@ -76,7 +76,7 @@ var fn_name = '{{fn_name}}';
 			<!-- Rename File / Folder -->
 			<behavior type="AllowRename">
 				<a href="#" id="a_toggle_rename">Rename this file or folder</a>
-				<img id="img{{fn_name}}_rename" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_rename" src="images/down.png" alt="Visibility" />
 				<div id="{{fn_name}}_rename" style="display: none">
 				<input type="text" name="{{fn_name}}_rname" value="{{filename}}" />
 				<input type="submit" name="{{fn_name}}_action" value="Rename" /><br/>
@@ -86,7 +86,7 @@ var fn_name = '{{fn_name}}';
 			<!-- Additional Settings -->
 			<behavior type="AllowEdit">
 				<a href="#" id="a_toggle_edit">Additional Settings</a>
-				<img id="img{{fn_name}}_edit" src="{{relpath}}/images/down.png" alt="Visibility" />
+				<img id="img{{fn_name}}_edit" src="images/down.png" alt="Visibility" />
 				<div id="{{fn_name}}_edit" style="display: none">
 				<addopts>
 					<tr><td>{{text}}</td><td>{{field}}</td></tr>
@@ -97,7 +97,6 @@ var fn_name = '{{fn_name}}';
 </options>
 
 <directory>
-	<!-- <td valign="top"> -->
 		<folders>
 		<box title="Folders">
 			<table>
@@ -108,7 +107,7 @@ var fn_name = '{{fn_name}}';
 				</tr></check>
 				<folder>
 					<tr>
-					<td align="right"><icon><img src="{{icon}}" alt="icon" /></icon></td>
+					<td align="right"><img src="{{icon}}" alt="icon" /></td>
 					<check>
 						<td>
 							<input type="checkbox" class="check_folder"
@@ -124,7 +123,6 @@ var fn_name = '{{fn_name}}';
 			</table>
 		</box>
 		</folders>
-	<!-- </td><td valign="top"> -->
 		<files>
 		<box title="Files">
 			<table>
@@ -156,7 +154,6 @@ var fn_name = '{{fn_name}}';
 			</QuickCapButton>
 		</box>
 		</files>
-	<!-- </td> -->
 </directory>
 
 <details>
