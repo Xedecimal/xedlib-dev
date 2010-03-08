@@ -9,7 +9,7 @@ class ModUser extends Module
 		if (@$GLOBALS['_d']['cl']['usr_access'] >= $level) return true;
 		return false;
 	}
-	
+
 	static function GetAccess()
 	{
 		return @$GLOBALS['_d']['cl']['usr_access'];
@@ -22,9 +22,7 @@ class ModUser extends Module
 		require_once(dirname(__FILE__).'/../h_data.php');
 
 		if (!empty($_d['db']))
-		{
 			$_d['user.ds'] = new DataSet($_d['db'], 'user', 'usr_id');
-		}
 		$_d['template.rewrites']['access'] = array('ModUser', 'TagAccess');
 	}
 
@@ -56,8 +54,6 @@ class ModUser extends Module
 			$p = array_pop($q);
 			if (array_search($p, $_d['user.pages']) === false) return;
 		}
-
-		if (ModUser::RequireAccess(1)) return;
 
 		if (!empty($_d['user.ds']) && @$_d['user.login'])
 		{
@@ -134,7 +130,7 @@ class ModUserAdmin extends Module
 	}
 }
 
-if ($GLOBALS['_d']['q'][0] == 'user')
+if (@$_d['q'][0] == 'user')
 	Module::RegisterModule('ModUserAdmin');
 
 ?>

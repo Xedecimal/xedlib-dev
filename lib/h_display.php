@@ -717,7 +717,7 @@ class FormInput
 	 */
 	function Get($parent = null, $persist = true)
 	{
-		if (!isset($this->atrs['ID']))
+		if (!empty($this->atrs['ID']))
 			$this->atrs['ID'] = $this->GetCleanID($parent);
 
 		if ($this->atrs['TYPE'] == 'spamblock')
