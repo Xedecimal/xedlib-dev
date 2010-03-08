@@ -20,7 +20,7 @@ function p($path)
 	// Xedlib Path
 	$xedpath = __DIR__.'/'.$path;
 	if (file_exists($xedpath)) return GetRelativePath(__DIR__).'/'.$path;
-	return "$abs/$path";
+	return $path;
 }
 
 function l($path)
@@ -38,7 +38,7 @@ function l($path)
 
 class Module
 {
-	static function Initialize($rewrite = false)
+	static function Initialize($repath = false)
 	{
 		if (!file_exists('modules')) return;
 		$dp = opendir('modules');
@@ -51,7 +51,7 @@ class Module
 			else if (fileext($p) == 'php') require_once($p);
 		}
 		closedir($dp);
-		if ($rewrite)
+		if ($repath)
 		{
 			global $_d;
 
