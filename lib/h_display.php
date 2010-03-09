@@ -629,7 +629,7 @@ class FormInput
 	 *
 	 * @var string
 	 */
-	private $atrs;
+	public $atrs;
 
 	/**
 	 * Help text is displayed below the form field. Usually in case of error or
@@ -789,7 +789,6 @@ class FormInput
 					@$this->atrs['CLASS'] .= ' checks';
 					$divAtrs = $this->atrs;
 					unset($divAtrs['TYPE'], $divAtrs['VALUE'], $divAtrs['NAME']);
-					$atrs = GetAttribs($this->atrs);
 					$ret .= '<div'.GetAttribs($divAtrs).'>';
 					$newsels = $this->GetValue($persist);
 					foreach ($newsels as $id => $val)
@@ -799,7 +798,7 @@ class FormInput
 				}
 				return $ret;
 			case 'custom':
-				return call_user_func($this->valu, $this);
+				return call_user_func($this->atrs['VALUE'], $this);
 
 			// Dates
 
@@ -1916,7 +1915,7 @@ function GetAttribs($attribs)
 	return $ret;
 }
 
-function TagInputData(&$atrs)
+function TagInputData($atrs)
 {
 	global $binds;
 
@@ -2079,7 +2078,7 @@ function TagForm($t, $g, $a)
 	return $ret;
 }
 
-class DataDisplay
+class IfYouDontUseMeGetRidOfMe
 {
 	function DataDisplay($name, $ds)
 	{

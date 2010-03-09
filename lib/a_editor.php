@@ -1466,7 +1466,7 @@ class DisplayData
 
 		if ($act == 'search')
 		{
-			$this->fs = GetVar($this->Name.'_field');
+			$this->fs = GetVar('field');
 			$this->ss = GetVar($this->Name.'_search');
 			$this->ipp = GetVar($this->Name.'_ipp', 10);
 
@@ -1477,7 +1477,8 @@ class DisplayData
 				$fi = $this->ds->FieldInputs[$col];
 				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
 				{
-					$query['cols'][$ms[2]] = "GROUP_CONCAT(DISTINCT {$col})";
+					$query['columns'][0] = '*';
+					$query['columns'][$ms[2]] = SqlUnquote("GROUP_CONCAT(DISTINCT {$col})");
 					$query['group'] =  $this->ds->id;
 				}
 			}
@@ -1514,19 +1515,20 @@ class DisplayData
 		$fi = $this->ds->FieldInputs[$col];
 		$fi->atrs['NAME'] = $col;
 
-		if ($fi->type == 'select')
+		// This may not work.
+		if ($fi->atrs['TYPE'] == 'select')
 			$query['match'][$col] = SqlIn($val);
 		else if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
 			foreach ($this->fs[$col] as $ix => $v)
 				$query['having'][] = " FIND_IN_SET($v, $ms[2]) > 0";
-		else if ($fi->type == 'date')
+		else if ($fi->atrs['TYPE'] == 'date')
 			$query['match'][$col] = SqlBetween(
 				TimestampToMySql(DateInputToTS(
 					$this->fs[$col][0]), false),
 				TimestampToMySql(DateInputToTS(
 					$this->fs[$col][1]), false)
 			);
-		else $query['match'][$col] = SqlLike($val);
+		else $query['match'][$col] = SqlLike('%'.$val.'%');
 	}
 
 	/**
@@ -1631,12 +1633,13 @@ class DisplayData
 		if (isset($GLOBALS['editor'])) $frm->AddHidden('editor', $GLOBALS['editor']);
 		$frm->AddInput(new FormInput('Search', 'custom', null, array(&$this, 'callback_fields')));
 		$frm->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Search'));
-		return $frm->Get('action="'.$me.'" method="post"');
+		return $frm->Get('action="'.GetVar('q').'" method="post"');
 	}
 
 	function TagResults($t, $g, $a)
 	{
 		if (isset($this->count)) return $g;
+		else return 'No results';
 	}
 
 	/**
@@ -1689,7 +1692,7 @@ class DisplayData
 						if ($bold) $vars['val'] .= '<span class="result">';
 					}
 					if (!empty($val))
-						$vars['val'] .= $this->ds->FieldInputs[$f]->valu[$val]->text;
+						$vars['val'] .= $this->ds->FieldInputs[$f]->atrs['VALUE'][$val]->text;
 					if (!empty($this->fs[$f]) && $bold) $vars['val'] .= '</span>';
 				}
 			}
@@ -1737,18 +1740,18 @@ class DisplayData
 			value="1" id="'.$this->Name.'_search_'.$col.'" name="'.$this->Name.'_search['.$col.']"
 			onclick="$(\'#'.str_replace('.','\\\\.',$col).'\').toggle(500)" />
 			'.$fi->text.'</label></td>';
-		if ($fi->type == 'date')
+		if ($fi->atrs['TYPE'] == 'date')
 		{
-			$fi->atrs['NAME'] = 'field['.$col.'][0]';
+			$fi->atrs['NAME'] = $this->Name.'_field['.$col.'][0]';
 			$ret .= ' <td valign="top" style="display: none" id="'.$col.'">
 				from '.$fi->Get($this->Name).' to ';
 			$fi->atrs['NAME'] = 'field['.$col.'][1]';
 			$ret .= $fi->Get($this->Name)."</td>\n";
 		}
-		if ($fi->type == 'select')
+		if ($fi->atrs['TYPE'] == 'select')
 			$fi->type = 'checks';
-		else $ret .= '<td style="display: none"
-			id="'.$col.'">'.$fi->Get($this->Name).'</td>';
+		else $ret .= '<td style="display: none" id="'.$col.'">'.
+			$fi->Get($this->Name).'</td>';
 		$ret .= '</tr>';
 		return $ret;
 	}
@@ -2067,7 +2070,7 @@ class DataSearch
 					(GetVar($this->Name.'_page', 1) - 1);
 				$query['filter'] = array($start, $this->Behavior->ItemsPerPage);
 				$this->items = $this->_ds->Get($query);
-				
+
 				$count = $this->_ds->GetCustom('SELECT FOUND_ROWS()');
 				$this->count = $count[0][0];
 			}
@@ -2256,7 +2259,7 @@ class DataSearch
 		}
 		return $ret;
 	}
-	
+
 	function TagButtonA($t, $g, $a)
 	{
 		return '<a'.GetAttribs(array_merge($this->but, $a)).'>'.$g.'</a>';
@@ -2319,7 +2322,7 @@ class DataSearch
 	}
 
 	# Edit Related
-	
+
 	function TagEditForm($t, $g, $a)
 	{
 		return '<form'.GetAttribs($a).'>'.

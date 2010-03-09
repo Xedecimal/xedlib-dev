@@ -9,8 +9,6 @@ class ModNav extends Module
 	function __construct()
 	{
 		global $_d;
-
-		$_d['nav.links'] = new TreeNode();
 	}
 
 	/**
@@ -19,41 +17,34 @@ class ModNav extends Module
 	* @param TreeNode $link
 	* @param int $depth
 	*/
-	static function GetLinks($link, $depth = -1)
+	static function GetLinks($t, $l)
 	{
 		// We have children to process.
 
-		if (!empty($link->children))
+		if (is_array($l))
 		{
 			$ret = null;
 
-			if (!empty($link->data))
-				$ret .= '<li><a href="#">'.$link->data."</a><ul>\n";
-			else $ret .= '<ul id="nav" class="menu vertical">';
-			foreach ($link->children as $c)
-				$ret .= ModNav::GetLinks($c, $depth+1);
-			if (!empty($link->data)) $ret .= "</ul></li>\n";
-			else $ret .= '</ul>';
+			if (!empty($t))
+				$ret .= '<li><a href="#">'.$t."</a><ul>\n";
+			else $ret .= '<ul class="nav">';
+			foreach ($l as $t => $c)
+				$ret .= ModNav::GetLinks($t, $c);
+			$ret .= '</ul>';
 			return $ret;
 		}
 
 		// No children under this link.
 
-		else return "<li><a href=\"{$link->id}\">{$link->data}</a></li>\n";
+		else return "<li><a href=\"{$l}\">{$t}</a></li>\n";
 	}
 
 	function Get()
 	{
 		global $_d;
 
-		$out = null;
-		if (isset($_d['nav.links']))
-		{
-			$t = new Template();
-			$t->ReWrite('link', array($this, 'TagLink'));
-			$t->ReWrite('head', array($this, 'TagHead'));
-			return ModNav::GetLinks($_d['nav.links']);
-		}
+		if (!empty($_d['nav.links']))
+			return ModNav::GetLinks(null, $_d['nav.links']);
 	}
 }
 

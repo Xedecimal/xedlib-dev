@@ -40,8 +40,11 @@ class ModUser extends Module
 		global $_d, $me;
 
 		if (ModUser::RequireAccess(1))
+		{
+			$q = GetVar('q');
 			$_d['nav.links']['Log Out'] =
-				"{{app_abs}}{{app_rel}}/user?{$this->lm->Name}_action=logout";
+				"{{app_abs}}/{$this->lm->Name}/logout?{$this->lm->Name}_return=$q";
+		}
 	}
 
 	function Get()
@@ -89,7 +92,7 @@ class ModUserAdmin extends Module
 		require_once(dirname(__FILE__).'/../h_display.php');
 
 		if (empty($_d['user.levels']))
-			$_d['user.levels'] = array(1 => 'User', 2 => 'Admin');
+			$_d['user.levels'] = array(0 => 'Guest', 1 => 'User', 2 => 'Admin');
 		$this->edUser = new EditorData('user', $_d['user.ds']);
 	}
 
@@ -98,7 +101,7 @@ class ModUserAdmin extends Module
 		global $_d;
 
 		if (ModUser::RequireAccess(2))
-			$_d['nav.links']['Users'] = '{{root}}{{me}}/user';
+			$_d['nav.links']['Users'] = '{{app_abs}}/user';
 	}
 
 	function Prepare()
@@ -131,7 +134,6 @@ class ModUserAdmin extends Module
 	}
 }
 
-if (@$_d['q'][0] == 'user')
-	Module::RegisterModule('ModUserAdmin');
+Module::RegisterModule('ModUserAdmin');
 
 ?>
