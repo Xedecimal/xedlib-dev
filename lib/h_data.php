@@ -294,6 +294,7 @@ class Database
 	function GetLastInsertID()
 	{
 		if ($this->type == DB_MY) return mysql_insert_id($this->link);
+		if ($this->type == DB_MI) return mysqli_insert_id($this->link);
 		if ($this->type == DB_SL) return sqlite_last_insert_rowid($this->link);
 		return 0;
 	}

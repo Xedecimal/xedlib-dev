@@ -59,10 +59,11 @@ class Module
 		{
 			global $_d;
 
-			$_d['template.transforms']['link'] = array('Module', 'TransHref');
-			$_d['template.transforms']['a'] = array('Module', 'TransHref');
-			$_d['template.transforms']['img'] = array('Module', 'TransSrc');
-			$_d['template.transforms']['script'] = array('Module', 'TransSrc');
+			$_d['template.transforms']['link'] = array('Module', 'TransPath', 'HREF');
+			$_d['template.transforms']['a'] = array('Module', 'TransPath', 'HREF');
+			$_d['template.transforms']['img'] = array('Module', 'TransPath', 'SRC');
+			$_d['template.transforms']['script'] = array('Module', 'TransPath', 'SRC');
+			$_d['template.transforms']['form'] = array('Module', 'TransPath', 'ACTION');
 		}
 	}
 
@@ -237,15 +238,9 @@ class Module
 	 */
 	function InstallFields(&$frm) { }
 
-	static function TransHref($a)
+	static function TransPath($a, $t)
 	{
-		if (isset($a['HREF'])) $a['HREF'] = p($a['HREF']);
-		return $a;
-	}
-
-	static function TransSrc($a)
-	{
-		if (isset($a['SRC'])) $a['SRC'] = p($a['SRC']);
+		if (isset($a[$t[0]])) $a[$t[0]] = p($a[$t[0]]);
 		return $a;
 	}
 }

@@ -159,11 +159,11 @@ class Template extends LayeredOutput
 
 		if (!empty($GLOBALS['_d']['template.rewrites']))
 			foreach ($GLOBALS['_d']['template.rewrites'] as $tag => $rw)
-				$this->ReWrite($tag, $rw);
+				$this->ReWrite($tag, array_slice($rw, 0, 2), array_slice($rw, 2));
 
 		if (!empty($GLOBALS['_d']['template.transforms']))
 			foreach ($GLOBALS['_d']['template.transforms'] as $tag => $tf)
-				$this->Transform($tag, $tf);
+				$this->Transform($tag, array_slice($tf, 0, 2), array_slice($tf, 2));
 
 		$this->ReWrite('template', array(&$this, 'TagTemplate'));
 		$this->ReWrite('repeat', array(&$this, 'TagRepeat'));
@@ -227,9 +227,10 @@ class Template extends LayeredOutput
 	 * @param string $tag Tag to translate.
 	 * @param mixed $callback The callback to be called on this tag.
 	 */
-	function Transform($tag, $callback)
+	function Transform($tag, $callback, $args = null)
 	{
 		$this->transforms[strtoupper($tag)][] = $callback;
+		$this->transformargs[strtoupper($tag)] = $args;
 	}
 
 	/**
@@ -244,7 +245,7 @@ class Template extends LayeredOutput
 
 		if (isset($this->transforms[$tag]))
 		{
-			$ret = RunCallbacks($this->transforms[$tag], $attribs);
+			$ret = RunCallbacks($this->transforms[$tag], $attribs, $this->transformargs[$tag]);
 			$attribs = array_merge($attribs, $ret);
 		}
 

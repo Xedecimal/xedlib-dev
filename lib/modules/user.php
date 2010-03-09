@@ -57,6 +57,7 @@ class ModUser extends Module
 
 		if (!empty($_d['user.ds']) && @$_d['user.login'])
 		{
+			$this->lm->Behavior->Return = GetVar('q');
 			$out = $this->lm->Get();
 			$out .= RunCallbacks(@$_d['user.callbacks.knee']);
 			return GetBox('box_user', 'Login', $out);
@@ -97,7 +98,7 @@ class ModUserAdmin extends Module
 		global $_d;
 
 		if (ModUser::RequireAccess(2))
-			$_d['nav.links']->AddChild(new TreeNode('Users', '{{root}}{{me}}/user'));
+			$_d['nav.links']['Users'] = '{{root}}{{me}}/user';
 	}
 
 	function Prepare()

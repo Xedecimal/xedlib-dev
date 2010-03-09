@@ -1414,6 +1414,9 @@ class LoginManager
 			return false;
 		}
 
+		$return = GetVar($this->Name.'_return');
+		if (!empty($return)) $_d['q'] = explode('/', $return);
+
 		if ($this->type == CONTROL_BOUND)
 		{
 			if (empty($check_user) || empty($check_pass)) return;
@@ -1451,6 +1454,8 @@ class LoginManager
 			$template = dirname(__FILE__).'/temps/login_manager.xml';
 
 		$f = new Form($this->Name, array(null, 'width="100%"'));
+		if (!empty($this->Behavior->Return))
+			$f->AddHidden($this->Name.'_return', $this->Behavior->Return);
 		if ($this->type != CONTROL_SIMPLE)
 			$f->AddInput(new FormInput($this->View->TextLogin, 'text', $this->Name.'_auth_user'));
 		$f->AddInput(new FormInput($this->View->TextPassword, 'password', $this->Name.'_auth_pass'));
@@ -1497,6 +1502,7 @@ class LoginManagerView
 class LoginManagerBehavior
 {
 	public $Encryption = true;
+	public $Return;
 }
 
 /**
