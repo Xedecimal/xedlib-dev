@@ -7,6 +7,7 @@ function p($path)
 
 	global $_d;
 	$abs = $_d['app_abs'];
+	$dir = $_d['app_dir'];
 	if (substr($path, 0, strlen($abs)) == $abs) return $path;
 
 	$tmp = @$_d['settings']['site_template'];
@@ -14,6 +15,9 @@ function p($path)
 	// Overloaded Path
 	$opath = "$tmp/$path";
 	if (file_exists($opath)) return "$abs/$opath";
+	// Absolute Override
+	$apath = "$dir/$path";
+	if (file_exists($apath)) return "$abs/$path";
 	// Module Path
 	$modpath = "modules/{$path}";
 	if (file_exists($modpath)) return "$abs/modules/$path";
