@@ -831,8 +831,7 @@ class DataSet
 					return $val['val'];
 				else return $lq.$this->database->Escape($val['val']).$rq;
 			}
-			else
-				return $lq.$this->database->Escape($val).$rq;
+			else { Error('Arrays are not allowed here.'); varinfo($val); }
 		}
 		else
 		{
