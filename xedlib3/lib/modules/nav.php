@@ -7,7 +7,7 @@ class ModNav extends Module
 	public $Block = 'nav';
 
 	/**
-	* put your comment there...
+	* 
 	* 
 	* @param TreeNode $link
 	* @param int $depth
@@ -22,7 +22,7 @@ class ModNav extends Module
 
 			if (!empty($link->data))
 				$ret .= '<li><a href="#">'.$link->data."</a><ul>\n";
-			else $ret .= '<ul id="nav" class="menu vertical">';
+			else $ret .= '<ul class="nav menu vertical">';
 			foreach ($link->children as $c)
 				$ret .= ModNav::GetLinks($c, $depth+1);
 			if (!empty($link->data)) $ret .= "</ul></li>\n";
