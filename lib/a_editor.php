@@ -1341,8 +1341,11 @@ class EditorData
 
 	function Reset()
 	{
-		unset($_SESSION[$this->Name.'_action']);
-		unset($_SESSION[$this->Name.'_ci']);
+		if (isset($_SESSION[$this->Name.'_action']))
+		{
+			unset($_SESSION[$this->Name.'_action']);
+			unset($_SESSION[$this->Name.'_ci']);
+		}
 	}
 }
 

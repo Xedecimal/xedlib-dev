@@ -6,12 +6,11 @@ class ModArticles extends Module
 	public $Name = 'articles';
 
 	protected $_template;
-	
+
 	function __construct()
 	{
 		global $_d;
-
-		$this->_template = dirname(__FILE__).'/../temps/mod_articles.xml';
+		$this->_template = l('temps/mod_articles.xml');
 	}
 
 	function TagArticle($t, $g)
@@ -25,7 +24,7 @@ class ModArticles extends Module
 		}
 		return $vp->ParseVars($g, $this->_article);
 	}
-	
+
 	function TagArticles($t, $g)
 	{
 		$t->ReWrite('article', array($this, 'TagArticle'));
@@ -61,7 +60,7 @@ class ModArticle extends Module
 	function __construct()
 	{
 		global $_d;
-		$this->_template = dirname(__FILE__).'/../temps/mod_article.xml';
+		$this->_template = l('temps/mod_article.xml');
 	}
 
 	function TagNews($t, $g)
@@ -73,7 +72,7 @@ class ModArticle extends Module
 		{
 			$items = $_d['news.ds']->Get();
 			$vp = new VarParser();
-			$ret = '';
+			$ret = null;
 			foreach ($items as $i) $ret .= $vp->ParseVars($g, $i);
 			return $ret;
 		}
@@ -84,9 +83,11 @@ class ModArticle extends Module
 		global $_d;
 		if ($_d['q'][0] != $this->Name) return;
 
-		if (!empty($_d['q'][1]))
+		$ci = $_d['q'][1];
+
+		if (!empty($ci))
 		{
-			$query = array('match' => array('nws_id' => $_d['q'][1]));
+			$query = array('match' => array('nws_id' => $ci));
 			$item = $_d['news.ds']->GetOne($query);
 			$vp = new VarParser();
 			return $vp->ParseVars($g, $item);
@@ -136,8 +137,6 @@ class ModArticleAdmin extends Module
 	{
 		global $_d;
 
-		if (@$_d['q'][1] != 'news') return;
-
 		$_d['news.ds']->Description = 'News';
 		$_d['news.ds']->DisplayColumns = array(
 			'nws_title' => new DisplayColumn('Title')
@@ -148,14 +147,13 @@ class ModArticleAdmin extends Module
 		);
 
 		global $me;
-		$this->edNews->Behavior->Target = $me.'/news';
+		$this->edNews->Behavior->Target = p('news');
 		$this->edNews->Prepare();
 	}
 
 	function Get()
 	{
 		global $_d;
-		if (@$_d['q'][0] != 'news') return;
 		return $this->edNews->GetUI('edNews');
 	}
 }
