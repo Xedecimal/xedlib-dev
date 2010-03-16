@@ -159,7 +159,13 @@ class Template extends LayeredOutput
 
 		if (!empty($GLOBALS['_d']['template.rewrites']))
 			foreach ($GLOBALS['_d']['template.rewrites'] as $tag => $rw)
-				$this->ReWrite($tag, array_slice($rw, 0, 2), array_slice($rw, 2));
+			{
+				if (is_array($rw))
+					$this->ReWrite($tag, array_slice($rw, 0, 2),
+						array_slice($rw, 2));
+				else
+					$this->ReWrite($tag, $rw);
+			}
 
 		if (!empty($GLOBALS['_d']['template.transforms']))
 			foreach ($GLOBALS['_d']['template.transforms'] as $tag => $tf)
