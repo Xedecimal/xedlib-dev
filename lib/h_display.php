@@ -1410,7 +1410,6 @@ class LoginManager
 		{
 			$check_pass = null;
 			UnsetVar($passvar);
-			return false;
 		}
 
 		$return = GetVar($this->Name.'_return');
