@@ -16,7 +16,7 @@ class Module
 		closedir($dp);
 	}
 
-	static function RegisterModule($name)
+	static function Register($name)
 	{
 		global $_d;
 		if (!empty($_d['module.disable'][$name])) return;

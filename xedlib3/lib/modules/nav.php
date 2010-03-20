@@ -1,6 +1,6 @@
 <?php
 
-Module::RegisterModule('ModNav');
+Module::Register('ModNav');
 
 class ModNav extends Module
 {
@@ -14,8 +14,25 @@ class ModNav extends Module
 	*/
 	static function GetLinks($link, $depth = -1)
 	{
+		$ret = null;
+
 		// We have children to process.
 
+		if (!empty($link->data))
+		{
+			if (is_array($link->data))
+			{
+				$dat = $link->data;
+				$text = $dat['TEXT'];
+				unset($dat['TEXT']);
+				$atrs = GetAttribs($dat);
+				$ret .= '<li><a href="'.$link->id.'"'.$atrs.'>'.$text.
+					"</a>\n";
+			}
+			else $ret .= '<li><a href="'.$link->id.'">'.$link->data.
+				"</a>\n";
+		}
+		
 		if (!empty($link->children))
 		{
 			$ret = null;
@@ -25,14 +42,12 @@ class ModNav extends Module
 			else $ret .= '<ul class="nav menu vertical">';
 			foreach ($link->children as $c)
 				$ret .= ModNav::GetLinks($c, $depth+1);
-			if (!empty($link->data)) $ret .= "</ul></li>\n";
-			else $ret .= '</ul>';
-			return $ret;
+			$ret .= '</ul>';
 		}
+		
+		if (!empty($link->data)) $ret .= '</li>';
 
-		// No children under this link.
-
-		else return "<li><a href=\"{$link->id}\">{$link->data}</a></li>\n";
+		return $ret;
 	}
 
 	function Get()

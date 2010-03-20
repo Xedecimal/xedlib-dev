@@ -1015,16 +1015,16 @@ class DataSet
 		$rows = $this->database->Query($query, $this->ErrorHandler);
 
 		//Prepare Data
+		$items = array();
 		$f = $this->func_rows;
 		switch ($this->database->type)
 		{
 			case DB_SL:
-				if ($f($rows) < 1) return array();
+				if ($f($rows) < 1) return $items;
 				break;
 			default:
-				if ($f($this->database->link) < 1) return array();
+				if ($f($this->database->link) < 1) return $items;
 		}
-		$items = array();
 
 		$a = null;
 		if ($this->database->type == DB_MY)

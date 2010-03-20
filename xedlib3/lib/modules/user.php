@@ -1,6 +1,6 @@
 <?php
 
-Module::RegisterModule('ModUser');
+Module::Register('ModUser');
 
 class ModUser extends Module
 {
