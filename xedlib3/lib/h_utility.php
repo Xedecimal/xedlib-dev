@@ -1358,7 +1358,7 @@ function ArrayToTree($n, $arr)
 	foreach ($arr as $k => $v)
 	{
 		if (is_array($v)) $n = ArrayToTree($k, $v);
-		else $n = new TreeNode($v);
+		else $n = new TreeNode($k, $v);
 		$root->AddChild($n);
 	}
 	return $root;

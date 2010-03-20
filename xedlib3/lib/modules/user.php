@@ -19,10 +19,9 @@ class ModUser extends Module
 	{
 		global $_d;
 
-		require_once(dirname(__FILE__).'/../h_data.php');
-
 		if (!empty($_d['db']))
 		{
+			require_once(dirname(__FILE__).'/../h_data.php');
 			$_d['user.ds'] = new DataSet($_d['db'], 'user', 'usr_id');
 		}
 		$_d['template.rewrites']['access'] = array('ModUser', 'TagAccess');
@@ -43,7 +42,7 @@ class ModUser extends Module
 
 		if (ModUser::RequireAccess(1))
 			$_d['nav.links']->AddChild(new TreeNode('Log Out',
-				"{{app_abs}}{{app_rel}}/user?{$this->lm->Name}_action=logout"));
+				"{{app_abs}}?{$this->lm->Name}_action=logout"));
 	}
 
 	function Get()
