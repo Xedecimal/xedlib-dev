@@ -28,7 +28,8 @@ class ModArticles extends Module
 	function TagArticles($t, $g)
 	{
 		$t->ReWrite('article', array($this, 'TagArticle'));
-		if (isset($this->_source)) $this->_articles = $this->_source->Get();
+		if (isset($this->_source)) $this->_articles = $this->_source->Get(
+			array('sort' => array($this->_source->id => 'DESC')));
 		if (!empty($this->_articles))
 		{
 			foreach ($this->_articles as $a)
