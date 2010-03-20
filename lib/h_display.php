@@ -1385,7 +1385,7 @@ class LoginManager
 
 		if (@$_d['q'][0] == $this->Name)
 			$act = @$_d['q'][1];
-		else $act = null;
+		else $act = GetVar($this->Name.'_action');
 
 		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
 			? $_SESSION[$uservar] : null;
@@ -1459,7 +1459,7 @@ class LoginManager
 		$f->AddInput(new FormInput($this->View->TextPassword, 'password', $this->Name.'_auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
 		$f->Template = file_get_contents($template);
-		$target = "{{app_abs}}/{$this->Name}/login";
+		$target = Ask($this->Behavior->Target, "{{app_abs}}/{$this->Name}/login");
 		return $f->Get('action="'.$target.'" method="post"');
 	}
 
@@ -1501,6 +1501,7 @@ class LoginManagerBehavior
 {
 	public $Encryption = true;
 	public $Return;
+	public $Target;
 }
 
 /**
@@ -1655,118 +1656,34 @@ function GetInputSState($atrs = null, $keys = true)
 	return MakeSelect($atrs, ArrayToSelOptions($StateSNames, null, $keys));
 }
 
-$StateNames = array(
-	0 => 'None',
-	1 => 'Alabama',
-	2 => 'Alaska',
-	3 => 'Arizona',
-	4 => 'Arkansas',
-	5 => 'California',
-	6 => 'Colorado',
-	7 => 'Connecticut',
-	8 => 'Delaware',
-	9 => 'Florida',
-	10 => 'Georgia',
-	11 => 'Hawaii',
-	12 => 'Idaho',
-	13 => 'Illinois',
-	14 => 'Indiana',
-	15 => 'Iowa',
-	16 => 'Kansas',
-	17 => 'Kentucky',
-	18 => 'Louisiana',
-	19 => 'Maine',
-	20 => 'Maryland',
-	21 => 'Massachusetts',
-	22 => 'Michigan',
-	23 => 'Minnesota',
-	24 => 'Mississippi',
-	25 => 'Missouri',
-	26 => 'Montana',
-	27 => 'Nebraska',
-	28 => 'Nevada',
-	29 => 'New Hampshire',
-	30 => 'New Jersey',
-	31 => 'New Mexico',
-	32 => 'New York',
-	33 => 'North Carolina',
-	34 => 'North Dakota',
-	35 => 'Ohio',
-	36 => 'Oklahoma',
-	37 => 'Oregon',
-	38 => 'Pennsylvania',
-	39 => 'Rhode Island',
-	40 => 'South Carolina',
-	41 => 'South Dakota',
-	42 => 'Tennessee',
-	43 => 'Texas',
-	44 => 'Utah',
-	45 => 'Vermont',
-	46 => 'Virginia',
-	47 => 'Washington',
-	48 => 'West Virginia',
-	49 => 'Wisconsin',
-	50 => 'Wyoming',
-	51 => 'District of Columbia',
-	52 => 'Canada',
-	53 => 'Armed Forces Africa / Canada / Europe / Middle East',
+$StateNames = array(0 => 'None', 1 => 'Alabama', 2 => 'Alaska', 3 => 'Arizona',
+	4 => 'Arkansas', 5 => 'California', 6 => 'Colorado', 7 => 'Connecticut',
+	8 => 'Delaware', 9 => 'Florida', 10 => 'Georgia', 11 => 'Hawaii',
+	12 => 'Idaho', 13 => 'Illinois', 14 => 'Indiana', 15 => 'Iowa',
+	16 => 'Kansas', 17 => 'Kentucky', 18 => 'Louisiana', 19 => 'Maine',
+	20 => 'Maryland', 21 => 'Massachusetts', 22 => 'Michigan',
+	23 => 'Minnesota', 24 => 'Mississippi', 25 => 'Missouri', 26 => 'Montana',
+	27 => 'Nebraska', 28 => 'Nevada', 29 => 'New Hampshire', 30 => 'New Jersey',
+	31 => 'New Mexico', 32 => 'New York', 33 => 'North Carolina',
+	34 => 'North Dakota', 35 => 'Ohio', 36 => 'Oklahoma', 37 => 'Oregon',
+	38 => 'Pennsylvania', 39 => 'Rhode Island', 40 => 'South Carolina',
+	41 => 'South Dakota', 42 => 'Tennessee', 43 => 'Texas', 44 => 'Utah',
+	45 => 'Vermont', 46 => 'Virginia', 47 => 'Washington',
+	48 => 'West Virginia', 49 => 'Wisconsin', 50 => 'Wyoming',
+	51 => 'District of Columbia', 52 => 'Canada',
+	3 => 'Armed Forces Africa / Canada / Europe / Middle East'
 );
 
 $StateSNames = array(
-	0 => 'NA',
-	1 => 'AL',
-	2 => 'AK',
-	3 => 'AZ',
-	4 => 'AR',
-	5 => 'CA',
-	6 => 'CO',
-	7 => 'CT',
-	8 => 'DE',
-	9 => 'FL',
-	10 => 'GA',
-	11 => 'HI',
-	12 => 'ID',
-	13 => 'IL',
-	14 => 'IN',
-	15 => 'IA',
-	16 => 'KS',
-	17 => 'KY',
-	18 => 'LA',
-	19 => 'ME',
-	20 => 'MD',
-	21 => 'MA',
-	22 => 'MI',
-	23 => 'MN',
-	24 => 'MS',
-	25 => 'MO',
-	26 => 'MT',
-	27 => 'NE',
-	28 => 'NV',
-	29 => 'NH',
-	30 => 'NJ',
-	31 => 'NM',
-	32 => 'NY',
-	33 => 'NC',
-	34 => 'ND',
-	35 => 'OH',
-	36 => 'OK',
-	37 => 'OR',
-	38 => 'PA',
-	39 => 'RI',
-	40 => 'SC',
-	41 => 'SD',
-	42 => 'TN',
-	43 => 'TX',
-	44 => 'UT',
-	45 => 'VT',
-	46 => 'VA',
-	47 => 'WA',
-	48 => 'WV',
-	49 => 'WI',
-	50 => 'WY',
-	51 => 'DC',
-	52 => 'CN',
-	52 => 'AE',
+	0 => 'NA', 1 => 'AL', 2 => 'AK', 3 => 'AZ', 4 => 'AR', 5 => 'CA',
+	6 => 'CO', 7 => 'CT', 8 => 'DE', 9 => 'FL', 10 => 'GA', 11 => 'HI',
+	12 => 'ID', 13 => 'IL', 14 => 'IN', 15 => 'IA', 16 => 'KS', 17 => 'KY',
+	18 => 'LA', 19 => 'ME', 20 => 'MD', 21 => 'MA', 22 => 'MI', 23 => 'MN',
+	24 => 'MS', 25 => 'MO', 26 => 'MT', 27 => 'NE', 28 => 'NV', 29 => 'NH',
+	30 => 'NJ', 31 => 'NM', 32 => 'NY', 33 => 'NC', 34 => 'ND', 35 => 'OH',
+	36 => 'OK', 37 => 'OR', 38 => 'PA', 39 => 'RI', 40 => 'SC', 41 => 'SD',
+	42 => 'TN', 43 => 'TX', 44 => 'UT', 45 => 'VT', 46 => 'VA', 47 => 'WA',
+	48 => 'WV', 49 => 'WI', 50 => 'WY', 51 => 'DC', 52 => 'CN', 52 => 'AE'
 );
 
 function StateCallback($ds, $data, $col)

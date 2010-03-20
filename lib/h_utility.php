@@ -1491,6 +1491,11 @@ function Let(&$var, $val)
 	if (!isset($var)) $var = $val;
 }
 
+function Ask(&$var, $default)
+{
+	return !empty($var) ? $var : $default;
+}
+
 function GetMonthName($month)
 {
 	return date('F', strtotime($month.'/1/'.date('Y')));
