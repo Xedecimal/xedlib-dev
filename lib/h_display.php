@@ -481,9 +481,7 @@ class Form
 		$this->inputs[] = $input;
 
 		if ($input->attr('TYPE') == 'submit' && isset($this->Validation))
-		{
 			$input->atrs['ONCLICK'] = "return {$this->name}_check(1);";
-		}
 		if ($input->attr('TYPE') == 'file') $this->multipart = true;
 
 		$right = false;
@@ -684,11 +682,17 @@ class FormInput
 				return GetInputState($this->atrs, @$this->valu, false);
 			case 'shortstate':
 				return GetInputSState($this->atrs, @$this->valu);
+			case 'checkbox':
+				if (@$this->atrs['VALUE'])
+					$this->atrs['CHECKED'] = 'checked';
+				unset($this->atrs['VALUE']);
+				break;
 		}
 	}
 
-	function attr($attr, $val = null)
+	function attr($attr = null, $val = null)
 	{
+		if (!isset($attr)) return $this->atrs;
 		if (isset($val)) $this->atrs[$attr] = $val;
 		if (isset($this->atrs[$attr])) return $this->atrs[$attr];
 	}
@@ -774,8 +778,9 @@ class FormInput
 		}
 		if ($this->atrs['TYPE'] == 'checkbox')
 		{
-			return "<input ".$this->GetValue($persist).
-				GetAttribs($this->atrs)." />";
+			$val = $this->GetValue($persist);
+			$this->atrs['VALUE'] = 1;
+			return "<input ".GetAttribs($this->atrs)." />";
 		}
 		switch ($this->atrs['TYPE'])
 		{
@@ -914,10 +919,14 @@ class FormInput
 				return $newsels;
 			//Simple Checked...
 			case 'checkbox':
-				return $persist && @$this->atrs['VALUE'] ? ' checked="checked"' : null;
+				return @$this->atrs['VALUE'] ?
+					' checked="checked"'
+					: null;
 			//May get a little more complicated if we don't know what it is...
 			default:
-				return stripslashes(htmlspecialchars($persist ? GetVars($this->atrs['NAME'], @$this->atrs['VALUE']) : @$this->atrs['VALUE']));
+				return stripslashes(htmlspecialchars($persist ?
+					GetVars($this->atrs['NAME'], @$this->atrs['VALUE']) :
+					@$this->atrs['VALUE']));
 		}
 	}
 
