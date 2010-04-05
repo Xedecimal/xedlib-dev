@@ -23,7 +23,7 @@ function p($path)
 	if (file_exists($modpath)) return "$abs/modules/$path";
 	// Xedlib Path
 	$xedpath = dirname(__FILE__).'/'.$path;
-	if (file_exists($xedpath)) return GetRelativePath(__DIR__).'/'.$path;
+	if (file_exists($xedpath)) return GetRelativePath(dirname(__FILE__)).'/'.$path;
 	return $path;
 }
 
