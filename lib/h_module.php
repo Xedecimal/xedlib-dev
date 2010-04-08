@@ -35,7 +35,7 @@ function l($path)
 	if (file_exists($ovrpath)) return "{$_d['app_dir']}/{$ovrpath}";
 	$modpath = "{$_d['app_dir']}/modules/{$path}";
 	if (file_exists($modpath)) return "{$_d['app_dir']}/modules/{$path}";
-	$xedpath = __DIR__.'/'.$path;
+	$xedpath = dirname(__FILE__).'/'.$path;
 	if (file_exists($xedpath)) return $xedpath;
 	return $path;
 }
@@ -96,6 +96,7 @@ class Module
 		$tprep = new Template();
 		$tprep->ReWrite('block', array('Module', 'TagPrepBlock'));
 		$tprep->ParseFile($template);
+		$_d['blocks']['hidden'] = null;
 
 		$t = new Template($_d);
 		$t->ReWrite('head', array($t, 'TagAddHead'));
