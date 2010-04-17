@@ -798,7 +798,7 @@ class FormInput
 					$newsels = $this->GetValue($persist);
 					foreach ($newsels as $id => $val)
 						$ret .= $val->RenderCheck(array(
-							'NAME' => $this->atrs['NAME'].'[]'));
+							'NAME' => $this->atrs['NAME']));
 					$ret .= '</div>';
 				}
 				return $ret;
@@ -855,10 +855,7 @@ class FormInput
 				if ($this->atrs['TYPE'] == 'selects')
 				{
 					$this->atrs['MULTIPLE'] = 'multiple';
-					$this->atrs['NAME'] .= '[]';
 				}
-				if (!isset($this->atrs['CLASS']))
-					$this->atrs['CLASS'] = 'input_select';
 
 				$selAtrs = $this->atrs;
 				unset($selAtrs['TYPE'],$selAtrs['VALUE']);
@@ -1109,11 +1106,18 @@ function MakeChecks($atrs = null, $value = null, $selvalue = null)
 function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 {
 	$ret = null;
-	if (isset($none)) $ret[0] = new SelOption($none, false, $default == 0);
+	if (isset($none))
+	{
+		$sel = new SelOption($none, false, $default == 0);
+		$sel->valu = 0;
+		$ret[0] = $sel;
+	}
 	foreach ($result as $res)
 	{
-		$ret[$res[$col_id]] = new SelOption($res[$col_disp],
+		$sel = new SelOption($res[$col_disp],
 			strcmp($default, $res[$col_id]) == 0);
+		$sel->valu = $res[$col_id];
+		$ret[$res[$col_id]] = $sel;
 	}
 	return $ret;
 }
