@@ -1176,7 +1176,7 @@ class DataSet
 	{
 		$sets = $this->GetColVals($values);
 		if (empty($sets)) { Trace('Nothing to update.'); return; }
-		$query = "UPDATE {$this->table}";
+		$query = 'UPDATE '.$this->QuoteTable($this->table);
 		$query .= $this->JoinClause($this->joins);
 		$query .= $this->SetClause($values);
 		$query .= $this->WhereClause($match);
@@ -1248,7 +1248,7 @@ class DataSet
 	*/
 	function Remove($match)
 	{
-		$query = "DELETE FROM {$this->table}";
+		$query = 'DELETE FROM '.$this->QuoteTable($this->table);
 		$query .= $this->WhereClause($match);
 		$this->database->Query($query);
 

@@ -335,9 +335,7 @@ function Persist($name, $value)
  */
 function URL($url, $uri = null)
 {
-	// This will probably wreak havoc, try and see how well we can use it.
-	$ret = urlencode($url);
-	//$ret = str_replace(' ', '%20', $url);
+	$ret = $url; # This should be encoded elsewhere and not here.
 
 	global $PERSISTS;
 	$nuri = array();
@@ -686,7 +684,7 @@ function DataToTree($rows, $iCol, $pCol, $rootid = null)
 
 	// Build Tree
 
-	if (!isset($rootid)) $tnRoot = new TreeNode();
+	if (!isset($rootid) || !isset($flats[$rootid])) $tnRoot = new TreeNode();
 	else $tnRoot = $flats[$rootid];
 
 	if (!empty($flats))

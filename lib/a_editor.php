@@ -613,7 +613,7 @@ class EditorData
 			if (!empty($context->ds->FieldInputs))
 			foreach ($context->ds->FieldInputs as $name => $in)
 			{
-				if (strtolower(get_class($in)) == 'forminput')
+				if (is_object($in) && strtolower(get_class($in)) == 'forminput')
 				{
 					if ($in->attr('TYPE') == 'file')
 					{
@@ -1095,7 +1095,7 @@ class EditorData
 			{
 				if (!empty($this->ds->FieldInputs))
 				foreach ($this->ds->FieldInputs as $k => $fi)
-					if ($fi->attr('TYPE') == 'label')
+					if (is_object($fi) && $fi->attr('TYPE') == 'label')
 						unset($this->ds->FieldInputs[$k]);
 			}
 			$context = isset($curchild) ? $this->ds->children[$curchild] :
