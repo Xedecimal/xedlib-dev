@@ -241,7 +241,7 @@ class Database
 
 	function Queries($query)
 	{
-		foreach (split(';', $query) as $q) $this->Query($q);
+		foreach (explode(';', $query) as $q) $this->Query($q);
 	}
 
 	/**
