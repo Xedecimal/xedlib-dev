@@ -1894,7 +1894,7 @@ function GetAttribs($attribs)
 	return $ret;
 }
 
-function TagInputData(&$atrs)
+function TagInputData($atrs)
 {
 	global $binds;
 

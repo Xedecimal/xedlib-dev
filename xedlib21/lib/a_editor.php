@@ -1133,6 +1133,7 @@ class EditorData
 		if ($this->type == CONTROL_BOUND)
 		{
 			if ($this->state == STATE_CREATE)
+				if (!empty($this->ds->FieldInputs))
 				foreach ($this->ds->FieldInputs as $k => $fi)
 					if ($fi->type == 'label')
 						unset($this->ds->FieldInputs[$k]);

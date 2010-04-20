@@ -14,8 +14,8 @@
 
 <form action="{{me}}" method="post" enctype="multipart/form-data">
 
-<!-- <table>
-	<tr> -->
+<table>
+	<tr>
 
 <options>
 	<td valign="top">
@@ -211,8 +211,8 @@
 </td>
 </details>
 
-<!-- </tr>
-</table> -->
+</tr>
+</table>
 
 </form>
 </null>
