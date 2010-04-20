@@ -161,7 +161,7 @@ function GetCallstack($file = __FILE__, $line = __LINE__)
  */
 function SetVar($name, $value)
 {
-	global $HTTP_SESSION_VARS;
+	global $HTTP_SESSION_VARS, $_SESSION;
 	if (is_array($_SESSION)) $_SESSION[$name] = $value;
 	if (is_array($HTTP_SESSION_VARS)) $HTTP_SESSION_VARS[$name] = $value;
 	return $value;
