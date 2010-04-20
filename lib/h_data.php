@@ -721,7 +721,7 @@ class DataSet
 	{
 		if (!empty($amount))
 		{
-			$ret = ' LIMIT';
+			$ret = '\n LIMIT';
 			if (is_array($amount)) $ret .= " {$amount[0]}, {$amount[1]}";
 			else $ret .= " 0, {$amount}";
 			return $ret;
@@ -1009,7 +1009,7 @@ class DataSet
 		$query .= $this->WhereClause(@$opts['match']);
 		$query .= $this->GroupClause(@$opts['group']);
 		$query .= $this->OrderClause(@$opts['sort']);
-		$query .= $this->AmountClause(@$opts['filter']);
+		$query .= $this->AmountClause(@$opts['limit']);
 
 		//Execute Query
 		$rows = $this->database->Query($query, $this->ErrorHandler);
