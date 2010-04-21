@@ -693,7 +693,7 @@ class DataSet
 	 */
 	function OrderClause($sorting)
 	{
-		if (isset($sorting))
+		if (!empty($sorting))
 		{
 			$ret = "\n ORDER BY";
 			if (is_array($sorting))
@@ -721,7 +721,7 @@ class DataSet
 	{
 		if (!empty($amount))
 		{
-			$ret = '\n LIMIT';
+			$ret = "\n LIMIT";
 			if (is_array($amount)) $ret .= " {$amount[0]}, {$amount[1]}";
 			else $ret .= " 0, {$amount}";
 			return $ret;
