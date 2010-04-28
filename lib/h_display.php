@@ -1013,7 +1013,7 @@ class SelOption extends TreeNode
 
 	function RenderCheck($atrs)
 	{
-		if ($this->selected) $selected = ' selected="selected"';
+		if ($this->selected) $atrs['CHECKED'] = 'checked';
 		if (!empty($this->children))
 		{
 			$ret = '<p><b><i>'.$this->text.'</i></b><br />';

@@ -93,6 +93,7 @@ class Module
 
 		global $_d;
 
+		Trace('Module: Preparing modules for use.');
 		$tprep = new Template();
 		$tprep->ReWrite('block', array('Module', 'TagPrepBlock'));
 		$tprep->ParseFile($template);
@@ -104,6 +105,7 @@ class Module
 
 		global $mods;
 
+		Trace('Module: Prelink, Link, Prepare and Get...');
 		if (!empty($mods))
 		{
 			if (!empty($_d['module.disable']))
@@ -118,6 +120,7 @@ class Module
 			foreach ($mods as $n => $mod) $mod->Prepare();
 			foreach ($mods as $n => $mod)
 			{
+				Trace("Get {$n}");
 				if (@array_key_exists($mod->Block, $_d['blocks']))
 					$_d['blocks'][$mod->Block] .= $mod->Get();
 				else
@@ -125,6 +128,7 @@ class Module
 			}
 		}
 
+		Trace('Module: Initialized, moving to presentation');
 		$t = new Template($_d);
 		$t->ReWrite('block', array('Module', 'TagBlock'));
 		return $t->ParseFile($template);

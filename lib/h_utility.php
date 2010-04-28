@@ -56,7 +56,7 @@ function HandleErrors($file = null)
  */
 function Trace($msg)
 {
-	if (!empty($GLOBALS['debug'])) var_dump($msg);
+	if (!empty($GLOBALS['debug'])) varinfo($msg);
 	if (!empty($GLOBALS['__debfile'])) file_put_contents('trace.txt', $msg."\r\n", FILE_APPEND);
 }
 
