@@ -93,8 +93,7 @@ class Module
 
 		global $_d;
 
-		Trace('Module: Preparing modules for use.');
-		$tprep = new Template();
+		$tprep = new Template($_d);
 		$tprep->ReWrite('block', array('Module', 'TagPrepBlock'));
 		$tprep->ParseFile($template);
 		$_d['blocks']['hidden'] = null;

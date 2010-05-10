@@ -409,7 +409,7 @@ class Form
 	* @param array $colAttribs Array of table's column attributes.
 	* @param bool $persist Whether or not to persist the values in this form.
 	*/
-	function Form($name, $persist = true)
+	function __construct($name, $persist = true)
 	{
 		$this->name = $name;
 		$this->attribs = array();
@@ -589,7 +589,7 @@ class Form
 	{
 		require_once('h_template.php');
 		$this->formAttribs = $formAttribs;
-		$t = new Template();
+		$t = new Template($GLOBALS['_d']);
 		$t->Set('form_name', $this->name);
 		$t->ReWrite('form', array(&$this, 'TagForm'));
 		$t->ReWrite('field', array(&$this, 'TagField'));
@@ -662,14 +662,28 @@ class FormInput
 		$this->name = $name;
 		$this->help = $help;
 
+		// Consume these attributes
+
+		if (is_array($atrs))
+		{
+			$this->valid = Pull($atrs, 'VALID');
+			$this->invalid = Pull($atrs, 'INVALID');
+		}
+
+		// Propegate these attributes
+
 		if (is_array($atrs))
 			foreach ($atrs as $k => $v)
 				$this->atrs[strtoupper($k)] = $v;
 		else $this->atrs = ParseAtrs($atrs);
 
+		// Analyze these attributes
+
 		$this->atrs['TYPE'] = $type;
 		if ($name != null) $this->atrs['NAME'] = $name;
 		if ($valu != null) $this->atrs['VALUE'] = $valu;
+
+		// @TODO: I don't believe these should be in the constructor.
 
 		switch ($type)
 		{
@@ -1775,6 +1789,51 @@ function SOCallback($ds, $item, $icol, $col = null)
 	return $item[$icol];
 }
 
+/**
+* Rewriting form tag to add additional functionality.
+*
+* @param Template $t
+* @param string $g
+* @param array $a
+*/
+function TagForm($t, $g, $a)
+{
+	global $PERSISTS;
+	$frm = new Form($a['ID']);
+	$t->Push($frm);
+	$ret = '<form'.GetAttribs($a).'>';
+	if (is_array($PERSISTS))
+	foreach ($PERSISTS as $n => $v)
+		$ret .= '<input type="hidden" name="'.$n.'" value="'.$v.'" />';
+	$t->ReWrite('input', 'TagInput');
+	$ret .= $t->GetString('<null>'.$g.'</null>');
+	$obj = $t->Pop();
+	$ret .= $obj->outs[0];
+	$ret .= '</form>';
+
+	foreach ($frm->inputs as $in)
+	{
+		if (!empty($in->valid))
+		{
+			require_once('a_validation.php');
+			$ret .= Validation::GetJS($frm);
+			break;
+		}
+	}
+
+	return $ret;
+}
+
+/**
+* Rewrites inputs into FormInputs for further processing.
+*
+* @param Template $t
+* @param string $guts
+* @param array $attribs
+* @param string $tag
+* @param mixed $args
+* @return string
+*/
 function TagInput($t, $guts, $attribs, $tag, $args)
 {
 	// Handle Persistent Values
@@ -1794,14 +1853,19 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 		}
 	}
 
-	$searchable = $attribs['TYPE'] != 'hidden' && $attribs['TYPE'] != 'radio'
-		&& $attribs['TYPE'] != 'checkbox' && $attribs['TYPE'] != 'submit';
+	$searchable =
+		$attribs['TYPE'] != 'hidden' &&
+		$attribs['TYPE'] != 'radio' &&
+		$attribs['TYPE'] != 'checkbox' &&
+		$attribs['TYPE'] != 'submit';
 
 	if (!empty($attribs['TYPE']))
 	{
 		$fi = new FormInput(null, @$attribs['TYPE'], @$attribs['NAME'],
 			@$attribs['VALUE'], $attribs);
-		$field = $fi->Get(null, false);
+		if (get_class($t->GetCurrentObject()) == 'Form')
+			$t->GetCurrentObject()->AddInput($fi);
+		return $fi->Get(null, false);
 	}
 
 	$ret = '';
@@ -1820,19 +1884,6 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 	if ($args == 'search' && $searchable) $ret .= '</div>';
 	return $ret;
 }
-
-function TagLoop($t, $g, $a)
-{
-	$vp = new VarParser();
-	$ret = null;
-	for ($ix = $a['START']; $ix <= $a['END']; $ix++)
-	{
-		$ret .= $vp->ParseVars($g, array($a['VAR'] => $ix));
-	}
-	return $ret;
-}
-
-function TagUpper($t, $g, $a) { return strtoupper($g); }
 
 function GetAttribs($attribs)
 {
@@ -1995,77 +2046,16 @@ function AddResultTags(&$t)
 	$t->ReWrite('sum', 'TagSum');
 }
 
-function TagForm($t, $g, $a)
+class LayeredOutput
 {
-	global $PERSISTS;
-	$ret = '<form'.GetAttribs($a).'>';
-	if (is_array($PERSISTS))
-	foreach ($PERSISTS as $n => $v)
-		$ret .= '<input type="hidden" name="'.$n.'" value="'.$v.'" />';
-	$ret .= $g;
-	$ret .= '</form>';
-	return $ret;
-}
+	public $layer = -1;
+	public $outs;
 
-class IfYouDontUseMeGetRidOfMe
-{
-	function DataDisplay($name, $ds)
-	{
-		$this->Name = $name;
-		$this->ds = $ds;
-	}
-
-	function Get($temp)
-	{
-		$this->ci = GetVar($this->Name.'_ci');
-
-		$tg = new Template();
-		$tg->Set('name', $this->Name);
-		$tg->ReWrite('listitem', array(&$this, 'TagListItem'));
-		$tg->ReWrite('detailitem', array(&$this, 'TagDetailItem'));
-		return $tg->GetString($temp);
-	}
-
-	/**
-	 * This is repeated for each item in the associated dataset.
-	 *
-	 * @param Template $t Associated template.
-	 * @param string $guts Contents of the tag.
-	 */
-	function TagListItem($t, $guts)
-	{
-		$ret = '';
-
-		if (empty($this->ci))
-		{
-			$vp = new VarParser();
-
-			foreach ($this->ds->Get() as $i)
-			{
-				$ret .= $vp->ParseVars($guts, $i);
-			}
-		}
-
-		return $ret;
-	}
-
-	/**
-	 * This is called for a detail tag in the template.
-	 *
-	 * @param Template $t Associated template.
-	 * @param string $guts Contents of the tag.
-	 */
-	function TagDetailItem($t, $guts)
-	{
-		$vp = new VarParser();
-
-		if (!empty($this->ci))
-		{
-			$item = $this->ds->GetOne(array($this->ds->id => $this->ci));
-
-			return $vp->ParseVars($guts, array_merge($item));
-		}
-	}
+	function __construct() { $this->CreateBuffer(); }
+	function CreateBuffer() { $this->outs[++$this->layer] = ''; }
+	function Out($data) { $this->outs[$this->layer] .= $data; }
+	function Get() { return $this->outs[$this->layer]; }
+	function FlushBuffer() { return $this->outs[$this->layer--]; }
 }
 
 ?>

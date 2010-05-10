@@ -1540,7 +1540,7 @@ function GetQ()
 
 function Pull(&$arr, $key)
 {
-	$ret = $arr[$key];
+	$ret = @$arr[$key];
 	unset($arr[$key]);
 	return $ret;
 }

@@ -702,7 +702,8 @@ class DataSet
 				foreach ($sorting as $col => $dir)
 				{
 					if ($ix++ > 0) $ret .= ',';
-					$ret .= " {$col} {$dir}";
+					if (!is_numeric($col)) $ret .= " {$col} {$dir}";
+					$ret .= " $dir";
 				}
 			}
 			else $ret .= " $sorting";
@@ -1008,7 +1009,7 @@ class DataSet
 		$query .= $this->JoinClause(@$opts['joins'], $this->joins);
 		$query .= $this->WhereClause(@$opts['match']);
 		$query .= $this->GroupClause(@$opts['group']);
-		$query .= $this->OrderClause(@$opts['sort']);
+		$query .= $this->OrderClause(@$opts['order']);
 		$query .= $this->AmountClause(@$opts['limit']);
 
 		//Execute Query
