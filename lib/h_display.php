@@ -304,7 +304,7 @@ class SortTable extends Table
  * A web page form, with functions for easy field creation and layout.
  * @todo Create sub classes for each input type.
  */
-class Form
+class Form extends LayeredOutput
 {
 	/**
 	 * Unique name of this form (used in html / js / identifying).
@@ -411,6 +411,7 @@ class Form
 	*/
 	function __construct($name, $persist = true)
 	{
+		parent::__construct();
 		$this->name = $name;
 		$this->attribs = array();
 		$this->Persist = $persist;
@@ -2053,7 +2054,7 @@ class LayeredOutput
 
 	function __construct() { $this->CreateBuffer(); }
 	function CreateBuffer() { $this->outs[++$this->layer] = ''; }
-	function Out($data) { $this->outs[$this->layer] .= $data; }
+	function Out($data) { @$this->outs[$this->layer] .= $data; }
 	function Get() { return $this->outs[$this->layer]; }
 	function FlushBuffer() { return $this->outs[$this->layer--]; }
 }
