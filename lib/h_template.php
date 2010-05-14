@@ -66,6 +66,8 @@ function RequireModule(&$data, $file, $class)
 	return $mod;
 }
 
+require_once('h_display.php');
+
 /**
  * A template
  */
