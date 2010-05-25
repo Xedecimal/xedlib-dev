@@ -189,9 +189,11 @@ class Module
 	{
 		global $_d;
 
-		if (@$_d['q'][0] == $name)
+		$q = $_d['q'];
+
+		if (@$q[0] == $name)
 		{
-			@$GLOBALS['me'] .= '/'.array_shift($_d['q']);
+			@$GLOBALS['me'] .= '/'.array_shift($q);
 			$this->Active = true;
 		}
 	}

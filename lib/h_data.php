@@ -703,7 +703,7 @@ class DataSet
 				{
 					if ($ix++ > 0) $ret .= ',';
 					if (!is_numeric($col)) $ret .= " {$col} {$dir}";
-					$ret .= " $dir";
+					else $ret .= " $dir";
 				}
 			}
 			else $ret .= " $sorting";

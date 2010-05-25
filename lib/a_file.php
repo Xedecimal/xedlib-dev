@@ -519,15 +519,12 @@ class FileManager
 					array($this->Name.'_cf' =>
 					"{$this->cf}{$f->filename}"));
 
-			//$this->curfile = $f;
 			$this->vars['caption'] = $this->View->GetCaption($f);
 			$this->vars['filename'] = $f->filename;
 			$this->vars['fipath'] = $f->path;
 			$this->vars['type'] = 'folders';
 			$this->vars['index'] = $ix;
 			$this->vars['icon'] = $this->GetIcon($f);
-			//if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
-			//else $this->vars['icon'] = '';
 
 			$common = "?cf={$this->cf}&amp;editor={$this->Name}&amp;type=folders";
 

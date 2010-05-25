@@ -1994,11 +1994,11 @@ class DataSearch
 		$this->_ds = $ds;
 		$this->Behavior = new DataSearchBehavior();
 		$this->Behavior->Buttons['View'] = array(
-			'href' => '{{root}}{{me}}/{{name}}/view/{{id}}',
+			'href' => '{{app_abs}}{{me}}/{{name}}/view/{{id}}',
 			'target' => '_blank'
 		);
 		$this->Behavior->Buttons['Edit'] = array(
-			'href' => '{{root}}{{me}}/{{name}}/edit/{{id}}',
+			'href' => '{{app_abs}}{{me}}/{{name}}/edit/{{id}}',
 			'target' => '_blank'
 		);
 		$this->Behavior->Buttons['Delete'] = array(
@@ -2316,7 +2316,7 @@ class DataSearch
 		$vp = new VarParser();
 		for ($ix = 0; $ix < $pages; $ix++)
 		{
-			$vars['url'] = url($_d['root'].$GLOBALS['me'].'/'.$this->Name
+			$vars['url'] = url($_d['app_abs'].$GLOBALS['me'].'/'.$this->Name
 				.'/search', array_merge($_GET, $_POST));
 			$vars['num'] = $ix+1;
 			$ret .= $vp->ParseVars($g, $vars);

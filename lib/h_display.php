@@ -813,7 +813,7 @@ class FormInput
 					$newsels = $this->GetValue($persist);
 					foreach ($newsels as $id => $val)
 						$ret .= $val->RenderCheck(array(
-							'NAME' => $this->atrs['NAME']));
+							'NAME' => $this->atrs['NAME'].'[]'));
 					$ret .= '</div>';
 				}
 				return $ret;
@@ -1800,7 +1800,7 @@ function SOCallback($ds, $item, $icol, $col = null)
 function TagForm($t, $g, $a)
 {
 	global $PERSISTS;
-	$frm = new Form($a['ID']);
+	$frm = new Form(@$a['ID']);
 	$t->Push($frm);
 	$ret = '<form'.GetAttribs($a).'>';
 	if (is_array($PERSISTS))

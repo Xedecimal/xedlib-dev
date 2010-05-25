@@ -14,33 +14,40 @@ class Validation
 	 * @param string $form Form containing validation to be used.
 	 * @return string
 	 */
-	static function GetJS($form)
+	static function GetJS($valids)
 	{
 		$ret = <<<EOF
-<script type="text/javascript">
+
+window.checks = [];
+
 $(function () {
+
 EOF;
-		foreach ($form->inputs as $in)
+		foreach ($valids as $id => $rexmsg)
 		{
-			if ($in->valid)
-			{
-				$id = $in->atrs['ID'];
-				$rex = $in->valid;
-				$msg = $in->invalid;
-				$ret .= <<<EOF
-$('#$id').after('<div id="$id-error" class="form-error"></div>');
-$('#$id').blur(function () {
+			list($rex, $msg) = $rexmsg;
+			$jname = preg_replace('/(:|\.|\[|\])/', '\\\\\1',$id);
+			$iname = str_replace('\\', '\\\\', $jname);
+			$sel = "input[name=$jname]";
+			$ret .= <<<EOF
+window.checks['check_$sel'] = function () {
+	$('#{$iname}_error').remove();
 	if (!$(this).val().match($rex))
-		$('#$id-error').text('X $msg').addClass('form-error');
-	else
-		$('#$id-error').text('').removeClass('form-error');
-});
+	{
+		$('<span id="{$jname}_error">$msg</span>').addClass('form-error').insertAfter('$sel');
+		$(window).scrollTop($(this).position().top)
+		return false;
+	}
+	return true;
+};
+
+$('$sel').blur(window.checks['check_$sel']);
+
 EOF;
-			}
 		}
 $ret .= <<<EOF
 });
-</script>
+
 EOF;
 		return $ret;
 	}
