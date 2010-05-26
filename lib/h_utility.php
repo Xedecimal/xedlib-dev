@@ -690,6 +690,8 @@ function DataToTree($rows, $iCol, $pCol, $rootid = null)
 	if (!empty($flats))
 	foreach ($flats as $tn)
 	{
+		if ($tn->data[$pCol] == $tn->data[$iCol]) continue;
+
 		if (isset($flats[$tn->data[$pCol]]))
 			$flats[$tn->data[$pCol]]->AddChild($tn);
 		else

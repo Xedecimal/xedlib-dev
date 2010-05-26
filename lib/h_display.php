@@ -1344,6 +1344,16 @@ class TreeNode
 			}
 		}
 	}
+
+	function Dump($in = 0)
+	{
+		foreach ($this->children as $c)
+		{
+			echo str_repeat(' ', $in);
+			echo $c->id."\n";
+			$c->Dump($in+1);
+		}
+	}
 }
 
 define('ACCESS_GUEST', 0);

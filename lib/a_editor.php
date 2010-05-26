@@ -1322,7 +1322,6 @@ class EditorData
 		$t = new Template();
 		$t->ReWrite('forms', array(&$this, 'TagForms'));
 		$t->ReWrite('search', array(&$this, 'TagSearch'));
-		$t->ReWrite('form', 'TagForm');
 		$t->Set('target', $this->Behavior->Target);
 		$t->Set('name', $this->Name);
 		$t->Set('plural', Plural($this->ds->Description));
