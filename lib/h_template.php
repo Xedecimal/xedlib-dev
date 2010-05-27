@@ -773,7 +773,10 @@ class VarParser
 			$var = $this->FindVar($indices[0]);
 
 			for ($ix = 1; $ix < count($indices); $ix++)
-				if (isset($var[$indices[$ix]])) $var = $var[$indices[$ix]];
+			{
+				if (is_object($var)) $var = $var->$indices[$ix];
+				else if (isset($var[$indices[$ix]])) $var = $var[$indices[$ix]];
+			}
 
 			if (!is_array($var)) return $var;
 		}

@@ -1,7 +1,5 @@
 <?php
 
-Module::RegisterModule('ModPage');
-
 class ModPage extends Module
 {
 	function Get()
@@ -15,5 +13,7 @@ class ModPage extends Module
 		return '<div class="page_content">'.$content.'</div>';
 	}
 }
+
+Module::Register('ModPage');
 
 ?>
