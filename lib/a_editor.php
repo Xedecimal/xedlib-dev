@@ -1524,12 +1524,9 @@ class DisplayData
 			foreach ($this->fs[$col] as $ix => $v)
 				$query['having'][] = " FIND_IN_SET($v, $ms[2]) > 0";
 		else if ($fi->atrs['TYPE'] == 'date')
-			$query['match'][$col] = SqlBetween(
-				TimestampToMySql(DateInputToTS(
-					$this->fs[$col][0]), false),
-				TimestampToMySql(DateInputToTS(
-					$this->fs[$col][1]), false)
-			);
+			$query['match'][$col] = SqlBetween(TimestampToMySql(DateInputToTS(
+				$this->fs[$col][0]), false), TimestampToMySql(DateInputToTS(
+				$this->fs[$col][1]), false));
 		else $query['match'][$col] = SqlLike('%'.$val.'%');
 	}
 
@@ -1713,11 +1710,9 @@ class DisplayData
 	{
 		if ($this->count > 10)
 		{
-			return GetPages(count($this->result), $this->ipp, array(
-				$this->Name.'_action' => 'search',
-				$this->Name.'_search' => $this->ss,
-				$this->Name.'_fields' => $this->fs,
-				$this->Name.'_ipp' => $this->ipp));
+			$vars = array_merge($_GET, $_POST);
+			unset($vars['cp']);
+			return GetPages(count($this->result), $this->ipp, $vars);
 		}
 	}
 
@@ -1738,22 +1733,23 @@ class DisplayData
 		if (!isset($this->ds->FieldInputs[$col])) return;
 		$fi = $this->ds->FieldInputs[$col];
 		$fi->atrs['NAME'] = "field[{$col}]";
+		$target = '#'.str_replace('.','\\\\.',$col);
 		$ret .= '<tr><td valign="top"><label><input type="checkbox"
 			value="1" id="'.$this->Name.'_search_'.$col.'" name="'.$this->Name.'_search['.$col.']"
-			onclick="$(\'#'.str_replace('.','\\\\.',$col).'\').toggle(500)" />
+			onclick="$(\''.$target.'\').showHide($(this).attr(\'checked\'))" />
 			'.$fi->text.'</label></td>';
 		if ($fi->atrs['TYPE'] == 'date')
 		{
-			$fi->atrs['NAME'] = $this->Name.'_field['.$col.'][0]';
-			$ret .= ' <td valign="top" style="display: none" id="'.$col.'">
+			$fi->atrs['NAME'] = 'field['.$col.'][0]';
+			$ret .= ' <td valign="top"><div id="'.$col.'" class="hidden">
 				from '.$fi->Get($this->Name).' to ';
 			$fi->atrs['NAME'] = 'field['.$col.'][1]';
-			$ret .= $fi->Get($this->Name)."</td>\n";
+			$ret .= $fi->Get($this->Name)."</div></td>\n";
 		}
-		if ($fi->atrs['TYPE'] == 'select')
+		else if ($fi->atrs['TYPE'] == 'select')
 			$fi->type = 'checks';
-		else $ret .= '<td style="display: none" id="'.$col.'">'.
-			$fi->Get($this->Name).'</td>';
+		else $ret .= '<td><div id="'.$col.'" class="hidden">'.
+			$fi->Get($this->Name).'</div></td>';
 		$ret .= '</tr>';
 		return $ret;
 	}
