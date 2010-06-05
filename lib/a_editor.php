@@ -2062,11 +2062,7 @@ class DataSearch
 					$this->AddToQuery($query, $col, $val);
 				}
 
-				$query['cols'] = array(
-					SqlUnquote('SQL_CALC_FOUND_ROWS *'));
-				$start = $this->Behavior->ItemsPerPage *
-					(GetVar($this->Name.'_page', 1) - 1);
-				$query['filter'] = array($start, $this->Behavior->ItemsPerPage);
+				$query['cols'] = array(SqlUnquote('SQL_CALC_FOUND_ROWS *'));
 				$this->items = $this->_ds->Get($query);
 
 				$count = $this->_ds->GetCustom('SELECT FOUND_ROWS()');
@@ -2225,8 +2221,13 @@ class DataSearch
 			$t->ReWrite('result_button', array($this, 'TagResultButton'));
 
 			$ret = '';
-			foreach ($this->items as $ix => $i)
+			$start = $this->Behavior->ItemsPerPage *
+				(GetVar($this->Name.'_page', 1) - 1);
+			for ($ix = 0; $ix < $this->Behavior->ItemsPerPage; $ix++)
+			#foreach ($this->items as $ix => $i)
 			{
+				if ($start+$ix >= count($this->items)) break;
+				$i = $this->items[$start+$ix];
 				if (!empty($this->Callbacks->Result))
 					RunCallbacks($this->Callbacks->Result, $t, $i);
 				$this->item = $i;
@@ -2236,8 +2237,6 @@ class DataSearch
 				$t->Set('id', $i[$this->_ds->id]);
 				$t->Set($i);
 				$ret .= $t->GetString($g);
-
-				if ($ix > $this->Behavior->ItemsPerPage) break;
 			}
 			return $ret;
 		}

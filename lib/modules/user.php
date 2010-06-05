@@ -1,7 +1,5 @@
 <?php
 
-Module::RegisterModule('ModUser');
-
 class ModUser extends Module
 {
 	static function RequireAccess($level)
@@ -42,8 +40,8 @@ class ModUser extends Module
 		if (ModUser::RequireAccess(1))
 		{
 			$q = GetVar('q');
-			$_d['nav.links']['Log Out'] =
-				"{{app_abs}}/{$this->lm->Name}/logout?{$this->lm->Name}_return=$q";
+			$_d['nav.links']->AddChild(new TreeNode('Log Out',
+				"{{app_abs}}/{$this->lm->Name}/logout?{$this->lm->Name}_return=$q"));
 		}
 	}
 
@@ -75,6 +73,8 @@ class ModUser extends Module
 	}
 }
 
+Module::Register('ModUser');
+
 class ModUserAdmin extends Module
 {
 	/**
@@ -101,7 +101,7 @@ class ModUserAdmin extends Module
 		global $_d;
 
 		if (ModUser::RequireAccess(2))
-			$_d['nav.links']['Users'] = '{{app_abs}}/user';
+			$_d['nav.links']->AddChild(new TreeNode('Users', '{{app_abs}}/user'));
 	}
 
 	function Prepare()
@@ -134,6 +134,6 @@ class ModUserAdmin extends Module
 	}
 }
 
-Module::RegisterModule('ModUserAdmin');
+Module::Register('ModUserAdmin');
 
 ?>
