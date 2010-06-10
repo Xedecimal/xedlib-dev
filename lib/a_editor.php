@@ -2196,7 +2196,7 @@ class DataSearch
 				TimestampToMySql(DateInputToTS(GetVar($col.'2')), false)
 			);
 		}
-		else $query['match'][$col] = SqlLike($val);
+		else $query['match'][$col] = SqlLike('%'.$val.'%');
 	}
 
 	# Result Related
