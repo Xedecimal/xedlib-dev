@@ -1,11 +1,11 @@
 /*** adding sf-vertical in addition to sf-menu creates a vertical menu ***/
 .nav, .nav li {
-	width:	10em;
+	width:	8em;
 }
 /* this lacks ul at the start of the selector, so the styles from the main CSS file override it where needed */
 .nav li:hover ul,
 .nav li.sfHover ul {
-	left:	10em; /* match ul width */
+	left:	8em; /* match ul width */
 	top:	0;
 }
 
