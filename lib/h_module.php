@@ -121,7 +121,7 @@ class Module
 				if (@array_key_exists($mod->Block, $_d['blocks']))
 					$_d['blocks'][$mod->Block] .= $mod->Get();
 				else
-					@$_d['blocks']['default'] .= $mod->Get();
+					$_d['blocks']['default'] .= $mod->Get();
 			}
 		}
 

@@ -4,7 +4,7 @@ class ModUser extends Module
 {
 	static function RequireAccess($level)
 	{
-		if (@$GLOBALS['_d']['cl']['usr_access'] >= $level) return true;
+		if ($GLOBALS['_d']['cl']['usr_access'] >= $level) return true;
 		return false;
 	}
 
@@ -56,7 +56,7 @@ class ModUser extends Module
 			if (array_search($p, $_d['user.pages']) === false) return;
 		}
 
-		if (!empty($_d['user.ds']) && @$_d['user.login'])
+		if (!empty($_d['user.ds']) && @$_d['user.login'] && empty($_d['cl']))
 		{
 			$this->lm->Behavior->Return = GetVar('q');
 			$out = $this->lm->Get();

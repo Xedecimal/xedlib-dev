@@ -43,7 +43,8 @@ class ModArticles extends Module
 
 	function Get()
 	{
-		$t = new Template();
+		if (ModUser::RequireAccess(1)) return;
+		$t = new Template($GLOBALS['_d']);
 		$t->ReWrite('articles', array($this, 'TagArticles'));
 		$t->Set('foot', @$this->_foot);
 		$t->Behavior->Bleed = false;
@@ -62,6 +63,8 @@ class ModArticle extends Module
 	{
 		global $_d;
 		$this->_template = l('temps/mod_article.xml');
+		if (empty($this->_source))
+			$this->_source = new DataSet($_d['db'], $this->Name, $this->ID);
 	}
 
 	function TagNews($t, $g)
@@ -71,7 +74,7 @@ class ModArticle extends Module
 
 		if (empty($_d['q'][1]))
 		{
-			$items = $_d['news.ds']->Get();
+			$items = $this->_source->Get();
 			$vp = new VarParser();
 			$ret = null;
 			foreach ($items as $i) $ret .= $vp->ParseVars($g, $i);
@@ -84,12 +87,12 @@ class ModArticle extends Module
 		global $_d;
 		if ($_d['q'][0] != $this->Name) return;
 
-		$ci = $_d['q'][1];
+		$ci = @$_d['q'][1];
 
 		if (!empty($ci))
 		{
-			$query = array('match' => array('nws_id' => $ci));
-			$item = $_d['news.ds']->GetOne($query);
+			$query = array('match' => array($this->ID => $ci));
+			$item = $this->_source->GetOne($query);
 			$vp = new VarParser();
 			return $vp->ParseVars($g, $item);
 		}
@@ -112,23 +115,23 @@ class ModArticleAdmin extends Module
 	*/
 	private $edNews;
 
+	protected $Name = 'news';
+	protected $ID = 'nws_id';
+
 	function __construct()
 	{
 		require_once('xedlib/a_editor.php');
 		global $_d;
 
-		if (empty($_d['news.ds']))
-			$_d['news.ds'] = new DataSet($_d['db'], 'news', 'nws_id');
-
-		$this->edNews = new EditorData('edNews', $_d['news.ds']);
-		$this->edNews->Behavior->Search = false;
+		if (empty($this->_source))
+			$this->_source = new DataSet($_d['db'], $this->Name, $this->ID);
 	}
 
 	function Link()
 	{
 		global $_d, $me;
 
-		if (@$_d['q'][1] != 'news') return;
+		if (!$this->Active) return;
 
 		if (!ModUser::RequireAccess(2)) return;
 		$_d['nav.links']['News'] = $me.'/news';
@@ -138,23 +141,31 @@ class ModArticleAdmin extends Module
 	{
 		global $_d;
 
-		$_d['news.ds']->Description = 'News';
-		$_d['news.ds']->DisplayColumns = array(
-			'nws_title' => new DisplayColumn('Title')
-		);
-		$_d['news.ds']->FieldInputs = array(
-			'nws_title' => new FormInput('Title'),
-			'nws_body' => new FormInput('Body', 'area')
-		);
+		if (empty($this->_source->DisplayColumns))
+		{
+			$this->_source->Description = 'News';
+			$this->_source->DisplayColumns = array(
+				'nws_title' => new DisplayColumn('Title')
+			);
+			$this->_source->FieldInputs = array(
+				'nws_title' => new FormInput('Title'),
+				'nws_body' => new FormInput('Body', 'area')
+			);
+		}
 
 		global $me;
-		$this->edNews->Behavior->Target = p('news');
+		$this->edNews = new EditorData('edNews', $this->_source);
+		$this->edNews->Behavior->Search = false;
+		$this->edNews->Behavior->Target = p($this->Name);
 		$this->edNews->Prepare();
 	}
 
 	function Get()
 	{
 		global $_d;
+
+		if (!$this->Active) return;
+
 		return $this->edNews->GetUI('edNews');
 	}
 }
