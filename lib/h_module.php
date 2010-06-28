@@ -23,7 +23,9 @@ function p($path)
 	if (file_exists($modpath)) return "$abs/modules/$path";
 	// Xedlib Path
 	$xedpath = dirname(__FILE__).'/'.$path;
-	if (file_exists($xedpath)) return GetRelativePath(dirname(__FILE__)).'/'.$path;
+	if (file_exists($xedpath))
+		return GetRelativePath(dirname(__FILE__)).'/'.$path;
+
 	return $path;
 }
 
@@ -44,6 +46,17 @@ class Module
 {
 	static function Initialize($repath = false)
 	{
+		if ($repath)
+		{
+			global $_d;
+
+			$_d['template.transforms']['link'] = array('Module', 'TransPath', 'HREF');
+			$_d['template.transforms']['a'] = array('Module', 'TransPath', 'HREF');
+			$_d['template.transforms']['img'] = array('Module', 'TransPath', 'SRC');
+			$_d['template.transforms']['script'] = array('Module', 'TransPath', 'SRC');
+			$_d['template.transforms']['form'] = array('Module', 'TransPath', 'ACTION');
+		}
+
 		if (!file_exists('modules')) return;
 		$dp = opendir('modules');
 		while ($f = readdir($dp))
@@ -55,16 +68,6 @@ class Module
 			else if (fileext($p) == 'php') require_once($p);
 		}
 		closedir($dp);
-		if ($repath)
-		{
-			global $_d;
-
-			$_d['template.transforms']['link'] = array('Module', 'TransPath', 'HREF');
-			$_d['template.transforms']['a'] = array('Module', 'TransPath', 'HREF');
-			$_d['template.transforms']['img'] = array('Module', 'TransPath', 'SRC');
-			$_d['template.transforms']['script'] = array('Module', 'TransPath', 'SRC');
-			$_d['template.transforms']['form'] = array('Module', 'TransPath', 'ACTION');
-		}
 	}
 
 	/**

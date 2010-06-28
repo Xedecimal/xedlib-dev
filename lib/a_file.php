@@ -392,14 +392,14 @@ class FileManager
 		$icons = array(
 			'folder' => p('images/icons/folder.png'),
 			'png' => p('images/icons/image.png'),
-			'jpg' => p('/images/icons/image.png'),
-			'jpeg' => p('/images/icons/image.png'),
-			'gif' => p('/images/icons/image.png'),
-			'pdf' => p('/images/icons/acrobat.png'),
-			'sql' => p('/images/icons/db.png'),
-			'xls' => p('/images/icons/excel.png'),
-			'doc' => p('/images/icons/word.png'),
-			'docx' => p('/images/icons/word.png')
+			'jpg' => p('images/icons/image.png'),
+			'jpeg' => p('images/icons/image.png'),
+			'gif' => p('images/icons/image.png'),
+			'pdf' => p('images/icons/acrobat.png'),
+			'sql' => p('images/icons/db.png'),
+			'xls' => p('images/icons/excel.png'),
+			'doc' => p('images/icons/word.png'),
+			'docx' => p('images/icons/word.png')
 		);
 		if (!empty($f->vars['icon']))
 			return $f->vars['icon'];

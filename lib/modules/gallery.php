@@ -2,9 +2,6 @@
 
 require_once('xedlib/a_file.php');
 
-Module::RegisterModule('ModGallery');
-Module::RegisterModule('ModGalleryAdmin');
-
 class ModGallery extends Module
 {
 	function Get()
@@ -21,6 +18,8 @@ class ModGallery extends Module
 		return $gal->Get(GetVar('galcf'));
 	}
 }
+
+Module::Register('ModGallery');
 
 class ModGalleryAdmin extends Module
 {
@@ -44,9 +43,10 @@ class ModGalleryAdmin extends Module
 	{
 		global $_d, $me;
 
+		if ($_d['q'][0] == 'admin') $_d['user.login'] = true;
 		if (!ModUser::RequireAccess(2)) return;
 
-		$_d['nav.links']['Gallery'] = $me.'/gallery';
+		$_d['nav.links']->AddChild(new TreeNode('Gallery', '{{app_abs}}/gallery'));
 	}
 
 	function Prepare()
@@ -67,5 +67,7 @@ class ModGalleryAdmin extends Module
 		return $this->fm->Get();
 	}
 }
+
+Module::Register('ModGalleryAdmin');
 
 ?>
