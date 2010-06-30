@@ -1220,6 +1220,7 @@ class EditorData
 
 					if (isset($this->Errors[$in->attr('NAME')]))
 						$in->help = $this->Errors[$in->atrs['NAME']];
+					$in->attr('CLASS', 'editor_input');
 
 					$frm->AddInput($in);
 				}

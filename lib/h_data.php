@@ -780,17 +780,7 @@ class DataSet
 				continue;
 
 				if ($opts & SQLOPT_QUOTE) $ret .= "'";
-				switch ($this->database->type)
-				{
-					case DB_MY:
-						$ret .= mysql_real_escape_string($val, $this->database->link);
-						break;
-					case DB_SL:
-						$ret .= sqlite_escape_string($val);
-						break;
-					default:
-						$ret .= addslashes($val);
-				}
+				$ret .= $this->database->Escape($val);
 				if ($opts & SQLOPT_QUOTE) $ret .= "'";
 			}
 			if ($found) return $ret;

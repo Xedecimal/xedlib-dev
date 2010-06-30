@@ -783,7 +783,7 @@ class FormInput
 		}
 		if ($this->atrs['TYPE'] == 'area')
 		{
-			if (empty($this->atrs['ROWS'])) $this->atrs['ROWS'] = 3;
+			if (empty($this->atrs['ROWS'])) $this->atrs['ROWS'] = 10;
 			if (empty($this->atrs['COLS'])) $this->atrs['COLS'] = 25;
 			if (empty($this->atrs['CLASS'])) $this->atrs['CLASS'] = 'input_area';
 			$natrs = $this->atrs;
