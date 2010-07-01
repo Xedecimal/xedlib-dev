@@ -910,8 +910,16 @@ class EditorData
 				}
 			}
 
-			$items = $this->ds->GetSearch($cols, GetVar($this->Name.'_q'),
-				null, null, $this->sort, $this->filter);
+			// Search
+			$s = GetVar($this->Name.'_q');
+			if (!empty($s))
+				foreach($cols as $c)
+					$q['match'][$c] = SqlLike('%'.$s.'%');
+
+			$q['columns'] = $cols;
+			$q['order'] = $this->sort;
+			$q['limit'] = $this->filter;
+			$items = $this->ds->Get($q);
 
 			$root = $this->BuildTree($items);
 		}

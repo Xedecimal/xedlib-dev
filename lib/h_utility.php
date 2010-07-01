@@ -187,15 +187,12 @@ function GetVar($name, $default = null)
 	global $HTTP_POST_FILES, $HTTP_POST_VARS, $HTTP_GET_VARS, $HTTP_SERVER_VARS,
 	$HTTP_SESSION_VARS, $HTTP_COOKIE_VARS;
 
-	//This was empty() but that caused blank values that actually are set to
-	//fail with null instead of an empty string, the proper return value I
-	//believe. Changing it back to isset().
-	if (isset($_FILES[$name]))   { Trace("GetVar(): $name (File)    -> {$_FILES[$name]}<br/>\n"); return $_FILES[$name]; }
-	if (isset($_POST[$name]))    { Trace("GetVar(): $name (Post)    -> {$_POST[$name]}<br/>\n"); return $_POST[$name]; }
-	if (isset($_GET[$name]))     { Trace("GetVar(): $name (Get)     -> {$_GET[$name]}<br/>\n"); return $_GET[$name]; }
-	if (isset($_SESSION[$name])) { Trace("GetVar(): $name (Session) -> {$_SESSION[$name]}<br/>\n"); return $_SESSION[$name]; }
-	if (isset($_COOKIE[$name]))  { Trace("GetVar(): $name (Cookie)  -> {$_COOKIE[$name]}<br/>\n"); return $_COOKIE[$name]; }
-	if (isset($_SERVER[$name]))  { Trace("GetVar(): $name (Server)  -> {$_SERVER[$name]}<br/>\n"); return $_SERVER[$name]; }
+	if (isset($_FILES[$name])) return $_FILES[$name];
+	if (isset($_POST[$name])) return $_POST[$name];
+	if (isset($_GET[$name])) return $_GET[$name];
+	if (isset($_SESSION[$name])) return $_SESSION[$name];
+	if (isset($_COOKIE[$name])) return $_COOKIE[$name];
+	if (isset($_SERVER[$name])) return $_SERVER[$name];
 
 	if (isset($HTTP_POST_FILES[$name]) && strlen($HTTP_POST_FILES[$name]) > 0)
 		return $HTTP_POST_FILES[$name];
@@ -211,6 +208,19 @@ function GetVar($name, $default = null)
 		return $HTTP_SERVER_VARS[$name];
 
 	return $default;
+}
+
+function SanitizeEnvironment()
+{
+	if (ini_get('magic_quotes_gpc'))
+		foreach ($_POST as $k => $v) Sanitize($_POST[$k]);
+}
+
+function Sanitize(&$v)
+{
+	if (is_array($v))
+		foreach ($v as $i) Sanitize($i);
+	else $v = stripslashes($v);
 }
 
 /**

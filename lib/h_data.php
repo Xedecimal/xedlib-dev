@@ -709,6 +709,7 @@ class DataSet
 			else $ret .= " $sorting";
 			return $ret;
 		}
+		else if (!empty($this->order)) return $this->OrderClause($this->order);
 		return null;
 	}
 

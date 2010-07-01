@@ -16,10 +16,12 @@ class ModArticles extends Module
 	function TagArticle($t, $g)
 	{
 		$vp = new VarParser();
+
+		// $this->_map = array('column' => val/callback);
 		foreach ($this->_map as $k => $v)
 		{
 			if (is_array($v))
-				$this->_article[$k] = RunCallbacks($v, $this->_article);
+				$this->_article += call_user_func($v, $this->_article);
 			else $this->_article[$k] = $this->_article[$v];
 		}
 		return $vp->ParseVars($g, $this->_article);
@@ -28,8 +30,8 @@ class ModArticles extends Module
 	function TagArticles($t, $g)
 	{
 		$t->ReWrite('article', array($this, 'TagArticle'));
-		if (isset($this->_source)) $this->_articles = $this->_source->Get(
-			array('sort' => array($this->_source->id => 'DESC')));
+		if (isset($this->_source))
+			$this->_articles = $this->_source->Get();
 		if (!empty($this->_articles))
 		{
 			foreach ($this->_articles as $a)
@@ -141,17 +143,17 @@ class ModArticleAdmin extends Module
 	{
 		global $_d;
 
+		if (empty($this->_source->Description))
+			$this->_source->Description = 'Articles';
 		if (empty($this->_source->DisplayColumns))
-		{
-			$this->_source->Description = 'News';
 			$this->_source->DisplayColumns = array(
 				'nws_title' => new DisplayColumn('Title')
 			);
+		if (empty($this->_source->FieldInputs))
 			$this->_source->FieldInputs = array(
 				'nws_title' => new FormInput('Title'),
 				'nws_body' => new FormInput('Body', 'area')
 			);
-		}
 
 		global $me;
 		$this->edNews = new EditorData('edNews', $this->_source);
