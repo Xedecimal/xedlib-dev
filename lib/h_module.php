@@ -3,7 +3,7 @@
 function p($path)
 {
 	// Only translate finished paths.
-	if (preg_match('/{/', $path)) return $path;
+	if (preg_match('/{{/', $path)) return $path;
 
 	global $_d;
 	$abs = $_d['app_abs'];

@@ -17,10 +17,18 @@ class ModEmail extends Module
 
 		global $_d;
 
-		if (@$_d['q'][1] == 'send')
+		if (@$_d['q'][1] == 'submit')
 		{
+			$this->_from = GetVar('from');
 			$t = new Template();
-			die($t->ParseFile($this->_email_template));
+			$t->use_getvar = true;
+
+			$headers[] = 'From: '.$this->_from;
+			$headers[] = 'Reply-To: '.$this->_from;
+
+			mail($this->_to, $this->_subject,
+				$t->ParseFile($this->_email_template),
+				implode($headers, "\r\n"));
 		}
 	}
 
