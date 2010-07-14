@@ -65,7 +65,7 @@ class ModNav extends Module
 
 Module::Register('ModNav');
 
-require_once('xedlib/h_display.php');
+require_once(l('h_display.php'));
 $_d['nav.links'] = new TreeNode();
 
 ?>

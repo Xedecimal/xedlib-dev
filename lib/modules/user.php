@@ -29,6 +29,8 @@ class ModUser extends Module
 		global $_d;
 
 		$this->lm = new LoginManager('lmAdmin');
+		if (isset($_d['user.encrypt']) && !$_d['user.encrypt'])
+			$this->lm->Behavior->Encryption = false;
 		$this->lm->AddDataSet($_d['user.ds'], 'usr_pass', 'usr_name');
 		$_d['cl'] = $this->lm->Prepare();
 	}
