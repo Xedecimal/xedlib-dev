@@ -1421,8 +1421,7 @@ class LoginManager
 		$passvar = $this->Name.'_sespass';
 		$uservar = $this->Name.'_sesuser';
 
-		if (@$_d['q'][0] == $this->Name)
-			$act = @$_d['q'][1];
+		if (@$_d['q'][0] == $this->Name) $act = @$_d['q'][1];
 		else $act = GetVar($this->Name.'_action');
 
 		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
@@ -1470,6 +1469,7 @@ class LoginManager
 				);
 				if (!empty($conditions))
 					$match = array_merge($query['match'], $conditions);
+
 				$item = $ds[0]->GetOne($query);
 				if ($item != null) return $item;
 			}

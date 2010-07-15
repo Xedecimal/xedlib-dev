@@ -1,6 +1,6 @@
 <?php
 
-Module::RegisterModule('ModEditorText');
+Module::Register('ModEditorText');
 
 class ModEditorText extends Module
 {

@@ -92,6 +92,7 @@ class EditorHandler
 
 	/**
 	 * Called to retrieve additional fields for the editor form object.
+	 * @param EditorData $s Source editor.
 	 * @param Form $form Contextual form suggested to add fields to.
 	 * @param mixed $id Unique id of this row.
 	 * @param array $data Data related to the action (update/insert).
@@ -1113,15 +1114,16 @@ class EditorData
 				<br />Where: EditorData({$this->Name})::GetForm.
 				<br />Why: This editor was not created with a proper dataset.");
 
-			$joins = array();
 			foreach ($this->handlers as $handler)
 			{
-				$join = $handler->GetJoins();
-				if (!empty($join)) $joins = array_merge($joins, $join);
+				$joins = $handler->GetJoins();
+				if (!empty($joins))
+				foreach ($joins as $ix => $j) $this->ds->joins[$ix] = $j;
+					//$joins = array_merge($joins, $join);
 			}
 
 			$sel = $state == STATE_EDIT ? $context->ds->Get(array(
-					'match' => array($context->ds->id => $ci),
+				'match' => array($context->ds->id => $ci),
 					'joins' => $joins)) : null;
 
 			$ds = $context->ds;
