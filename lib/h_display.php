@@ -1414,7 +1414,7 @@ class LoginManager
 	 *
 	 * @return mixed Array of user data or null if bound or true or false if not bound.
 	 */
-	function Prepare($conditions = null)
+	function Prepare($conditions = null, $queryAdd = null)
 	{
 		global $_d;
 
@@ -1463,10 +1463,15 @@ class LoginManager
 					<br />Who: LoginManager::Prepare()
 					<br />Why: You may have set an incorrect dataset in the
 					creation of this LoginManager.");
+
 				$query['match'] = array(
 					$ds[1] => $check_pass,
 					$ds[2] => SqlAnd($check_user)
 				);
+
+				if (!empty($queryAdd))
+					$query = array_merge_recursive($query, $queryAdd);
+
 				if (!empty($conditions))
 					$match = array_merge($query['match'], $conditions);
 
