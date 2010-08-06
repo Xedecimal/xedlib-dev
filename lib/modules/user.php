@@ -58,7 +58,7 @@ class ModUser extends Module
 			if (array_search($p, $_d['user.pages']) === false) return;
 		}
 
-		if (!empty($_d['user.ds']) && @$_d['user.login'] && empty($_d['cl']))
+		if (!empty($_d['user.ds']) && empty($_d['cl']) && $_d['q'][0] == 'admin')
 		{
 			$this->lm->Behavior->Return = GetVar('q');
 			$out = $this->lm->Get();

@@ -697,11 +697,6 @@ class FormInput
 				return GetInputState($this->atrs, @$this->valu, false);
 			case 'shortstate':
 				return GetInputSState($this->atrs, @$this->valu);
-			case 'checkbox':
-				if (@$this->atrs['VALUE'])
-					$this->atrs['CHECKED'] = 'checked';
-				unset($this->atrs['VALUE']);
-				break;
 		}
 	}
 
@@ -794,7 +789,6 @@ class FormInput
 		if ($this->atrs['TYPE'] == 'checkbox')
 		{
 			$val = $this->GetValue($persist);
-			$this->atrs['VALUE'] = 1;
 			return "<input ".GetAttribs($this->atrs)." />";
 		}
 		switch ($this->atrs['TYPE'])
@@ -936,9 +930,9 @@ class FormInput
 					: null;
 			//May get a little more complicated if we don't know what it is...
 			default:
-				return stripslashes(htmlspecialchars($persist ?
+				return htmlspecialchars($persist ?
 					GetVars($this->atrs['NAME'], @$this->atrs['VALUE']) :
-					@$this->atrs['VALUE']));
+					@$this->atrs['VALUE']);
 		}
 	}
 
@@ -1827,6 +1821,7 @@ function TagForm($t, $g, $a)
 	$ret .= $obj->outs[0];
 	$ret .= '</form>';
 
+	if (!empty($frm->inputs))
 	foreach ($frm->inputs as $in)
 	{
 		if (!empty($in->valid))

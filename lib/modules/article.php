@@ -18,6 +18,7 @@ class ModArticles extends Module
 		$vp = new VarParser();
 
 		// $this->_map = array('column' => val/callback);
+
 		foreach ($this->_map as $k => $v)
 		{
 			if (is_array($v))
@@ -45,7 +46,6 @@ class ModArticles extends Module
 
 	function Get()
 	{
-		if (ModUser::RequireAccess(1)) return;
 		$t = new Template($GLOBALS['_d']);
 		$t->ReWrite('articles', array($this, 'TagArticles'));
 		$t->Set('foot', @$this->_foot);
@@ -127,21 +127,23 @@ class ModArticleAdmin extends Module
 
 		if (empty($this->_source))
 			$this->_source = new DataSet($_d['db'], $this->Name, $this->ID);
+
+		$this->CheckActive($this->Name);
 	}
 
 	function Link()
 	{
 		global $_d, $me;
 
-		if (!$this->Active) return;
-
 		if (!ModUser::RequireAccess(2)) return;
-		$_d['nav.links']['News'] = $me.'/news';
+		$_d['nav.links']->AddChild(new TreeNode('News', '{{app_abs}}/'.$this->Name));
 	}
 
 	function Prepare()
 	{
 		global $_d;
+
+		if (!ModUser::RequireAccess(1)) return;
 
 		if (empty($this->_source->Description))
 			$this->_source->Description = 'Articles';
@@ -151,6 +153,7 @@ class ModArticleAdmin extends Module
 			);
 		if (empty($this->_source->FieldInputs))
 			$this->_source->FieldInputs = array(
+				'nws_date' => new FormInput('Date', 'date'),
 				'nws_title' => new FormInput('Title'),
 				'nws_body' => new FormInput('Body', 'area')
 			);
@@ -167,6 +170,7 @@ class ModArticleAdmin extends Module
 		global $_d;
 
 		if (!$this->Active) return;
+		if (!ModUser::RequireAccess(1)) return;
 
 		return $this->edNews->GetUI('edNews');
 	}

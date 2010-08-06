@@ -4,22 +4,24 @@ require_once('xedlib/a_file.php');
 
 class ModGallery extends Module
 {
+	function __construct()
+	{
+		parent::__construct();
+
+		$this->CheckActive($this->Name);
+	}
+
 	function Get()
 	{
 		global $_d;
 
-		if ($_d['q'][0] != 'gallery') return;
+		if (!$this->Active) return;
 
 		require_once('xedlib/a_gallery.php');
-		$gal = new Gallery('galimg');
-		global $me;
-
-		$me .= $_d['q'][0];
+		$gal = new Gallery($this->Path);
 		return $gal->Get(GetVar('galcf'));
 	}
 }
-
-Module::Register('ModGallery');
 
 class ModGalleryAdmin extends Module
 {
@@ -36,7 +38,7 @@ class ModGalleryAdmin extends Module
 		if ($_d['q'][0] != 'gallery') return;
 
 		$this->fm = new FileManager('fmGallery', 'galimg', array('Gallery'));
-		$this->fm->Behavior->Target = $me.'/gallery';
+		$this->fm->Behavior->Target = $_d['app_abs'].'/gallery';
 	}
 
 	function Link()
@@ -53,6 +55,7 @@ class ModGalleryAdmin extends Module
 	{
 		global $_d;
 		if ($_d['q'][0] != 'gallery') return;
+		if (!ModUser::RequireAccess(2)) return;
 
 		$this->fm->Behavior->AllowAll();
 		$this->fm->Prepare();
@@ -67,7 +70,5 @@ class ModGalleryAdmin extends Module
 		return $this->fm->Get();
 	}
 }
-
-Module::Register('ModGalleryAdmin');
 
 ?>

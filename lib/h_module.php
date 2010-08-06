@@ -157,6 +157,8 @@ class Module
 	/** @var boolean */
 	public $Active;
 
+	protected $Name = 'module';
+
 	function DataError($errno)
 	{
 		global $_d;
@@ -206,7 +208,7 @@ class Module
 	* Overload Responsibility: Link up your datasets, make them available for
 	* other modules and any other initial construction.
 	*/
-	function __construct($installed) { }
+	function __construct() { }
 
 	/**
 	* Overload Responsibility: Before linkage, do security checks and validation

@@ -1038,7 +1038,7 @@ class EditorData
 					if (array_key_exists($disp_index, $cnode->data))
 					{
 						$row[$ix++] = array(
-							htmlspecialchars(stripslashes($cnode->data[$disp_index])),
+							htmlspecialchars($cnode->data[$disp_index]),
 							array('class' => 'editor_cell',
 								'id' => "{$this->Name}:{$col}:{$cnode->id}")
 						);
@@ -1135,8 +1135,7 @@ class EditorData
 			foreach (array_keys($ds->FieldInputs) as $n)
 			{
 				if (isset($this->values[$n]))
-					$ds->FieldInputs[$n]->attr('VALUE',
-						stripslashes($this->values[$n]));
+					$ds->FieldInputs[$n]->attr('VALUE', $this->values[$n]);
 			}
 		}
 
@@ -1931,8 +1930,7 @@ class EditorText
 		if ($action == 'update')
 		{
 			$this->item = SecurePath(GetVar($this->Name.'_ci'));
-			file_put_contents($this->item,
-				stripslashes(GetVar($this->Name.'_body')));
+			file_put_contents($this->item, GetVar($this->Name.'_body'));
 		}
 	}
 
@@ -1943,7 +1941,7 @@ class EditorText
 		$frmRet->AddHidden($this->Name.'_ci', $this->item);
 
 		$frmRet->AddInput(new FormInput(null, 'area', 'body',
-			stripslashes(@file_get_contents($this->item)),
+			@file_get_contents($this->item),
 				array('ROWS' => 30, 'COLS' => 30, 'style' => 'width: 100%')));
 		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 

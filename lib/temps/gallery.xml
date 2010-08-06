@@ -14,7 +14,7 @@
 
 <file>
 <div class="file">
-<img src="{{icon}}" class="thumb" title="{{name}}" alt="{{fullname}}" />
+<img src="{{app_abs}}/{{icon}}" class="thumb" title="{{name}}" alt="{{fullname}}" />
 <div class="caption">{{name}}</div>
 </div> <!-- file -->
 </file>

@@ -894,28 +894,6 @@ function GetPages($total, $count, $args = null)
 }
 
 /**
- * Properly strip slashes from the given string depending on the configuration.
- * @param string $str String to strip from.
- * @return string Cleaned string.
- */
-function psslash($str)
-{
-	if (ini_get('magic_quotes_gpc')) return stripslashes($str);
-	else return $str;
-}
-
-/**
- * Properly add slashes to the given string depending on the configuration.
- * @param string $str String to add slashes to.
- * @return string Cleaned string.
- */
-function paslash($str)
-{
-	if (ini_get('magic_quotes_gpc')) return $str;
-	else return addslashes($str);
-}
-
-/**
  * Converts a data size string to proper digits.
  *
  * @param string $str String to convert into proper size.
