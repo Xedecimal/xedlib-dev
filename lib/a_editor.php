@@ -1940,7 +1940,7 @@ class EditorText
 		$frmRet->AddHidden($this->Name.'_action', 'update');
 		$frmRet->AddHidden($this->Name.'_ci', $this->item);
 
-		$frmRet->AddInput(new FormInput(null, 'area', 'body',
+		$frmRet->AddInput(new FormInput(null, 'area', $this->Name.'_body',
 			@file_get_contents($this->item),
 				array('ROWS' => 30, 'COLS' => 30, 'style' => 'width: 100%')));
 		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));

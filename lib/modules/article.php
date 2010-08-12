@@ -22,7 +22,7 @@ class ModArticles extends Module
 		foreach ($this->_map as $k => $v)
 		{
 			if (is_array($v))
-				$this->_article += call_user_func($v, $this->_article);
+				$this->_article = call_user_func($v, $this->_article);
 			else $this->_article[$k] = $this->_article[$v];
 		}
 		return $vp->ParseVars($g, $this->_article);
@@ -58,6 +58,7 @@ class ModArticle extends Module
 {
 	public $Block = 'article';
 	public $Name = 'article';
+	public $ID = 'art_id';
 
 	protected $_template;
 
@@ -155,7 +156,7 @@ class ModArticleAdmin extends Module
 			$this->_source->FieldInputs = array(
 				'nws_date' => new FormInput('Date', 'date'),
 				'nws_title' => new FormInput('Title'),
-				'nws_body' => new FormInput('Body', 'area')
+				'nws_body' => new FormInput('Body', 'area', null, null, array('rows="10" width="100%"'))
 			);
 
 		global $me;
