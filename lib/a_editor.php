@@ -684,12 +684,12 @@ class EditorData
 		$ret['name'] = $this->Name;
 
 		$act = GetVar($this->Name.'_action');
-		$q = GetVar($this->Name.'_q');
+		$sq = GetVar($this->Name.'_q');
 
 		$ret['ds'] = $this->ds;
 		if ($act != 'edit' && !empty($this->ds->DisplayColumns)
-			&& ($this->Behavior->Search && isset($q)))
-			$ret['table'] = $this->GetTable($this->Behavior->Target, $act, $q);
+			&& ($this->Behavior->Search && isset($sq)))
+			$ret['table'] = $this->GetTable($this->Behavior->Target, $act, $sq);
 		else $ret['table'] = null;
 		$ret['forms'] = $this->GetForms(GetVar($assoc) == $this->Name ?
 			GetVar('child') : null);
@@ -855,8 +855,8 @@ class EditorData
 	{
 		if ($this->Behavior->Search)
 		{
-			$q = GetVar($this->Name.'_q');
-			if (!isset($q)) return;
+			$sq = GetVar($this->Name.'_q');
+			if (!isset($sq)) return;
 		}
 
 		$ret = null;
@@ -911,11 +911,11 @@ class EditorData
 				}
 			}
 
-			// Search
-			$s = GetVar($this->Name.'_q');
-			if (!empty($s))
+			# Search
+
+			if (!empty($sq))
 				foreach($cols as $c)
-					$q['match'][$c] = SqlLike('%'.$s.'%');
+					$q['match'][$c] = SqlOr(SqlLike("%$sq%"));
 
 			$q['columns'] = $cols;
 			$q['order'] = $this->sort;
@@ -1124,7 +1124,7 @@ class EditorData
 
 			$sel = $state == STATE_EDIT ? $context->ds->Get(array(
 				'match' => array($context->ds->id => $ci),
-					'joins' => $joins)) : null;
+					'joins' => @$joins)) : null;
 
 			$ds = $context->ds;
 		}

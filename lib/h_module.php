@@ -116,7 +116,6 @@ class Module
 			uksort($mods, array('Module', 'cmp_mod'));
 			RunCallbacks(@$_d['index.cb.prelink']);
 
-			foreach ($mods as $n => $mod) $mod->PreLink();
 			foreach ($mods as $n => $mod) $mod->Link();
 			foreach ($mods as $n => $mod) $mod->Prepare();
 			foreach ($mods as $n => $mod)
@@ -209,13 +208,6 @@ class Module
 	* other modules and any other initial construction.
 	*/
 	function __construct() { }
-
-	/**
-	* Overload Responsibility: Before linkage, do security checks and validation
-	* possibly before we move on to preparation so you will be ready to present
-	* contextual data.
-	*/
-	function PreLink() { }
 
 	/**
 	* New Availability: DataSet
