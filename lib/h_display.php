@@ -1348,6 +1348,15 @@ class TreeNode
 			$c->Dump($in+1);
 		}
 	}
+
+	function Collapse()
+	{
+		if (!empty($this->id)) $ret = array($this->id => $this->data);
+		else $ret = array();
+		foreach ($this->children as $c)
+			$ret = array_merge($ret, $c->Collapse());
+		return $ret;
+	}
 }
 
 define('ACCESS_GUEST', 0);

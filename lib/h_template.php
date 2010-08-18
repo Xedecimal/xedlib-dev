@@ -811,6 +811,11 @@ class VarParserBehavior
 	public $UseGetVar = false;
 }
 
+function TagEmpty($t, $g, $a)
+{
+	if (empty($GLOBALS[$a['VAR']]) && empty($t->vars[$a['VAR']])) return $g;
+}
+
 function TagNotEmpty($t, $g, $a)
 {
 	if (!empty($GLOBALS[$a['VAR']])) return $g;
