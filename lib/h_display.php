@@ -1349,6 +1349,11 @@ class TreeNode
 		}
 	}
 
+	static function AddNodes(&$tv, $nodes)
+	{
+		foreach ($nodes as $t => $v) $tv->AddChild(new TreeNode($t, $v));
+	}
+
 	function Collapse()
 	{
 		if (!empty($this->id)) $ret = array($this->id => $this->data);

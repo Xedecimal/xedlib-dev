@@ -312,13 +312,15 @@ function UnsetVar($name)
  *
  * @param mixed $var Variable to return information on.
  */
-function VarInfo($var)
+function VarInfo($var, $return = false)
 {
-	echo "<div class=\"debug\"><pre>\n";
-	if (!isset($var)) echo "[NULL VALUE]";
-	else if (is_string($var) && strlen($var) < 1) echo '[EMPTY STRING]';
-	echo str_replace("<", "&lt;", print_r($var, true));
-	echo "</pre></div>\n";
+	$ret = "<div class=\"debug\"><pre>\n";
+	if (!isset($var)) $ret .= "[NULL VALUE]";
+	else if (is_string($var) && strlen($var) < 1) $ret .= '[EMPTY STRING]';
+	$ret .= str_replace("<", "&lt;", print_r($var, true));
+	$ret .= "</pre></div>\n";
+	if ($return) return $ret;
+	echo $ret;
 }
 
 /**

@@ -627,12 +627,8 @@ class Template extends LayeredOutput
 		{
 			$err = "XML Error: " . xml_error_string(xml_get_error_code($p)) .
 			" on line " . xml_get_current_line_number($p);
-			if (!empty($this->template)) $err .= " of file " . $this->template;
-			else
-			{
-				$err .= "<br/>Inside the following template ...<br/>\n";
-				$err .= varinfo($str, true);
-			}
+			$err .= "<br/>Inside the following template ...<br/>\n";
+			$err .= varinfo($str, true);
 			$err .= "<br/>\n";
 			Error($err);
 		}
