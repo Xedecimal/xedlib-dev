@@ -1304,9 +1304,10 @@ class TreeNode
 
 	function AddChild(&$tn)
 	{
-		$this->children[] = $tn;
+		$this->children[$tn->id] = $tn;
 		$tn->parent = $this;
-		$this->Index();
+		# Indexes can get gigantic, find another method.
+		// $this->Index();
 	}
 
 	function Index()
@@ -1318,8 +1319,8 @@ class TreeNode
 
 	function GetIndex()
 	{
-		foreach ($this->children as $c)
-			foreach ($c->_index as $id => $tn)
+		foreach ($this->children as &$c)
+			foreach ($c->_index as $id => &$tn)
 				$this->_index[$id] = $tn;
 	}
 

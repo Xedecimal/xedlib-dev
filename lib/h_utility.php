@@ -685,30 +685,48 @@ function DataToArray($rows, $idcol)
 	return $ret;
 }
 
-function DataToTree($rows, $iCol, $pCol, $rootid = null)
+/**
+* Converts a data result into a tree of joined children.
+*
+* @param array $rows Result of DataSet::Get
+* @param array $assocs Array of associations array('parent1' => 'child1',
+* 'parent2' => 'child2')
+* @param mixed $rootid Root identifier for top-most result.
+* @return TreeNode
+*/
+function DataToTree($rows, $assocs, $rootid = null)
 {
-	// Build Flats
+	if (empty($rows)) return;
 
-	$flats = array();
-	if (!empty($rows))
+	# Build Flats
+
+	foreach ($assocs as $p => $c)
 	foreach ($rows as $row)
-		$flats[$row[$iCol]] = new TreeNode($row, $row[$iCol]);
+	{
+		$flats[$p][$row[$p]] = new TreeNode($row, $row[$p]);
+		$flats[$c[0]][$row[$c[0]]] = new TreeNode($row, $row[$c[0]]);
+	}
 
-	// Build Tree
+	# Build Tree
 
 	if (!isset($rootid) || !isset($flats[$rootid])) $tnRoot = new TreeNode();
 	else $tnRoot = $flats[$rootid];
 
 	if (!empty($flats))
-	foreach ($flats as $tn)
+	foreach ($assocs as $p => $c)
+	foreach ($rows as $row)
 	{
-		if ($tn->data[$pCol] == $tn->data[$iCol]) continue;
+		# if parent (p) id of child ($c[1]) in parent node exists
 
-		if (isset($flats[$tn->data[$pCol]]))
-			$flats[$tn->data[$pCol]]->AddChild($tn);
+		if (isset($flats[$p][$row[$p]]) && $row[$c[1]] != $rootid)
+			$flats[$p][$row[$p]]->AddChild(&$flats[$c[0]][$row[$c[0]]]);
 		else
-			$tnRoot->AddChild($tn);
+			$tnRoot->AddChild(&$flats[$p][$row[$p]]);
 	}
+
+	$pkeys = array_keys($assocs);
+	foreach ($flats[$pkeys[0]] as &$rn)
+		$tnRoot->AddChild($rn);
 
 	return $tnRoot;
 }
