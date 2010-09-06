@@ -71,7 +71,7 @@ class Module
 	}
 
 	/**
-	* put your comment there...
+	* 
 	*
 	* @param string $name Class name of defined module class.
 	* @param array $deps Depended modules eg. array('ModName', 'ModName2')
@@ -136,8 +136,8 @@ class Module
 	{
 		global $_d;
 
-		return @$_d['module.order'][$x] >
-			@$_d['module.order'][$y];
+		return @$_d['module.order'][get_class($x)] <
+			@$_d['module.order'][get_class($y)];
 	}
 
 	static function TagPrepBlock($t, $g, $a)

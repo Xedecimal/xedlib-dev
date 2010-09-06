@@ -1309,8 +1309,9 @@ define('OPT_DIRS', 2);
  * @param string $exclude Passed to preg_match to blacklist files.
  * @return array Series of non-directories that were not excluded.
  */
-function Comb($path, $exclude = null, $flags = 3)
+function Comb($path, $exclude, $flags = 3)
 {
+	if ($exclude != null && preg_match($exclude, $path)) return array();
 	// This is a file and unable to recurse.
 	if (is_file($path))
 	{
@@ -1326,7 +1327,7 @@ function Comb($path, $exclude = null, $flags = 3)
 		while ($f = readdir($dp))
 		{
 			if ($f[0] == '.') continue;
-			$ret = array_merge($ret, Comb($path.$f, $exclude, $flags));
+			$ret = array_merge($ret, Comb($path.'/'.$f, $exclude, $flags));
 		}
 
 		return $ret;

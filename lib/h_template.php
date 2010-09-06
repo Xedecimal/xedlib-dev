@@ -763,7 +763,7 @@ class VarParser
 		$tvar = $match[1];
 
 		// This is an advanced variable.
-		if (strpos($tvar, '.'))
+		if (strpos($tvar, '.') && !$this->Behavior->SimpleVars)
 		{
 			$indices = explode('.', $tvar);
 			$var = $this->FindVar($indices[0]);
@@ -805,6 +805,8 @@ class VarParserBehavior
 	public $Bleed = true;
 
 	public $UseGetVar = false;
+
+	public $SimpleVars = false;
 }
 
 function TagEmpty($t, $g, $a)

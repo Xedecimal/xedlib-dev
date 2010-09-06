@@ -317,10 +317,17 @@ function SqlOr($val)
 	else return array('inc' => 'OR', 'val' => $val);
 }
 function SqlLess($val) { return array('cmp' => '<', 'val' => $val); }
+function SqlMore($val) { return array('cmp' => '>', 'val' => $val); }
 function SqlDistinct($val) { return array('cmp' => 'DISTINCT', 'val' => $val); }
 function SqlCount($val) { return array('val' => 'COUNT('.$val.')', 'opt' => SQLOPT_UNQUOTE); }
 function SqlLike($val) { return array('val' => $val, 'cmp' => 'LIKE'); }
-function SqlIn($vals) { return array('val' => 'IN('.$vals.')', 'opt' => SQLOPT_UNQUOTE, 'cmp' => ''); }
+function SqlIn($vals)
+{
+	$ix = 0; $nv = '';
+	if (!empty($vals))
+	foreach ($vals as $v) { if ($ix++ > 0) $nv .= ', '; $nv .= "'$v'"; }
+	return array('val' => 'IN('.$nv.')', 'opt' => SQLOPT_UNQUOTE, 'cmp' => '');
+}
 
 /**
  * Returns the proper format for DataSet to generate the current time.
@@ -609,7 +616,7 @@ class DataSet
 					{
 						if (is_array($val))
 						{
-							$ret .= $this->QuoteTable($col);
+							$ret .= $col;
 							$ret .= isset($val['cmp'])?' '.$val['cmp'].' ':' = ';
 							$ret .= $this->ProcessVal($val);
 						}
@@ -943,7 +950,8 @@ class DataSet
 		}
 
 		$this->database->Query($query);
-		return $this->database->GetLastInsertID();
+		if (isset($columns[$this->id])) return $columns[$this->id];
+		else return $this->database->GetLastInsertID();
 	}
 
 	/**

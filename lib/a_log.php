@@ -5,7 +5,7 @@ require_once('a_editor.php');
 /**
  * @package Logging
  */
- 
+
 class LoggerAuth extends EditorHandler
 {
 	/**
