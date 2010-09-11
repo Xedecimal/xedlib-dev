@@ -719,9 +719,9 @@ function DataToTree($rows, $assocs, $rootid = null)
 		# if parent (p) id of child ($c[1]) in parent node exists
 
 		if (isset($flats[$p][$row[$p]]) && $row[$c[1]] != $rootid)
-			$flats[$p][$row[$p]]->AddChild(&$flats[$c[0]][$row[$c[0]]]);
+			$flats[$p][$row[$p]]->AddChild($flats[$c[0]][$row[$c[0]]]);
 		else
-			$tnRoot->AddChild(&$flats[$p][$row[$p]]);
+			$tnRoot->AddChild($flats[$p][$row[$p]]);
 	}
 
 	$pkeys = array_keys($assocs);
@@ -741,6 +741,22 @@ function &array_get($array)
 {
 	return $array[count($array)-1];
 }
+
+/**
+ * Array Recursive Key Sort, sorting an array of any dimension by their keys.
+ *
+ * @param array $array Array to be sorted
+ */
+function arksort(&$array)
+{
+	ksort($array);
+	foreach ($array as $k => $v)
+		if (is_array($v)) arksort($array[$k]);
+}
+
+/////////////////
+// Organize Me!
+//
 
 /**
  * Resizes an image bicubicly and constrains proportions.
