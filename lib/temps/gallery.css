@@ -1,0 +1,12 @@
+a img { border: 0; }
+
+.folder,.file
+{
+	padding: 5px;
+	width: 200px;
+	height: 250px;
+	float: left;
+	vertical-align: top;
+}
+
+.clear { clear: both; }

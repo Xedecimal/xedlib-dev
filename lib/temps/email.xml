@@ -1,0 +1,11 @@
+<form action="{{Name}}/send" method="post">
+<fieldset>
+<legend>Contact Form</legend>
+<ul>
+<li><label for="name">Name:</label><input id="name" /></li>
+<li><label for="email">Email:</label><input id="email" /></li>
+<li><label for="message">Your Message:</label><textarea id="message"></textarea></li>
+<li><label for="submit">&nbsp;</label><input type="submit" id="submit" value="Send" /></li>
+</ul>
+</fieldset>
+</form>

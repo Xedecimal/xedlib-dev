@@ -1,0 +1,173 @@
+<null>
+
+<script type="text/javascript">
+var fn_name = '{{fn_name}}';
+</script>
+<script type="text/javascript" src="temps/file.js"></script>
+
+<header>
+<box title="Current Path Location" id="{{fn_name}}_path">
+<path root="Home" sep="&raquo;"> <a href="{{uri}}">{{name}}</a></path>
+<download></download>
+</box>
+</header>
+
+<form action="{{target}}" method="post" enctype="multipart/form-data">
+
+<options>
+	<!-- <td valign="top"> -->
+		<box title="File and Folder Tasks" id="{{fn_name}}_tasks">
+			<!-- Mass Options -->
+			<div id="{{fn_name}}_mass_options">
+				<p>With selected files...</p>
+				<behavior type="AllowMove,AllowCopy,AllowLink">
+					<behavior type="AllowMove"><input type="submit" name="{{fn_name}}_action" value="Move To" /></behavior>
+					<behavior type="AllowCopy"><input type="submit" name="{{fn_name}}_action" value="Copy To" /></behavior>
+					<behavior type="AllowLink"><input type="submit" name="{{fn_name}}_action" value="Link In" /></behavior>
+					{{dirsel}}
+				</behavior>
+				<behavior type="AllowDelete"><input type="submit" name="{{fn_name}}_action" value="Delete" onclick="return confirm('Are you sure you wish to delete these files?')" /></behavior>
+				<behavior type="AllowDownloadZip"><input type="submit" name="{{fn_name}}_action" value="Download Selected" /></behavior>
+			</div>
+
+			<search>
+			<!-- Search -->
+			<tr><td class="opt_title">
+				<a href="#" onclick="$('#{{fn_name}}_search').toggle('slow'); return false;">Search</a>
+			</td><td>
+				<img id="img{{fn_name}}_search"
+					src="images/down.png" alt="Visibility" />
+			</td></tr><tr><td colspan="2">
+				<div id="{{fn_name}}_search" style="display: none">
+				<table>
+				<tr><td>Search for</td><td><input type="text" name="cq" /></td></tr>
+				<tr><td></td><td><input type="submit" name="ca" value="Search" /></td></tr>
+				</table>
+				</div>
+			</td></tr>
+			</search>
+
+			<!-- Upload File -->
+			<behavior type="AllowUpload">
+			<a href="#" id="a_toggle_upload">Send Files</a>
+				<img id="img{{fn_name}}_upload" src="images/down.png" alt="Visibility" />
+				<div id="{{fn_name}}_upload" style="display: none">
+					<applet codebase="{{relpath}}/java/" code="uploadApplet.class"
+						archive="UploadApplet.jar,commons-codec-1.3.jar,commons-httpclient-3.0.1.jar,commons-logging-1.0.4.jar"
+						width="525" height="100">
+						<param name="host" value="http://{{host}}" />
+						<param name="pathToScript" value="{{target}}?editor={{fn_name}}&amp;{{fn_name}}_action=upload&amp;PHPSESSID={{sid}}" />
+						<param name="path" value="{{cf}}" />
+						<param name="uploadMax" value="500000" />
+					</applet>
+				</div>
+			</behavior>
+
+			<!-- Create Folder -->
+			<behavior type="AllowCreateDir">
+				<a href="#" id="a_toggle_create">{{TextCreateFolder}}</a>
+				<img id="img{{fn_name}}_create" src="images/down.png" alt="Visibility" />
+				<div id="{{fn_name}}_create" style="display: none">
+					<input type="text" name="{{fn_name}}_cname" />
+					<input type="submit" name="{{fn_name}}_action" value="Create" /><br/>
+				</div>
+			</behavior>
+
+			<!-- Rename File / Folder -->
+			<behavior type="AllowRename">
+				<a href="#" id="a_toggle_rename">Rename this file or folder</a>
+				<img id="img{{fn_name}}_rename" src="images/down.png" alt="Visibility" />
+				<div id="{{fn_name}}_rename" style="display: none">
+				<input type="text" name="{{fn_name}}_rname" value="{{filename}}" />
+				<input type="submit" name="{{fn_name}}_action" value="Rename" /><br/>
+				</div>
+			</behavior>
+
+			<!-- Additional Settings -->
+			<behavior type="AllowEdit">
+				<a href="#" id="a_toggle_edit">Additional Settings</a>
+				<img id="img{{fn_name}}_edit" src="images/down.png" alt="Visibility" />
+				<div id="{{fn_name}}_edit" style="display: none">
+				<addopts>
+					<tr><td>{{text}}</td><td>{{field}}</td></tr>
+				</addopts>
+				</div>
+			</behavior>
+		</box>
+</options>
+
+<directory>
+		<folders>
+		<box title="Folders">
+			<table>
+				<check><tr>
+					<td>&nbsp;</td>
+					<td><input type="checkbox" id="{{fn_name}}_sel_folders" /></td>
+					<td><label for="{{fn_name}}_sel_folders">Select All</label></td>
+				</tr></check>
+				<folder>
+					<tr>
+					<td align="right"><img src="{{icon}}" alt="icon" /></td>
+					<check>
+						<td>
+							<input type="checkbox" class="check_folder"
+							id="{{fn_name}}_sel_{{type}}_{{index}}"
+							name="{{fn_name}}_sels[]" value="{{fipath}}" />
+						</td>
+					</check>
+					<td><a href="{{url}}">{{caption}}</a></td>
+					<td>{{butup}}</td>
+					<td>{{butdown}}</td>
+				</tr>
+				</folder>
+			</table>
+		</box>
+		</folders>
+		<files>
+		<box title="Files">
+			<table>
+				<check><tr>
+					<td>&nbsp;</td>
+					<td><input type="checkbox" id="sel_files" /></td>
+					<td><label for="sel_files">Select All</label></td>
+				</tr></check>
+				<file>
+				<tr>
+					<td align="right"><icon><img src="{{icon}}" alt="icon" /></icon></td>
+					<check>
+					<td>
+						<input type="checkbox" class="check_file"
+						id="sel_{{type}}_{{index}}" name="{{fn_name}}_sels[]"
+						value="{{fipath}}" />
+					</td>
+					</check>
+					<td><a href="{{url}}">{{filename}}</a></td>
+					<quickcap><td><textarea cols="30" rows="2"
+					name="{{fn_name}}_titles[{{filename}}]">{{ftitle}}</textarea></td></quickcap>
+					<td>{{butup}}</td>
+					<td>{{butdown}}</td>
+				</tr>
+				</file>
+			</table>
+			<QuickCapButton>
+				<input type="submit" name="{{fn_name}}_action" value="Update Captions" />
+			</QuickCapButton>
+		</box>
+		</files>
+</directory>
+
+<details>
+<td valign="top">
+<box title="File Information">
+	<header/>
+<table>
+	<tr><td align="right">Modified:</td><td>{{date}}</td></tr>
+	<tr><td align="right">Size:</td><td>{{size}}</td></tr>
+</table>
+<b><a href="{{me}}?editor={{fn_name}}&amp;{{fn_name}}_action=getfile&amp;{{fn_name}}_cf={{cf}}">Download</a></b>
+</box>
+</td>
+</details>
+
+</form>
+</null>

@@ -1,0 +1,12 @@
+<!-- Begin Form: {{form_name}} -->
+<form>
+<fieldset>
+<ul>
+	<field>
+		<li><label class="field_text" for="">{{text}}</label>
+		{{field}}<error><span class="error">{{help}}</span></error>
+	</li></field>
+</ul>
+</fieldset>
+</form>
+<!-- End Form: {{form_name}} -->

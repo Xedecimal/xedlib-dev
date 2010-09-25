@@ -1,0 +1,39 @@
+<!DOCTYPE null [
+	<!ENTITY nbsp "&#160;">
+]>
+
+<null>
+
+<table class="CalendarTable">
+	<tr class="CalendarHead">
+		<td valign="top" colspan="7" class="calendar_head">
+			<form action="{{target}}" method="post">
+				<input type="year" name="calyear" value="{{year}}" />
+				<input type="month" name="calmonth" value="{{month}}" />
+				<input type="submit" value="Go" />
+			</form>
+		</td>
+	</tr><tr class="CalendarWeekTitle">
+		<td>S</td>
+		<td>M</td>
+		<td>T</td>
+		<td>W</td>
+		<td>T</td>
+		<td>F</td>
+		<td>S</td>
+	</tr>
+	<month>
+	<week>
+		<tr>
+		<pad><td colspan="{{amount}}"></td></pad>
+		<day>
+			<td class="CalendarDay">{{day}}<br />
+				<event><div class="CalendarEvent">{{title}}</div></event>
+			</td>
+		</day>
+		<pad><td colspan="{{amount}}"></td></pad>
+		</tr>
+	</week>
+	</month>
+</table>
+</null>

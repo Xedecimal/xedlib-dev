@@ -1,0 +1,23 @@
+/*** adding sf-vertical in addition to sf-menu creates a vertical menu ***/
+.nav, .nav li {
+	width:	8em;
+}
+/* this lacks ul at the start of the selector, so the styles from the main CSS file override it where needed */
+.nav li:hover ul,
+.nav li.sfHover ul {
+	left:	8em; /* match ul width */
+	top:	0;
+}
+
+/*** alter arrow directions ***/
+.nav .sf-sub-indicator { background-position: -10px 0; } /* IE6 gets solid image only */
+.nav a > .sf-sub-indicator { background-position: 0 0; } /* use translucent arrow for modern browsers*/
+
+/* hover arrow direction for modern browsers*/
+.nav a:focus > .sf-sub-indicator,
+.nav a:hover > .sf-sub-indicator,
+.nav a:active > .sf-sub-indicator,
+.nav li:hover > a > .sf-sub-indicator,
+.nav li.sfHover > a > .sf-sub-indicator {
+	background-position: -10px 0; /* arrow hovers for modern browsers*/
+}
