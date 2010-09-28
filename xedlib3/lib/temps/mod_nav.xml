@@ -1,5 +1,0 @@
-<nav>
-<ul>
-<head><li><span class="nav_head">{{title}}</span></li></head>
-<link><li><a href="{{link}}">{{title}}</a></li></link>
-</ul></nav>
