@@ -1,14 +1,9 @@
-<!DOCTYPE null [
-	<!ENTITY nbsp "&#160;">
-	<!ENTITY raquo "&#187;">
-]>
-
 <null>
 
 <script type="text/javascript">
 var fn_name = '{{fn_name}}';
 </script>
-<script type="text/javascript" src="{{app_abs}}/xedlib/temps/file.js"></script>
+<script type="text/javascript" src="temps/file.js"></script>
 
 <header>
 <box title="Current Path Location" id="{{fn_name}}_path">
@@ -19,44 +14,29 @@ var fn_name = '{{fn_name}}';
 
 <form action="{{target}}" method="post" enctype="multipart/form-data">
 
-<!-- <table>
-	<tr> -->
-
 <options>
 	<!-- <td valign="top"> -->
 		<box title="File and Folder Tasks" id="{{fn_name}}_tasks">
-			<table>
 			<!-- Mass Options -->
-			<tr><td>
-				<div id="{{fn_name}}_mass_options">
+			<div id="{{fn_name}}_mass_options">
 				<p>With selected files...</p>
 				<behavior type="AllowMove,AllowCopy,AllowLink">
-					<behavior type="AllowMove"><input type="submit"
-						name="{{fn_name}}_action" value="Move To" /></behavior>
-					<behavior type="AllowCopy"><input type="submit"
-						name="{{fn_name}}_action" value="Copy To" /></behavior>
-					<behavior type="AllowLink"><input type="submit"
-						name="{{fn_name}}_action" value="Link In" /></behavior>
-					{{dirsel}}<br/></behavior>
-				<behavior type="AllowDelete"><input type="submit"
-					name="{{fn_name}}_action" value="Delete" onclick="return
-					confirm('Are you sure you wish to delete these files?')" />
+					<behavior type="AllowMove"><input type="submit" name="{{fn_name}}_action" value="Move To" /></behavior>
+					<behavior type="AllowCopy"><input type="submit" name="{{fn_name}}_action" value="Copy To" /></behavior>
+					<behavior type="AllowLink"><input type="submit" name="{{fn_name}}_action" value="Link In" /></behavior>
+					{{dirsel}}
 				</behavior>
-				<behavior type="AllowDownloadZip"><input type="submit"
-					name="{{fn_name}}_action" value="Download Selected" />
-				</behavior>
-				</div>
-			</td></tr>
+				<behavior type="AllowDelete"><input type="submit" name="{{fn_name}}_action" value="Delete" onclick="return confirm('Are you sure you wish to delete these files?')" /></behavior>
+				<behavior type="AllowDownloadZip"><input type="submit" name="{{fn_name}}_action" value="Download Selected" /></behavior>
+			</div>
 
 			<search>
 			<!-- Search -->
 			<tr><td class="opt_title">
-				<a href="#"
-					onclick="$('#{{fn_name}}_search').toggle('slow'); return
-					false;">Search</a>
+				<a href="#" onclick="$('#{{fn_name}}_search').toggle('slow'); return false;">Search</a>
 			</td><td>
 				<img id="img{{fn_name}}_search"
-					src="{{relpath}}/images/down.png" alt="Visibility" />
+					src="images/down.png" alt="Visibility" />
 			</td></tr><tr><td colspan="2">
 				<div id="{{fn_name}}_search" style="display: none">
 				<table>
@@ -69,11 +49,8 @@ var fn_name = '{{fn_name}}';
 
 			<!-- Upload File -->
 			<behavior type="AllowUpload">
-			<tr><td>
-				<a href="#" id="a_toggle_upload">Send Files</a>
-			</td><td>
-				<img id="img{{fn_name}}_upload" src="{{relpath}}/images/down.png" alt="Visibility" />
-			</td></tr><tr><td colspan="2">
+			<a href="#" id="a_toggle_upload">Send Files</a>
+				<img id="img{{fn_name}}_upload" src="images/down.png" alt="Visibility" />
 				<div id="{{fn_name}}_upload" style="display: none">
 					<applet codebase="{{relpath}}/java/" code="uploadApplet.class"
 						archive="UploadApplet.jar,commons-codec-1.3.jar,commons-httpclient-3.0.1.jar,commons-logging-1.0.4.jar"
@@ -84,59 +61,42 @@ var fn_name = '{{fn_name}}';
 						<param name="uploadMax" value="500000" />
 					</applet>
 				</div>
-			</td></tr>
 			</behavior>
 
 			<!-- Create Folder -->
 			<behavior type="AllowCreateDir">
-			<tr><td>
 				<a href="#" id="a_toggle_create">{{TextCreateFolder}}</a>
-			</td><td>
-				<img id="img{{fn_name}}_create" src="{{relpath}}/images/down.png" alt="Visibility" />
-			</td></tr><tr><td colspan="2">
+				<img id="img{{fn_name}}_create" src="images/down.png" alt="Visibility" />
 				<div id="{{fn_name}}_create" style="display: none">
 					<input type="text" name="{{fn_name}}_cname" />
 					<input type="submit" name="{{fn_name}}_action" value="Create" /><br/>
 				</div>
-			</td></tr>
 			</behavior>
 
 			<!-- Rename File / Folder -->
 			<behavior type="AllowRename">
-			<tr><td class="opt_title">
 				<a href="#" id="a_toggle_rename">Rename this file or folder</a>
-			</td><td>
-				<img id="img{{fn_name}}_rename" src="{{relpath}}/images/down.png" alt="Visibility" />
-			</td></tr><tr><td>
+				<img id="img{{fn_name}}_rename" src="images/down.png" alt="Visibility" />
 				<div id="{{fn_name}}_rename" style="display: none">
 				<input type="text" name="{{fn_name}}_rname" value="{{filename}}" />
 				<input type="submit" name="{{fn_name}}_action" value="Rename" /><br/>
 				</div>
-			</td></tr>
 			</behavior>
 
 			<!-- Additional Settings -->
 			<behavior type="AllowEdit">
-			<tr><td>
-				<a href="#" id="a_toggle_edit" onclick="">Additional Settings</a>
-			</td><td>
-				<img id="img{{fn_name}}_edit" src="{{relpath}}/images/down.png" alt="Visibility" />
-			</td></tr><tr><td colspan="2">
+				<a href="#" id="a_toggle_edit">Additional Settings</a>
+				<img id="img{{fn_name}}_edit" src="images/down.png" alt="Visibility" />
 				<div id="{{fn_name}}_edit" style="display: none">
 				<addopts>
 					<tr><td>{{text}}</td><td>{{field}}</td></tr>
 				</addopts>
 				</div>
-			</td></tr>
 			</behavior>
-
-			</table>
 		</box>
-	<!-- </td> -->
 </options>
 
 <directory>
-	<!-- <td valign="top"> -->
 		<folders>
 		<box title="Folders">
 			<table>
@@ -147,7 +107,7 @@ var fn_name = '{{fn_name}}';
 				</tr></check>
 				<folder>
 					<tr>
-					<td align="right"><icon><img src="{{icon}}" alt="icon" /></icon></td>
+					<td align="right"><img src="{{icon}}" alt="icon" /></td>
 					<check>
 						<td>
 							<input type="checkbox" class="check_folder"
@@ -163,7 +123,6 @@ var fn_name = '{{fn_name}}';
 			</table>
 		</box>
 		</folders>
-	<!-- </td><td valign="top"> -->
 		<files>
 		<box title="Files">
 			<table>
@@ -195,7 +154,6 @@ var fn_name = '{{fn_name}}';
 			</QuickCapButton>
 		</box>
 		</files>
-	<!-- </td> -->
 </directory>
 
 <details>
@@ -210,9 +168,6 @@ var fn_name = '{{fn_name}}';
 </box>
 </td>
 </details>
-
-<!-- </tr>
-</table> -->
 
 </form>
 </null>

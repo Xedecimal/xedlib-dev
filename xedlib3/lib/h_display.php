@@ -304,7 +304,7 @@ class SortTable extends Table
  * A web page form, with functions for easy field creation and layout.
  * @todo Create sub classes for each input type.
  */
-class Form
+class Form extends LayeredOutput
 {
 	/**
 	 * Unique name of this form (used in html / js / identifying).
@@ -409,8 +409,9 @@ class Form
 	* @param array $colAttribs Array of table's column attributes.
 	* @param bool $persist Whether or not to persist the values in this form.
 	*/
-	function Form($name, $persist = true)
+	function __construct($name, $persist = true)
 	{
+		parent::__construct();
 		$this->name = $name;
 		$this->attribs = array();
 		$this->Persist = $persist;
@@ -481,9 +482,7 @@ class Form
 		$this->inputs[] = $input;
 
 		if ($input->attr('TYPE') == 'submit' && isset($this->Validation))
-		{
 			$input->atrs['ONCLICK'] = "return {$this->name}_check(1);";
-		}
 		if ($input->attr('TYPE') == 'file') $this->multipart = true;
 
 		$right = false;
@@ -554,7 +553,7 @@ class Form
 		{
 			$d['even_odd'] = ($ix++ % 2) ? 'even' : 'odd';
 			$d['text'] = !empty($in->text) ? $in->text : '';
-			if (strtolower(get_class($in)) == 'forminput')
+			if (is_object($in) && strtolower(get_class($in)) == 'forminput')
 			{
 				$d['field'] = $in->Get($this->name);
 				$d['help'] = $in->help;
@@ -591,7 +590,7 @@ class Form
 	{
 		require_once('h_template.php');
 		$this->formAttribs = $formAttribs;
-		$t = new Template();
+		$t = new Template($GLOBALS['_d']);
 		$t->Set('form_name', $this->name);
 		$t->ReWrite('form', array(&$this, 'TagForm'));
 		$t->ReWrite('field', array(&$this, 'TagField'));
@@ -629,7 +628,7 @@ class FormInput
 	 *
 	 * @var string
 	 */
-	private $atrs;
+	public $atrs;
 
 	/**
 	 * Help text is displayed below the form field. Usually in case of error or
@@ -664,14 +663,28 @@ class FormInput
 		$this->name = $name;
 		$this->help = $help;
 
+		// Consume these attributes
+
+		if (is_array($atrs))
+		{
+			$this->valid = Pull($atrs, 'VALID');
+			$this->invalid = Pull($atrs, 'INVALID');
+		}
+
+		// Propegate these attributes
+
 		if (is_array($atrs))
 			foreach ($atrs as $k => $v)
 				$this->atrs[strtoupper($k)] = $v;
 		else $this->atrs = ParseAtrs($atrs);
 
+		// Analyze these attributes
+
 		$this->atrs['TYPE'] = $type;
 		if ($name != null) $this->atrs['NAME'] = $name;
 		if ($valu != null) $this->atrs['VALUE'] = $valu;
+
+		// @TODO: I don't believe these should be in the constructor.
 
 		switch ($type)
 		{
@@ -687,8 +700,9 @@ class FormInput
 		}
 	}
 
-	function attr($attr, $val = null)
+	function attr($attr = null, $val = null)
 	{
+		if (!isset($attr)) return $this->atrs;
 		if (isset($val)) $this->atrs[$attr] = $val;
 		if (isset($this->atrs[$attr])) return $this->atrs[$attr];
 	}
@@ -717,7 +731,7 @@ class FormInput
 	 */
 	function Get($parent = null, $persist = true)
 	{
-		if (!isset($this->atrs['ID']))
+		if (!empty($this->atrs['ID']))
 			$this->atrs['ID'] = $this->GetCleanID($parent);
 
 		if ($this->atrs['TYPE'] == 'spamblock')
@@ -762,10 +776,9 @@ class FormInput
 			}
 			return $ret;
 		}
-
 		if ($this->atrs['TYPE'] == 'area')
 		{
-			if (empty($this->atrs['ROWS'])) $this->atrs['ROWS'] = 3;
+			if (empty($this->atrs['ROWS'])) $this->atrs['ROWS'] = 10;
 			if (empty($this->atrs['COLS'])) $this->atrs['COLS'] = 25;
 			if (empty($this->atrs['CLASS'])) $this->atrs['CLASS'] = 'input_area';
 			$natrs = $this->atrs;
@@ -775,10 +788,9 @@ class FormInput
 		}
 		if ($this->atrs['TYPE'] == 'checkbox')
 		{
-			return "<input ".$this->GetValue($persist).
-				GetAttribs($this->atrs)." />";
+			$val = $this->GetValue($persist);
+			return "<input ".GetAttribs($this->atrs)." />";
 		}
-
 		switch ($this->atrs['TYPE'])
 		{
 			case 'checks':
@@ -791,7 +803,6 @@ class FormInput
 					@$this->atrs['CLASS'] .= ' checks';
 					$divAtrs = $this->atrs;
 					unset($divAtrs['TYPE'], $divAtrs['VALUE'], $divAtrs['NAME']);
-					$atrs = GetAttribs($this->atrs);
 					$ret .= '<div'.GetAttribs($divAtrs).'>';
 					$newsels = $this->GetValue($persist);
 					foreach ($newsels as $id => $val)
@@ -801,7 +812,7 @@ class FormInput
 				}
 				return $ret;
 			case 'custom':
-				return call_user_func($this->valu, $this);
+				return call_user_func($this->atrs['VALUE'], $this);
 
 			// Dates
 
@@ -853,10 +864,7 @@ class FormInput
 				if ($this->atrs['TYPE'] == 'selects')
 				{
 					$this->atrs['MULTIPLE'] = 'multiple';
-					$this->atrs['NAME'] .= '[]';
 				}
-				if (!isset($this->atrs['CLASS']))
-					$this->atrs['CLASS'] = 'input_select';
 
 				$selAtrs = $this->atrs;
 				unset($selAtrs['TYPE'],$selAtrs['VALUE']);
@@ -875,7 +883,7 @@ class FormInput
 				return $ret.'</select>';
 		}
 
-		$val = $this->GetValue($persist && $this->atrs['TYPE'] != 'radio');
+		//$val = $this->GetValue($persist && $this->atrs['TYPE'] != 'radio');
 		$atrs = GetAttribs($this->atrs);
 		return "<input {$atrs} />";
 	}
@@ -917,10 +925,14 @@ class FormInput
 				return $newsels;
 			//Simple Checked...
 			case 'checkbox':
-				return $persist && $this->valu ? ' checked="checked"' : null;
+				return @$this->atrs['VALUE'] ?
+					' checked="checked"'
+					: null;
 			//May get a little more complicated if we don't know what it is...
 			default:
-				return stripslashes(htmlspecialchars($persist ? GetVars($this->atrs['NAME'], @$this->atrs['VALUE']) : @$this->atrs['VALUE']));
+				return htmlspecialchars($persist ?
+					GetVars($this->atrs['NAME'], @$this->atrs['VALUE']) :
+					@$this->atrs['VALUE']);
 		}
 	}
 
@@ -1010,7 +1022,7 @@ class SelOption extends TreeNode
 
 	function RenderCheck($atrs)
 	{
-		if ($this->selected) $selected = ' selected="selected"';
+		if ($this->selected) $atrs['CHECKED'] = 'checked';
 		if (!empty($this->children))
 		{
 			$ret = '<p><b><i>'.$this->text.'</i></b><br />';
@@ -1025,9 +1037,10 @@ class SelOption extends TreeNode
 		}
 	}
 
-	function Render()
+	function Render($selected = false)
 	{
-		if ($this->selected) $selected = ' selected="selected"';
+		if ($this->selected || $selected)
+			$selected = ' selected="selected"';
 		else $selected = '';
 		if (!empty($this->children))
 		{
@@ -1059,7 +1072,8 @@ function MakeSelect($atrs = null, $value = null, $selvalue = null)
 	if (is_array($atrs)) unset($atrs['VALUE']);
 
 	$ret = '<select'.GetAttribs($atrs).">\n";
-	foreach ($value as $id => $option) $ret .= $option->Render();
+	foreach ($value as $id => $option)
+		$ret .= $option->Render($id == $selvalue);
 	$ret .= "</select>\n";
 	return $ret;
 }
@@ -1101,11 +1115,18 @@ function MakeChecks($atrs = null, $value = null, $selvalue = null)
 function DataToSel($result, $col_disp, $col_id, $default = 0, $none = null)
 {
 	$ret = null;
-	if (isset($none)) $ret[0] = new SelOption($none, false, $default == 0);
-	if (!empty($result)) foreach ($result as $res)
+	if (isset($none))
 	{
-		$ret[$res[$col_id]] = new SelOption($res[$col_disp], false,
+		$sel = new SelOption($none, false, $default == 0);
+		$sel->valu = 0;
+		$ret[0] = $sel;
+	}
+	foreach ($result as $res)
+	{
+		$sel = new SelOption($res[$col_disp],
 			strcmp($default, $res[$col_id]) == 0);
+		$sel->valu = $res[$col_id];
+		$ret[$res[$col_id]] = $sel;
 	}
 	return $ret;
 }
@@ -1283,21 +1304,23 @@ class TreeNode
 
 	function AddChild(&$tn)
 	{
-		$this->children[] = $tn;
+		$this->children[$tn->id] = $tn;
 		$tn->parent = $this;
-		$this->Index();
+		# Indexes can get gigantic, find another method.
+		// $this->Index();
 	}
 
 	function Index()
 	{
 		$this->GetIndex();
-		if (isset($this->parent)) $this->parent->Index();
+		if (isset($this->parent) && $this->id != $this->parent->id)
+			$this->parent->Index();
 	}
 
 	function GetIndex()
 	{
-		foreach ($this->children as $c)
-			foreach ($c->_index as $id => $tn)
+		foreach ($this->children as &$c)
+			foreach ($c->_index as $id => &$tn)
 				$this->_index[$id] = $tn;
 	}
 
@@ -1315,6 +1338,30 @@ class TreeNode
 				if (isset($ret)) return $ret;
 			}
 		}
+	}
+
+	function Dump($in = 0)
+	{
+		foreach ($this->children as $c)
+		{
+			echo str_repeat(' ', $in);
+			echo $c->id."\n";
+			$c->Dump($in+1);
+		}
+	}
+
+	static function AddNodes(&$tv, $nodes)
+	{
+		foreach ($nodes as $t => $v) $tv->AddChild(new TreeNode($t, $v));
+	}
+
+	function Collapse()
+	{
+		if (!empty($this->id)) $ret = array($this->id => $this->data);
+		else $ret = array();
+		foreach ($this->children as $c)
+			$ret = array_merge($ret, $c->Collapse());
+		return $ret;
 	}
 }
 
@@ -1376,12 +1423,15 @@ class LoginManager
 	 *
 	 * @return mixed Array of user data or null if bound or true or false if not bound.
 	 */
-	function Prepare($conditions = null)
+	function Prepare($conditions = null, $queryAdd = null)
 	{
+		global $_d;
+
 		$passvar = $this->Name.'_sespass';
 		$uservar = $this->Name.'_sesuser';
 
-		$act = GetVar($this->Name.'_action');
+		if (@$_d['q'][0] == $this->Name) $act = @$_d['q'][1];
+		else $act = GetVar($this->Name.'_action');
 
 		$check_user = ($this->type == CONTROL_BOUND && isset($_SESSION[$uservar]))
 			? $_SESSION[$uservar] : null;
@@ -1406,8 +1456,10 @@ class LoginManager
 		{
 			$check_pass = null;
 			UnsetVar($passvar);
-			return false;
 		}
+
+		$return = GetVar($this->Name.'_return');
+		if (!empty($return)) $_d['q'] = explode('/', $return);
 
 		if ($this->type == CONTROL_BOUND)
 		{
@@ -1420,12 +1472,18 @@ class LoginManager
 					<br />Who: LoginManager::Prepare()
 					<br />Why: You may have set an incorrect dataset in the
 					creation of this LoginManager.");
+
 				$query['match'] = array(
 					$ds[1] => $check_pass,
 					$ds[2] => SqlAnd($check_user)
 				);
+
+				if (!empty($queryAdd))
+					$query = array_merge_recursive($query, $queryAdd);
+
 				if (!empty($conditions))
 					$match = array_merge($query['match'], $conditions);
+
 				$item = $ds[0]->GetOne($query);
 				if ($item != null) return $item;
 			}
@@ -1446,13 +1504,15 @@ class LoginManager
 			$template = dirname(__FILE__).'/temps/login_manager.xml';
 
 		$f = new Form($this->Name, array(null, 'width="100%"'));
-		$f->AddHidden($this->Name.'_action', 'login');
+		if (!empty($this->Behavior->Return))
+			$f->AddHidden($this->Name.'_return', $this->Behavior->Return);
 		if ($this->type != CONTROL_SIMPLE)
 			$f->AddInput(new FormInput($this->View->TextLogin, 'text', $this->Name.'_auth_user'));
 		$f->AddInput(new FormInput($this->View->TextPassword, 'password', $this->Name.'_auth_pass'));
 		$f->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Login'));
 		$f->Template = file_get_contents($template);
-		return $f->Get('action="{{app_abs}}/{{app_rel}}" method="post"');
+		$target = Ask($this->Behavior->Target, "{{app_abs}}/{$this->Name}/login");
+		return $f->Get('action="'.$target.'" method="post"');
 	}
 
 	/**
@@ -1492,6 +1552,8 @@ class LoginManagerView
 class LoginManagerBehavior
 {
 	public $Encryption = true;
+	public $Return;
+	public $Target;
 }
 
 /**
@@ -1646,118 +1708,34 @@ function GetInputSState($atrs = null, $keys = true)
 	return MakeSelect($atrs, ArrayToSelOptions($StateSNames, null, $keys));
 }
 
-$StateNames = array(
-	0 => 'None',
-	1 => 'Alabama',
-	2 => 'Alaska',
-	3 => 'Arizona',
-	4 => 'Arkansas',
-	5 => 'California',
-	6 => 'Colorado',
-	7 => 'Connecticut',
-	8 => 'Delaware',
-	9 => 'Florida',
-	10 => 'Georgia',
-	11 => 'Hawaii',
-	12 => 'Idaho',
-	13 => 'Illinois',
-	14 => 'Indiana',
-	15 => 'Iowa',
-	16 => 'Kansas',
-	17 => 'Kentucky',
-	18 => 'Louisiana',
-	19 => 'Maine',
-	20 => 'Maryland',
-	21 => 'Massachusetts',
-	22 => 'Michigan',
-	23 => 'Minnesota',
-	24 => 'Mississippi',
-	25 => 'Missouri',
-	26 => 'Montana',
-	27 => 'Nebraska',
-	28 => 'Nevada',
-	29 => 'New Hampshire',
-	30 => 'New Jersey',
-	31 => 'New Mexico',
-	32 => 'New York',
-	33 => 'North Carolina',
-	34 => 'North Dakota',
-	35 => 'Ohio',
-	36 => 'Oklahoma',
-	37 => 'Oregon',
-	38 => 'Pennsylvania',
-	39 => 'Rhode Island',
-	40 => 'South Carolina',
-	41 => 'South Dakota',
-	42 => 'Tennessee',
-	43 => 'Texas',
-	44 => 'Utah',
-	45 => 'Vermont',
-	46 => 'Virginia',
-	47 => 'Washington',
-	48 => 'West Virginia',
-	49 => 'Wisconsin',
-	50 => 'Wyoming',
-	51 => 'District of Columbia',
-	52 => 'Canada',
-	53 => 'Armed Forces Africa / Canada / Europe / Middle East',
+$StateNames = array(0 => 'None', 1 => 'Alabama', 2 => 'Alaska', 3 => 'Arizona',
+	4 => 'Arkansas', 5 => 'California', 6 => 'Colorado', 7 => 'Connecticut',
+	8 => 'Delaware', 9 => 'Florida', 10 => 'Georgia', 11 => 'Hawaii',
+	12 => 'Idaho', 13 => 'Illinois', 14 => 'Indiana', 15 => 'Iowa',
+	16 => 'Kansas', 17 => 'Kentucky', 18 => 'Louisiana', 19 => 'Maine',
+	20 => 'Maryland', 21 => 'Massachusetts', 22 => 'Michigan',
+	23 => 'Minnesota', 24 => 'Mississippi', 25 => 'Missouri', 26 => 'Montana',
+	27 => 'Nebraska', 28 => 'Nevada', 29 => 'New Hampshire', 30 => 'New Jersey',
+	31 => 'New Mexico', 32 => 'New York', 33 => 'North Carolina',
+	34 => 'North Dakota', 35 => 'Ohio', 36 => 'Oklahoma', 37 => 'Oregon',
+	38 => 'Pennsylvania', 39 => 'Rhode Island', 40 => 'South Carolina',
+	41 => 'South Dakota', 42 => 'Tennessee', 43 => 'Texas', 44 => 'Utah',
+	45 => 'Vermont', 46 => 'Virginia', 47 => 'Washington',
+	48 => 'West Virginia', 49 => 'Wisconsin', 50 => 'Wyoming',
+	51 => 'District of Columbia', 52 => 'Canada',
+	3 => 'Armed Forces Africa / Canada / Europe / Middle East'
 );
 
 $StateSNames = array(
-	0 => 'NA',
-	1 => 'AL',
-	2 => 'AK',
-	3 => 'AZ',
-	4 => 'AR',
-	5 => 'CA',
-	6 => 'CO',
-	7 => 'CT',
-	8 => 'DE',
-	9 => 'FL',
-	10 => 'GA',
-	11 => 'HI',
-	12 => 'ID',
-	13 => 'IL',
-	14 => 'IN',
-	15 => 'IA',
-	16 => 'KS',
-	17 => 'KY',
-	18 => 'LA',
-	19 => 'ME',
-	20 => 'MD',
-	21 => 'MA',
-	22 => 'MI',
-	23 => 'MN',
-	24 => 'MS',
-	25 => 'MO',
-	26 => 'MT',
-	27 => 'NE',
-	28 => 'NV',
-	29 => 'NH',
-	30 => 'NJ',
-	31 => 'NM',
-	32 => 'NY',
-	33 => 'NC',
-	34 => 'ND',
-	35 => 'OH',
-	36 => 'OK',
-	37 => 'OR',
-	38 => 'PA',
-	39 => 'RI',
-	40 => 'SC',
-	41 => 'SD',
-	42 => 'TN',
-	43 => 'TX',
-	44 => 'UT',
-	45 => 'VT',
-	46 => 'VA',
-	47 => 'WA',
-	48 => 'WV',
-	49 => 'WI',
-	50 => 'WY',
-	51 => 'DC',
-	52 => 'CN',
-	52 => 'AE',
+	0 => 'NA', 1 => 'AL', 2 => 'AK', 3 => 'AZ', 4 => 'AR', 5 => 'CA',
+	6 => 'CO', 7 => 'CT', 8 => 'DE', 9 => 'FL', 10 => 'GA', 11 => 'HI',
+	12 => 'ID', 13 => 'IL', 14 => 'IN', 15 => 'IA', 16 => 'KS', 17 => 'KY',
+	18 => 'LA', 19 => 'ME', 20 => 'MD', 21 => 'MA', 22 => 'MI', 23 => 'MN',
+	24 => 'MS', 25 => 'MO', 26 => 'MT', 27 => 'NE', 28 => 'NV', 29 => 'NH',
+	30 => 'NJ', 31 => 'NM', 32 => 'NY', 33 => 'NC', 34 => 'ND', 35 => 'OH',
+	36 => 'OK', 37 => 'OR', 38 => 'PA', 39 => 'RI', 40 => 'SC', 41 => 'SD',
+	42 => 'TN', 43 => 'TX', 44 => 'UT', 45 => 'VT', 46 => 'VA', 47 => 'WA',
+	48 => 'WV', 49 => 'WI', 50 => 'WY', 51 => 'DC', 52 => 'CN', 52 => 'AE'
 );
 
 function StateCallback($ds, $data, $col)
@@ -1836,6 +1814,52 @@ function SOCallback($ds, $item, $icol, $col = null)
 	return $item[$icol];
 }
 
+/**
+* Rewriting form tag to add additional functionality.
+*
+* @param Template $t
+* @param string $g
+* @param array $a
+*/
+function TagForm($t, $g, $a)
+{
+	global $PERSISTS;
+	$frm = new Form(@$a['ID']);
+	$t->Push($frm);
+	$ret = '<form'.GetAttribs($a).'>';
+	if (is_array($PERSISTS))
+	foreach ($PERSISTS as $n => $v)
+		$ret .= '<input type="hidden" name="'.$n.'" value="'.$v.'" />';
+	$t->ReWrite('input', 'TagInput');
+	$ret .= $t->GetString('<null>'.$g.'</null>');
+	$obj = $t->Pop();
+	$ret .= $obj->outs[0];
+	$ret .= '</form>';
+
+	if (!empty($frm->inputs))
+	foreach ($frm->inputs as $in)
+	{
+		if (!empty($in->valid))
+		{
+			require_once('a_validation.php');
+			$ret .= Validation::GetJS($frm);
+			break;
+		}
+	}
+
+	return $ret;
+}
+
+/**
+* Rewrites inputs into FormInputs for further processing.
+*
+* @param Template $t
+* @param string $guts
+* @param array $attribs
+* @param string $tag
+* @param mixed $args
+* @return string
+*/
 function TagInput($t, $guts, $attribs, $tag, $args)
 {
 	// Handle Persistent Values
@@ -1855,14 +1879,19 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 		}
 	}
 
-	$searchable = $attribs['TYPE'] != 'hidden' && $attribs['TYPE'] != 'radio'
-		&& $attribs['TYPE'] != 'checkbox' && $attribs['TYPE'] != 'submit';
+	$searchable =
+		$attribs['TYPE'] != 'hidden' &&
+		$attribs['TYPE'] != 'radio' &&
+		$attribs['TYPE'] != 'checkbox' &&
+		$attribs['TYPE'] != 'submit';
 
 	if (!empty($attribs['TYPE']))
 	{
 		$fi = new FormInput(null, @$attribs['TYPE'], @$attribs['NAME'],
 			@$attribs['VALUE'], $attribs);
-		$field = $fi->Get(null, false);
+		if (get_class($t->GetCurrentObject()) == 'Form')
+			$t->GetCurrentObject()->AddInput($fi);
+		return $fi->Get(null, false);
 	}
 
 	$ret = '';
@@ -1882,29 +1911,17 @@ function TagInput($t, $guts, $attribs, $tag, $args)
 	return $ret;
 }
 
-function TagLoop($t, $g, $a)
-{
-	$vp = new VarParser();
-	$ret = null;
-	for ($ix = $a['START']; $ix <= $a['END']; $ix++)
-	{
-		$ret .= $vp->ParseVars($g, array($a['VAR'] => $ix));
-	}
-	return $ret;
-}
-
-function TagUpper($t, $g, $a) { return strtoupper($g); }
-
 function GetAttribs($attribs)
 {
 	$ret = '';
 	if (is_array($attribs))
-	foreach ($attribs as $n => $v) $ret .= ' '.strtolower($n).'="'.$v.'"';
+	foreach ($attribs as $n => $v)
+		$ret .= ' '.strtolower($n).'="'.htmlspecialchars($v).'"';
 	else return ' '.$attribs;
 	return $ret;
 }
 
-function TagInputData(&$atrs)
+function TagInputData($atrs)
 {
 	global $binds;
 
@@ -1952,6 +1969,31 @@ function TagInputDisplay($t, $guts, $tag)
 		default:
 			echo "Unknown type: {$tag}<br/>\n";
 	}
+}
+
+//TODO: Replace Nav with Tree
+
+/**
+* put your comment there...
+*
+* @param TreeNode $root Root treenode item.
+* @param string $text VarParser capable text linked to treenode data items.
+*/
+function GetTree($root, $text)
+{
+	$vp = new VarParser();
+
+	$ret = '<ul><li>'.$vp->ParseVars($text, $root->data);
+	if (!empty($root->children))
+	{
+		foreach ($root->children as $c)
+		{
+			if ($c->id == $root->id) continue;
+			$ret .= GetTree($c, $text);
+		}
+	}
+	$ret .= "</li></ul>";
+	return $ret;
 }
 
 /**
@@ -2030,77 +2072,16 @@ function AddResultTags(&$t)
 	$t->ReWrite('sum', 'TagSum');
 }
 
-function TagForm($t, $g, $a)
+class LayeredOutput
 {
-	global $PERSISTS;
-	$ret = '<form'.GetAttribs($a).'>';
-	if (is_array($PERSISTS))
-	foreach ($PERSISTS as $n => $v)
-		$ret .= '<input type="hidden" name="'.$n.'" value="'.$v.'" />';
-	$ret .= $g;
-	$ret .= '</form>';
-	return $ret;
-}
+	public $layer = -1;
+	public $outs;
 
-class DataDisplay
-{
-	function DataDisplay($name, $ds)
-	{
-		$this->Name = $name;
-		$this->ds = $ds;
-	}
-
-	function Get($temp)
-	{
-		$this->ci = GetVar($this->Name.'_ci');
-
-		$tg = new Template();
-		$tg->Set('name', $this->Name);
-		$tg->ReWrite('listitem', array(&$this, 'TagListItem'));
-		$tg->ReWrite('detailitem', array(&$this, 'TagDetailItem'));
-		return $tg->GetString($temp);
-	}
-
-	/**
-	 * This is repeated for each item in the associated dataset.
-	 *
-	 * @param Template $t Associated template.
-	 * @param string $guts Contents of the tag.
-	 */
-	function TagListItem($t, $guts)
-	{
-		$ret = '';
-
-		if (empty($this->ci))
-		{
-			$vp = new VarParser();
-
-			foreach ($this->ds->Get() as $i)
-			{
-				$ret .= $vp->ParseVars($guts, $i);
-			}
-		}
-
-		return $ret;
-	}
-
-	/**
-	 * This is called for a detail tag in the template.
-	 *
-	 * @param Template $t Associated template.
-	 * @param string $guts Contents of the tag.
-	 */
-	function TagDetailItem($t, $guts)
-	{
-		$vp = new VarParser();
-
-		if (!empty($this->ci))
-		{
-			$item = $this->ds->GetOne(array($this->ds->id => $this->ci));
-
-			return $vp->ParseVars($guts, array_merge($item));
-		}
-	}
+	function __construct() { $this->CreateBuffer(); }
+	function CreateBuffer() { $this->outs[++$this->layer] = ''; }
+	function Out($data) { @$this->outs[$this->layer] .= $data; }
+	function Get() { return $this->outs[$this->layer]; }
+	function FlushBuffer() { return $this->outs[$this->layer--]; }
 }
 
 ?>

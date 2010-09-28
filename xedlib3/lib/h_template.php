@@ -66,6 +66,8 @@ function RequireModule(&$data, $file, $class)
 	return $mod;
 }
 
+require_once('h_display.php');
+
 /**
  * A template
  */
@@ -159,12 +161,22 @@ class Template extends LayeredOutput
 
 		if (!empty($GLOBALS['_d']['template.rewrites']))
 			foreach ($GLOBALS['_d']['template.rewrites'] as $tag => $rw)
-				$this->ReWrite($tag, $rw);
+			{
+				if (is_array($rw))
+					$this->ReWrite($tag, array_slice($rw, 0, 2),
+						array_slice($rw, 2));
+				else
+					$this->ReWrite($tag, $rw);
+			}
+
+		if (!empty($GLOBALS['_d']['template.transforms']))
+			foreach ($GLOBALS['_d']['template.transforms'] as $tag => $tf)
+				$this->Transform($tag, array_slice($tf, 0, 2), array_slice($tf, 2));
 
 		$this->ReWrite('template', array(&$this, 'TagTemplate'));
 		$this->ReWrite('repeat', array(&$this, 'TagRepeat'));
 		$this->ReWrite('callback', array(&$this, 'TagCallback'));
-		parent::LayeredOutput();
+		parent::__construct();
 	}
 
 	/**
@@ -199,7 +211,7 @@ class Template extends LayeredOutput
 	function TagCallback($t, $g, $a)
 	{
 		$ds = @$GLOBALS[$a['DS']];
-		return RunCallbacks(@$ds[$a['NAME']]);
+		return RunCallbacks(@$ds[$a['NAME']], $this);
 	}
 
 	/**
@@ -223,9 +235,10 @@ class Template extends LayeredOutput
 	 * @param string $tag Tag to translate.
 	 * @param mixed $callback The callback to be called on this tag.
 	 */
-	function Transform($tag, $callback)
+	function Transform($tag, $callback, $args = null)
 	{
 		$this->transforms[strtoupper($tag)][] = $callback;
+		$this->transformargs[strtoupper($tag)] = $args;
 	}
 
 	/**
@@ -240,7 +253,7 @@ class Template extends LayeredOutput
 
 		if (isset($this->transforms[$tag]))
 		{
-			$ret = RunCallbacks($this->transforms[$tag], $attribs);
+			$ret = RunCallbacks($this->transforms[$tag], $attribs, $this->transformargs[$tag]);
 			$attribs = array_merge($attribs, $ret);
 		}
 
@@ -614,12 +627,8 @@ class Template extends LayeredOutput
 		{
 			$err = "XML Error: " . xml_error_string(xml_get_error_code($p)) .
 			" on line " . xml_get_current_line_number($p);
-			if (!empty($this->template)) $err .= " of file " . $this->template;
-			else
-			{
-				$err .= "<br/>Inside the following template ...<br/>\n";
-				$err .= print_r($str, true);
-			}
+			$err .= "<br/>Inside the following template ...<br/>\n";
+			$err .= varinfo($str, true);
 			$err .= "<br/>\n";
 			Error($err);
 		}
@@ -632,8 +641,10 @@ class Template extends LayeredOutput
 
 	function ProcessVars($str)
 	{
-		return preg_replace_callback('/\{\{([^\}]+)\}\}/',
-			array(&$this, "parse_vars"), $str);
+		$vp = new VarParser;
+		$vp->Behavior->Bleed = $this->Behavior->Bleed;
+		$vp->Behavior->UseGetVar = $this->use_getvar;
+		return $vp->ParseVars($str, array_merge($this->data, $this->vars));
 	}
 
 	function def($p, $g)
@@ -643,54 +654,6 @@ class Template extends LayeredOutput
 			$obj = &$this->GetCurrentObject();
 			$obj->Out($g);
 		}
-	}
-
-	/**
-	 * Need a new description for this. It doesn't only apply to set()
-	 *
-	 * @param array $match A regexp match.
-	 * @return mixed Value of named var.
-	 */
-	function parse_vars($match)
-	{
-		$tvar = $match[1];
-
-		// This is an advanced variable.
-		if (strpos($tvar, '.'))
-		{
-			$indices = explode('.', $tvar);
-			$var = $this->FindVar($indices[0]);
-
-			for ($ix = 1; $ix < count($indices); $ix++)
-				if (isset($var[$indices[$ix]])) $var = $var[$indices[$ix]];
-
-			if (!is_array($var)) return $var;
-		}
-		$ret = $this->FindVar($tvar);
-		if (isset($ret)) return $ret;
-		return $this->Behavior->Bleed ? $match[0] : $ret;
-	}
-
-	function FindVar($tvar)
-	{
-		global $$tvar;
-		if (key_exists($tvar, $this->vars)) return $this->vars[$tvar];
-		else if (isset($$tvar)) return $$tvar;
-		else if (defined($tvar)) return constant($tvar);
-		else if (isset($this->data[$tvar])) return $this->data[$tvar];
-		else if ($this->use_getvar) return GetVar($tvar);
-		return null;
-	}
-
-	/**
-	 * Header tag to combine all head tags into the topmost tag.
-	 *
-	 * @param Template $t Associated Template.
-	 * @param string $guts Contents of the associated tag.
-	 */
-	function TagAddHead($t, $guts)
-	{
-		$this->heads .= $guts;
 	}
 
 	/**
@@ -747,13 +710,12 @@ class VarParser
 	 */
 	public $vars;
 
-	/**
-	 * Whether variables in the template {{example}} will bleed through if not
-	 * set.
-	 *
-	 * @var bool
-	 */
-	public $Bleed = true;
+	public $Behavior;
+
+	function __construct()
+	{
+		$this->Behavior = new VarParserBehavior;
+	}
 
 	/**
 	 * Processes variables in the given string $data for variables named as keys
@@ -763,11 +725,12 @@ class VarParser
 	 * @param array $vars Override existing names with these.
 	 * @return mixed Reformatted text with variables replaced.
 	 */
-	function ParseVars($data, $vars)
+	function ParseVars($data, $vars = null)
 	{
 		if (empty($data)) return '';
 		$this->vars = $vars;
-		return preg_replace_callback('/\{\{([^\}]+)\}\}/', array(&$this, 'var_parser'), $data);
+		return preg_replace_callback('/\{\{([^\}]+)\}\}/',
+			array(&$this, 'var_parser'), $data);
 	}
 
 	/**
@@ -778,7 +741,7 @@ class VarParser
 	 */
 	function var_parser($match)
 	{
-		$tvar = $match[1];
+		/*$tvar = $match[1];
 
 		$ret = null;
 
@@ -795,20 +758,60 @@ class VarParser
 		else if (defined($tvar)) $ret = constant($tvar);
 		else $ret = $this->Bleed ? $match[0] : null;
 
-		return $ret;
+		return $ret;*/
+
+		$tvar = $match[1];
+
+		// This is an advanced variable.
+		if (strpos($tvar, '.') && !$this->Behavior->SimpleVars)
+		{
+			$indices = explode('.', $tvar);
+			$var = $this->FindVar($indices[0]);
+
+			for ($ix = 1; $ix < count($indices); $ix++)
+			{
+				if (is_object($var)) $var = $var->$indices[$ix];
+				else if (isset($var[$indices[$ix]])) $var = $var[$indices[$ix]];
+			}
+
+			if (!is_array($var)) return $var;
+		}
+		$ret = $this->FindVar($tvar);
+		if (isset($ret)) return $ret;
+		return $this->Behavior->Bleed ? $match[0] : $ret;
+	}
+
+	function FindVar($tvar)
+	{
+		global $$tvar;
+		if (!empty($this->vars) && key_exists($tvar, $this->vars))
+			return $this->vars[$tvar];
+		else if (isset($$tvar)) return $$tvar;
+		else if (defined($tvar)) return constant($tvar);
+		else if (isset($this->data[$tvar])) return $this->data[$tvar];
+		else if ($this->Behavior->UseGetVar) return GetVar($tvar);
+		return null;
 	}
 }
 
-class LayeredOutput
+class VarParserBehavior
 {
-	public $layer = -1;
-	public $outs;
+	/**
+	 * Whether variables in the template {{example}} will bleed through if not
+	 * set.
+	 *
+	 * @var bool
+	 */
+	public $Bleed = true;
 
-	function LayeredOutput() { $this->CreateBuffer(); }
-	function CreateBuffer() { $this->outs[++$this->layer] = ''; }
-	function Out($data) { $this->outs[$this->layer] .= $data; }
-	function Get() { return $this->outs[$this->layer]; }
-	function FlushBuffer() { return $this->outs[$this->layer--]; }
+	public $UseGetVar = false;
+
+	public $SimpleVars = false;
+}
+
+function TagEmpty($t, $g, $a)
+{
+	if (empty($GLOBALS[$a['VAR']]) && empty($t->vars[$a['VAR']])) return $g;
 }
 
 function TagNotEmpty($t, $g, $a)
@@ -826,5 +829,29 @@ function TagPassthrough($t, $g)
 {
 	return $g;
 }
+
+function TagLoop($t, $g, $a)
+{
+	$vp = new VarParser;
+	$ret = null;
+	for ($ix = $a['START']; $ix <= $a['END']; $ix++)
+	{
+		$ret .= $vp->ParseVars($g, array($a['VAR'] => $ix));
+	}
+	return $ret;
+}
+
+function TagEach($t, $g, $a)
+{
+	$vp = new VarParser;
+	$vp->Behavior->UseGetVar = true;
+	$ret = null;
+	$dat = GetVar($a['VAR']);
+	for ($ix = $a['START']; $ix < count($dat); $ix++)
+		$ret .= $vp->ParseVars(preg_replace("/{$a['IDX']}/i", $ix, $g));
+	return $ret;
+}
+
+function TagUpper($t, $g, $a) { return strtoupper($g); }
 
 ?>

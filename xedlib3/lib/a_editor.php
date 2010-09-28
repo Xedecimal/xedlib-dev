@@ -92,6 +92,7 @@ class EditorHandler
 
 	/**
 	 * Called to retrieve additional fields for the editor form object.
+	 * @param EditorData $s Source editor.
 	 * @param Form $form Contextual form suggested to add fields to.
 	 * @param mixed $id Unique id of this row.
 	 * @param array $data Data related to the action (update/insert).
@@ -613,7 +614,7 @@ class EditorData
 			if (!empty($context->ds->FieldInputs))
 			foreach ($context->ds->FieldInputs as $name => $in)
 			{
-				if (strtolower(get_class($in)) == 'forminput')
+				if (is_object($in) && strtolower(get_class($in)) == 'forminput')
 				{
 					if ($in->attr('TYPE') == 'file')
 					{
@@ -683,12 +684,12 @@ class EditorData
 		$ret['name'] = $this->Name;
 
 		$act = GetVar($this->Name.'_action');
-		$q = GetVar($this->Name.'_q');
+		$sq = GetVar($this->Name.'_q');
 
 		$ret['ds'] = $this->ds;
 		if ($act != 'edit' && !empty($this->ds->DisplayColumns)
-			&& ($this->Behavior->Search && isset($q)))
-			$ret['table'] = $this->GetTable($this->Behavior->Target, $act, $q);
+			&& ($this->Behavior->Search && isset($sq)))
+			$ret['table'] = $this->GetTable($this->Behavior->Target, $act, $sq);
 		else $ret['table'] = null;
 		$ret['forms'] = $this->GetForms(GetVar($assoc) == $this->Name ?
 			GetVar('child') : null);
@@ -854,8 +855,8 @@ class EditorData
 	{
 		if ($this->Behavior->Search)
 		{
-			$q = GetVar($this->Name.'_q');
-			if (!isset($q)) return;
+			$sq = GetVar($this->Name.'_q');
+			if (!isset($sq)) return;
 		}
 
 		$ret = null;
@@ -910,8 +911,16 @@ class EditorData
 				}
 			}
 
-			$items = $this->ds->GetSearch($cols, GetVar($this->Name.'_q'),
-				null, null, $this->sort, $this->filter);
+			# Search
+
+			if (!empty($sq))
+				foreach($cols as $c)
+					$q['match'][$c] = SqlOr(SqlLike("%$sq%"));
+
+			$q['columns'] = $cols;
+			$q['order'] = $this->sort;
+			$q['limit'] = $this->filter;
+			$items = $this->ds->Get($q);
 
 			$root = $this->BuildTree($items);
 		}
@@ -1029,7 +1038,7 @@ class EditorData
 					if (array_key_exists($disp_index, $cnode->data))
 					{
 						$row[$ix++] = array(
-							htmlspecialchars(stripslashes($cnode->data[$disp_index])),
+							htmlspecialchars($cnode->data[$disp_index]),
 							array('class' => 'editor_cell',
 								'id' => "{$this->Name}:{$col}:{$cnode->id}")
 						);
@@ -1095,7 +1104,7 @@ class EditorData
 			{
 				if (!empty($this->ds->FieldInputs))
 				foreach ($this->ds->FieldInputs as $k => $fi)
-					if ($fi->attr('TYPE') == 'label')
+					if (is_object($fi) && $fi->attr('TYPE') == 'label')
 						unset($this->ds->FieldInputs[$k]);
 			}
 			$context = isset($curchild) ? $this->ds->children[$curchild] :
@@ -1105,16 +1114,17 @@ class EditorData
 				<br />Where: EditorData({$this->Name})::GetForm.
 				<br />Why: This editor was not created with a proper dataset.");
 
-			$joins = array();
 			foreach ($this->handlers as $handler)
 			{
-				$join = $handler->GetJoins();
-				if (!empty($join)) $joins = array_merge($joins, $join);
+				$joins = $handler->GetJoins();
+				if (!empty($joins))
+				foreach ($joins as $ix => $j) $this->ds->joins[$ix] = $j;
+					//$joins = array_merge($joins, $join);
 			}
 
 			$sel = $state == STATE_EDIT ? $context->ds->Get(array(
-					'match' => array($context->ds->id => $ci),
-					'joins' => $joins)) : null;
+				'match' => array($context->ds->id => $ci),
+					'joins' => @$joins)) : null;
 
 			$ds = $context->ds;
 		}
@@ -1125,8 +1135,7 @@ class EditorData
 			foreach (array_keys($ds->FieldInputs) as $n)
 			{
 				if (isset($this->values[$n]))
-					$ds->FieldInputs[$n]->attr('VALUE',
-						stripslashes($this->values[$n]));
+					$ds->FieldInputs[$n]->attr('VALUE', $this->values[$n]);
 			}
 		}
 
@@ -1220,6 +1229,7 @@ class EditorData
 
 					if (isset($this->Errors[$in->attr('NAME')]))
 						$in->help = $this->Errors[$in->atrs['NAME']];
+					$in->attr('CLASS', 'editor_input');
 
 					$frm->AddInput($in);
 				}
@@ -1322,7 +1332,6 @@ class EditorData
 		$t = new Template();
 		$t->ReWrite('forms', array(&$this, 'TagForms'));
 		$t->ReWrite('search', array(&$this, 'TagSearch'));
-		$t->ReWrite('form', 'TagForm');
 		$t->Set('target', $this->Behavior->Target);
 		$t->Set('name', $this->Name);
 		$t->Set('plural', Plural($this->ds->Description));
@@ -1341,8 +1350,11 @@ class EditorData
 
 	function Reset()
 	{
-		unset($_SESSION[$this->Name.'_action']);
-		unset($_SESSION[$this->Name.'_ci']);
+		if (isset($_SESSION[$this->Name.'_action']))
+		{
+			unset($_SESSION[$this->Name.'_action']);
+			unset($_SESSION[$this->Name.'_ci']);
+		}
 	}
 }
 
@@ -1466,7 +1478,7 @@ class DisplayData
 
 		if ($act == 'search')
 		{
-			$this->fs = GetVar($this->Name.'_field');
+			$this->fs = GetVar('field');
 			$this->ss = GetVar($this->Name.'_search');
 			$this->ipp = GetVar($this->Name.'_ipp', 10);
 
@@ -1477,7 +1489,8 @@ class DisplayData
 				$fi = $this->ds->FieldInputs[$col];
 				if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
 				{
-					$query['cols'][$ms[2]] = "GROUP_CONCAT(DISTINCT {$col})";
+					$query['columns'][0] = '*';
+					$query['columns'][$ms[2]] = SqlUnquote("GROUP_CONCAT(DISTINCT {$col})");
 					$query['group'] =  $this->ds->id;
 				}
 			}
@@ -1514,19 +1527,17 @@ class DisplayData
 		$fi = $this->ds->FieldInputs[$col];
 		$fi->atrs['NAME'] = $col;
 
-		if ($fi->type == 'select')
+		// This may not work.
+		if ($fi->atrs['TYPE'] == 'select')
 			$query['match'][$col] = SqlIn($val);
 		else if (preg_match('/([^.]+)\.(.*)/', $col, $ms))
 			foreach ($this->fs[$col] as $ix => $v)
 				$query['having'][] = " FIND_IN_SET($v, $ms[2]) > 0";
-		else if ($fi->type == 'date')
-			$query['match'][$col] = SqlBetween(
-				TimestampToMySql(DateInputToTS(
-					$this->fs[$col][0]), false),
-				TimestampToMySql(DateInputToTS(
-					$this->fs[$col][1]), false)
-			);
-		else $query['match'][$col] = SqlLike($val);
+		else if ($fi->atrs['TYPE'] == 'date')
+			$query['match'][$col] = SqlBetween(TimestampToMySql(DateInputToTS(
+				$this->fs[$col][0]), false), TimestampToMySql(DateInputToTS(
+				$this->fs[$col][1]), false));
+		else $query['match'][$col] = SqlLike('%'.$val.'%');
 	}
 
 	/**
@@ -1631,12 +1642,13 @@ class DisplayData
 		if (isset($GLOBALS['editor'])) $frm->AddHidden('editor', $GLOBALS['editor']);
 		$frm->AddInput(new FormInput('Search', 'custom', null, array(&$this, 'callback_fields')));
 		$frm->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Search'));
-		return $frm->Get('action="'.$me.'" method="post"');
+		return $frm->Get('action="'.GetVar('q').'" method="post"');
 	}
 
 	function TagResults($t, $g, $a)
 	{
 		if (isset($this->count)) return $g;
+		else return 'No results';
 	}
 
 	/**
@@ -1689,7 +1701,7 @@ class DisplayData
 						if ($bold) $vars['val'] .= '<span class="result">';
 					}
 					if (!empty($val))
-						$vars['val'] .= $this->ds->FieldInputs[$f]->valu[$val]->text;
+						$vars['val'] .= $this->ds->FieldInputs[$f]->atrs['VALUE'][$val]->text;
 					if (!empty($this->fs[$f]) && $bold) $vars['val'] .= '</span>';
 				}
 			}
@@ -1708,11 +1720,9 @@ class DisplayData
 	{
 		if ($this->count > 10)
 		{
-			return GetPages(count($this->result), $this->ipp, array(
-				$this->Name.'_action' => 'search',
-				$this->Name.'_search' => $this->ss,
-				$this->Name.'_fields' => $this->fs,
-				$this->Name.'_ipp' => $this->ipp));
+			$vars = array_merge($_GET, $_POST);
+			unset($vars['cp']);
+			return GetPages(count($this->result), $this->ipp, $vars);
 		}
 	}
 
@@ -1733,22 +1743,23 @@ class DisplayData
 		if (!isset($this->ds->FieldInputs[$col])) return;
 		$fi = $this->ds->FieldInputs[$col];
 		$fi->atrs['NAME'] = "field[{$col}]";
+		$target = '#'.str_replace('.','\\\\.',$col);
 		$ret .= '<tr><td valign="top"><label><input type="checkbox"
 			value="1" id="'.$this->Name.'_search_'.$col.'" name="'.$this->Name.'_search['.$col.']"
-			onclick="$(\'#'.str_replace('.','\\\\.',$col).'\').toggle(500)" />
+			onclick="$(\''.$target.'\').showHide($(this).attr(\'checked\'))" />
 			'.$fi->text.'</label></td>';
-		if ($fi->type == 'date')
+		if ($fi->atrs['TYPE'] == 'date')
 		{
 			$fi->atrs['NAME'] = 'field['.$col.'][0]';
-			$ret .= ' <td valign="top" style="display: none" id="'.$col.'">
+			$ret .= ' <td valign="top"><div id="'.$col.'" class="hidden">
 				from '.$fi->Get($this->Name).' to ';
 			$fi->atrs['NAME'] = 'field['.$col.'][1]';
-			$ret .= $fi->Get($this->Name)."</td>\n";
+			$ret .= $fi->Get($this->Name)."</div></td>\n";
 		}
-		if ($fi->type == 'select')
+		else if ($fi->atrs['TYPE'] == 'select')
 			$fi->type = 'checks';
-		else $ret .= '<td style="display: none"
-			id="'.$col.'">'.$fi->Get($this->Name).'</td>';
+		else $ret .= '<td><div id="'.$col.'" class="hidden">'.
+			$fi->Get($this->Name).'</div></td>';
 		$ret .= '</tr>';
 		return $ret;
 	}
@@ -1919,8 +1930,7 @@ class EditorText
 		if ($action == 'update')
 		{
 			$this->item = SecurePath(GetVar($this->Name.'_ci'));
-			file_put_contents($this->item,
-				stripslashes(GetVar($this->Name.'_body')));
+			file_put_contents($this->item, GetVar($this->Name.'_body'));
 		}
 	}
 
@@ -1930,8 +1940,8 @@ class EditorText
 		$frmRet->AddHidden($this->Name.'_action', 'update');
 		$frmRet->AddHidden($this->Name.'_ci', $this->item);
 
-		$frmRet->AddInput(new FormInput(null, 'area', 'body',
-			stripslashes(@file_get_contents($this->item)),
+		$frmRet->AddInput(new FormInput(null, 'area', $this->Name.'_body',
+			@file_get_contents($this->item),
 				array('ROWS' => 30, 'COLS' => 30, 'style' => 'width: 100%')));
 		$frmRet->AddInput(new FormInput(null, 'submit', 'butSubmit', 'Update'));
 
@@ -1988,11 +1998,11 @@ class DataSearch
 		$this->_ds = $ds;
 		$this->Behavior = new DataSearchBehavior();
 		$this->Behavior->Buttons['View'] = array(
-			'href' => '{{root}}{{me}}/{{name}}/view/{{id}}',
+			'href' => '{{app_abs}}{{me}}/{{name}}/view/{{id}}',
 			'target' => '_blank'
 		);
 		$this->Behavior->Buttons['Edit'] = array(
-			'href' => '{{root}}{{me}}/{{name}}/edit/{{id}}',
+			'href' => '{{app_abs}}{{me}}/{{name}}/edit/{{id}}',
 			'target' => '_blank'
 		);
 		$this->Behavior->Buttons['Delete'] = array(
@@ -2061,13 +2071,9 @@ class DataSearch
 					$this->AddToQuery($query, $col, $val);
 				}
 
-				$query['cols'] = array(
-					SqlUnquote('SQL_CALC_FOUND_ROWS *'));
-				$start = $this->Behavior->ItemsPerPage *
-					(GetVar($this->Name.'_page', 1) - 1);
-				$query['filter'] = array($start, $this->Behavior->ItemsPerPage);
+				$query['cols'] = array(SqlUnquote('SQL_CALC_FOUND_ROWS *'));
 				$this->items = $this->_ds->Get($query);
-				
+
 				$count = $this->_ds->GetCustom('SELECT FOUND_ROWS()');
 				$this->count = $count[0][0];
 			}
@@ -2199,7 +2205,7 @@ class DataSearch
 				TimestampToMySql(DateInputToTS(GetVar($col.'2')), false)
 			);
 		}
-		else $query['match'][$col] = SqlLike($val);
+		else $query['match'][$col] = SqlLike('%'.$val.'%');
 	}
 
 	# Result Related
@@ -2224,8 +2230,13 @@ class DataSearch
 			$t->ReWrite('result_button', array($this, 'TagResultButton'));
 
 			$ret = '';
-			foreach ($this->items as $ix => $i)
+			$start = $this->Behavior->ItemsPerPage *
+				(GetVar($this->Name.'_page', 1) - 1);
+			for ($ix = 0; $ix < $this->Behavior->ItemsPerPage; $ix++)
+			#foreach ($this->items as $ix => $i)
 			{
+				if ($start+$ix >= count($this->items)) break;
+				$i = $this->items[$start+$ix];
 				if (!empty($this->Callbacks->Result))
 					RunCallbacks($this->Callbacks->Result, $t, $i);
 				$this->item = $i;
@@ -2235,8 +2246,6 @@ class DataSearch
 				$t->Set('id', $i[$this->_ds->id]);
 				$t->Set($i);
 				$ret .= $t->GetString($g);
-
-				if ($ix > $this->Behavior->ItemsPerPage) break;
 			}
 			return $ret;
 		}
@@ -2256,7 +2265,7 @@ class DataSearch
 		}
 		return $ret;
 	}
-	
+
 	function TagButtonA($t, $g, $a)
 	{
 		return '<a'.GetAttribs(array_merge($this->but, $a)).'>'.$g.'</a>';
@@ -2310,7 +2319,7 @@ class DataSearch
 		$vp = new VarParser();
 		for ($ix = 0; $ix < $pages; $ix++)
 		{
-			$vars['url'] = url($_d['root'].$GLOBALS['me'].'/'.$this->Name
+			$vars['url'] = url($_d['app_abs'].$GLOBALS['me'].'/'.$this->Name
 				.'/search', array_merge($_GET, $_POST));
 			$vars['num'] = $ix+1;
 			$ret .= $vp->ParseVars($g, $vars);
@@ -2319,7 +2328,7 @@ class DataSearch
 	}
 
 	# Edit Related
-	
+
 	function TagEditForm($t, $g, $a)
 	{
 		return '<form'.GetAttribs($a).'>'.

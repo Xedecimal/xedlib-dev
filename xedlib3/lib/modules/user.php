@@ -1,15 +1,13 @@
 <?php
 
-Module::Register('ModUser');
-
 class ModUser extends Module
 {
 	static function RequireAccess($level)
 	{
-		if (@$GLOBALS['_d']['cl']['usr_access'] >= $level) return true;
+		if ($GLOBALS['_d']['cl']['usr_access'] >= $level) return true;
 		return false;
 	}
-	
+
 	static function GetAccess()
 	{
 		return @$GLOBALS['_d']['cl']['usr_access'];
@@ -19,11 +17,10 @@ class ModUser extends Module
 	{
 		global $_d;
 
+		require_once(dirname(__FILE__).'/../h_data.php');
+
 		if (!empty($_d['db']))
-		{
-			require_once(dirname(__FILE__).'/../h_data.php');
 			$_d['user.ds'] = new DataSet($_d['db'], 'user', 'usr_id');
-		}
 		$_d['template.rewrites']['access'] = array('ModUser', 'TagAccess');
 	}
 
@@ -32,6 +29,8 @@ class ModUser extends Module
 		global $_d;
 
 		$this->lm = new LoginManager('lmAdmin');
+		if (isset($_d['user.encrypt']) && !$_d['user.encrypt'])
+			$this->lm->Behavior->Encryption = false;
 		$this->lm->AddDataSet($_d['user.ds'], 'usr_pass', 'usr_name');
 		$_d['cl'] = $this->lm->Prepare();
 	}
@@ -41,8 +40,11 @@ class ModUser extends Module
 		global $_d, $me;
 
 		if (ModUser::RequireAccess(1))
+		{
+			$q = GetVar('q');
 			$_d['nav.links']->AddChild(new TreeNode('Log Out',
-				"{{app_abs}}?{$this->lm->Name}_action=logout"));
+				"{{app_abs}}/{$this->lm->Name}/logout?{$this->lm->Name}_return=$q"));
+		}
 	}
 
 	function Get()
@@ -56,10 +58,9 @@ class ModUser extends Module
 			if (array_search($p, $_d['user.pages']) === false) return;
 		}
 
-		if (ModUser::RequireAccess(1)) return;
-
-		if (!empty($_d['user.ds']) && @$_d['user.login'])
+		if (!empty($_d['user.ds']) && empty($_d['cl']) && $_d['q'][0] == 'admin')
 		{
+			$this->lm->Behavior->Return = GetVar('q');
 			$out = $this->lm->Get();
 			$out .= RunCallbacks(@$_d['user.callbacks.knee']);
 			return GetBox('box_user', 'Login', $out);
@@ -73,6 +74,8 @@ class ModUser extends Module
 		return $g;
 	}
 }
+
+Module::Register('ModUser');
 
 class ModUserAdmin extends Module
 {
@@ -91,7 +94,7 @@ class ModUserAdmin extends Module
 		require_once(dirname(__FILE__).'/../h_display.php');
 
 		if (empty($_d['user.levels']))
-			$_d['user.levels'] = array(1 => 'User', 2 => 'Admin');
+			$_d['user.levels'] = array(0 => 'Guest', 1 => 'User', 2 => 'Admin');
 		$this->edUser = new EditorData('user', $_d['user.ds']);
 	}
 
@@ -100,7 +103,7 @@ class ModUserAdmin extends Module
 		global $_d;
 
 		if (ModUser::RequireAccess(2))
-			$_d['nav.links']->AddChild(new TreeNode('Users', '{{root}}{{me}}/user'));
+			$_d['nav.links']->AddChild(new TreeNode('Users', '{{app_abs}}/user'));
 	}
 
 	function Prepare()
@@ -133,7 +136,6 @@ class ModUserAdmin extends Module
 	}
 }
 
-if ($GLOBALS['_d']['q'][0] == 'user')
-	Module::RegisterModule('ModUserAdmin');
+Module::Register('ModUserAdmin');
 
 ?>

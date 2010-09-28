@@ -1,14 +1,12 @@
 <?php
 
-Module::Register('ModNav');
-
 class ModNav extends Module
 {
 	public $Block = 'nav';
 
 	/**
-	* 
-	* 
+	*
+	*
 	* @param TreeNode $link
 	* @param int $depth
 	*/
@@ -32,7 +30,7 @@ class ModNav extends Module
 			else $ret .= '<li><a href="'.$link->id.'">'.$link->data.
 				"</a>\n";
 		}
-		
+
 		if (!empty($link->children))
 		{
 			$ret = null;
@@ -44,7 +42,7 @@ class ModNav extends Module
 				$ret .= ModNav::GetLinks($c, $depth+1);
 			$ret .= '</ul>';
 		}
-		
+
 		if (!empty($link->data)) $ret .= '</li>';
 
 		return $ret;
@@ -64,5 +62,10 @@ class ModNav extends Module
 		}
 	}
 }
+
+Module::Register('ModNav');
+
+require_once(l('h_display.php'));
+$_d['nav.links'] = new TreeNode();
 
 ?>

@@ -36,8 +36,8 @@ function HandleErrors($file = null)
 	if (!empty($file)) $GLOBALS['__err_file'] = $file;
 	else ini_set('display_errors', 1);
 	$ver = phpversion();
-	if ($ver[0] == '5') ini_set('error_reporting', E_ALL | E_STRICT);
-	else ini_set('error_reporting', E_ALL);
+	//if ($ver[0] == '5') ini_set('error_reporting', E_ALL | E_STRICT);
+	//else ini_set('error_reporting', E_ALL);
 	ini_set('error_log', 'errors_php.txt');
 	set_error_handler("ErrorHandler");
 }
@@ -56,7 +56,7 @@ function HandleErrors($file = null)
  */
 function Trace($msg)
 {
-	if (!empty($GLOBALS['debug'])) var_dump($msg);
+	if (!empty($GLOBALS['debug'])) varinfo($msg);
 	if (!empty($GLOBALS['__debfile'])) file_put_contents('trace.txt', $msg."\r\n", FILE_APPEND);
 }
 
@@ -93,9 +93,14 @@ function ErrorHandler($errno, $errmsg, $filename, $linenum)
 		E_USER_NOTICE     => "User Notice",
 	);
 	$ver = phpversion();
-	if ($ver[0] > 4) $errortype[E_STRICT] = 'Strict Error';
-	if ($ver[0] > 4 && $ver[2] > 1)
+	if ($ver[0] >= 5) $errortype[E_STRICT] = 'Strict Error';
+	if ($ver[0] >= 5 && $ver[2] >= 2)
 		$errortype[E_RECOVERABLE_ERROR] = 'Recoverable Error';
+	if ($ver[0] >= 5 && $ver[2] >= 3)
+	{
+		$errortype[E_DEPRECATED] = 'Deprecated';
+		$errortype[E_USER_DEPRECATED] = 'User Deprecated';
+	}
 
 	$err = "[{$errortype[$errno]}] ".nl2br($errmsg)."<br/>";
 	$err .= "Error seems to be in one of these places...\n";
@@ -161,8 +166,8 @@ function GetCallstack($file = __FILE__, $line = __LINE__)
  */
 function SetVar($name, $value)
 {
-	global $HTTP_SESSION_VARS, $_SESSION;
-	if (is_array($_SESSION)) $_SESSION[$name] = $value;
+	global $HTTP_SESSION_VARS;
+	if (is_array(@$_SESSION)) $_SESSION[$name] = $value;
 	if (is_array($HTTP_SESSION_VARS)) $HTTP_SESSION_VARS[$name] = $value;
 	return $value;
 }
@@ -182,15 +187,12 @@ function GetVar($name, $default = null)
 	global $HTTP_POST_FILES, $HTTP_POST_VARS, $HTTP_GET_VARS, $HTTP_SERVER_VARS,
 	$HTTP_SESSION_VARS, $HTTP_COOKIE_VARS;
 
-	//This was empty() but that caused blank values that actually are set to
-	//fail with null instead of an empty string, the proper return value I
-	//believe. Changing it back to isset().
-	if (isset($_FILES[$name]))   { Trace("GetVar(): $name (File)    -> {$_FILES[$name]}<br/>\n"); return $_FILES[$name]; }
-	if (isset($_POST[$name]))    { Trace("GetVar(): $name (Post)    -> {$_POST[$name]}<br/>\n"); return $_POST[$name]; }
-	if (isset($_GET[$name]))     { Trace("GetVar(): $name (Get)     -> {$_GET[$name]}<br/>\n"); return $_GET[$name]; }
-	if (isset($_SESSION[$name])) { Trace("GetVar(): $name (Session) -> {$_SESSION[$name]}<br/>\n"); return $_SESSION[$name]; }
-	if (isset($_COOKIE[$name]))  { Trace("GetVar(): $name (Cookie)  -> {$_COOKIE[$name]}<br/>\n"); return $_COOKIE[$name]; }
-	if (isset($_SERVER[$name]))  { Trace("GetVar(): $name (Server)  -> {$_SERVER[$name]}<br/>\n"); return $_SERVER[$name]; }
+	if (isset($_FILES[$name])) return $_FILES[$name];
+	if (isset($_POST[$name])) return $_POST[$name];
+	if (isset($_GET[$name])) return $_GET[$name];
+	if (isset($_SESSION[$name])) return $_SESSION[$name];
+	if (isset($_COOKIE[$name])) return $_COOKIE[$name];
+	if (isset($_SERVER[$name])) return $_SERVER[$name];
 
 	if (isset($HTTP_POST_FILES[$name]) && strlen($HTTP_POST_FILES[$name]) > 0)
 		return $HTTP_POST_FILES[$name];
@@ -206,6 +208,19 @@ function GetVar($name, $default = null)
 		return $HTTP_SERVER_VARS[$name];
 
 	return $default;
+}
+
+function SanitizeEnvironment()
+{
+	if (ini_get('magic_quotes_gpc'))
+		foreach ($_POST as $k => $v) Sanitize($_POST[$k]);
+}
+
+function Sanitize(&$v)
+{
+	if (is_array($v))
+		foreach ($v as $i) Sanitize($i);
+	else $v = stripslashes($v);
 }
 
 /**
@@ -288,7 +303,6 @@ function UnsetVar($name)
 		if (!empty($name))
 		foreach ($name as $var) UnsetVar($var);
 	}
-	if (session_is_registered($name)) session_unregister($name);
 	if (isset($_SESSION)) unset($_SESSION[$name]);
 	if (isset($HTTP_SESSION_VARS)) unset($HTTP_SESSION_VARS[$name]);
 }
@@ -298,13 +312,15 @@ function UnsetVar($name)
  *
  * @param mixed $var Variable to return information on.
  */
-function VarInfo($var)
+function VarInfo($var, $return = false)
 {
-	echo "<div class=\"debug\"><pre>\n";
-	if (!isset($var)) echo "[NULL VALUE]";
-	else if (is_string($var) && strlen($var) < 1) echo '[EMPTY STRING]';
-	echo str_replace("<", "&lt;", print_r($var, true));
-	echo "</pre></div>\n";
+	$ret = "<div class=\"debug\"><pre>\n";
+	if (!isset($var)) $ret .= "[NULL VALUE]";
+	else if (is_string($var) && strlen($var) < 1) $ret .= '[EMPTY STRING]';
+	$ret .= str_replace("<", "&lt;", print_r($var, true));
+	$ret .= "</pre></div>\n";
+	if ($return) return $ret;
+	echo $ret;
 }
 
 /**
@@ -331,7 +347,7 @@ function Persist($name, $value)
  */
 function URL($url, $uri = null)
 {
-	$ret = str_replace(' ', '%20', $url);
+	$ret = $url; # This should be encoded elsewhere and not here.
 
 	global $PERSISTS;
 	$nuri = array();
@@ -369,8 +385,8 @@ function URLParse($key, $val, $start = false)
 			$ret .= URLParse($key.'['.$akey.']', $aval, $start);
 	else
 	{
-		$nval = str_replace(' ', '%20', $val);
-		$ret .= ($start ? '?' : '&amp;')."{$key}={$nval}";
+		//$nval = str_replace(' ', '%20', $val);
+		$ret .= ($start ? '?' : '&amp;').$key.'='.urlencode($val);
 	}
 	return $ret;
 }
@@ -669,26 +685,48 @@ function DataToArray($rows, $idcol)
 	return $ret;
 }
 
-function DataToTree($rows, $iCol, $pCol)
+/**
+* Converts a data result into a tree of joined children.
+*
+* @param array $rows Result of DataSet::Get
+* @param array $assocs Array of associations array('parent1' => 'child1',
+* 'parent2' => 'child2')
+* @param mixed $rootid Root identifier for top-most result.
+* @return TreeNode
+*/
+function DataToTree($rows, $assocs, $rootid = null)
 {
-	// Build Flats
+	if (empty($rows)) return;
 
-	$flats = array();
-	if (!empty($rows))
+	# Build Flats
+
+	foreach ($assocs as $p => $c)
 	foreach ($rows as $row)
-		$flats[$row[$iCol]] = new TreeNode($row, $row[$iCol]);
+	{
+		$flats[$p][$row[$p]] = new TreeNode($row, $row[$p]);
+		$flats[$c[0]][$row[$c[0]]] = new TreeNode($row, $row[$c[0]]);
+	}
 
-	// Build Tree
+	# Build Tree
 
-	$tnRoot = new TreeNode();
+	if (!isset($rootid) || !isset($flats[$rootid])) $tnRoot = new TreeNode();
+	else $tnRoot = $flats[$rootid];
 
 	if (!empty($flats))
-	foreach ($flats as $tn)
+	foreach ($assocs as $p => $c)
+	foreach ($rows as $row)
 	{
-		if (isset($flats[$tn->data[$pCol]]))
-			$flats[$tn->data[$pCol]]->AddChild($tn);
-		else $tnRoot->AddChild($tn);
+		# if parent (p) id of child ($c[1]) in parent node exists
+
+		if (isset($flats[$p][$row[$p]]) && $row[$c[1]] != $rootid)
+			$flats[$p][$row[$p]]->AddChild($flats[$c[0]][$row[$c[0]]]);
+		else
+			$tnRoot->AddChild($flats[$p][$row[$p]]);
 	}
+
+	$pkeys = array_keys($assocs);
+	foreach ($flats[$pkeys[0]] as &$rn)
+		$tnRoot->AddChild($rn);
 
 	return $tnRoot;
 }
@@ -703,6 +741,22 @@ function &array_get($array)
 {
 	return $array[count($array)-1];
 }
+
+/**
+ * Array Recursive Key Sort, sorting an array of any dimension by their keys.
+ *
+ * @param array $array Array to be sorted
+ */
+function arksort(&$array)
+{
+	ksort($array);
+	foreach ($array as $k => $v)
+		if (is_array($v)) arksort($array[$k]);
+}
+
+/////////////////
+// Organize Me!
+//
 
 /**
  * Resizes an image bicubicly and constrains proportions.
@@ -873,28 +927,6 @@ function GetPages($total, $count, $args = null)
 		GetButton(URL($me, array_merge(array('cp' => $page), $args)), 'end.png', 'End');
 
 	return $ret;
-}
-
-/**
- * Properly strip slashes from the given string depending on the configuration.
- * @param string $str String to strip from.
- * @return string Cleaned string.
- */
-function psslash($str)
-{
-	if (ini_get('magic_quotes_gpc')) return stripslashes($str);
-	else return $str;
-}
-
-/**
- * Properly add slashes to the given string depending on the configuration.
- * @param string $str String to add slashes to.
- * @return string Cleaned string.
- */
-function paslash($str)
-{
-	if (ini_get('magic_quotes_gpc')) return $str;
-	else return addslashes($str);
 }
 
 /**
@@ -1293,8 +1325,9 @@ define('OPT_DIRS', 2);
  * @param string $exclude Passed to preg_match to blacklist files.
  * @return array Series of non-directories that were not excluded.
  */
-function Comb($path, $exclude = null, $flags = 3)
+function Comb($path, $exclude, $flags = 3)
 {
+	if ($exclude != null && preg_match($exclude, $path)) return array();
 	// This is a file and unable to recurse.
 	if (is_file($path))
 	{
@@ -1310,7 +1343,7 @@ function Comb($path, $exclude = null, $flags = 3)
 		while ($f = readdir($dp))
 		{
 			if ($f[0] == '.') continue;
-			$ret = array_merge($ret, Comb(realpath($path.'/'.$f), $exclude, $flags));
+			$ret = array_merge($ret, Comb($path.'/'.$f, $exclude, $flags));
 		}
 
 		return $ret;
@@ -1358,7 +1391,7 @@ function ArrayToTree($n, $arr)
 	foreach ($arr as $k => $v)
 	{
 		if (is_array($v)) $n = ArrayToTree($k, $v);
-		else $n = new TreeNode($k, $v);
+		else $n = new TreeNode($v);
 		$root->AddChild($n);
 	}
 	return $root;
@@ -1483,6 +1516,11 @@ function Let(&$var, $val)
 	if (!isset($var)) $var = $val;
 }
 
+function Ask(&$var, $default)
+{
+	return !empty($var) ? $var : $default;
+}
+
 function GetMonthName($month)
 {
 	return date('F', strtotime($month.'/1/'.date('Y')));
@@ -1529,7 +1567,7 @@ function GetQ()
 
 function Pull(&$arr, $key)
 {
-	$ret = $arr[$key];
+	$ret = @$arr[$key];
 	unset($arr[$key]);
 	return $ret;
 }

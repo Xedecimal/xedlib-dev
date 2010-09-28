@@ -1,4 +1,5 @@
 $(function () {
+	$('#'+fn_name+'_mass_options').hide();
 	$('#'+fn_name+'_sel_folders').click(function () {
 		$('.check_folder').attr('checked', $(this).attr('checked'));
 		$('.check_folder').change();
@@ -28,7 +29,7 @@ $(function () {
 	});
 
 	$('#a_toggle_edit').click(function () {
-		$('#'+fn_name+'_add').slideToggle(500);
+		$('#'+fn_name+'_edit').slideToggle(500);
 		return false;
 	});
 });
@@ -36,7 +37,7 @@ $(function () {
 function checkChanged()
 {
 	if ($('.check_folder:checked,.check_file:checked').length > 0)
-		$('#'+fn_name+'_mass_options').show();
+		$('#'+fn_name+'_mass_options').show(500);
 	else
-		$('#'+fn_name+'_mass_options').hide();
+		$('#'+fn_name+'_mass_options').hide(500);
 }

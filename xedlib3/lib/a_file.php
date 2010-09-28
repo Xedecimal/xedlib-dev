@@ -61,13 +61,6 @@ class FileManager
 	private $filters;
 
 	/**
-	 * Icons and their associated filetypes, overridden with FilterGallery.
-	 *
-	 * @var array
-	 */
-	public $icons;
-
-	/**
 	 * Current File
 	 *
 	 * @var string
@@ -137,19 +130,6 @@ class FileManager
 			$this->cf .= '/';
 
 		$rp = GetRelativePath(dirname(__FILE__));
-
-		$this->icons = array(
-			'folder' => $rp.'/images/icons/folder.png',
-			'png' => $rp.'/images/icons/image.png',
-			'jpg' => $rp.'/images/icons/image.png',
-			'jpeg' => $rp.'/images/icons/image.png',
-			'gif' => $rp.'/images/icons/image.png',
-			'pdf' => $rp.'/images/icons/acrobat.png',
-			'sql' => $rp.'/images/icons/db.png',
-			'xls' => $rp.'/images/icons/excel.png',
-			'doc' => $rp.'/images/icons/word.png',
-			'docx' => $rp.'/images/icons/word.png'
-		);
 	}
 
 	/**
@@ -215,7 +195,7 @@ class FileManager
 		{
 			if (!$this->Behavior->AllowEdit) return;
 			$info = new FileInfo($this->Root.$this->cf, $this->filters);
-			$newinfo = GetPost($this->Name.'_info');
+			$newinfo = GetPost('info');
 			$f = FileInfo::GetFilter($info, $this->Root, $this->filters);
 			$f->Updated($this, $info, $newinfo);
 			$this->Behavior->Update($newinfo);
@@ -332,7 +312,7 @@ class FileManager
 			{
 				$fi = new FileInfo($file, $this->filters);
 				$f = FileInfo::GetFilter($fi, $this->Root, $this->filters);
-				$f->Rename($fi, $ct.$fi->filename);
+				$f->Rename($fi, "$ct/{$fi->filename}");
 
 				if (!empty($this->Behavior->Watchers))
 					RunCallbacks($this->Behavior->Watchers, FM_ACTION_MOVE,
@@ -405,6 +385,27 @@ class FileManager
 		}
 
 		if (is_dir($this->Root.$this->cf)) $this->files = $this->GetDirectory();
+	}
+
+	static function GetIcon($f)
+	{
+		$icons = array(
+			'folder' => p('images/icons/folder.png'),
+			'png' => p('images/icons/image.png'),
+			'jpg' => p('images/icons/image.png'),
+			'jpeg' => p('images/icons/image.png'),
+			'gif' => p('images/icons/image.png'),
+			'pdf' => p('images/icons/acrobat.png'),
+			'sql' => p('images/icons/db.png'),
+			'xls' => p('images/icons/excel.png'),
+			'doc' => p('images/icons/word.png'),
+			'docx' => p('images/icons/word.png')
+		);
+		if (!empty($f->vars['icon']))
+			return $f->vars['icon'];
+		else if (isset($icons[$f->type]))
+			return $icons[$f->type];
+		else return null;
 	}
 
 	function TagPart($t, $guts, $attribs)
@@ -518,14 +519,12 @@ class FileManager
 					array($this->Name.'_cf' =>
 					"{$this->cf}{$f->filename}"));
 
-			$this->curfile = $f;
 			$this->vars['caption'] = $this->View->GetCaption($f);
 			$this->vars['filename'] = $f->filename;
 			$this->vars['fipath'] = $f->path;
 			$this->vars['type'] = 'folders';
 			$this->vars['index'] = $ix;
-			if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
-			else $this->vars['icon'] = '';
+			$this->vars['icon'] = $this->GetIcon($f);
 
 			$common = "?cf={$this->cf}&amp;editor={$this->Name}&amp;type=folders";
 
@@ -553,7 +552,6 @@ class FileManager
 			else $this->vars['butdown'] = '';
 
 			$tfile = new Template($this->vars);
-			$tfile->ReWrite('icon', array(&$this, 'TagIcon'));
 			$ret .= $tfile->GetString($g);
 
 			$ix++;
@@ -599,9 +597,9 @@ class FileManager
 				$this->vars['url'] = URL($this->Behavior->Target,
 					array($this->Name.'_cf' => $this->cf.$f->filename));
 			else
-				$this->vars['url'] = $this->Root."{$this->cf}{$f->filename}";
-			$this->vars['filename'] = $f->filename;
-			$this->vars['fipath'] = $f->path;
+				$this->vars['url'] = htmlspecialchars($this->Root.$this->cf.$f->filename);
+			$this->vars['filename'] = htmlspecialchars($f->filename);
+			$this->vars['fipath'] = htmlspecialchars($f->path);
 			$this->vars['type'] = 'files';
 			$this->vars['index'] = $ix;
 			if (!empty($f->icon)) $this->vars['icon'] = $f->icon;
@@ -635,28 +633,12 @@ class FileManager
 			else $this->vars['butdown'] = '';
 
 			$tfile = new Template($this->vars);
-			$tfile->ReWrite('icon', array(&$this, 'TagIcon'));
 			$tfile->ReWrite('quickcap', array(&$this, 'TagQuickCap'));
 			$ret .= $tfile->GetString($g);
 
 			$ix++;
 		}
 		return $ret;
-	}
-
-	function TagIcon($t, $g, $a)
-	{
-		$file = $this->curfile;
-
-		if (!empty($this->vars['icon'])) return $g;
-		else if (isset($this->icons[$file->type]))
-		{
-			$this->vars['icon'] = $this->icons[$file->type];
-		}
-		else return null;
-
-		$vp = new VarParser();
-		return $vp->ParseVars($g, $this->vars);
 	}
 
 	function TagQuickCap($t, $guts)
@@ -760,7 +742,7 @@ class FileManager
 			}
 			if ($this->Behavior->UpdateButton)
 			{
-				$sub = new FormInput(null, 'submit', 'action', 'Save');
+				$sub = new FormInput(null, 'submit', $this->Name.'_action', 'Save');
 				$this->vars['text'] = '';
 				$this->vars['field'] = $sub->Get($this->Name, false);
 				$ret .= $vp->ParseVars($guts, $this->vars);
@@ -1089,6 +1071,36 @@ EOF;
 
 		return false;
 	}
+
+	/**
+	 * Gets a breadcrumb like path.
+	 * @param string $root Root location of this path.
+	 * @param string $path Current path we are recursing.
+	 * @param string $arg Name of url argument to attach path to.
+	 * @param string $sep Separation of folders use this character.
+	 * @param string $rootname Name of the top level folder.
+	 * @return string Rendered breadcrumb trail.
+	 */
+	static function TagBreadcrumb($t, $g, $a)
+	{
+		$path = GetVar($a['SOURCE']);
+		if (empty($path)) return null;
+
+		$items = explode('/', $path);
+
+		$ret = null;
+		$cpath = '';
+
+		foreach ($items as $ix => $i)
+		{
+			if ($ix > 0) { $ret .= $a['SEP']; $text = $i; }
+			else $text = $a['ROOT'];
+			$cpath .= ($ix > 0 ? '/' : null).$i;
+			$uri = URL('', array($a['SOURCE'] => $cpath));
+			$ret .= "<a href=\"{$uri}\">{$text}</a>";
+		}
+		return $ret;
+	}
 }
 
 class FileManagerView
@@ -1236,9 +1248,9 @@ class FileManagerBehavior
 	public $AllowMove = false;
 
 	public $AllowCopy = false;
-	
+
 	public $AllowLink = false;
-	
+
 	/**
 	 * Allow downloading all packaged files as a zip file.
 	 *
@@ -1716,15 +1728,16 @@ class FilterGallery extends FilterDefault
 
 		global $_d;
 
-		$dir = $_d['site_root'].$fi->dir;
+		$dir = $fi->dir;
 		$abs = "{$dir}/t_{$fi->filename}";
 		$rel = "{$fi->dir}/t_{$fi->filename}";
-		if (file_exists($rel)) $fi->icon = $abs;
+		if (file_exists($rel)) $fi->icon = htmlspecialchars($abs);
 
 		if (is_dir($fi->path))
 		{
 			$fs = glob($fi->path.'/.t_image.*');
-			if (!empty($fs)) $fi->icon = $_d['site_root'].$fs[0];
+			if (!empty($fs)) $fi->vars['icon'] = $fs[0];
+			else $fi->vars['icon'] = FileManager::GetIcon($fi);
 		}
 		return $fi;
 	}
@@ -1734,21 +1747,26 @@ class FilterGallery extends FilterDefault
 	 */
 	function Updated(&$fm, &$fi, &$newinfo)
 	{
+		$img = GetVar('image');
 		$upimg = GetVar('upimage');
-		$img = GetVar($fm->Name.'_image');
 
+		// Uploaded folder image
 		if (!empty($upimg['name']))
 		{
 			mkdir("timg");
 			move_uploaded_file($upimg['tmp_name'], 'timg/'.$upimg['name']);
 			$newimg = 'timg/'.$upimg['name'];
 		}
+		// No folder image.
 		else if ($img == 1)
 		{
 			$files = glob("{$fi->path}.t_image.*");
 			foreach ($files as $f) unlink($f);
 		}
+		// Selected folder image.
 		else if (!empty($img)) $newimg = $fi->path.$img;
+
+		// Uploaded folder image.
 		if (!empty($newimg))
 		{
 			$this->ResizeFile($newimg,
@@ -1787,7 +1805,7 @@ class FilterGallery extends FilterDefault
 
 			if (is_dir($fi->path.'/'.$file))
 			{
-				$g = glob("$fir->path/._image.*");
+				$g = glob("{$fir->path}/._image.*");
 				if (!empty($g))
 					$this->ResizeFile($g[0], $fir->path.'/.'.
 						filenoext('t'.substr(basename($g[0]), 1)),
@@ -1823,7 +1841,7 @@ class FilterGallery extends FilterDefault
 			foreach ($fm->files['files'] as $fiImg)
 			{
 				if (substr($fiImg->filename, 0, 2) == 't_') continue;
-				$selImages[$fiImg->filename] = new SelOption($fiImg->filename);
+				$selImages[htmlspecialchars($fiImg->filename)] = new SelOption($fiImg->filename);
 			}
 
 			$new[] = new FormInput('Thumbnail Width', 'text',

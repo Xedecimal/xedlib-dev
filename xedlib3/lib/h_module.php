@@ -1,9 +1,63 @@
 <?php
 
+function p($path)
+{
+	// Only translate finished paths.
+	if (preg_match('/{{/', $path)) return $path;
+
+	global $_d;
+	$abs = $_d['app_abs'];
+	$dir = $_d['app_dir'];
+	if (substr($path, 0, strlen($abs)) == $abs) return $path;
+
+	$tmp = @$_d['settings']['site_template'];
+
+	// Overloaded Path
+	$opath = "$tmp/$path";
+	if (file_exists($opath)) return "$abs/$opath";
+	// Absolute Override
+	$apath = "$dir/$path";
+	if (file_exists($apath)) return "$abs/$path";
+	// Module Path
+	$modpath = "modules/{$path}";
+	if (file_exists($modpath)) return "$abs/modules/$path";
+	// Xedlib Path
+	$xedpath = dirname(__FILE__).'/'.$path;
+	if (file_exists($xedpath))
+		return GetRelativePath(dirname(__FILE__)).'/'.$path;
+
+	return $path;
+}
+
+function l($path)
+{
+	global $_d;
+
+	$ovrpath = @$_d['settings']['site_template'].'/'.$path;
+	if (file_exists($ovrpath)) return "{$_d['app_dir']}/{$ovrpath}";
+	$modpath = "{$_d['app_dir']}/modules/{$path}";
+	if (file_exists($modpath)) return "{$_d['app_dir']}/modules/{$path}";
+	$xedpath = dirname(__FILE__).'/'.$path;
+	if (file_exists($xedpath)) return $xedpath;
+	return $path;
+}
+
 class Module
 {
-	static function Initialize()
+	static function Initialize($repath = false)
 	{
+		if ($repath)
+		{
+			global $_d;
+
+			$_d['template.transforms']['link'] = array('Module', 'TransPath', 'HREF');
+			$_d['template.transforms']['a'] = array('Module', 'TransPath', 'HREF');
+			$_d['template.transforms']['img'] = array('Module', 'TransPath', 'SRC');
+			$_d['template.transforms']['script'] = array('Module', 'TransPath', 'SRC');
+			$_d['template.transforms']['form'] = array('Module', 'TransPath', 'ACTION');
+		}
+
+		if (!file_exists('modules')) return;
 		$dp = opendir('modules');
 		while ($f = readdir($dp))
 		{
@@ -16,15 +70,23 @@ class Module
 		closedir($dp);
 	}
 
-	static function Register($name)
+	/**
+	* 
+	*
+	* @param string $name Class name of defined module class.
+	* @param array $deps Depended modules eg. array('ModName', 'ModName2')
+	*/
+	static function Register($name, $deps = null)
 	{
 		global $_d;
 		if (!empty($_d['module.disable'][$name])) return;
+		if (!empty($deps))
+		foreach ($deps as $dep) if (!empty($_d['module.disable'][$dep])) return;
 
 		if (!empty($_d['module.enable']) && empty($_d['module.enable'][$name]))
 			return;
 
-		$GLOBALS['mods'][$name] = new $name(file_exists('settings.txt'));
+		$GLOBALS['mods'][$name] = new $name(file_exists('settings.ini'));
 	}
 
 	static function Run($template)
@@ -34,31 +96,31 @@ class Module
 
 		global $_d;
 
-		$tprep = new Template();
+		$tprep = new Template($_d);
 		$tprep->ReWrite('block', array('Module', 'TagPrepBlock'));
 		$tprep->ParseFile($template);
+		$_d['blocks']['hidden'] = null;
 
 		$t = new Template($_d);
+		$t->ReWrite('head', array($t, 'TagAddHead'));
 		$t->ReWrite('block', array('Module', 'TagBlock'));
 
 		global $mods;
 
 		if (!empty($mods))
 		{
-			foreach (array_keys($_d['module.disable']) as $m) unset($mods[$m]);
+			if (!empty($_d['module.disable']))
+				foreach (array_keys($_d['module.disable']) as $m)
+					unset($mods[$m]);
 
 			uksort($mods, array('Module', 'cmp_mod'));
 			RunCallbacks(@$_d['index.cb.prelink']);
 
-			foreach ($mods as $n => $mod)
-				$mod->PreLink();
-			foreach ($mods as $n => $mod)
-				$mod->Link();
-			foreach ($mods as $n => $mod)
-				$mod->Prepare();
+			foreach ($mods as $n => $mod) $mod->Link();
+			foreach ($mods as $n => $mod) $mod->Prepare();
 			foreach ($mods as $n => $mod)
 			{
-				if (array_key_exists($mod->Block, $_d['blocks']))
+				if (@array_key_exists($mod->Block, $_d['blocks']))
 					$_d['blocks'][$mod->Block] .= $mod->Get();
 				else
 					$_d['blocks']['default'] .= $mod->Get();
@@ -93,6 +155,8 @@ class Module
 	public $Block = 'default';
 	/** @var boolean */
 	public $Active;
+
+	protected $Name = 'module';
 
 	function DataError($errno)
 	{
@@ -129,9 +193,11 @@ class Module
 	{
 		global $_d;
 
-		if (@$_d['q'][0] == $name)
+		$q = $_d['q'];
+
+		if (@$q[0] == $name)
 		{
-			@$GLOBALS['me'] .= '/'.array_shift($_d['q']);
+			@$GLOBALS['me'] .= '/'.array_shift($q);
 			$this->Active = true;
 		}
 	}
@@ -141,14 +207,7 @@ class Module
 	* Overload Responsibility: Link up your datasets, make them available for
 	* other modules and any other initial construction.
 	*/
-	function __construct($installed) { }
-
-	/**
-	* Overload Responsibility: Before linkage, do security checks and validation
-	* possibly before we move on to preparation so you will be ready to present
-	* contextual data.
-	*/
-	function PreLink() { }
+	function __construct() { }
 
 	/**
 	* New Availability: DataSet
@@ -178,6 +237,12 @@ class Module
 	 * the user.
 	 */
 	function InstallFields(&$frm) { }
+
+	static function TransPath($a, $t)
+	{
+		if (isset($a[$t[0]])) $a[$t[0]] = p($a[$t[0]]);
+		return $a;
+	}
 }
 
 ?>

@@ -241,7 +241,7 @@ class Database
 
 	function Queries($query)
 	{
-		foreach (split(';', $query) as $q) $this->Query($q);
+		foreach (explode(';', $query) as $q) $this->Query($q);
 	}
 
 	/**
@@ -294,6 +294,7 @@ class Database
 	function GetLastInsertID()
 	{
 		if ($this->type == DB_MY) return mysql_insert_id($this->link);
+		if ($this->type == DB_MI) return mysqli_insert_id($this->link);
 		if ($this->type == DB_SL) return sqlite_last_insert_rowid($this->link);
 		return 0;
 	}
@@ -316,10 +317,17 @@ function SqlOr($val)
 	else return array('inc' => 'OR', 'val' => $val);
 }
 function SqlLess($val) { return array('cmp' => '<', 'val' => $val); }
+function SqlMore($val) { return array('cmp' => '>', 'val' => $val); }
 function SqlDistinct($val) { return array('cmp' => 'DISTINCT', 'val' => $val); }
 function SqlCount($val) { return array('val' => 'COUNT('.$val.')', 'opt' => SQLOPT_UNQUOTE); }
 function SqlLike($val) { return array('val' => $val, 'cmp' => 'LIKE'); }
-function SqlIn($vals) { return array('val' => 'IN('.$vals.')', 'opt' => SQLOPT_UNQUOTE, 'cmp' => ''); }
+function SqlIn($vals)
+{
+	$ix = 0; $nv = '';
+	if (!empty($vals))
+	foreach ($vals as $v) { if ($ix++ > 0) $nv .= ', '; $nv .= "'$v'"; }
+	return array('val' => 'IN('.$nv.')', 'opt' => SQLOPT_UNQUOTE, 'cmp' => '');
+}
 
 /**
  * Returns the proper format for DataSet to generate the current time.
@@ -608,7 +616,7 @@ class DataSet
 					{
 						if (is_array($val))
 						{
-							$ret .= $this->QuoteTable($col);
+							$ret .= $col;
 							$ret .= isset($val['cmp'])?' '.$val['cmp'].' ':' = ';
 							$ret .= $this->ProcessVal($val);
 						}
@@ -692,7 +700,7 @@ class DataSet
 	 */
 	function OrderClause($sorting)
 	{
-		if (isset($sorting))
+		if (!empty($sorting))
 		{
 			$ret = "\n ORDER BY";
 			if (is_array($sorting))
@@ -701,12 +709,14 @@ class DataSet
 				foreach ($sorting as $col => $dir)
 				{
 					if ($ix++ > 0) $ret .= ',';
-					$ret .= " {$col} {$dir}";
+					if (!is_numeric($col)) $ret .= " {$col} {$dir}";
+					else $ret .= " $dir";
 				}
 			}
 			else $ret .= " $sorting";
 			return $ret;
 		}
+		else if (!empty($this->order)) return $this->OrderClause($this->order);
 		return null;
 	}
 
@@ -720,7 +730,7 @@ class DataSet
 	{
 		if (!empty($amount))
 		{
-			$ret = ' LIMIT';
+			$ret = "\n LIMIT";
 			if (is_array($amount)) $ret .= " {$amount[0]}, {$amount[1]}";
 			else $ret .= " 0, {$amount}";
 			return $ret;
@@ -778,17 +788,7 @@ class DataSet
 				continue;
 
 				if ($opts & SQLOPT_QUOTE) $ret .= "'";
-				switch ($this->database->type)
-				{
-					case DB_MY:
-						$ret .= mysql_real_escape_string($val, $this->database->link);
-						break;
-					case DB_SL:
-						$ret .= sqlite_escape_string($val);
-						break;
-					default:
-						$ret .= addslashes($val);
-				}
+				$ret .= $this->database->Escape($val);
 				if ($opts & SQLOPT_QUOTE) $ret .= "'";
 			}
 			if ($found) return $ret;
@@ -831,8 +831,7 @@ class DataSet
 					return $val['val'];
 				else return $lq.$this->database->Escape($val['val']).$rq;
 			}
-			else
-				return $lq.$this->database->Escape($val).$rq;
+			else { Error('Arrays are not allowed here.'); varinfo($val); }
 		}
 		else
 		{
@@ -951,7 +950,8 @@ class DataSet
 		}
 
 		$this->database->Query($query);
-		return $this->database->GetLastInsertID();
+		if (isset($columns[$this->id])) return $columns[$this->id];
+		else return $this->database->GetLastInsertID();
 	}
 
 	/**
@@ -1008,23 +1008,23 @@ class DataSet
 		$query .= $this->JoinClause(@$opts['joins'], $this->joins);
 		$query .= $this->WhereClause(@$opts['match']);
 		$query .= $this->GroupClause(@$opts['group']);
-		$query .= $this->OrderClause(@$opts['sort']);
-		$query .= $this->AmountClause(@$opts['filter']);
+		$query .= $this->OrderClause(@$opts['order']);
+		$query .= $this->AmountClause(@$opts['limit']);
 
 		//Execute Query
 		$rows = $this->database->Query($query, $this->ErrorHandler);
 
 		//Prepare Data
-		$items = array();
 		$f = $this->func_rows;
 		switch ($this->database->type)
 		{
 			case DB_SL:
-				if ($f($rows) < 1) return $items;
+				if ($f($rows) < 1) return array();
 				break;
 			default:
-				if ($f($this->database->link) < 1) return $items;
+				if ($f($this->database->link) < 1) return array();
 		}
+		$items = array();
 
 		$a = null;
 		if ($this->database->type == DB_MY)
@@ -1176,7 +1176,7 @@ class DataSet
 	{
 		$sets = $this->GetColVals($values);
 		if (empty($sets)) { Trace('Nothing to update.'); return; }
-		$query = "UPDATE {$this->table}";
+		$query = 'UPDATE '.$this->QuoteTable($this->table);
 		$query .= $this->JoinClause($this->joins);
 		$query .= $this->SetClause($values);
 		$query .= $this->WhereClause($match);
@@ -1248,7 +1248,7 @@ class DataSet
 	*/
 	function Remove($match)
 	{
-		$query = "DELETE FROM {$this->table}";
+		$query = 'DELETE FROM '.$this->QuoteTable($this->table);
 		$query .= $this->WhereClause($match);
 		$this->database->Query($query);
 

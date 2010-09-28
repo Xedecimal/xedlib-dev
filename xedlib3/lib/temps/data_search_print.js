@@ -12,8 +12,10 @@ $(function () {
 		$(this).replaceWith('<span class="input">'+$(this).find('option:selected').text()+'</span>');
 	});
 
-	$('input[type!=checkbox][type!=radio],textarea').each(function () {
+	$('input[type!=hidden][type!=checkbox][type!=radio],textarea').each(function () {
 		$(this).replaceWith('<span class="input">'+$(this).val()+'</span>');
 	});
+
+	$('#tabs').tabs('destroy');
 });
 </null>
