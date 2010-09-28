@@ -19,12 +19,8 @@ require_once('lib/a_editor.php');
 
 $editor = GetVar('editor');
 
-$imgError = ' <img src="'.GetRelativePath(dirname(__FILE__)).'/lib/images/error.png" alt="Error" />';
-$v = new Validation('name', '.+', $imgError.' You must specify a name.');
-
-$ret = FormValidate('formtest', $v, $ret, isset($ca));
-
-$page_head = "<script type=\"text/javascript\">\n".$ret['js'].'</script>';
+$imgError = ' <img src="'.GetRelativePath(dirname(__FILE__))
+	.'/lib/images/error.png" alt="Error" />';
 
 $db = new Database();
 $db->Open('mysql://root:ransal@localhost/test');
@@ -33,11 +29,11 @@ $db->Open('mysql://root:ransal@localhost/test');
 
 $dsChild = new DataSet($db, 'child');
 $dsChild->Description = "Child";
-$dsChild->Display = array(
-	new DisplayColumn('Child', 'example')
+$dsChild->DisplayColumns = array(
+	'example' => new DisplayColumn('Child')
 );
-$dsChild->Fields = array(
-	'Example' => array('example', 'text')
+$dsChild->FieldInputs = array(
+	'example' => new FormInput('Example')
 );
 
 // dsBoth
@@ -45,44 +41,42 @@ $dsChild->Fields = array(
 $dsBoth = new DataSet($db, 'test');
 $dsBoth->Description = "Both Item";
 $dsBoth->AddChild(new Relation($dsBoth, 'id', 'parent'));
-$dsBoth->Display = array(
-	new DisplayColumn('Name', 'name'),
-	new DisplayColumn('Second', 'second')
+$dsBoth->DisplayColumns = array(
+	'name' => new DisplayColumn('Name'),
+	'second' => new DisplayColumn('Second')
 );
-$dsBoth->Fields = array(
-	'Name' => array('name', 'text'),
-	'Second' => array('second', 'text')
+$dsBoth->FieldInputs = array(
+	'name' => new FormInput('Name', 'text'),
+	'second' => new FormInput('Second', 'text')
 );
-$dsBoth->Validation = $v;
-$dsBoth->Errors = $ret['errors'];
 
 $dsBoth->AddChild(new Relation($dsChild, 'id', 'parent'));
 
 // dsForeign
 
 $dsForeign = new DataSet($db, 'test');
-$dsForeign->Description = "Foreign Item";
-$dsForeign->Display = array(
-	new DisplayColumn('Name', 'name'),
-	new DisplayColumn('Second', 'second')
+$dsForeign->Description = 'Foreign Item';
+$dsForeign->DisplayColumns = array(
+	'name' => new DisplayColumn('Name'),
+	'second' => new DisplayColumn('Second')
 );
-$dsForeign->Fields = array(
-	'Name' => array('name', 'text'),
-	'Second' => array('second', 'text')
+$dsForeign->FieldInputs = array(
+	'name' => new FormInput('Name'),
+	'second' => new FormInput('Second')
 );
 $dsForeign->AddChild(new Relation($dsChild, 'id', 'parent'));
 
 // dsSelf
 
 $dsSelf = new DataSet($db, 'test');
-$dsSelf->Description = "Self Item";
-$dsSelf->Display = array(
-	new DisplayColumn('Name', 'name'),
-	new DisplayColumn('Second', 'second')
+$dsSelf->Description = 'Self Item';
+$dsSelf->DisplayColumns = array(
+	'name' => new DisplayColumn('Name'),
+	'second' => new DisplayColumn('Second')
 );
-$dsSelf->Fields = array(
-	'Name' => array('name', 'text'),
-	'Second' => array('second', 'text')
+$dsSelf->FieldInputs = array(
+	'name' => new FormInput('Name'),
+	'second' => new FormInput('Second')
 );
 $dsSelf->AddChild(new Relation($dsSelf, 'id', 'parent'));
 
@@ -110,21 +104,21 @@ $tbl = new Table('tblMain',
 	array('valign="top"', 'valign="top"', 'valign="top"')
 );
 
-$ret = $edSelf->Get($me, $ci);
+$ret = $edSelf->GetUI();
 $row[0] = $ret['table'];
 foreach ($ret['forms'] as $frm)
 	$row[0] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
 		$frm->Get('action="'.$me.'" method="post"'),
 		'templates/box.html');
 
-$ret = $edForeign->Get($me, $ci);
+$ret = $edForeign->GetUI();
 $row[1] = $ret['table'];
 foreach ($ret['forms'] as $frm)
 	$row[1] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
 		$frm->Get('action="'.$me.'" method="post"'),
 		'templates/box.html');
-		
-$ret = $edBoth->Get($me, $ci);
+
+$ret = $edBoth->GetUI();
 $row[2] = $ret['table'];
 foreach ($ret['forms'] as $frm)
 	$row[2] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
@@ -140,6 +134,6 @@ actually can re-align if in the correct order, but you will destroy their tree
 if they cannot find their parents by their order (a part of manual sorting that
 cannot allow us to automatically sort).";
 
-echo $t->Get('template_test.html');
+echo $t->ParseFile('t.xml');
 
 ?>
