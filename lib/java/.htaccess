@@ -1,5 +1,0 @@
-Options None
-
-<IfModule mod_rewrite.c>
-	RewriteEngine off
-</IfModule>

@@ -1,7 +1,0 @@
-<!-- Begin Login: {{form_name}} -->
-<form>
-<ul>
-<field><li><label for="">{{text}}</label>{{field}}</li></field>
-</ul>
-</form>
-<!-- End Login: {{form_name}} -->
