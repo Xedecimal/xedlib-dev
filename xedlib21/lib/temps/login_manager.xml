@@ -1,9 +1,0 @@
-<null>
-	<!-- Begin Login: {{form_name}} -->
-	<form>
-	<table>
-	<field><tr><td align="right">{{text}}</td><td>{{field}}</td></tr></field>
-	</table>
-	</form>
-	<!-- End Login: {{form_name}} -->
-</null>
