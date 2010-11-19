@@ -5,21 +5,24 @@
 $page_title = 'Storage Tests';
 $page_body = '';
 
-//Requirements
+//Requirements 
 
-require_once('lib/h_utility.php');
-HandleErrors();
-require_once('lib/h_data.php');
-require_once('lib/h_display.php');
-require_once('lib/h_template.php');
-
-require_once('lib/a_editor.php');
+require_once('h_main.php');
+require_once('lib/classes/File.php');
+require_once('lib/classes/data/Database.php');
+require_once('lib/classes/data/DataSet.php');
+require_once('lib/classes/data/Relation.php');
+require_once('lib/classes/present/EditorData.php');
+require_once('lib/classes/present/FormInput.php');
+require_once('lib/classes/present/Template.php');
+require_once('lib/classes/present/Table.php');
+Server::HandleErrors();
 
 // Data
 
-$editor = GetVar('editor');
+$editor = Server::GetVar('editor');
 
-$imgError = ' <img src="'.GetRelativePath(dirname(__FILE__))
+$imgError = ' <img src="'.File::GetRelativePath(dirname(__FILE__))
 	.'/lib/images/error.png" alt="Error" />';
 
 $db = new Database();
@@ -82,8 +85,8 @@ $dsSelf->AddChild(new Relation($dsSelf, 'id', 'parent'));
 
 //Preparation
 
-$ca = GetVar('ca');
-$ci = GetVar('ci');
+$ca = Server::GetVar('ca');
+$ci = Server::GetVar('ci');
 
 $data = null;
 $t = new Template($data);
@@ -104,27 +107,9 @@ $tbl = new Table('tblMain',
 	array('valign="top"', 'valign="top"', 'valign="top"')
 );
 
-$ret = $edSelf->GetUI();
-$row[0] = $ret['table'];
-foreach ($ret['forms'] as $frm)
-	$row[0] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
-		$frm->Get('action="'.$me.'" method="post"'),
-		'templates/box.html');
-
-$ret = $edForeign->GetUI();
-$row[1] = $ret['table'];
-foreach ($ret['forms'] as $frm)
-	$row[1] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
-		$frm->Get('action="'.$me.'" method="post"'),
-		'templates/box.html');
-
-$ret = $edBoth->GetUI();
-$row[2] = $ret['table'];
-foreach ($ret['forms'] as $frm)
-	$row[2] .= GetBox("box_{$frm->name}", $frm->State.' '.$frm->Description,
-		$frm->Get('action="'.$me.'" method="post"'),
-		'templates/box.html');
-
+$row[0] = $edSelf->GetUI();
+$row[1] = $edForeign->GetUI();
+$row[2] = $edBoth->GetUI();
 $tbl->AddRow($row);
 
 $page_body .= $tbl->Get();

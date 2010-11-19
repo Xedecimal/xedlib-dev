@@ -14,17 +14,13 @@
 <xsl:for-each select="root/class">
 	<b><xsl:value-of select="doc/tag[@type='access']"/></b><xsl:text> </xsl:text>
 	<a>
-		<xsl:attribute name="href">
-			class_<xsl:value-of select="@name"/>.xml
-		</xsl:attribute>
+		<xsl:attribute name="href">class_<xsl:value-of select="@name"/>.xml</xsl:attribute>
 		<xsl:value-of select="@name" />
 	</a>
 	<xsl:if test="@extends">
 		<xsl:text> </xsl:text><b>extends</b><xsl:text> </xsl:text>
 		<a>
-			<xsl:attribute name="href">
-				class_<xsl:value-of select="@extends" />.xml
-			</xsl:attribute>
+			<xsl:attribute name="href">class_<xsl:value-of select="@extends" />.xml</xsl:attribute>
 			<xsl:value-of select="@extends" />
 		</a>
 	</xsl:if><br />
@@ -37,9 +33,7 @@
 <p class="blue body item">
 <xsl:for-each select="root/function">
 	<a>
-		<xsl:attribute name="href">
-			function_<xsl:value-of select="@name"/>.xml
-		</xsl:attribute>
+		<xsl:attribute name="href">function_<xsl:value-of select="@name"/>.xml</xsl:attribute>
 		<xsl:value-of select="@name" />
 	</a><br />
 	<xsl:value-of select="@extends" />
@@ -53,9 +47,7 @@
 <b>Rule of thumb, have no existing global variables!</b><br/><br/>
 <xsl:for-each select="root/variable">
 	<a>
-		<xsl:attribute name="href">
-			variable_<xsl:value-of select="@name"/>.xml
-		</xsl:attribute>
+		<xsl:attribute name="href">variable_<xsl:value-of select="@name"/>.xml</xsl:attribute>
 		<xsl:value-of select="@name" /><br />
 	</a>
 </xsl:for-each>

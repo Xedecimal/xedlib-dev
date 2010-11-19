@@ -2,22 +2,7 @@
 
 require_once('lib/h_utility.php');
 HandleErrors();
-require_once('lib/a_code.php');
-
-function GetTypeName($type)
-{
-	switch ($type)
-	{
-		case T_FUNCTION: return 'function';
-		case T_CLASS: return 'class';
-		case T_VARIABLE: return 'variable';
-		case T_DEFINE: return 'define';
-		case T_PUBLIC: return 'public';
-		case T_PRIVATE: return 'private';
-		case T_PROTECTED: return 'protected';
-		default: return 'unknown';
-	}
-}
+require_once('lib/classes/CodeReader.php');
 
 class DocGeneratorXML
 {
@@ -25,7 +10,7 @@ class DocGeneratorXML
 	{
 		$doc = new DOMDocument();
 		$doc->appendChild($doc->createProcessingInstruction(
-			'xml-stylesheet', "href=\"../{$type}.xsl\" type=\"text/xsl\""));
+			'xml-stylesheet', 'href="../'.$type.'.xsl" type="text/xsl"'));
 		return $doc;
 	}
 
@@ -50,20 +35,22 @@ class DocGeneratorXML
 			$elTag->setAttribute('type', 'example');
 			$elDoc->appendChild($elTag);
 		}
-		else if (isset($item->doc->params))
+		else if (!empty($item->doc->params))
 		{
-			$elTag = $doc->createElement('tag', $match[3]);
-			$elTag->setAttribute('type', 'param');
-			$elTag->setAttribute('datatype', $match[1]);
-			$elTag->setAttribute('name', $match[2]);
-			$elDoc->appendChild($elTag);
+			foreach ($item->doc->params as $n => $p)
+			{
+				$elTag = $doc->createElement('tag', $p['desc']);
+				$elTag->setAttribute('type', 'param');
+				$elTag->setAttribute('datatype', $p['type']);
+				$elTag->setAttribute('name', $n);
+				$elDoc->appendChild($elTag);
+			}
 		}
 		else if (isset($item->doc->return))
 		{
-			$elTag = $doc->createElement('tag', isset($match[3]) ? $match[3] : null);
+			$elTag = $doc->createElement('tag', $item->doc->return['desc']);
 			$elTag->setAttribute('type', 'return');
-			$elTag->setAttribute('datatype', $match[1]);
-			$elTag->setAttribute('text', $match[2]);
+			$elTag->setAttribute('datatype', $item->doc->return['type']);
 			$elDoc->appendChild($elTag);
 		}
 
@@ -71,7 +58,8 @@ class DocGeneratorXML
 		//$elTag->setAttribute('type');
 		//$elDoc->appendChild($elTag);
 
-		$elDoc->appendChild($doc->createCDATASection($item->doc->body));
+		if (!empty($item->doc->body))
+			$elDoc->appendChild($doc->createCDATASection($item->doc->body));
 		return $elDoc;
 	}
 
@@ -157,19 +145,23 @@ class DocGeneratorXML
 		$parent->appendChild($element);
 	}
 
-	function OutputFiles($mask, $target)
+	function OutputFiles($source, $include, $exclude, $target)
 	{
 		$d = new CodeReader();
 
-		$files = glob($mask);
+		$rdi = new RecursiveDirectoryIterator($source);
+		$rii = new RecursiveIteratorIterator($rdi);
+		$ri = new RegexIterator($rii, $include, RecursiveRegexIterator::GET_MATCH);
+
 		$data = null;
-		foreach ($files as $file)
+		foreach ($ri as $file)
 		{
-			$new = $d->Parse($file);
-			if (!isset($data)) $data = $new;
-			else if (isset($new))
+			if (preg_match($exclude, $file[0])) continue;
+			$new = $d->Parse($file[0]);
+			if (!isset($data)) $data = $new['data'];
+			else if (!empty($new['data']->members))
 			{
-				$data->members = array_merge($data->members, $new->members);
+				$data->members += $new['data']->members;
 				$data->file = $file;
 			}
 		}
@@ -193,10 +185,10 @@ class DocGeneratorXML
 $GLOBALS['debug'] = true;
 
 echo '<pre>';
-$stime = microtime();
+$stime = microtime(true);
 $d = new DocGeneratorXML();
-$d->OutputFiles('lib/*.php', 'doc/output');
-echo 'Done in '.(microtime()-$stime)." seconds.<br/>\n";
+$d->OutputFiles('lib', '/^.+\.php$/i', '#lib\\\\3rd.*#i', 'doc/output');
+echo 'Done in '.(microtime(true)-$stime)." seconds.<br/>\n";
 echo '</pre>';
 
 ?>
