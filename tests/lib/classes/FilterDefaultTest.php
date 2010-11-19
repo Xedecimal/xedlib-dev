@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../lib/classes/FileManager.php';
+require_once dirname(__FILE__) . '/../../../lib/classes/FilterDefault.php';
 
 /**
  * Test class for FilterDefault.
