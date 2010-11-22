@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../lib/classes/present/Calendar.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/present/Calendar.php';
 
 /**
  * Test class for Calendar.
@@ -8,37 +8,14 @@ require_once dirname(__FILE__) . '/../../lib/classes/present/Calendar.php';
  */
 class CalendarTest extends PHPUnit_Framework_TestCase
 {
-	/**
-	 * @var Calendar
-	 */
-	protected $object;
-
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 */
-	protected function setUp()
+	public function testCalendar()
 	{
-		$this->object = new Calendar;
-	}
-
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 */
-	protected function tearDown()
-	{
-		
-	}
-
-	/**
-	 * @todo Implement testAddItem().
-	 */
-	public function testAddItem()
-	{
+		$cal = new Calendar;
 		$tsfrom = time();
 		$tsto = strtotime('2 days');
-		$this->object->AddItem($tsfrom, $tsto, 'Testing');
+		$cal->AddItem($tsfrom, $tsto, 'Testing');
+		$cal->Get();
+		$cal->GetVert();
 	}
 
 	/**

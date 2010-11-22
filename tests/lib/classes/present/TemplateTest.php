@@ -31,265 +31,48 @@ class TemplateTest extends PHPUnit_Framework_TestCase
 		
 	}
 
-	/**
-	 * @todo Implement testTagTemplate().
-	 */
-	public function testTagTemplate()
+	public function testTemplate()
 	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testReWrite().
-	 */
-	public function testReWrite()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testTransform().
-	 */
-	public function testTransform()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testStart_Tag().
-	 */
-	public function testStart_Tag()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testEnd_Tag().
-	 */
-	public function testEnd_Tag()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testPush().
-	 */
-	public function testPush()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testPop().
-	 */
-	public function testPop()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testCData().
-	 */
-	public function testCData()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testProcess().
-	 */
-	public function testProcess()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetDestinationObject().
-	 */
-	public function testGetDestinationObject()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetCurrentObject().
-	 */
-	public function testGetCurrentObject()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testSet().
-	 */
-	public function testSet()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testParseFile().
-	 */
-	public function testParseFile()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGet().
-	 */
-	public function testGet()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetString().
-	 */
-	public function testGetString()
-	{
-		$xml = <<<EOF
+		$temp = <<<EOF
 <html doctype="trans">
 <head>
 <title>Title Here</title>
 </head>
 <body>
-Here's some content.
+<!-- Comment Here! -->
+Here's some content. {{Test}} {{Test2}}
+<box title="Test">
+Body From object: {{Arg}}
+</box>
+<template file="temp_sub.xml" />
+<?php echo "And some code!"; ?>
+<nempty var="{{Test}}">This is not empty</nempty>
 </body>
 </html>
 EOF;
+		$temp_sub = <<<EOF
+<p>Here's a sub-template.
+</p>
+EOF;
+		file_put_contents('temp.xml', $temp);
+		file_put_contents('temp_sub.xml', $temp_sub);
 		$t = new Template();
-		$t->GetString($xml);
+		$t->ReWrite('nempty', array(&$t, 'TagNEmpty'));
+		$t->Set('Test', 'value');
+		$t->Set(array('Test2' => 'test2'));
+		$obj = new stdClass();
+		$obj->Arg = 'val';
+		$t->Set($obj);
+		$t->Transform('p', array(&$this, 'TransP'));
+		$t->ParseFile('temp.xml');
+		unlink('temp.xml');
+		unlink('temp_sub.xml');
 	}
 
-	/**
-	 * @todo Implement testProcessVars().
-	 */
-	public function testProcessVars()
+	public function TransP($a)
 	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testDef().
-	 */
-	public function testDef()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testPreProcess().
-	 */
-	public function testPreProcess()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testCodeCallback().
-	 */
-	public function testCodeCallback()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testTagRepeat().
-	 */
-	public function testTagRepeat()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testTagCallback().
-	 */
-	public function testTagCallback()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testTagNEmpty().
-	 */
-	public function testTagNEmpty()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetStack().
-	 */
-	public function testGetStack()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
+		$a['attribs']['ID'] = 'test';
+		return $a;
 	}
 }
 

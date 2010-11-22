@@ -7,110 +7,20 @@ require_once dirname(__FILE__) . '/../../../lib/classes/TreeNode.php';
  */
 class TreeNodeTest extends PHPUnit_Framework_TestCase
 {
-	public function testAddChild()
+	public function testTreeNode()
 	{
 		$tn = new TreeNode('parent', 'data');
 		$tn->AddChild(new TreeNode('child', 'cdata'));
+		TreeNode::AddNodes($tn, array('P' => 'K'));
 		$this->assertEquals('data', $tn->Find('cdata')->parent->id);
-	}
+		$tn->Dump();
+		$tn->Collapse();
+		TreeNode::GetUL($tn);
+		TreeNode::GetTree($tn, 'Test');
 
-	/**
-	 * @todo Implement testIndex().
-	 */
-	public function testIndex()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetIndex().
-	 */
-	public function testGetIndex()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testFind().
-	 */
-	public function testFind()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testDump().
-	 */
-	public function testDump()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testAddNodes().
-	 */
-	public function testAddNodes()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testCollapse().
-	 */
-	public function testCollapse()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetUL().
-	 */
-	public function testGetUL()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetTree().
-	 */
-	public function testGetTree()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testFromArray().
-	 */
-	public function testFromArray()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
+		$atree['Test'] = 'top level';
+		$atree['test']['Test2'] = 'lower level';
+		TreeNode::FromArray($tn, $atree);
 	}
 }
 

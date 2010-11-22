@@ -35,10 +35,10 @@ class UTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testVarInfo()
 	{
-		U::VarInfo("Test");
-		U::VarInfo(33);
-		U::VarInfo(new Form('Test'));
-		U::VarInfo(array('Test' => 1, 2 => 3));
+		U::VarInfo("Test", true);
+		U::VarInfo(33, true);
+		U::VarInfo(new Form('Test'), true);
+		U::VarInfo(array('Test' => 1, 2 => 3), true);
 	}
 
 	/**

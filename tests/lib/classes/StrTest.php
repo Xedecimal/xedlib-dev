@@ -56,10 +56,7 @@ class StrTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testGetStringSize()
 	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
+		$this->assertEquals(204800, Str::GetStringSize('200K'));
 	}
 
 	/**

@@ -22,7 +22,13 @@ class EditorDataTest extends PHPUnit_Framework_TestCase
 	protected function setUp()
 	{
 		$db = new Database();
-		$ds = new DataSet($db, 'test');
+		$ds = new DataSet($db, 'test', 'tst_id');
+		$ds->FieldInputs = array(
+			'tst_name' => new FormInput('Name')
+		);
+		$ds->DisplayColumns = array(
+			'tst_name' => new DisplayColumn('Name')
+		);
 		$this->object = new EditorData('editor_name', $ds);
 	}
 
@@ -194,10 +200,7 @@ class EditorDataTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testGetUI()
 	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
+		$this->object->GetUI();
 	}
 
 	/**
@@ -205,10 +208,7 @@ class EditorDataTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testReset()
 	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
+		$this->object->Reset();
 	}
 }
 

@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../../lib/classes/HTML.php';
+require_once dirname(__FILE__) . '/../../../lib/classes/HM.php';
 
 /**
  * Test class for HTML.
@@ -14,18 +14,18 @@ class HTMLTest extends PHPUnit_Framework_TestCase
 
 	public function testCleanID()
 	{
-		$this->assertEquals('a__22', HTML::CleanID('a [22]'));
+		$this->assertEquals('a__22', HM::CleanID('a [22]'));
 	}
 
 	public function testGetAttribs()
 	{
-		$this->assertEquals(' test="1"', HTML::GetAttribs(array('test' => 1)));
-		$this->assertEquals(' test="1"', HTML::GetAttribs('test="1"'));
+		$this->assertEquals(' test="1"', HM::GetAttribs(array('test' => 1)));
+		$this->assertEquals(' test="1"', HM::GetAttribs('test="1"'));
 	}
 
 	public function testParseAttribs()
 	{
-		$arr = HTML::ParseAttribs('test="1"');
+		$arr = HM::ParseAttribs('test="1"');
 		$this->assertEquals('1', $arr['test']);
 	}
 }
