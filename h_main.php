@@ -6,8 +6,8 @@ require_once('lib/classes/data/Database.php');
 Server::HandleErrors();
 
 $_d['me'] = Server::GetVar('SCRIPT_NAME');
-$_d['app_abs'] = Server::GetRelativePath(dirname(__FILE__));
-$_d['app_rel'] = '';
+$_d['app_dir'] = __DIR__;
+$_d['app_abs'] = Server::GetRelativePath($_d['app_dir']);
 $_d['page_head'] = '';
 $_d['page_title'] = 'Xedlib Tests';
 

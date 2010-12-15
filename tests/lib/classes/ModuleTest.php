@@ -11,7 +11,8 @@ class ModuleTest extends PHPUnit_Framework_TestCase
 {
 	public function testModule()
 	{
-		require_once(__DIR__.'/../../../lib/modules/article.php');
+		require_once(__DIR__.'/../../../h_main.php');
+		require_once(__DIR__.'/../../../lib/modules/article/article.php');
 		Module::Register('ModArticles');
 		$temp = <<<EOF
 <html doctype="trans">

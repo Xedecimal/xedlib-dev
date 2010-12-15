@@ -7,126 +7,18 @@ require_once dirname(__FILE__) . '/../../../../lib/classes/present/Form.php';
  */
 class FormTest extends PHPUnit_Framework_TestCase
 {
-	/**
-	 * @var Form
-	 */
-	protected $object;
-
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 */
-	protected function setUp()
+	public function testForm()
 	{
-		$this->object = new Form('test');
-	}
+		$f = new Form('test');
+		$f->AddHidden('testh', 'value');
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 */
-	protected function tearDown()
-	{
-		
-	}
+		$arr = array('name' => 'value1');
+		$opts = FormOption::FromArray($arr);
+		$fi = new FormInput('Test', 'select', 'test', $opts,
+			array('id' => 'sel-test'), 'Help');
+		$f->AddInput($fi);
 
-	/**
-	 * @todo Implement testAddHidden().
-	 */
-	public function testAddHidden()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testAddInput().
-	 */
-	public function testAddInput()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testIterateInput().
-	 */
-	public function testIterateInput()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testTagField().
-	 */
-	public function testTagField()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testTagError().
-	 */
-	public function testTagError()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGet().
-	 */
-	public function testGet()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetSubmitButton().
-	 */
-	public function testGetSubmitButton()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testTagInput().
-	 */
-	public function testTagInput()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testTagForm().
-	 */
-	public function testTagForm()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
+		$f->Get();
 	}
 }
 
