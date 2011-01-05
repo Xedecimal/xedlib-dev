@@ -14,12 +14,35 @@ class DataSetTest extends PHPUnit_Framework_TestCase
 	 */
 	protected $object;
 
+	protected function setUp()
+	{
+		global $_d;
+
+		# Find our database for $target
+
+		$url = parse_url($_d['settings']['database']);
+		$url['path'] = '/temp';
+		$target = http_build_url($url);
+
+		# Open our database
+
+		$db = new Database();
+		$db->Open($target, true);
+
+		# Create our dataset
+
+		$this->object = new DataSet($db, 'test', 'tst_id');
+		$dsChild = new DataSet($db, 'test', 'tst_id');
+		$dsChild->Shortcut = 'tchild';
+	}
+
 	/**
 	 * Sets up the fixture, for example, opens a network connection.
 	 * This method is called before a test is executed.
 	 */
 	public function testDataSet()
 	{
+		$GLOBALS['debug'] = true;
 		$sqlCreateTable = <<<EOF
 CREATE TABLE `test` (
 	`tst_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -28,21 +51,6 @@ CREATE TABLE `test` (
 	PRIMARY KEY (`tst_id`)
 )
 EOF;
-
-		global $_d;
-
-		# Locate database
-
-		$url = parse_url($_d['settings']['database']);
-		$url['path'] = '/temp';
-		$target = http_build_url($url);
-
-		$db = new Database();
-		$db->Open($target, true);
-
-		$this->object = new DataSet($db, 'test', 'tst_id');
-		$dsChild = new DataSet($db, 'test', 'tst_id');
-		$dsChild->Shortcut = 'tchild';
 
 		$this->object->database->Query($sqlCreateTable);
 
@@ -68,6 +76,18 @@ EOF;
 		$this->object->Remove(array('tst_name' => 'test'));
 		$this->object->database->DropTable('test');
 		$this->object->database->Drop();
+	}
+
+	public function testProcessVal()
+	{
+		$testIn = Database::SqlNot(
+			Database::SqlIn(
+				array(1, 2, 'three', 'four')
+			)
+		);
+
+		$this->assertEquals("NOT IN('1', '2', 'three', 'four')",
+			$this->object->ProcessVal($testIn));
 	}
 }
 
