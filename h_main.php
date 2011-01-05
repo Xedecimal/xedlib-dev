@@ -3,7 +3,6 @@
 require_once('lib/classes/Server.php');
 require_once('lib/classes/File.php');
 require_once('lib/classes/data/Database.php');
-Server::HandleErrors();
 
 $_d['me'] = Server::GetVar('SCRIPT_NAME');
 $_d['app_dir'] = __DIR__;
