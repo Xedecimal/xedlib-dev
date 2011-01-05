@@ -42,24 +42,6 @@ class StrTest extends PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * @todo Implement testSizeString().
-	 */
-	public function testSizeString()
-	{
-		$this->assertEquals('64 KB', Str::SizeString(65536));
-		$this->assertEquals('32 MB', Str::SizeString(33552432));
-		$this->assertEquals('976.32 MB', Str::SizeString(1023741824));
-	}
-
-	/**
-	 * @todo Implement testGetStringSize().
-	 */
-	public function testGetStringSize()
-	{
-		$this->assertEquals(204800, Str::GetStringSize('200K'));
-	}
-
-	/**
 	 * @todo Implement testChomp().
 	 */
 	public function testChomp()
