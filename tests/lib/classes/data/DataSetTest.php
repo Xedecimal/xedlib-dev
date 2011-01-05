@@ -42,6 +42,7 @@ EOF;
 
 		$this->object = new DataSet($db, 'test', 'tst_id');
 		$dsChild = new DataSet($db, 'test', 'tst_id');
+		$dsChild->Shortcut = 'tchild';
 
 		$this->object->database->Query($sqlCreateTable);
 
@@ -62,7 +63,7 @@ EOF;
 		$q['match']['tst_id'] = Database::SqlGreater(5);
 		$q['match']['tst_parent'] = 0;
 		$q['order']['tst_id'] = 'ASC';
-		$q['limit'] = array('0, 10');
+		$q['limit'] = array(0, 10);
 		$this->object->Get($q);
 
 		# Cleanup
