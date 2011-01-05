@@ -46,9 +46,6 @@ EOF;
 
 		$this->object->database->Query($sqlCreateTable);
 
-		$this->object->AddChild(new Relation($dsChild, 'tst_parent', 'tst_id'));
-		$this->object->AddJoin(new Join($dsChild, 'tst_parent = tst_id', 'LEFT JOIN'));
-
 		# Creates
 
 		$this->object->Add(array('tst_name' => 'test'));
