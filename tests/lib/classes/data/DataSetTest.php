@@ -42,7 +42,6 @@ class DataSetTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testDataSet()
 	{
-		$GLOBALS['debug'] = true;
 		$sqlCreateTable = <<<EOF
 CREATE TABLE `test` (
 	`tst_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
