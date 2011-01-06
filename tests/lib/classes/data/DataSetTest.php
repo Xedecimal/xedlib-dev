@@ -43,7 +43,7 @@ class DataSetTest extends PHPUnit_Framework_TestCase
 	public function testDataSet()
 	{
 		$sqlCreateTable = <<<EOF
-CREATE TABLE `test` (
+CREATE TABLE IF NOT EXISTS `test` (
 	`tst_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`tst_parent` INT UNSIGNED,
 	`tst_name` VARCHAR(255),
