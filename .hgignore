@@ -1,2 +1,3 @@
 glob:nbproject/private/*
 glob:doc/output/*
+glob:test/*
