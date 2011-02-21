@@ -11,6 +11,8 @@ class ModuleTest extends PHPUnit_Framework_TestCase
 {
 	public function testModule()
 	{
+		Module::Initialize(realpath(dirname(__FILE__).'../../../'), true);
+
 		require_once(__DIR__.'/../../../h_main.php');
 		require_once(__DIR__.'/../../../lib/modules/article/article.php');
 		Module::Register('ModArticles');
@@ -21,7 +23,6 @@ class ModuleTest extends PHPUnit_Framework_TestCase
 </body>
 </html>
 EOF;
-		Module::Initialize(true);
 		Module::RunString($temp);
 	}
 }
