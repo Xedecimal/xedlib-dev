@@ -1,13 +1,11 @@
-<null>
-<doctype type="trans" />
-<html>
+<html doctype="trans">
 <head>
 	<title>{{page_title}}</title>
 	<link href="main.css" type="text/css" rel="stylesheet" />
-	{{page_head}}
+	<script type="text/javascript" src="{{xl_abs}}/js/jquery.js"></script>
+	<block name="head" />
 </head>
 <body>
-{{page_body}}
+<block name="default" />
 </body>
 </html>
-</null>
