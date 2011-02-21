@@ -32,6 +32,7 @@ class DataSetTest extends PHPUnit_Framework_TestCase
 		# Create our dataset
 
 		$this->object = new DataSet($db, 'test', 'tst_id');
+		$this->object->Shortcut = 'tp';
 		$dsChild = new DataSet($db, 'test', 'tst_id');
 		$dsChild->Shortcut = 'tchild';
 	}
@@ -64,9 +65,11 @@ EOF;
 
 		# Gets
 
-		$q['match']['tst_id'] = Database::SqlGreater(5);
-		$q['match']['tst_parent'] = 0;
-		$q['order']['tst_id'] = 'ASC';
+		$q['match']['tp.tst_id'] = Database::SqlGreater(5);
+		$q['match']['tp.tst_parent'] = 0;
+		$q['order']['tp.tst_id'] = 'ASC';
+		$q['joins']['test2'] = new Join($this->object,
+				'tc.tst_parent = tp.tst_id', 'JOIN', 'tc');
 		$q['limit'] = array(0, 10);
 		$this->object->Get($q);
 
@@ -85,7 +88,7 @@ EOF;
 			)
 		);
 
-		$this->assertEquals("NOT IN('1', '2', 'three', 'four')",
+		$this->assertEquals(" NOT IN('1', '2', 'three', 'four')",
 			$this->object->ProcessVal($testIn));
 	}
 }
