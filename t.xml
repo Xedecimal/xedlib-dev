@@ -1,6 +1,6 @@
 <html doctype="trans">
 <head>
-	<title>{{page_title}}</title>
+	<title>Xedlib Index</title>
 	<link href="main.css" type="text/css" rel="stylesheet" />
 	<script type="text/javascript" src="{{xl_abs}}/js/jquery.js"></script>
 	<block name="head" />
