@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../../lib/classes/LayeredOutput.php';
+require_once dirname(__FILE__) . '/../../../lib/classes/layered_output.php';
 
 /**
  * Test class for LayeredOutput.

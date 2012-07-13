@@ -11,7 +11,7 @@ $classes = $x->evaluate('/root/class');
 
 foreach ($classes as $class)
 {
-	varinfo($class);
+	var_dump($class);
 }
 
 ?>

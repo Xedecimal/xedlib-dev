@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../../lib/classes/Arr.php';
+require_once dirname(__FILE__) . '/../../../lib/classes/arr.php';
 
 /**
  * Test class for Arr.
@@ -28,7 +28,7 @@ class ArrTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-		
+
 	}
 
 	/**

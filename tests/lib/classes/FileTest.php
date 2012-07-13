@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../lib/classes/File.php';
+require_once dirname(__FILE__) . '/../../../lib/classes/file.php';
 
 /**
  * Test class for File.
@@ -27,7 +27,7 @@ class FileTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-		
+
 	}
 
 	/**

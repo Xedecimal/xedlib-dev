@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../../lib/classes/FileInfo.php';
+require_once dirname(__FILE__) . '/../../../lib/classes/file_info.php';
 
 /**
  * Test class for FileInfo.

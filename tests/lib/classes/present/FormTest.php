@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/Form.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/present/form.php';
 
 /**
  * Test class for Form.

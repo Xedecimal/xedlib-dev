@@ -3,8 +3,8 @@
 session_start();
 
 require_once('h_main.php');
-require_once('lib/classes/LoggerAuth.php');
-require_once('lib/modules/FileManager/FileManager.php');
+require_once('lib/classes/logger_auth.php');
+require_once('lib/modules/file_manager/file_manager.php');
 require_once('lib/modules/user/user.php');
 
 Module::Initialize(dirname(__FILE__), true);

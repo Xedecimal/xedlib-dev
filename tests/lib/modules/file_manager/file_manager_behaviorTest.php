@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../../../lib/modules/filemanager/FileManager.php';
+require_once dirname(__FILE__) . '/../../../../lib/modules/file_manager/file_manager.php';
 
 /**
  * Test class for FileManagerBehavior.

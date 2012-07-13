@@ -1,6 +1,6 @@
 <?php
 
-require_once(__DIR__.'/../../../../lib/classes/data/DataSet.php');
+require_once(__DIR__.'/../../../../lib/classes/data/dataset.php');
 require_once(__DIR__.'/../../../../h_main.php');
 
 /**

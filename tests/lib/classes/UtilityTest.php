@@ -1,5 +1,7 @@
 <?php
-require_once dirname(__FILE__) . '/../../../lib/classes/Utility.php';
+
+require_once dirname(__FILE__) . '/../config.php';
+require_once dirname(__FILE__) . '/../../../lib/classes/utility.php';
 
 /**
  * Test class for U.
@@ -27,7 +29,7 @@ class UTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-		
+
 	}
 
 	/**
@@ -35,7 +37,7 @@ class UTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testVarInfo()
 	{
-		require_once dirname(__FILE__) . '/../../../lib/classes/present/Form.php';
+		require_once dirname(__FILE__) . '/../../../lib/classes/present/form.php';
 		U::VarInfo("Test", true);
 		U::VarInfo(33, true);
 		U::VarInfo(new Form('Test'), true);

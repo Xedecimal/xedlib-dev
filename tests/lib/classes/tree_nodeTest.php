@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../lib/classes/TreeNode.php';
+require_once dirname(__FILE__) . '/../../../lib/classes/tree_node.php';
 
 /**
  * Test class for TreeNode.

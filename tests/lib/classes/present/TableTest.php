@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/Table.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/present/table.php';
 
 /**
  * Test class for Table.

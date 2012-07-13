@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../../lib/classes/data/Database.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/data/database.php';
 
 /**
  * Test class for Database.

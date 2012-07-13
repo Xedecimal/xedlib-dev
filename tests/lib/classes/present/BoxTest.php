@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/Box.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/present/box.php';
 
 /**
  * Test class for Box.
@@ -27,7 +27,7 @@ class BoxTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-		
+
 	}
 
 	/**

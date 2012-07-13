@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/FormInput.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/present/form_input.php';
 
 /**
  * Test class for FormInput.
@@ -30,7 +30,7 @@ class FormInputTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-		
+
 	}
 
 	/**

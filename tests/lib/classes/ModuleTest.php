@@ -1,7 +1,7 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../../lib/classes/Module.php';
-require_once dirname(__FILE__) . '/../../../lib/classes/Utility.php';
+require_once dirname(__FILE__) . '/../../../lib/classes/module.php';
+require_once dirname(__FILE__) . '/../../../lib/classes/utility.php';
 
 /**
  * Test class for Module.

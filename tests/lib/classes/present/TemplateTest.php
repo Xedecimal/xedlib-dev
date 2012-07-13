@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/Template.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/present/template.php';
 
 /**
  * Test class for Template.
@@ -28,7 +28,7 @@ class TemplateTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-		
+
 	}
 
 	public function testTemplate()

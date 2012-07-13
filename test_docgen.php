@@ -1,8 +1,7 @@
 <?php
 
 require_once('lib/h_utility.php');
-HandleErrors();
-require_once('lib/classes/CodeReader.php');
+require_once('lib/classes/code_reader.php');
 
 class DocGeneratorXML
 {
@@ -74,7 +73,7 @@ class DocGeneratorXML
 	{
 		$e = $doc->createElement(GetTypeName($item->type));
 		$e->setAttribute('name', $item->name);
-		
+
 		if (isset($item->modifier))
 			$e->setAttribute('modifier', GetTypeName($item->modifier));
 		if (isset($item->doc))
@@ -106,20 +105,20 @@ class DocGeneratorXML
 	function OutputDetail($item, $target)
 	{
 		$type = GetTypeName($item->type);
-	
+
 		$doc = $this->CreateDoc($type);
-	
+
 		$root = $doc->createElement('root');
 		$root->setAttribute('name', $item->name);
 		if (isset($item->doc))
 			$root->appendChild($this->GetDocumentElement($doc, $item));
-	
+
 		//Arguments and methods
 		if (!empty($item->members))
 		foreach ($item->members as $member)
 			$this->OutputMember($doc, $root, $member);
 		$doc->appendChild($root);
-	
+
 		$doc->save("{$target}/{$type}_{$item->name}.xml");
 	}
 
@@ -165,9 +164,9 @@ class DocGeneratorXML
 				$data->file = $file;
 			}
 		}
-		
+
 		ksort($data->members);
-	
+
 		if (!empty($data))
 		{
 			if (!file_exists($target)) mkdir($target);

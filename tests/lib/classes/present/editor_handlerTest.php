@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/EditorData.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/present/editor_data.php';
 
 /**
  * Test class for EditorHandler.
@@ -27,7 +27,7 @@ class EditorHandlerTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-		
+
 	}
 
 	/**

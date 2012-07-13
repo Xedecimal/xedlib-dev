@@ -1,6 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/Calendar.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/present/calendar.php';
 
 /**
  * Test class for Calendar.

@@ -2,8 +2,10 @@
 
 require_once('h_main.php');
 
-$ca = GetVar('ca');
-$cf = GetVar('upfile');
+require_once('lib/classes/present/form.php');
+
+$ca = Server::GetVar('ca');
+$cf = Server::GetVar('upfile');
 
 if (!isset($ca))
 {
@@ -14,7 +16,7 @@ if (!isset($ca))
 	$out = '<table><tr><td>Upload Backup';
 	$out .= $frm->Get('method="post" enctype="multipart/form-data"');
 	$out .= <<<EOF
-	</td><td valign="top"><a href="{$me}?ca=download">Download Backup</a></td>
+	</td><td valign="top"><a href="{{app_abs}}?ca=download">Download Backup</a></td>
 </tr>
 EOF;
 	die($out);

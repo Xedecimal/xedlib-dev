@@ -1,8 +1,8 @@
 <?php
 
-require_once dirname(__FILE__) . '/../../../../lib/classes/data/Database.php';
-require_once dirname(__FILE__) . '/../../../../lib/classes/data/DataSet.php';
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/EditorData.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/data/database.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/data/dataset.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/present/editor_data.php';
 
 /**
  * Test class for EditorData.
@@ -38,7 +38,7 @@ class EditorDataTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-		
+
 	}
 
 	/**

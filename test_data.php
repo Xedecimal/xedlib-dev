@@ -5,24 +5,26 @@
 $page_title = 'Storage Tests';
 $page_body = '';
 
-//Requirements 
+//Requirements
 
 require_once('h_main.php');
-require_once('lib/classes/File.php');
-require_once('lib/classes/data/Database.php');
-require_once('lib/classes/data/DataSet.php');
-require_once('lib/classes/data/Relation.php');
-require_once('lib/classes/present/EditorData.php');
-require_once('lib/classes/present/FormInput.php');
-require_once('lib/classes/present/Template.php');
-require_once('lib/classes/present/Table.php');
+require_once('lib/classes/module.php');
+require_once('lib/classes/file.php');
+require_once('lib/classes/data/database.php');
+require_once('lib/classes/data/data_set.php');
+require_once('lib/modules/editor_data/editor_data.php');
+require_once('lib/classes/present/form_input.php');
+require_once('lib/classes/present/template.php');
+require_once('lib/classes/present/table.php');
 Server::HandleErrors();
+
+Module::Initialize(dirname(__FILE__), true);
 
 // Data
 
 $editor = Server::GetVar('editor');
 
-$imgError = ' <img src="'.File::GetRelativePath(dirname(__FILE__))
+$imgError = ' <img src="'.Server::GetRelativePath(dirname(__FILE__))
 	.'/lib/images/error.png" alt="Error" />';
 
 $db = new Database();
@@ -43,7 +45,7 @@ $dsChild->FieldInputs = array(
 
 $dsBoth = new DataSet($db, 'test');
 $dsBoth->Description = "Both Item";
-$dsBoth->AddChild(new Relation($dsBoth, 'id', 'parent'));
+$dsBoth->AddJoin(new Join($dsBoth, 'id=parent'));
 $dsBoth->DisplayColumns = array(
 	'name' => new DisplayColumn('Name'),
 	'second' => new DisplayColumn('Second')
@@ -53,7 +55,7 @@ $dsBoth->FieldInputs = array(
 	'second' => new FormInput('Second', 'text')
 );
 
-$dsBoth->AddChild(new Relation($dsChild, 'id', 'parent'));
+$dsBoth->AddJoin(new Join($dsChild, 'id=parent'));
 
 // dsForeign
 
@@ -67,7 +69,7 @@ $dsForeign->FieldInputs = array(
 	'name' => new FormInput('Name'),
 	'second' => new FormInput('Second')
 );
-$dsForeign->AddChild(new Relation($dsChild, 'id', 'parent'));
+$dsForeign->AddJoin(new Join($dsChild, 'id=parent'));
 
 // dsSelf
 
@@ -81,7 +83,7 @@ $dsSelf->FieldInputs = array(
 	'name' => new FormInput('Name'),
 	'second' => new FormInput('Second')
 );
-$dsSelf->AddChild(new Relation($dsSelf, 'id', 'parent'));
+$dsSelf->AddJoin(new Join($dsSelf, 'id=parent'));
 
 //Preparation
 
@@ -107,9 +109,9 @@ $tbl = new Table('tblMain',
 	array('valign="top"', 'valign="top"', 'valign="top"')
 );
 
-$row[0] = $edSelf->GetUI();
-$row[1] = $edForeign->GetUI();
-$row[2] = $edBoth->GetUI();
+$row[0] = $edSelf->Get();
+$row[1] = $edForeign->Get();
+$row[2] = $edBoth->Get();
 $tbl->AddRow($row);
 
 $page_body .= $tbl->Get();
@@ -119,6 +121,6 @@ actually can re-align if in the correct order, but you will destroy their tree
 if they cannot find their parents by their order (a part of manual sorting that
 cannot allow us to automatically sort).";
 
-echo $t->ParseFile('t.xml');
+die($page_body);
 
 ?>

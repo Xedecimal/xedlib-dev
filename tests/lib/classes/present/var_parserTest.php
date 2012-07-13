@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/Template.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/present/template.php';
 
 /**
  * Test class for VarParser.
@@ -27,7 +27,7 @@ class VarParserTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-		
+
 	}
 
 	/**
