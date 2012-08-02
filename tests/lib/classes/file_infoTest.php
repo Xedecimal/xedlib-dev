@@ -21,7 +21,7 @@ class FileInfoTest extends PHPUnit_Framework_TestCase {
 	 * @todo Implement test__toString().
 	 */
 	public function test__toString() {
-		$this->assertEquals((string)$this->object, 'FileInfoTest.php');
+		$this->assertEquals((string)$this->object, 'file_infoTest.php');
 	}
 
 	/**
@@ -35,7 +35,7 @@ class FileInfoTest extends PHPUnit_Framework_TestCase {
 	public function testSaveInfo()
 	{
 		$this->object->SaveInfo();
-		unlink(dirname(__FILE__).'/.FileInfoTest.php');
+		unlink(dirname(__FILE__).'/.file_infoTest.php');
 	}
 }
 

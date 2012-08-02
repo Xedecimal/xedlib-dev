@@ -40,7 +40,7 @@ class FormInputTest extends PHPUnit_Framework_TestCase
 	{
 		$in = new FormInput('Test', 'text', 'name', null, array('test' => 1));
 		$in->attr('href', 'test');
-		$this->assertEquals('test', $in->attr('href'));
+		$this->assertEquals('test', $in->attr('HREF'));
 	}
 
 	/**

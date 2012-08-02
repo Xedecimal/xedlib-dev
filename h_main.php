@@ -9,5 +9,6 @@ $_d['settings']['database'] = 'mysqli://root:ransal@127.0.0.1/test';
 
 $db = new Database();
 $db->Open($_d['settings']['database']);
+$_d['db'] = $db;
 
 ?>

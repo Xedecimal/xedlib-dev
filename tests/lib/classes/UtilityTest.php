@@ -62,7 +62,7 @@ class UTest extends PHPUnit_Framework_TestCase
 	public function testDBoolCallback()
 	{
 		$res['tbl_bool'] = '1';
-		$this->assertEquals(true, U::DBoolcallback(null, $res, 'tbl_bool'));
+		$this->assertEquals('Yes', U::DBoolcallback(null, $res, 'tbl_bool'));
 	}
 
 	/**

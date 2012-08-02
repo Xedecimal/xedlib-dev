@@ -44,9 +44,7 @@ class TableTest extends PHPUnit_Framework_TestCase {
 	public function testGet() {
 		$this->object->AddRow(array('item1', 'item2'));
 		$this->object->AddRow(array('missing two'));
-		var_dump($this->object->Get(array('CLASS' => 'test')));
 	}
-
 }
 
 ?>

@@ -26,7 +26,7 @@ class HMTest extends PHPUnit_Framework_TestCase
 	public function testParseAttribs()
 	{
 		$arr = HM::ParseAttribs('test="1"');
-		$this->assertEquals('1', $arr['test']);
+		$this->assertEquals('1', $arr['TEST']);
 	}
 
 	public function testAttribAppend()
@@ -47,8 +47,7 @@ class HMTest extends PHPUnit_Framework_TestCase
 
 	public function testParseURL()
 	{
-		$dat = HM::ParseURL('http://www.google.com?test=testing');
-		var_dump($dat);
+		//$dat = HM::ParseURL('http://www.google.com?test=testing');
 	}
 }
 
