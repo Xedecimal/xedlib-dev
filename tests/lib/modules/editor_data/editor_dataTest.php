@@ -1,8 +1,8 @@
 <?php
 
 require_once dirname(__FILE__) . '/../../../../lib/classes/data/database.php';
-require_once dirname(__FILE__) . '/../../../../lib/classes/data/dataset.php';
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/editor_data.php';
+require_once dirname(__FILE__) . '/../../../../lib/classes/data/data_set.php';
+require_once dirname(__FILE__) . '/../../../../lib/modules/editor_data/editor_data.php';
 
 /**
  * Test class for EditorData.
@@ -193,14 +193,6 @@ class EditorDataTest extends PHPUnit_Framework_TestCase
 		$this->markTestIncomplete(
 			'This test has not been implemented yet.'
 		);
-	}
-
-	/**
-	 * @todo Implement testGetUI().
-	 */
-	public function testGetUI()
-	{
-		$this->object->GetUI();
 	}
 
 	/**

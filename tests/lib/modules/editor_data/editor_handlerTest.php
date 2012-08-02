@@ -1,5 +1,5 @@
 <?php
-require_once dirname(__FILE__) . '/../../../../lib/classes/present/editor_data.php';
+require_once dirname(__FILE__) . '/../../../../lib/modules/editor_data/editor_data.php';
 
 /**
  * Test class for EditorHandler.
