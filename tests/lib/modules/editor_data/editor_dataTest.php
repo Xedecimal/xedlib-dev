@@ -1,8 +1,11 @@
 <?php
 
+require_once dirname(__FILE__) . '/../../../../lib/classes/module.php';
 require_once dirname(__FILE__) . '/../../../../lib/classes/data/database.php';
 require_once dirname(__FILE__) . '/../../../../lib/classes/data/data_set.php';
 require_once dirname(__FILE__) . '/../../../../lib/modules/editor_data/editor_data.php';
+
+require_once(__DIR__.'/../../../../h_main.php');
 
 /**
  * Test class for EditorData.
@@ -15,13 +18,30 @@ class EditorDataTest extends PHPUnit_Framework_TestCase
 	 */
 	protected $object;
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 */
 	protected function setUp()
 	{
+		global $_d;
+
+		Module::Initialize(__DIR__, true);
+
+		$url = parse_url($_d['settings']['database']);
+		$url['path'] = '/temp';
+		$target = http_build_url($url);
+
 		$db = new Database();
+		$db->Open($target, true);
+
+		$sqlCreateTable = <<<EOF
+CREATE TABLE IF NOT EXISTS `test` (
+	`tst_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`tst_parent` INT UNSIGNED,
+	`tst_name` VARCHAR(255),
+	PRIMARY KEY (`tst_id`)
+)
+EOF;
+
+		$db->Query($sqlCreateTable);
+
 		$ds = new DataSet($db, 'test', 'tst_id');
 		$ds->FieldInputs = array(
 			'tst_name' => new FormInput('Name')
@@ -29,179 +49,29 @@ class EditorDataTest extends PHPUnit_Framework_TestCase
 		$ds->DisplayColumns = array(
 			'tst_name' => new DisplayColumn('Name')
 		);
+		$ds->Add(array('tst_name' => 'Hello.'));
 		$this->object = new EditorData('editor_name', $ds);
 	}
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 */
-	protected function tearDown()
+	public function testMain()
 	{
-
+		$this->object->Active = true;
+		$this->object->Behavior->Search = false;
+		$this->object->Prepare();
+		$this->object->Get();
 	}
 
-	/**
-	 * @todo Implement testAddHandler().
-	 */
 	public function testAddHandler()
 	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
+		$this->object->AddHandler(new TestEditorHandler());
 	}
 
-	/**
-	 * @todo Implement testPrepare().
-	 */
-	public function testPrepare()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetSelArray().
-	 */
-	public function testGetSelArray()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetSelMask().
-	 */
-	public function testGetSelMask()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGet().
-	 */
-	public function testGet()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testBuildTree().
-	 */
-	public function testBuildTree()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testFixTree().
-	 */
-	public function testFixTree()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testSortByChild().
-	 */
-	public function testSortByChild()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetTable().
-	 */
-	public function testGetTable()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testAddRows().
-	 */
-	public function testAddRows()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetForm().
-	 */
-	public function testGetForm()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testGetForms().
-	 */
-	public function testGetForms()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testTagForms().
-	 */
-	public function testTagForms()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testTagSearch().
-	 */
-	public function testTagSearch()
-	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-			'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @todo Implement testReset().
-	 */
 	public function testReset()
 	{
 		$this->object->Reset();
 	}
 }
 
-?>
+class TestEditorHandler extends EditorHandler
+{
+}
